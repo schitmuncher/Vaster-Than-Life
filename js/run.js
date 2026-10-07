@@ -65,7 +65,7 @@ function genSector(n, type){
   }
   for(const b of nodes) if(b.col>0 && !b.links.some(i => nodes[i].col<b.col)) link(nodes, pick(nodes.filter(a=>a.col===b.col-1)), b);
   const mids = nodes.filter(nd => nd.col>=2 && nd.col<=cols-2);
-  const storeN = final ? 2 : (Math.random() < .3 ? 2 : 1); const placed = [];
+  const storeN = Math.random() < .25 ? 3 : 2; const placed = [];
   for(const nd of shuffle(mids.slice())){ if(placed.length>=storeN) break; if(placed.some(p => Math.abs(p.col - nd.col) < 2)) continue; nd.type = 'store'; nd.distress = false; placed.push(nd); }
   G.map = { nodes, cur:0 }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
@@ -92,6 +92,7 @@ function jumpTo(i){
 }
 function leaveCombat(){
   if(G.enemy){ for(const c of [...G.ship.crew]) if(c.owner==='e' && c.drone) G.ship.crew.splice(G.ship.crew.indexOf(c),1); }
+  for(const c of G.ship.crew) if(c.owner==='p') c.mcT = 0;
   G.enemy = null; G.proj = []; G.units = []; G.ftl = 0; G.boss = false; UI.selWeapon = null; UI.mode = null;
   for(const w of G.ship.weapons){ w.charge = 0; w.target = null; }
   for(const d of G.ship.drones){ const bp = DATA.drones[d.id]; if(bp && bp.kind!=='internal') d.unit = null; }
@@ -130,7 +131,10 @@ function arrive(i){
     case 'event': startEvent(pickEvent(node)); break;
     case 'combat': startCombat('random', { hail:true }); break;
     case 'exit': G.modal = { type:'exit', opts:sectorOptions() }; save(); break;
-    default: G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text: hazardText(G.hazard) || fillText(pick(QUIET_TEXTS), { crew:randomCrewName() }) }; save();
+    default: { let text = hazardText(G.hazard) || fillText(pick(QUIET_TEXTS), { crew:randomCrewName() });
+      if(Math.random() < .3){ const f = ri(1,2); G.fuel += f; text += ` Sensors find a drifting fuel canister. +${f} fuel.`; }
+      if(!G.hazard && G.ship.hull < G.ship.maxHull && Math.random() < .6){ const n = Math.min(G.ship.maxHull - G.ship.hull, ri(1,3)); G.ship.hull += n; text += ` With nobody shooting at you, the crew bolt on spare plating. +${n} hull.`; }
+      G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text }; save(); }
   }
 }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
@@ -282,7 +286,7 @@ function startCombat(id, o={}){
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
-  G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.afterWin = o.afterWin || null;
+  G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5);
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
@@ -316,7 +320,7 @@ function finishCombat(kind, offer){
   if(kind==='surrender') L.push(...applyEffect(offer));
   else {
     const reward = { scrap: Math.round((ri(18,28) + G.sector*9) * (kind==='crew' ? 1.5 : 1)) };
-    if(Math.random()<.45) reward.fuel = ri(1,2); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
+    if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
     if(Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
@@ -371,6 +375,7 @@ function sellValue(kind, id){ const d = kind==='weapon' ? DATA.weapons[id] : kin
 function update(dt){
   updateStars(dt);
   if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
+  if(typeof checkHints==='function') checkHints(dt);
   if(UI.screen!=='game' || !G) return;
   for(const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
   G.shake = Math.max(0, G.shake - dt*2); G.flash = Math.max(0, (G.flash||0) - dt*1.5);
@@ -395,7 +400,11 @@ function update(dt){
     if(foe){
       const s = G.ship; const ok = eff(s,'engines')>0 && eff(s,'piloting')>0 && (manned(s,'piloting') || eff(s,'piloting')>=2);
       if(ok && G.ftl<1) G.ftl = Math.min(1, G.ftl + dt*(.02 + .006*eff(s,'engines')));
-      if(foe.fleeT!=null && !foe.dead){ if(eff(foe,'engines')>0 && (manned(foe,'piloting') || foe.auto)) foe.fleeT -= dt; if(foe.fleeT<=0){ finishCombat('fled'); return; } }
+      // stalemate breaker: if nobody has been able to hurt anybody for a while, the enemy gives up and leaves
+      if(!foe.dead && !foe.boss){ const sig = s.hull*1000 + foe.hull*7 + Object.values(foe.systems).reduce((t,y)=>t+y.dmg,0)*3 + Object.values(s.systems).reduce((t,y)=>t+y.dmg,0)*5 + Math.round([...s.crew, ...foe.crew].reduce((t,c)=>t+c.hp,0)/10);
+        if(sig!==G.stSig){ G.stSig = sig; G.stT = 0; } else if(!G.paused) G.stT = (G.stT||0) + dt;
+        if(G.stT > 60 && foe.fleeT==null){ foe.fleeT = 15; foe.stalemate = true; toast(`Neither ship can land a blow. The ${foe.name} gives up and spins up its jump drive.`); } }
+      if(foe.fleeT!=null && !foe.dead){ if(foe.stalemate || (eff(foe,'engines')>0 && (manned(foe,'piloting') || foe.auto))) foe.fleeT -= dt; if(foe.fleeT<=0){ finishCombat('fled'); return; } }
     }
     if(G.enemy && G.enemy.dead){ G.dieT -= dt; const b = G.enemy._b; if(b && Math.random() < dt*10) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), .8, '#ff8a3d'); if(G.dieT<=0){ finishCombat(G.enemy.deadKind || 'destroyed'); } }
     for(const b of (G.chat||[])) b.t -= dt;

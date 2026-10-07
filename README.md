@@ -12,11 +12,18 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 
 | Quest control | Action |
 | --- | --- |
-| Point + trigger (or pinch with hands) | Click |
+| Point at the console + trigger (or pinch) | Click |
+| Point at the floor + trigger | Teleport there |
+| Left stick | Walk around the bridge (with a comfort vignette) |
+| Right stick left / right | Turn (snap 30°, 45° or smooth) |
+| Right stick up / down | Move the console closer or further |
+| Left stick click | Magnifier on / off (a zoomed loupe over whatever you point at) |
+| Right stick click | Back to the captain's spot |
 | A / X | Pause or resume |
 | B / Y | Open or close the map |
-| Grip | Recenter the console in front of you |
-| Right stick up / down | Move the console closer or further |
+| Grip | Bring the console in front of you |
+
+Look at either controller to see a label of what its buttons do. Turning style, teleport-only movement, the vignette, the magnifier, bigger VR text and the controller labels are all in **Settings → VR comfort & clarity**. Hovering over buttons gives a small haptic tick, the console texture is mipmapped so small text stays sharp, and small fonts are enlarged in VR.
 
 In VR you stand on the bridge of your ship. A **holotable** under the console shows 3D models of both ships, with fires, damage, crew, drones and shots in flight, and the enemy ship is out there beyond the canopy. You can turn the holotable off in Settings.
 
@@ -98,6 +105,11 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 - The holotable shows extruded 3D models of both ships (metal hulls with your room layout on top, nacelles with engine glow, wings, canopy, turrets, fresnel shields) with tiny holographic crew walking about.
 - The enemy ship flies outside the canopy. Shots streak between you, it flashes when hit, your own shield bubble ripples when it blocks a shot, and beaten ships explode into debris.
 - Physically based materials with image-based lighting, tuned for Quest 2 (no shadows, low draw calls). Mixed-reality mode hides the bridge and keeps the console and holotable.
+
+**Captain's tips**
+- Short, contextual tips appear the first time each mechanic matters: targeting shields, volley fire, missiles and beams, spare power, fire, breaches, boarders, low oxygen, mind control, the medbay, fleeing, upgrading, stores, fuel, the fleet, being outgunned, and a Flagship briefing before the last sector.
+- Combat tips pause the game and highlight the part of the screen they talk about. Turn them off with "No more tips", or replay them from Settings.
+- First-time captains start on Easy.
 
 **Around the game**
 - 20 achievements and three difficulties.
@@ -196,4 +208,6 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/run.js` | Run flow, map, events, stores, combat start and end, the Flaggship chase, saving |
 | `js/ui.js` | All canvas drawing and input |
 | `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
+| `js/hints.js` | Contextual captain's tips and their triggers |
+| `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

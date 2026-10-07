@@ -13,9 +13,10 @@ const FD = "'Chakra Petch','Segoe UI',system-ui,sans-serif", FM = "'IBM Plex Mon
 let HR = [];
 const PTR = [{ x:-1, y:-1, on:false }, { x:-1, y:-1, on:false, xr:true }, { x:-1, y:-1, on:false, xr:true }];
 function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
+let VRTXT = false;   // set each frame: larger minimum text while in VR
 function region(x,y,w,h,cb){ HR.push({ x,y,w,h,cb }); }
 function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
-function T(t,x,y,o={}){ ctx.font = `${o.w||400} ${o.s||22}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
+function T(t,x,y,o={}){ let fs_ = o.s||22; if(VRTXT && fs_ < 15) fs_ = fs_ < 12 ? fs_ + 3 : 15; ctx.font = `${o.w||400} ${fs_}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
   if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; if(o.max) ctx.fillText(t,x,y,o.max); else ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
 function label(t,x,y,c=C.muted,a='left',s=16){ T(String(t).toUpperCase(),x,y,{ s, f:FD, w:600, c, ls:2, a }); }
 function lines(text, maxW, font){ ctx.font = font; const out = [];
@@ -80,7 +81,7 @@ function drawBubbles(){
 }
 /* ---------------- main draw ---------------- */
 function draw(){
-  HR = []; TIPS = []; TIP_MODAL = false;
+  HR = []; TIPS = []; TIP_MODAL = false; VRTXT = SET.vrBigText !== false && typeof inXR==='function' && inXR();
   ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   drawBG(); drawStars();
   switch(UI.screen){
@@ -95,6 +96,7 @@ function draw(){
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
+  if(UI.screen==='game') drawHint();
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
@@ -119,7 +121,7 @@ function drawTitle(){
   btn(110, y, 160, 58, 'Manual', () => { UI.screen = 'help'; }, { s:18 });
   btn(280, y, 160, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 70;
   btn(110, y, bw, 58, `Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
-  label('Quest: point and pull the trigger · A/X pause · B/Y map · grip recenters · right stick moves the screen', 110, H-30, C.muted, 'left', 15);
+  label('Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
 }
 
 function classGroups(){
@@ -161,7 +163,7 @@ function drawHangar(){
     rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, 520, { s:15, lh:18, max:1 }); });
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
-  label('Difficulty', 760, y0+360, C.muted, 'left', 14);
+  label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName); }, { fill:true, s:26, disabled:!open });
   btn(1060, 890, 160, 70, 'Back', () => { UI.screen = 'title'; });
@@ -197,18 +199,29 @@ function drawSettings(){
   const row = (y, name, val, dec, inc) => { T(name, 80, y+34, { s:22 }); T(val, 560, y+34, { s:22, f:FD, w:700, a:'center', c:C.amber }); if(dec) btn(440, y+6, 60, 46, '−', dec, { s:24 }); if(inc) btn(620, y+6, 60, 46, '+', inc, { s:24 }); };
   row(170, 'Music volume', `${Math.round(SET.music*100)}%`, () => { SET.music = clamp(+(SET.music-.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }, () => { SET.music = clamp(+(SET.music+.1).toFixed(1),0,1); applyVolumes(); saveProfile(); });
   row(240, 'Sound effects', `${Math.round(SET.sfx*100)}%`, () => { SET.sfx = clamp(+(SET.sfx-.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }, () => { SET.sfx = clamp(+(SET.sfx+.1).toFixed(1),0,1); applyVolumes(); saveProfile(); sfx('click'); });
-  const tog = (y, name, key, note) => { T(name, 80, y+34, { s:22 }); btn(440, y+6, 240, 46, SET[key] ? 'On' : 'Off', () => { SET[key] = !SET[key]; saveProfile(); if(key==='allowScripts') applyMods(); }, { fill:SET[key], col:SET[key]?C.good:C.muted }); if(note) para(note, 720, y+22, 780, { s:15, lh:20, c:C.muted }); };
+  const tog = (y, name, key, note) => { T(name, 80, y+34, { s:22 }); btn(440, y+6, 240, 46, SET[key] ? 'On' : 'Off', () => { SET[key] = !SET[key]; saveProfile(); if(key==='allowScripts') applyMods(); }, { fill:SET[key], col:SET[key]?C.good:C.muted }); if(note){ para(note, 80, y+66, 640, { s:14, lh:18, c:C.muted, max:1 }); tip(70, y, 620, 58, name, note); } };
   T('Difficulty', 80, 344, { s:22 }); Object.keys(DIFFICULTY).forEach((k,i) => btn(440 + i*130, 316, 120, 46, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tog(390, 'Holotable in VR', 'holotable', '3D models of both ships on a table below the console.');
   tog(460, 'Unlock all ships', 'unlockAll', 'Skip the unlock conditions and pick any ship.');
   tog(530, 'Allow mod scripts', 'allowScripts', 'Lets mods run their own JavaScript. Only turn this on for mods you trust.');
   tog(600, 'Smart pause', 'smartPause', 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
-  if(UI.confirmReset){ T('Erase all achievements, unlocks and stats?', 80, 700, { s:22, c:C.hostile });
-    btn(80, 720, 220, 52, 'Yes, erase', () => { for(const k of Object.keys(PROFILE.ach)) delete PROFILE.ach[k]; PROFILE.maxSector = 1; PROFILE.kills = 0; PROFILE.wins = {}; PROFILE.runs = 0; saveProfile(); UI.confirmReset = false; toast('Profile reset.'); }, { col:C.hostile, fill:true });
-    btn(320, 720, 160, 52, 'Cancel', () => { UI.confirmReset = false; }); }
-  else btn(80, 690, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
-  T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)}`, 80, 790, { s:18, c:C.muted });
-  btn(80, 860, 200, 64, 'Back', () => { UI.screen = 'title'; UI.confirmReset = false; });
+  label('VR comfort & clarity', 820, 190, C.cyan, 'left', 16);
+  const vrow = (y, name, opts, key, def) => { T(name, 820, y+34, { s:20 }); opts.forEach(([v,l],i) => btn(1080 + i*150, y+6, 140, 46, l, () => { SET[key] = v; saveProfile(); }, { fill:(SET[key] ?? def)===v, s:15 })); };
+  vrow(210, 'Turning', [['30','Snap 30°'],['45','Snap 45°'],['smooth','Smooth']], 'vrTurn', '30');
+  vrow(270, 'Walking', [['smooth','Stick + teleport'],['teleport','Teleport only']], 'vrMove', 'smooth');
+  vrow(330, 'Comfort vignette', [[true,'On'],[false,'Off']], 'vrVignette', true);
+  vrow(390, 'Magnifier', [[true,'On'],[false,'Off']], 'vrLoupe', true);
+  vrow(450, 'Bigger text', [[true,'On'],[false,'Off']], 'vrBigText', true);
+  vrow(510, 'Controller help', [[true,'On'],[false,'Off']], 'vrLabels', true);
+  para('Look at a controller to see what its buttons do. Point at the floor and pull the trigger to teleport. Click the left stick to toggle the magnifier.', 820, 600, 700, { s:16, lh:22, c:C.muted });
+  tog(670, 'Captain\'s hints', 'hints', 'Short tips the first time each mechanic comes up.');
+  btn(700, 676, 180, 46, 'Replay tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again from the start of your next run.'); }, { s:15 });
+  if(UI.confirmReset){ T('Erase all achievements, unlocks and stats?', 80, 760, { s:22, c:C.hostile });
+    btn(80, 776, 220, 52, 'Yes, erase', () => { for(const k of Object.keys(PROFILE.ach)) delete PROFILE.ach[k]; PROFILE.maxSector = 1; PROFILE.kills = 0; PROFILE.wins = {}; PROFILE.runs = 0; saveProfile(); UI.confirmReset = false; toast('Profile reset.'); }, { col:C.hostile, fill:true });
+    btn(320, 776, 160, 52, 'Cancel', () => { UI.confirmReset = false; }); }
+  else btn(80, 750, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
+  T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)}`, 80, 846, { s:18, c:C.muted });
+  btn(80, 870, 200, 64, 'Back', () => { UI.screen = 'title'; UI.confirmReset = false; });
 }
 function drawAchievements(){
   label('Your record', 60, 70, C.cyan, 'left', 18);
@@ -261,7 +274,7 @@ function drawGame(){
   if(hint){ panel(W/2-330, 520, 660, 40, 8); T(hint, W/2, 541, { s:17, a:'center', b:'middle', c:C.amber }); }
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0){ ctx.fillStyle = `rgba(255,236,200,${warpAmt()*.5})`; ctx.fillRect(0,0,W,H); }
-  if(G.paused && !G.modal){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
+  if(G.paused && !G.modal && !UI.hint){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
     panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted }); }
   if(G.modal) drawModal();
 }
@@ -877,6 +890,7 @@ cv.addEventListener('pointermove', e => { const p = canvasXY(e); PTR[0].x = p.x;
 cv.addEventListener('pointerleave', () => { PTR[0].on = false; });
 cv.addEventListener('pointerdown', e => { e.preventDefault(); const p = canvasXY(e); PTR[0].x = p.x; PTR[0].y = p.y; click(p.x, p.y); });
 window.addEventListener('keydown', e => {
+  if(UI.hint && (e.key==='Enter' || e.key==='Escape')){ closeHint(false); e.preventDefault(); return; }
   if(e.target && e.target.closest && e.target.closest('dialog,#modPanel,#renameDlg')) return;
   if(UI.screen!=='game' || !G) return;
   if(e.code==='Space'){ e.preventDefault(); if(!G.modal) G.paused = !G.paused; }

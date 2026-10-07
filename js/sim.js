@@ -68,7 +68,8 @@ function evasion(sh){
   }
   if(sh.cloak.t>0) base += 60;
   if(hasAug(sh,'stealth')) base += 5;
-  return Math.min(95, Math.round(base));
+  if(sh.side==='p' && base>0) base += (DIFFICULTY[SET.difficulty]?.evade || 0);
+  return clamp(Math.round(base), 0, 95);
 }
 function weaponPowerUsed(sh){ return sh.weapons.reduce((t,w)=>t + (w.on ? (DATA.weapons[w.id]?.power||0) : 0), 0); }
 function weaponBudget(sh){ let cap = eff(sh,'weapons'); for(const w of sh.weapons){ if(!w.on) continue; const p = DATA.weapons[w.id]?.power||0; if(p<=cap) cap -= p; else { w.on = false; w.target = null; } } }
@@ -337,7 +338,8 @@ function autoCrew(sh, c){
   const helm = roomOf(sh,'piloting');
   const soleOn = k => { const i = roomOf(sh,k); return here===i && !sh.crew.some(o => o!==c && controlled(o) && o.room===i && !o.path.length); };
   const med = roomOf(sh,'medbay');
-  if(c.hp < c.maxHp*(G.enemy ? .35 : .75) && med>=0 && eff(sh,'medbay')>0 && !hostilesFor(sh, med, 'p') && sh.rooms[med].fire===0){ if(here!==med && !(soleOn('piloting') && G.enemy)) orderMove(sh, c, med); return; }
+  const airAvg = sh.rooms.reduce((t,x)=>t+x.o2,0)/sh.rooms.length, oxBroken = sh.systems.oxygen && sh.systems.oxygen.dmg>0;
+  if(c.hp < c.maxHp*(G.enemy ? .5 : .75) && med>=0 && eff(sh,'medbay')>0 && !hostilesFor(sh, med, 'p') && sh.rooms[med].fire===0 && !(oxBroken && airAvg < 30 && sh.rooms[med].o2 < 20 && race.repair>0)){ if(here!==med && !(soleOn('piloting') && G.enemy && c.hp > c.maxHp*.25)) orderMove(sh, c, med); return; }
   const intruderRooms = sh.rooms.map((r,i)=>i).filter(i => hostilesFor(sh, i, 'p'));
   if(intruderRooms.length && race.combat > .5){
     const pilotStays = G.enemy && soleOn('piloting');
@@ -415,8 +417,14 @@ function tickShip(sh, dt, foe){
     else if(h.cd>0) h.cd -= dt; }
   shedPower(sh); sh.restT = (sh.restT||0) - dt; if(sh.restT<=0){ sh.restT = .5; restorePower(sh); }
   if(sh.side==='p' && sh.systems.oxygen){ const avg = sh.rooms.reduce((t,r)=>t+r.o2,0)/sh.rooms.length;
-    if(avg < 35 && !sh.o2Warned){ sh.o2Warned = true; toast('Oxygen is running low! Power and repair the Oxygen system.'); say('breach', { force:true }); smartPause('oxygen low'); }
-    else if(avg > 60) sh.o2Warned = false; }
+    if(avg < 35 && !sh.o2Warned){ sh.o2Warned = true; toast('Oxygen is running low! Power and repair the Oxygen system.'); say('breach', { force:true }); smartPause('oxygen low'); hint('o2'); }
+    else if(avg > 60) sh.o2Warned = false;
+    // life-support guard (part of crew autopilot): never let the ship suffocate because Oxygen was left unpowered
+    const ox = sh.systems.oxygen;
+    if(G.crewAuto && avg < 55 && ox.power===0 && ox.max - ox.dmg > 0 && !(ox.ionT>0)){
+      if(reactorFree(sh) <= 0){ for(const k of ['cloaking','hacking','mindcontrol','teleporter','drones','medbay','clonebay','engines','weapons']){ const y = sh.systems[k]; if(y && y.power>0){ removePower(sh, k); if(k==='weapons') weaponBudget(sh); break; } } }
+      if(addPower(sh, 'oxygen')==='ok' && !sh.o2Rerouted){ sh.o2Rerouted = true; toast('Autopilot rerouted reactor power to Oxygen.'); } }
+    if(avg > 70) sh.o2Rerouted = false; }
   // shields
   const layers = shieldLayers(sh);
   if(sh.shield > layers) sh.shield = layers;
@@ -463,7 +471,7 @@ function tickShip(sh, dt, foe){
     const race = raceOf(c), r = sh.rooms[c.room];
     if(r){
       if(r.fire>0 && !race.fireproof) c.hp -= Math.min(6, 2*r.fire)*dt;
-      if(r.o2 < 5 && !race.noAir) c.hp -= 5*dt;
+      if(r.o2 < 5 && !race.noAir) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
     }
     if(race.heal) c.hp = Math.min(c.maxHp, c.hp + race.heal*dt);
     if(c.owner===sh.side && crewSide(c)===sh.side && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
@@ -480,7 +488,10 @@ function tickShip(sh, dt, foe){
     if(friends.length && foes.length){
       for(const a of grp){ if(a.stunT>0) continue; const dps = crewDps(a); if(dps<=0) continue;
         const opp = crewSide(a)===sh.side ? foes : friends; let tgt = null; for(const o of opp) if(o.hp>0 && (!tgt || o.hp < tgt.hp)) tgt = o;
-        if(!tgt) continue; tgt.hp -= dps*dt; tgt.lastByCrew = a.id; if(a.owner==='p' && sh.isEnemy) tgt.killedByBoarder = true;
+        if(!tgt) continue;
+        // shipmates pull their punches on a mind-controlled friend: they restrain, they don't kill
+        if(tgt.owner===a.owner && (tgt.mcT>0 || a.mcT>0)){ tgt.hp = Math.max(Math.min(tgt.hp, 12), tgt.hp - dps*dt*.4); continue; }
+        tgt.hp -= dps*dt; tgt.lastByCrew = a.id; if(a.owner==='p' && sh.isEnemy) tgt.killedByBoarder = true;
         if(tgt.hp<=0 && !tgt._counted){ tgt._counted = true; a.kills++; gainXP(a,'combat',1); }
         if(Math.random()<dt*.6 && (sh.side==='p' || a.owner==='p')) sfx('punch'); }
     } else if(friends.length){
@@ -521,12 +532,13 @@ function tickShip(sh, dt, foe){
     if(foe.cloak.t>0 && !d.heal) continue;
     let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')]; else if(sh.auto) mult *= 1.05;
     if(hasAug(sh,'reloader')) mult *= 1.1;
-    if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .05*(G.sector-1));
+    if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .035*(G.sector-1));
+    if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     w.charge = Math.min(d.charge, w.charge + dt*mult);
     if(w.charge >= d.charge){
       if(sh.isEnemy && w.target==null) w.target = aiTargetRoom(foe, d);
-      if(sh.isEnemy && G.sector>=2 && foe.shield>0 && ['laser','flak','ion'].includes(d.type)){
+      if(sh.isEnemy && G.sector>=3 && foe.shield>0 && ['laser','flak','ion'].includes(d.type)){
         const ready = sh.weapons.filter(x => x.on && DATA.weapons[x.id] && x.charge >= DATA.weapons[x.id].charge).reduce((t,x) => t + (DATA.weapons[x.id].shots||1), 0);
         const soon = sh.weapons.some(x => x.on && DATA.weapons[x.id] && x.charge < DATA.weapons[x.id].charge && x.charge > DATA.weapons[x.id].charge*.55);
         if(ready <= foe.shield && soon && (w.hold = (w.hold||0) + dt) < 5) continue;

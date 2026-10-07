@@ -156,9 +156,9 @@ const BASE = {
     pyrate_bomber:  { name:'Pyrate Boom-barge', tags:['pyrate'], hull:11, sectors:[2,8], systems:{ shields:2, engines:1, weapons:3, oxygen:1, piloting:1, doors:1 }, weapons:['firebomb','basic'], crew:['human','pebblekin','human'] },
     auto_scoundrel: { name:'Auto-Scoundrel',    tags:['auto','enjinn'], auto:true, hull:9, sectors:[1,8], systems:{ shields:2, engines:2, weapons:3, drones:2, piloting:1 }, weapons:['basic','lego'], drones:['combat1'], crew:[] },
     auto_assault:   { name:'Auto-Assaulter',    tags:['auto','rebuff'], auto:true, hull:12, sectors:[4,8], systems:{ shields:4, engines:2, weapons:4, drones:4, piloting:1 }, weapons:['bust1','hermies'], drones:['defense1'], crew:[] },
-    mantlis_raider: { name:'Mantlis Raider',    tags:['mantlis'], hull:10, sectors:[2,8], systems:{ shields:2, engines:2, weapons:2, teleporter:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['basic','lego'], crew:['mantlis','mantlis','mantlis','mantlis'] },
+    mantlis_raider: { name:'Mantlis Raider',    tags:['mantlis'], hull:10, sectors:[3,8], systems:{ shields:2, engines:2, weapons:2, teleporter:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['basic','lego'], crew:['mantlis','mantlis','mantlis','mantlis'] },
     voltan_peace:   { name:'Voltan Peacemonger',tags:['voltan'], hull:10, sectors:[3,8], super:4, systems:{ shields:2, engines:3, weapons:3, oxygen:1, piloting:1, doors:1 }, weapons:['ion','pike'], crew:['voltan','voltan','voltan'] },
-    pebble_brute:   { name:'Pebblekin Brute',   tags:['pebblekin'], hull:14, sectors:[1,8], systems:{ shields:2, engines:1, weapons:3, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','arty'], crew:['pebblekin','pebblekin','pebblekin'] },
+    pebble_brute:   { name:'Pebblekin Brute',   tags:['pebblekin'], hull:14, sectors:[2,8], systems:{ shields:2, engines:1, weapons:3, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','arty'], crew:['pebblekin','pebblekin','pebblekin'] },
     sloog_hacker:   { name:'Sloog Interloper',  tags:['sloog'], hull:10, sectors:[3,8], systems:{ shields:2, engines:2, weapons:3, hacking:2, oxygen:1, piloting:1, sensors:2, doors:1 }, weapons:['biobeam','basic'], crew:['sloog','sloog','sloog'] },
     sloog_mind:     { name:'Sloog Puppeteer',   tags:['sloog'], hull:10, sectors:[3,8], systems:{ shields:2, engines:2, weapons:2, mindcontrol:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['bust1'], crew:['sloog','sloog','human'] },
     enjinn_carrier: { name:'Enjinn Dronecarrier',tags:['enjinn'], hull:11, sectors:[3,8], systems:{ shields:2, engines:2, weapons:1, drones:5, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['ion'], drones:['combat1','defense1'], crew:['enjinn','enjinn','enjinn'] },
@@ -346,9 +346,9 @@ const ACHIEVEMENTS = [
 ];
 
 const DIFFICULTY = {
-  easy:   { name:'Easy',   scrap:1.3, pace:.6,  startScrap:15,  enemyHull:-1 },
+  easy:   { name:'Easy',   scrap:1.35, pace:.5,  startScrap:20,  enemyHull:-2, evade:10 },
   normal: { name:'Normal', scrap:1,   pace:.7,  startScrap:0,   enemyHull:0 },
-  hard:   { name:'Hard',   scrap:.8,  pace:.85, startScrap:-10, enemyHull:2 }
+  hard:   { name:'Hard',   scrap:.8,  pace:.85, startScrap:-10, enemyHull:2, evade:-5 }
 };
 
 const EXAMPLE_MOD = {

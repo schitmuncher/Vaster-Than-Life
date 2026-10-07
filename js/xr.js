@@ -18,7 +18,9 @@ function init3D(){
   scene = new THREE.Scene(); scene.background = new THREE.Color(0x05070f);
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, .05, 900);
   tmpM = new THREE.Matrix4();
-  tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
+  tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
+  const gl2 = renderer.capabilities.isWebGL2; tex.generateMipmaps = gl2; tex.minFilter = gl2 ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;   // mipmaps keep small text crisp at a distance
+  rig = new THREE.Group(); scene.add(rig); rig.add(camera);
   tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   panelGroup = new THREE.Group();
   // console frame: bevelled metal bezel with lit edges, on a support arm
@@ -48,11 +50,12 @@ function init3D(){
     const emit = glowSpriteMesh(i ? '#5fd3e6' : '#ffb547', .03); emit.position.set(0, .005, -.03); body.add(emit);
     c.add(body);
     c.userData = { line, idx:i, hit:null, src:null };
-    c.addEventListener('selectstart', () => { if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } });
+    c.addEventListener('selectstart', () => { if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
     c.addEventListener('connected', e => { c.userData.src = e.data; });
     c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
-    scene.add(c); controllers.push(c);
+    rig.add(c); controllers.push(c);
   }
+  initNav();
   hapticFn = (v, ms) => { const s = renderer.xr.getSession(); if(!s) return; for(const src of s.inputSources) pulse(src, v, ms); };
   renderer.setAnimationLoop(loop);
   window.addEventListener('resize', () => { if(!inXR()){ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
@@ -68,9 +71,14 @@ function xrPointers(){
     raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
     raycaster.ray.direction.set(0,0,-1).applyMatrix4(tmpM);
     const hits = raycaster.intersectObject(panelMesh);
-    if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; c.userData.line.userData.dot.visible = true; }
-    else { c.userData.hit = null; PTR[1+i].on = false; c.userData.line.scale.z = 3; c.userData.line.userData.dot.visible = false; }
+    c.userData.aim = null;
+    if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; c.userData.line.userData.dot.visible = true;
+      c.userData.line.material.color.set(0xffb547); updateLoupe(c, hits[0]); hoverTick(i, x, y, c.userData.src); }
+    else { c.userData.hit = null; PTR[1+i].on = false; updateLoupe(c, null);
+      const aim = aimFloor(c, raycaster.ray.origin, raycaster.ray.direction); c.userData.aim = aim;
+      c.userData.line.scale.z = aim ? aim.t : 3; c.userData.line.userData.dot.visible = !!aim; c.userData.line.material.color.set(aim ? 0x5fd3e6 : 0xffb547); }
   }
+  updateTeleportMarker(controllers.map(c => c.userData.aim));
 }
 function xrButtons(dt){
   const sess = renderer.xr.getSession(); if(!sess) return;
@@ -82,8 +90,8 @@ function xrButtons(dt){
       if(edge(4) && !G.modal) G.paused = !G.paused;
       if(edge(5)){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
     }
-    if(edge(1)) recenterIn = 1;
-    if(gp.axes.length>=4 && Math.abs(gp.axes[3])>.3 && anchor.pos){ panelDist = clamp(panelDist + gp.axes[3]*dt*1.2, .9, 3.5); placePanel(); }
+    if(edge(1)) bringConsole();
+    if(edge(3)){ if(src.handedness==='left'){ SET.vrLoupe = SET.vrLoupe===false; saveProfile(); toast(SET.vrLoupe ? 'Magnifier on' : 'Magnifier off'); if(!SET.vrLoupe) loupe.visible = false; } else goHome(); }
     btnPrev[key] = pressed;
   }
 }
@@ -115,10 +123,10 @@ let last = performance.now(), fc = 0;
 function loop(){
   const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
   const xr = inXR();
-  if(xr){ xrPointers(); xrButtons(dt); }
+  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); }
   update(dt); draw();
   if(xr){
-    if(recenterIn>0){ recenterIn--; if(recenterIn===0) recenter(); }
+    if(recenterIn>0){ recenterIn--; if(recenterIn===0){ recenter(); nav.sessionT = 0; } }
     if((++fc & 1)===0) tex.needsUpdate = true;
     update3D(dt);
     const warp = warpAmt();
