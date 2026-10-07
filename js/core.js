@@ -30,7 +30,7 @@ function grant(id){
   if(typeof toast==='function') toast(`Achievement: ${a.name}`); sfx('buy');
 }
 function shipUnlocked(def){
-  if(SET.unlockAll) return true; const u = def.unlock; if(!u) return true;
+  if(SET.unlockAll || PROFILE.unlocked?.[def.id]) return true; const u = def.unlock; if(!u) return true;
   if(u.sector) return PROFILE.maxSector >= u.sector;
   if(u.ach) return !!PROFILE.ach[u.ach];
   if(u.win) return !!PROFILE.wins[u.win];

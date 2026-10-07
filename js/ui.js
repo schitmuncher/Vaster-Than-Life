@@ -26,13 +26,19 @@ function para(text,x,y,maxW,o={}){ const s = o.s||22, lh = o.lh||Math.round(s*1.
   ls.forEach((l,i)=>T(l,x,y+i*lh,{ s, f:o.f||FM, w:o.w||400, c:o.c||C.ink, a:o.a||'left' })); return ls.length*lh; }
 function btn(x,y,w,h,text,cb,o={}){
   const dis = !!o.disabled, hov = !dis && hovered(x,y,w,h), col = o.col||C.amber;
-  rr(x,y,w,h,6); ctx.fillStyle = o.fill ? (dis?C.line:col) : (hov ? hexA(col,.18) : C.panel2); ctx.fill();
-  if(o.fill && hov){ ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fill(); }
+  rr(x,y,w,h,6);
+  if(o.fill){ const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0, dis ? '#2a3350' : shade(col,.15)); g.addColorStop(1, dis ? '#1c2440' : shade(col,-.2)); ctx.fillStyle = g; }
+  else { const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0, hov ? hexA(col,.28) : '#1a2342'); g.addColorStop(1, hov ? hexA(col,.12) : '#10162b'); ctx.fillStyle = g; }
+  ctx.fill(); if(o.fill && hov){ ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.fill(); }
   ctx.lineWidth = hov ? 3 : 2; ctx.strokeStyle = dis ? C.line : col; ctx.stroke();
+  if(!dis){ ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x+6, y+2.5); ctx.lineTo(x+w-6, y+2.5); ctx.stroke(); }
+  if(hov && !o.fill) glow(x+w/2, y+h/2, Math.max(w,h)*.55, col, .12);
   T(text, x+w/2, y+h/2+1, { a:'center', b:'middle', s:o.s||20, f:FD, w:600, c: dis ? C.muted : (o.fill ? C.void : col), ls:1 });
   if(!dis && cb) region(x,y,w,h,cb);
 }
-function panel(x,y,w,h,r=10){ rr(x,y,w,h,r); ctx.fillStyle = hexA(C.panel,.94); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.line; ctx.stroke(); }
+
+function panel(x,y,w,h,r=10){ rr(x,y,w,h,r); const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,'rgba(22,30,56,.96)'); g.addColorStop(1,'rgba(10,14,28,.96)'); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.line; ctx.stroke(); corners(x,y,w,h); }
+
 function bar(x,y,w,h,frac,col,bg=C.panel2){ rr(x,y,w,h,3); ctx.fillStyle = bg; ctx.fill(); if(frac>0){ rr(x,y,Math.max(3,w*clamp(frac,0,1)),h,3); ctx.fillStyle = col; ctx.fill(); } }
 function tabs(x,y,list,cur,set,w=150){ list.forEach((t,i)=>btn(x+i*(w+8), y, w, 44, t[1], ()=>set(t[0]), { fill:cur===t[0], s:16 })); }
 
@@ -40,17 +46,43 @@ function tabs(x,y,list,cur,set,w=150){ list.forEach((t,i)=>btn(x+i*(w+8), y, w, 
 const STARS = Array.from({length:240}, () => ({ x:Math.random()*W, y:Math.random()*H, z:rand(.2,1) }));
 function warpAmt(){ return G && UI.screen==='game' && G.warp>0 ? (1-Math.abs(G.warp-.5)*2) : 0; }
 function updateStars(dt){ const sp = 6 + warpAmt()*2600; for(const s of STARS){ s.x -= s.z*sp*dt; if(s.x<0){ s.x += W; s.y = Math.random()*H; } } }
-function drawStars(){ const warp = warpAmt(); const neb = G && UI.screen==='game' && G.nebula;
-  if(neb){ const g = ctx.createRadialGradient(1100,400,50,1100,400,900); g.addColorStop(0,'rgba(139,111,214,.28)'); g.addColorStop(1,'rgba(139,111,214,0)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
-  for(const s of STARS){ ctx.fillStyle = `rgba(223,230,245,${.25 + s.z*.6})`;
-    if(warp>.05) ctx.fillRect(s.x, s.y, 4 + s.z*warp*260, 1.6); else ctx.fillRect(s.x, s.y, s.z*2.2, s.z*2.2); } }
+function drawStars(){ const warp = warpAmt();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for(const s of STARS){ ctx.fillStyle = `rgba(223,230,245,${.15 + s.z*.5})`;
+    if(warp>.05) ctx.fillRect(s.x, s.y, 4 + s.z*warp*260, 1.6); else ctx.fillRect(s.x, s.y, s.z*1.8, s.z*1.8); }
+  ctx.restore(); }
 
+function corners(x,y,w,h,col=hexA(C.amber,.4),s=9){ ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(x,y+s); ctx.lineTo(x,y); ctx.lineTo(x+s,y); ctx.moveTo(x+w-s,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w,y+s);
+  ctx.moveTo(x+w,y+h-s); ctx.lineTo(x+w,y+h); ctx.lineTo(x+w-s,y+h); ctx.moveTo(x+s,y+h); ctx.lineTo(x,y+h); ctx.lineTo(x,y+h-s); ctx.stroke(); }
+let TIPS = [], TIP_MODAL = false;
+function tip(x,y,w,h,title,body){ TIPS.push({ x,y,w,h,title,body, modal:TIP_MODAL }); }
+function drawTip(){
+  const p = PTR.find(q => q.on); if(!p) return;
+  for(let i=TIPS.length-1;i>=0;i--){ const t = TIPS[i]; if(UI.screen==='game' && G && G.modal && !t.modal) continue;
+    if(p.x>=t.x && p.x<=t.x+t.w && p.y>=t.y && p.y<=t.y+t.h){
+      const ls = lines(t.body||'', 360, `400 15px ${FM}`); const w = 400, h = 46 + ls.length*20; let x = p.x+20, y = p.y+20;
+      if(x+w > W-8) x = p.x-w-20; if(y+h > H-8) y = p.y-h-20;
+      panel(x,y,w,h,8); T(t.title, x+16, y+28, { s:17, f:FD, w:700, c:C.amber }); ls.forEach((l,k) => T(l, x+16, y+52+k*20, { s:15 })); return; } }
+}
+function typed(m, text){ if(!m || m.skip) return text; if(!m.t0) m.t0 = performance.now(); const n = Math.floor((performance.now() - m.t0)*.11); if(n >= text.length){ m.skip = true; return text; } return text.slice(0, n); }
+function drawBubbles(){
+  for(const bub of (G.chat||[])){
+    if(bub.t<=0) continue; let x, y;
+    if(bub.enemy){ const b = G.enemy?._b; if(!b) continue; x = (b.x0+b.x1)/2; y = b.y0 - 34; }
+    else { let c = null; for(const s of [G.ship, G.enemy]) if(s) c = c || s.crew.find(q => q.id===bub.id); if(!c || c._sx==null) continue; x = c._sx; y = c._sy - 30; }
+    const a = Math.min(1, bub.t*2); ctx.globalAlpha = a; ctx.font = `600 15px ${FD}`; const w = Math.min(320, ctx.measureText(bub.text).width + 22), h = 28;
+    x = clamp(x, w/2+8, W-w/2-8); y = Math.max(90, y);
+    rr(x-w/2, y-h, w, h, 8); ctx.fillStyle = bub.enemy ? 'rgba(60,16,28,.95)' : 'rgba(240,244,255,.95)'; ctx.fill(); ctx.strokeStyle = bub.enemy ? C.hostile : C.amber; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x-6, y); ctx.lineTo(x, y+8); ctx.lineTo(x+6, y); ctx.closePath(); ctx.fillStyle = bub.enemy ? 'rgba(60,16,28,.95)' : 'rgba(240,244,255,.95)'; ctx.fill();
+    T(bub.text, x, y-h/2+1, { s:15, f:FD, w:600, a:'center', b:'middle', c: bub.enemy ? '#ffd0d8' : '#141b31' }); ctx.globalAlpha = 1;
+  }
+}
 /* ---------------- main draw ---------------- */
 function draw(){
-  HR = [];
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.fillStyle = C.void; ctx.fillRect(0,0,W,H);
-  drawStars();
+  HR = []; TIPS = []; TIP_MODAL = false;
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  drawBG(); drawStars();
   switch(UI.screen){
     case 'title': drawTitle(); break;
     case 'select': drawHangar(); break;
@@ -63,24 +95,25 @@ function draw(){
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
-  for(const p of PTR){ if(!p.xr || !p.on) continue; ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
+  drawTip();
+  for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
 }
 
 /* ---------------- title & menus ---------------- */
 function drawTitle(){
-  const g = ctx.createRadialGradient(1180,420,20,1180,420,520); g.addColorStop(0,'rgba(255,181,71,.22)'); g.addColorStop(1,'rgba(255,181,71,0)');
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  ctx.beginPath(); ctx.arc(1240,470,230,0,7); const pg = ctx.createLinearGradient(1040,280,1440,680); pg.addColorStop(0,'#3b2a3f'); pg.addColorStop(1,'#0b0f1d'); ctx.fillStyle = pg; ctx.fill();
-  ctx.beginPath(); ctx.ellipse(1240,470,360,70,-.25,0,7); ctx.strokeStyle = hexA(C.amber,.35); ctx.lineWidth = 3; ctx.stroke();
+  const t = performance.now()/1000;
+  if(!UI._fly){ try{ if(!DATA) applyMods(); UI._fly = makeShip(DATA.ships.pestrel || Object.values(DATA.ships)[0], 'p', {}); UI._fly.crew = []; }catch(e){ UI._fly = null; } }
+  if(UI._fly){ const px = ((t*55 + 1150) % 2700) - 950; drawShip(UI._fly, { x:px, y:610, w:430, h:190 }, 1, false, true); }
   label('A Fedoration courier roguelike', 110, 200, C.cyan, 'left', 20);
+  glow(380, 300, 260, C.amber, .12);
   T('VASTER', 104, 320, { s:132, f:FD, w:700, c:C.amber, ls:10 });
   T('THAN LIFE', 108, 428, { s:96, f:FD, w:700, c:C.ink, ls:12 });
-  para('Outrun the Rebuff Fleet across eight sectors and stop the Flaggship. Built for Meta Quest, playable on any screen.', 112, 486, 700, { s:21, c:C.muted });
+  para('Outrun the Rebuff Fleet across eight sectors and stop the Flaggship. Built for Meta Quest, playable on any screen.', 112, 486, 780, { s:21, c:C.muted });
   const hasSave = !!LS.get(SAVE_KEY, null);
   let y = 560; const bw = 330;
   if(hasSave){ btn(110, y, bw, 58, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 70; }
-  btn(110, y, bw, 58, 'New run', () => { applyMods(); UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI.screen = 'select'; }, { fill:!hasSave }); y += 70;
+  btn(110, y, bw, 58, 'New run', () => { applyMods(); UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.screen = 'select'; }, { fill:!hasSave }); y += 70;
   const on = MODS.filter(m=>m.enabled).length;
   btn(110, y, bw, 58, on ? `Mods (${on} on)` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }); y += 70;
   btn(110, y, 160, 58, 'Manual', () => { UI.screen = 'help'; }, { s:18 });
@@ -88,6 +121,7 @@ function drawTitle(){
   btn(110, y, bw, 58, `Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
   label('Quest: point and pull the trigger · A/X pause · B/Y map · grip recenters · right stick moves the screen', 110, H-30, C.muted, 'left', 15);
 }
+
 function classGroups(){
   const groups = {}; for(const id in DATA.ships){ const s = DATA.ships[id]; const k = s.cls || s.name; (groups[k] = groups[k] || []).push(id); }
   for(const k in groups) groups[k].sort((a,b) => (DATA.ships[a].layout||'A').localeCompare(DATA.ships[b].layout||'A'));
@@ -117,7 +151,8 @@ function drawHangar(){
   T(UI.shipName || def.name, 84, y0+118, { s:36, f:FD, w:700, c:def.color||C.amber });
   if(open && !inXR()) btn(84 + Math.min(520, ctx.measureText(UI.shipName || def.name).width + 20), y0+86, 110, 40, 'Rename', () => openRename('ship'), { s:15 });
   para(def.desc||'', 84, y0+156, 640, { s:18, lh:26, c:C.muted });
-  let temp = null; try{ temp = makeShip(def,'p',{}); }catch(e){}
+  let temp = UI._prev && UI._prev.id===sel ? UI._prev.sh : null;
+  if(!temp){ try{ temp = makeShip(def,'p',{}); }catch(e){ temp = null; } UI._prev = { id:sel, sh:temp }; }
   if(temp){
     drawShip(temp, { x:760, y:y0+70, w:760, h:240 }, 1, false, true);
     const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
@@ -215,7 +250,7 @@ function drawGame(){
   ctx.save(); if(G.shake>0) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
   drawShip(G.ship, PBOX, 1, false, false); ctx.restore();
   if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else drawQuiet();
-  drawUnits(); drawProjectiles(); drawFX();
+  drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
   drawRoster(); if(G.enemy) drawEnemyStrip();
   drawSystems(); drawArmory();
   const hint = UI.selWeapon!=null ? (DATA.weapons[G.ship.weapons[UI.selWeapon]?.id]?.heal ? 'Point at one of YOUR rooms to target the burst' : 'Point at an enemy room to target it')
@@ -230,32 +265,37 @@ function drawGame(){
 }
 function drawTopBar(){
   const s = G.ship;
-  ctx.fillStyle = hexA(C.panel,.96); ctx.fillRect(0,0,W,76); ctx.fillStyle = C.line; ctx.fillRect(0,75,W,1.5);
+  const g = ctx.createLinearGradient(0,0,0,76); g.addColorStop(0,'rgba(24,32,60,.97)'); g.addColorStop(1,'rgba(10,14,28,.97)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,76);
+  const gl = ctx.createLinearGradient(0,0,W,0); gl.addColorStop(0,hexA(C.amber,0)); gl.addColorStop(.5,hexA(C.amber,.55)); gl.addColorStop(1,hexA(C.amber,0)); ctx.fillStyle = gl; ctx.fillRect(0,75,W,2);
   label('Hull', 20, 30, C.muted, 'left', 14);
-  const n = s.maxHull, bw = 260, seg = bw/n;
-  for(let i=0;i<n;i++){ ctx.fillStyle = i < s.hull ? (s.hull/n > .5 ? C.good : s.hull/n > .25 ? C.warn : C.hostile) : C.panel2; ctx.fillRect(70+i*seg, 13, Math.max(1,seg-1.5), 22); }
+  const n = s.maxHull, bw = 260, seg = bw/n, hc = s.hull/n > .5 ? C.good : s.hull/n > .25 ? C.warn : C.hostile;
+  for(let i=0;i<n;i++){ const on_ = i < s.hull; ctx.fillStyle = on_ ? hc : '#141b31'; ctx.fillRect(70+i*seg, 13, Math.max(1,seg-1.5), 22); if(on_){ ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(70+i*seg, 13, Math.max(1,seg-1.5), 4); } }
   T(`${s.hull}/${n}`, 70+bw+8, 31, { s:18, w:600 });
+  tip(16, 8, 360, 34, 'Hull', 'Your ship\'s structural integrity. At zero, the run is over. Repair it at stores, some events and with hull repair drones.');
   label('Shld', 20, 63, C.muted, 'left', 14);
   const mx = Math.floor((s.systems.shields?.max||0)/2), ml = shieldLayers(s);
-  for(let i=0;i<Math.max(mx,0);i++){ const x = 82+i*24; ctx.beginPath(); ctx.moveTo(x,51); ctx.lineTo(x+9,59); ctx.lineTo(x,67); ctx.lineTo(x-9,59); ctx.closePath(); ctx.fillStyle = i < s.shield ? C.cyan : (i<ml ? hexA(C.cyan,.25) : C.panel2); ctx.fill(); }
+  for(let i=0;i<Math.max(mx,0);i++){ const x = 82+i*24; ctx.beginPath(); ctx.moveTo(x,51); ctx.lineTo(x+9,59); ctx.lineTo(x,67); ctx.lineTo(x-9,59); ctx.closePath(); ctx.fillStyle = i < s.shield ? C.cyan : (i<ml ? hexA(C.cyan,.25) : C.panel2); ctx.fill(); if(i < s.shield) glow(x, 59, 12, C.cyan, .35); }
   let tx = 92 + Math.max(mx,1)*24;
   if(s.super>0){ T(`+${s.super}`, tx, 64, { s:16, f:FD, w:700, c:C.good }); tx += 44; }
   label(`Evade ${evasion(s)}%`, tx, 64, evasion(s)>0 ? C.ink : C.hostile, 'left', 14);
+  tip(tx, 48, 110, 22, 'Evasion', 'Chance to dodge incoming shots. Needs powered engines and someone at the helm. Manning engines and cloaking add more.');
   const avgO2 = Math.round(s.rooms.reduce((t,r)=>t+r.o2,0)/s.rooms.length);
   label(`O2 ${avgO2}%`, tx+120, 64, avgO2<40 ? C.hostile : C.ink, 'left', 14);
-  const res = [['Scrap', G.scrap, C.amber], ['Fuel', G.fuel, G.fuel<=3?C.hostile:C.ink], ['Missiles', G.missiles, C.ink], ['Parts', G.parts, C.ink]];
-  res.forEach((r,i) => { const x = 440 + i*108; label(r[0], x, 28, C.muted, 'left', 13); T(String(r[1]), x, 64, { s:28, f:FD, w:700, c:r[2] }); });
+  const res = [['Scrap', G.scrap, C.amber, 'The currency of the galaxy. Spend it on upgrades, repairs and gear.'], ['Fuel', G.fuel, G.fuel<=3?C.hostile:C.ink, 'Each jump costs 1 fuel. Run out and you will be stranded.'], ['Missiles', G.missiles, C.ink, 'Ammo for missiles and bombs.'], ['Parts', G.parts, C.ink, 'Drone parts. Each drone deployment and hacking drone uses one.']];
+  res.forEach((r,i) => { const x = 440 + i*108; label(r[0], x, 28, C.muted, 'left', 13); T(String(r[1]), x, 64, { s:28, f:FD, w:700, c:r[2] }); tip(x-6, 10, 100, 60, r[0], r[3]); });
   const sd = sectorDef();
   label(`Sector ${G.sector} of ${R.sectors}`, 872, 22, C.muted, 'left', 12);
   label(sd.name, 872, 42, sd.color||C.cyan, 'left', 12);
   if(G.flag) label(`Base ${G.flag.baseHP} · Boss ${G.flag.phase+1}/3`, 872, 64, C.hostile, 'left', 11);
   else if(G.hazard) label(HAZARDS[G.hazard], 872, 64, G.hazard==='nebula'?C.violet:C.warn, 'left', 11);
   label('VTL drive', 1108, 28, C.muted, 'left', 12);
-  const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber);
+  const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber); if(charge>=1) glow(1258, 44, 16, C.good, .4);
+  tip(1104, 14, 160, 44, 'VTL drive', 'Charges during combat while someone flies the ship. When full you can jump away from a fight.');
   btn(1268, 12, 104, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
   btn(1380, 12, 92, 52, 'Ship', () => { G.modal = { type:'ship' }; UI.tab = UI.tab || 'systems'; });
   btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
 }
+
 function layoutShip(sh, box, facing, mini){
   const gw = sh.gw, gh = sh.gh;
   const pad = mini ? 12 : 20, nose = mini ? 30 : 56;
@@ -278,46 +318,43 @@ function sensorLevel(){ if(!G) return 3; return eff(G.ship,'sensors'); }
 function telepathic(){ return G && G.ship.crew.some(c => c.owner==='p' && DATA.races[c.race]?.telepathic); }
 function drawShip(sh, box, facing, isEnemy, mini){
   const b = layoutShip(sh, box, facing, mini), cell = b.cell, cy = (b.y0+b.y1)/2, col = sh.color;
-  const fade = sh.dead ? Math.max(0, (G?.dieT||0)/1.3) : 1;
-  const cloaked = sh.cloak?.t>0;
-  ctx.globalAlpha = fade * (cloaked ? .45 : 1);
-  const tail = facing>0 ? b.x0 : b.x1;
-  for(const dy of [-.25,.25]){ const yy = cy + dy*(b.y1-b.y0); const g = ctx.createRadialGradient(tail,yy,2,tail,yy,mini?24:44);
-    g.addColorStop(0,hexA(col,.7)); g.addColorStop(1,hexA(col,0)); ctx.fillStyle = g; ctx.fillRect(tail-60,yy-50,120,100); }
+  const fade = sh.dead ? Math.max(0, (G?.dieT||0)/1.3) : 1; if(fade<=0) return;
+  const cloaked = sh.cloak?.t>0, t = G?.time ?? performance.now()/1000, live = !!G && !G.paused && !G.modal && UI.screen==='game';
+  const baseA = fade * (cloaked ? .38 : 1); ctx.globalAlpha = baseA;
+  engineGlow(sh, t);
   const img = getImg(sh.image);
-  if(img){ ctx.drawImage(img, b.x0 - (facing<0?b.nose:0), b.y0, (b.x1-b.x0)+b.nose, b.y1-b.y0); }
-  else { hullPath(b); const hg = ctx.createLinearGradient(0,b.y0,0,b.y1); hg.addColorStop(0,'#1b2440'); hg.addColorStop(1,'#10162a');
-    ctx.fillStyle = hg; ctx.fill(); ctx.lineWidth = mini?2:3; ctx.strokeStyle = hexA(col,.8); ctx.stroke(); }
+  if(img){ ctx.drawImage(img, b.x0 - (facing<0?b.nose:0), b.y0, (b.x1-b.x0)+b.nose, b.y1-b.y0);
+    sh._rects.forEach(q => { ctx.fillStyle = 'rgba(24,33,59,.92)'; ctx.fillRect(q.x,q.y,q.w,q.h); ctx.strokeStyle = '#4b5d8e'; ctx.lineWidth = 2; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2); }); }
+  else { const art = shipArt(sh, mini); if(art) ctx.drawImage(art.c, b.x0 + art.dx, b.y0 + art.dy); }
   const vis = !isEnemy || mini ? 3 : sensorLevel();
   const ownIn = new Set(); if(isEnemy) for(const c of sh.crew) if(c.owner==='p') ownIn.add(c.room);
-  const selW = UI.selWeapon!=null ? G?.ship.weapons[UI.selWeapon] : null; const healSel = selW && DATA.weapons[selW.id]?.heal;
+  const selW = (!mini && UI.selWeapon!=null && G) ? G.ship.weapons[UI.selWeapon] : null; const healSel = selW && DATA.weapons[selW.id]?.heal;
   sh.rooms.forEach((r,i) => {
-    const q = sh._rects[i], s = r.sys ? sh.systems[r.sys] : null, seen = vis>=1 || ownIn.has(i);
-    ctx.fillStyle = seen ? C.room : '#141a2c'; ctx.fillRect(q.x,q.y,q.w,q.h);
-    if(seen){
-      if(r.o2 < 60){ ctx.fillStyle = hexA(C.hostile, (60-r.o2)/60*.4); ctx.fillRect(q.x,q.y,q.w,q.h); }
-      ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
-      for(let gx=1; gx<r.w; gx++){ ctx.beginPath(); ctx.moveTo(q.x+gx*cell,q.y); ctx.lineTo(q.x+gx*cell,q.y+q.h); ctx.stroke(); }
-      for(let gy=1; gy<r.h; gy++){ ctx.beginPath(); ctx.moveTo(q.x,q.y+gy*cell); ctx.lineTo(q.x+q.w,q.y+gy*cell); ctx.stroke(); }
-      if(s && s.dmg>0){ ctx.fillStyle = hexA(C.hostile, .14 + .25*s.dmg/s.max); ctx.fillRect(q.x,q.y,q.w,q.h); }
+    const q = sh._rects[i]; if(!q) return; const s = r.sys ? sh.systems[r.sys] : null, seen = vis>=1 || ownIn.has(i);
+    if(!seen){ ctx.fillStyle = 'rgba(8,12,24,.85)'; ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); if(!mini) T('?', q.x+q.w/2, q.y+q.h/2+6, { s:18, f:FD, w:700, a:'center', c:'#2f3a5c' }); }
+    else if(!mini){
+      if(r.o2 < 60){ ctx.fillStyle = hexA(C.hostile, (60-r.o2)/60*.38); ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); }
+      if(s && s.dmg>0){ ctx.fillStyle = hexA(C.hostile, (.12 + .22*s.dmg/s.max)*(.75 + .25*Math.sin(t*6))); ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); }
       if(s && s.ionT>0){ ctx.save(); ctx.beginPath(); ctx.rect(q.x,q.y,q.w,q.h); ctx.clip(); ctx.strokeStyle = hexA(C.cyan,.45); ctx.lineWidth = 3;
-        for(let k=-q.h;k<q.w;k+=14){ ctx.beginPath(); ctx.moveTo(q.x+k,q.y+q.h); ctx.lineTo(q.x+k+q.h,q.y); ctx.stroke(); } ctx.restore(); }
-      for(let f=0; f<r.fire; f++){ const fx_ = q.x + ((f % r.w)+.5)*cell, fy = q.y + (Math.floor(f / r.w)+.5)*cell; const fl = Math.sin((G?.time||0)*12 + f*2)*3;
-        ctx.beginPath(); ctx.moveTo(fx_-cell*.22, fy+cell*.25); ctx.quadraticCurveTo(fx_-cell*.25, fy-cell*.05, fx_, fy-cell*.3-fl); ctx.quadraticCurveTo(fx_+cell*.25, fy-cell*.05, fx_+cell*.22, fy+cell*.25); ctx.closePath();
-        ctx.fillStyle = hexA(C.fire,.85); ctx.fill(); }
-      for(let k=0; k<r.breach; k++){ const bx = q.x + q.w - (k+.5)*Math.min(cell*.5, 22) - 4, by = q.y + q.h - 12; ctx.beginPath(); ctx.arc(bx, by, Math.min(9, cell*.14), 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.strokeStyle = C.hostile; ctx.lineWidth = 2; ctx.stroke(); }
-    } else if(!mini){ T('?', q.x+q.w/2, q.y+q.h/2+6, { s:18, f:FD, w:700, a:'center', c:'#2f3a5c' }); }
+        for(let k=-q.h;k<q.w;k+=14){ const o = (t*30)%14; ctx.beginPath(); ctx.moveTo(q.x+k+o,q.y+q.h); ctx.lineTo(q.x+k+o+q.h,q.y); ctx.stroke(); } ctx.restore(); }
+      for(let f=0; f<r.fire; f++){ const fx_ = q.x + ((f % r.w)+.5)*cell, fy = q.y + (Math.floor(f / r.w)+.6)*cell; const fl = Math.sin(t*12 + f*2)*cell*.05;
+        glow(fx_, fy, cell*.5, '#ff7a2d', .45);
+        ctx.beginPath(); ctx.moveTo(fx_-cell*.24, fy+cell*.25); ctx.quadraticCurveTo(fx_-cell*.3, fy-cell*.05, fx_+fl, fy-cell*.38); ctx.quadraticCurveTo(fx_+cell*.3, fy-cell*.05, fx_+cell*.24, fy+cell*.25); ctx.closePath(); ctx.fillStyle = hexA('#ff6a2d',.9); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(fx_-cell*.12, fy+cell*.22); ctx.quadraticCurveTo(fx_-cell*.14, fy, fx_-fl, fy-cell*.18); ctx.quadraticCurveTo(fx_+cell*.14, fy, fx_+cell*.12, fy+cell*.22); ctx.closePath(); ctx.fillStyle = '#ffd27a'; ctx.fill();
+        if(live && Math.random()<.12) ember(fx_, fy - cell*.25); }
+      for(let k=0; k<r.breach; k++){ const bx = q.x + q.w - (k+.5)*Math.min(cell*.5, 22) - 4, by = q.y + q.h - 12; ctx.beginPath(); ctx.arc(bx, by, Math.min(9, cell*.14), 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 2; ctx.stroke(); if(live && Math.random()<.25) vent(bx, by, (Math.random()-.5), -1); }
+    }
     const hov = !mini && hovered(q.x,q.y,q.w,q.h);
     const targeting = !mini && ((isEnemy && ((selW && !healSel) || UI.mode==='tele' || UI.mode==='hack')) || (!isEnemy && healSel));
-    ctx.lineWidth = 2; ctx.strokeStyle = (targeting && hov) ? C.hostile : (hov && UI.selCrew) ? C.amber : '#3a4a72'; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2);
-    if(r.sys){
+    if(targeting && hov){ ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2); glow(q.x+q.w/2, q.y+q.h/2, Math.max(q.w,q.h)*.6, C.hostile, .15); }
+    else if(hov && UI.selCrew){ ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2); }
+    if(r.sys && !mini){
       const ic = SYSC[r.sys]||C.ink, inst = !!s;
-      ctx.fillStyle = hexA(ic, inst ? .9 : .25); ctx.fillRect(q.x+3,q.y+3,mini?3:5,Math.min(q.h-6, mini?12:22));
-      if(!mini) T(SYSS[r.sys], q.x+11, q.y+17, { s: q.w < 56 ? 9 : 12, f:FD, w:700, c:inst ? ic : hexA(ic,.35), ls: q.w < 56 ? 0 : 1 });
-      if(!mini && inst && seen && s.dmg>0){ const work = sh.crew.some(c => c.room===i && !c.path.length && crewSide(c)===sh.side); if(work) bar(q.x+6, q.y+q.h-10, q.w-12, 6, s.rep, C.good, 'rgba(0,0,0,.5)'); }
-      if(!mini && sh.hacked && sh.hacked.room===i){ ctx.strokeStyle = sh.hacked.pulseT>0 ? '#ff9de2' : hexA('#ff9de2',.6); ctx.lineWidth = sh.hacked.pulseT>0 ? 4 : 2; ctx.strokeRect(q.x+4,q.y+4,q.w-8,q.h-8); T('HACK', q.x+q.w-6, q.y+16, { s:11, f:FD, w:700, a:'right', c:'#ff9de2' }); }
+      T(SYSS[r.sys], q.x+11, q.y+17, { s: q.w < 56 ? 9 : 12, f:FD, w:700, c:inst ? ic : hexA(ic,.35), ls: q.w < 56 ? 0 : 1 });
+      if(inst && seen && s.dmg>0){ const work = sh.crew.some(c => c.room===i && !c.path.length && crewSide(c)===sh.side); if(work) bar(q.x+6, q.y+q.h-10, q.w-12, 6, s.rep, C.good, 'rgba(0,0,0,.5)'); else if(Math.sin(t*5)>0) T('!', q.x+q.w-10, q.y+18, { s:16, f:FD, w:700, c:C.hostile }); }
+      if(sh.hacked && sh.hacked.room===i){ const on_ = sh.hacked.pulseT>0; ctx.strokeStyle = on_ ? '#ff9de2' : hexA('#ff9de2',.6); ctx.lineWidth = on_ ? 4 : 2; ctx.strokeRect(q.x+4,q.y+4,q.w-8,q.h-8); if(on_) glow(q.x+q.w/2, q.y+q.h/2, q.w*.6, '#ff9de2', .3); T('HACK', q.x+q.w-6, q.y+16, { s:11, f:FD, w:700, a:'right', c:'#ff9de2' }); }
     }
-    if(!mini){
+    if(!mini && G){
       if(isEnemy){
         if(selW && !healSel) region(q.x,q.y,q.w,q.h, () => { selW.target = i; UI.selWeapon = null; });
         else if(UI.mode==='tele') region(q.x,q.y,q.w,q.h, () => { if(teleSend(G.ship, G.enemy, i)) UI.mode = null; else toast('Gather crew in the teleporter room first, and wait for it to charge.'); });
@@ -329,52 +366,48 @@ function drawShip(sh, box, facing, isEnemy, mini){
       }
     }
   });
-  // doors
   if(!mini) for(const d of sh.doors){
     const a = cellXY(sh, d.ca[0], d.ca[1]), bb = cellXY(sh, d.cb[0], d.cb[1]);
     const mx = (a.x+bb.x)/2, my = (a.y+bb.y)/2, horiz = Math.abs(a.y-bb.y) < 1;
-    const L = cell*.42, Th = Math.max(5, cell*.11);
-    const w = horiz ? Th : L, h = horiz ? L : Th;
-    const st = d.broken>0 ? C.hostile : doorOpen(d) ? C.good : (d.b<0 ? '#e0b070' : '#c9a27e');
-    if(doorOpen(d)){ ctx.strokeStyle = st; ctx.lineWidth = 2; ctx.strokeRect(mx-w/2, my-h/2, w, h); }
-    else { ctx.fillStyle = st; ctx.fillRect(mx-w/2, my-h/2, w, h); }
-    if(!isEnemy && canDoors(sh)) region(mx-Math.max(w,22)/2, my-Math.max(h,22)/2, Math.max(w,22), Math.max(h,22), () => { d.open = !d.open; d.broken = 0; });
+    const L = cell*.46, Th = Math.max(5, cell*.12), open = doorOpen(d);
+    const st = d.broken>0 ? C.hostile : d.b<0 ? '#e0b070' : '#b89f74';
+    ctx.fillStyle = '#0b0f1c'; if(horiz) ctx.fillRect(mx-Th/2-1, my-L/2-2, Th+2, L+4); else ctx.fillRect(mx-L/2-2, my-Th/2-1, L+4, Th+2);
+    const gap = open ? L*.36 : 0; ctx.fillStyle = st;
+    if(horiz){ ctx.fillRect(mx-Th/2, my-L/2, Th, L/2-gap); ctx.fillRect(mx-Th/2, my+gap, Th, L/2-gap); }
+    else { ctx.fillRect(mx-L/2, my-Th/2, L/2-gap, Th); ctx.fillRect(mx+gap, my-Th/2, L/2-gap, Th); }
+    if(open && !d.broken) glow(mx, my, L*.4, C.good, .25); if(d.broken>0 && Math.random()<.05 && live) sparks(mx, my, '#ffb547', 3);
+    if(!isEnemy && canDoors(sh) && G) region(mx-Math.max(horiz?Th:L,22)/2, my-Math.max(horiz?L:Th,22)/2, Math.max(horiz?Th:L,22), Math.max(horiz?L:Th,22), () => { d.open = !d.open; d.broken = 0; });
   }
-  // crew
-  const rad = Math.max(5, Math.min(15, cell*.24));
+  const rad = Math.max(5, Math.min(15, cell*.26));
   const seeCrew = !isEnemy || mini || sensorLevel()>=2 || telepathic();
   for(const c of sh.crew){
     if(isEnemy && !seeCrew && c.owner!=='p' && !ownIn.has(c.room)){ c._sx = null; continue; }
-    const p = cellXY(sh, c.x, c.y); c._sx = p.x; c._sy = p.y + (mini?0:3);
-    const race = raceOf(c), hostileHere = crewSide(c)!==sh.side;
-    ctx.beginPath();
-    if(c.drone){ ctx.moveTo(p.x, p.y-rad); ctx.lineTo(p.x+rad, p.y); ctx.lineTo(p.x, p.y+rad); ctx.lineTo(p.x-rad, p.y); ctx.closePath(); }
-    else ctx.arc(p.x, p.y, rad, 0, 7);
-    ctx.fillStyle = c.owner==='e' && !mini ? (c.drone ? '#ff9de2' : hexA(C.hostile,.9)) : (c.drone ? '#f0a6ff' : race.color); ctx.fill();
+    const p = cellXY(sh, c.x, c.y); const px = p.x, py = p.y + (mini?0:2);
+    const face = c._sx!=null && Math.abs(px - c._sx) > .05 ? Math.sign(px - c._sx) : (c._face || (isEnemy ? -1 : 1)); c._face = face; c._sx = px; c._sy = py;
+    if(!mini && UI.selCrew===c.id){ ctx.beginPath(); ctx.ellipse(px, py+rad*.95, rad*1.25, rad*.45, 0, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); glow(px, py+rad*.9, rad*1.3, C.amber, .3); }
+    drawCrewSprite(px, py, rad, c, { hostile: c.owner==='e' && !mini, face });
     if(!mini){
-      ctx.beginPath(); ctx.arc(p.x,p.y,rad+4,-Math.PI/2,-Math.PI/2 + Math.PI*2*clamp(c.hp/c.maxHp,0,1)); ctx.strokeStyle = c.hp/c.maxHp>.5 ? C.good : c.hp/c.maxHp>.25 ? C.warn : C.hostile; ctx.lineWidth = 3; ctx.stroke();
-      if(c.mcT>0){ ctx.beginPath(); ctx.arc(p.x,p.y,rad+8,0,7); ctx.strokeStyle = C.violet; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); }
-      if(!c.drone) T((c.name||'?')[0], p.x, p.y+1, { s:Math.round(rad), f:FD, w:700, a:'center', b:'middle', c:C.void });
-      if(c.stunT>0) T('z', p.x+rad, p.y-rad, { s:14, f:FD, w:700, c:C.cyan });
-      if(UI.selCrew===c.id){ ctx.beginPath(); ctx.arc(p.x,p.y,rad+9,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke(); }
-      if(hostileHere && c.owner==='p') { ctx.beginPath(); ctx.arc(p.x,p.y,rad+2,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5; ctx.stroke(); }
-      if(controlled(c)) region(p.x-rad-6, p.y-rad-6, rad*2+12, rad*2+12, () => { UI.selCrew = UI.selCrew===c.id ? null : c.id; UI.selWeapon = null; UI.mode = null; });
-      else if(UI.mode==='mind' && crewSide(c)!=='p') region(p.x-rad-6, p.y-rad-6, rad*2+12, rad*2+12, () => { if(mindControl(G.ship, c)) UI.mode = null; });
+      const hw = rad*1.9, fr = clamp(c.hp/c.maxHp,0,1); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(px-hw/2-1, py-rad*1.6-1, hw+2, 5); ctx.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; ctx.fillRect(px-hw/2, py-rad*1.6, hw*fr, 3);
+      if(c.mcT>0){ ctx.beginPath(); ctx.arc(px,py,rad+7,0,7); ctx.strokeStyle = C.violet; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); }
+      if(c.stunT>0) T('z', px+rad, py-rad, { s:14, f:FD, w:700, c:C.cyan });
+      if(crewSide(c)!==sh.side && c.owner==='p'){ ctx.beginPath(); ctx.arc(px,py,rad+3,0,7); ctx.strokeStyle = hexA(C.amber,.6); ctx.lineWidth = 1.5; ctx.stroke(); }
+      if(G && controlled(c)) region(px-rad-6, py-rad-8, rad*2+12, rad*2+14, () => { UI.selCrew = UI.selCrew===c.id ? null : c.id; UI.selWeapon = null; UI.mode = null; });
+      else if(G && UI.mode==='mind' && crewSide(c)!=='p') region(px-rad-6, py-rad-8, rad*2+12, rad*2+14, () => { if(mindControl(G.ship, c)) UI.mode = null; });
     }
   }
-  // shields
-  if(!mini){ const scx = (b.x0+b.x1)/2 + facing*b.nose*.3; const rx = (b.x1-b.x0)/2 + b.nose*.55 + 14, ry = (b.y1-b.y0)/2 + 26;
-    if(sh.shield>0){ ctx.beginPath(); ctx.ellipse(scx, cy, rx, ry, 0, 0, 7); ctx.fillStyle = hexA(C.cyan, .03 + .025*sh.shield); ctx.fill(); ctx.strokeStyle = hexA(C.cyan, .35 + .1*sh.shield); ctx.lineWidth = 1.5 + sh.shield*1.2; ctx.stroke(); }
-    if(sh.super>0){ ctx.beginPath(); ctx.ellipse(scx, cy, rx+10, ry+10, 0, 0, 7); ctx.strokeStyle = hexA(C.good, .5); ctx.lineWidth = 2 + sh.super*.6; ctx.stroke(); }
-  }
-  // targets
-  if(!mini && G){ G.ship.weapons.forEach((w,wi) => { if(w.target==null) return; const heal = DATA.weapons[w.id]?.heal; if(heal === !isEnemy){}
+  const scx = (b.x0+b.x1)/2 + facing*b.nose*.3, rx = (b.x1-b.x0)/2 + b.nose*.55 + 18, ry = (b.y1-b.y0)/2 + 30;
+  sh._shieldE = { cx:scx, cy, rx, ry };
+  if(!mini) drawShieldBubble(scx, cy, rx, ry, sh.shield, sh.super, t);
+  if(cloaked){ ctx.save(); ctx.globalAlpha = .18; ctx.strokeStyle = C.cyan; ctx.lineWidth = 1; for(let yy = b.y0 + ((t*40)%8); yy < b.y1; yy += 8){ ctx.beginPath(); ctx.moveTo(b.x0 - (facing<0?b.nose:0), yy); ctx.lineTo(b.x1 + (facing>0?b.nose:0), yy); ctx.stroke(); } ctx.restore(); }
+  if(!mini && G){ G.ship.weapons.forEach((w,wi) => { if(w.target==null) return; const heal = DATA.weapons[w.id]?.heal;
       if((isEnemy && heal) || (!isEnemy && !heal)) return; const q = sh._rects[w.target]; if(!q) return; const x = q.x+q.w/2 + (wi-1.5)*12, y = q.y+q.h/2;
-      ctx.strokeStyle = heal ? C.good : C.amber; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x,y,15,0,7); ctx.moveTo(x-22,y); ctx.lineTo(x-8,y); ctx.moveTo(x+8,y); ctx.lineTo(x+22,y); ctx.moveTo(x,y-22); ctx.lineTo(x,y-8); ctx.moveTo(x,y+8); ctx.lineTo(x,y+22); ctx.stroke();
-      T(String(wi+1), x, y+1, { s:14, f:FD, w:700, a:'center', b:'middle', c: heal ? C.good : C.amber }); }); }
+      const tc = heal ? C.good : C.amber; ctx.save(); ctx.translate(x,y); ctx.rotate(t*.8); ctx.strokeStyle = tc; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0,0,15,0,7);
+      for(let k=0;k<4;k++){ ctx.moveTo(Math.cos(k*1.571)*9, Math.sin(k*1.571)*9); ctx.lineTo(Math.cos(k*1.571)*22, Math.sin(k*1.571)*22); } ctx.stroke(); ctx.restore();
+      T(String(wi+1), x, y+1, { s:14, f:FD, w:700, a:'center', b:'middle', c:tc }); }); }
   ctx.globalAlpha = 1;
   if(!mini){ label(sh.name, box.x+8, box.y+16, hexA(col,.9), 'left', 15); if(cloaked) label(`Cloaked ${sh.cloak.t.toFixed(0)}s`, box.x+box.w-8, box.y+16, C.cyan, 'right', 14); }
 }
+
 function moveSelected(sh, ri_){
   const c = sh.crew.find(x => x.id===UI.selCrew);
   if(!c){ toast('Crew can only walk within the ship they are on. Use the teleporter to cross.'); UI.selCrew = null; return; }
@@ -403,6 +436,7 @@ function drawRoster(){
     const where = c.mcT>0 ? 'Controlled!' : s!==G.ship ? 'Enemy ship' : c.path.length ? 'Moving' : (s.rooms[c.room]?.sys ? SYSS[s.rooms[c.room].sys] : 'Hall');
     if(cw>=110) T(where, x+cw-8, y0+28, { s:12, a:'right', c: s!==G.ship || c.mcT>0 ? C.hostile : C.muted });
     bar(x+10, y0+46, cw-20, 8, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
+    tip(x, y0, cw, 66, `${c.name} · ${race.name||''}`, `${race.desc||''} Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}.`);
     if(c.mcT<=0) region(x,y0,cw,66, () => { UI.selCrew = sel ? null : c.id; UI.selWeapon = null; UI.mode = null; }); });
 }
 function drawEnemyStrip(){
@@ -444,7 +478,8 @@ function drawSystems(){
   const subW = 176, colW = Math.min(100, (w - 28 - subW)/Math.max(1,list.length));
   list.forEach((k,i) => {
     const cx = x+14 + i*colW, sy = s.systems[k], e = eff(s,k), bonus = bonusPower(s,k), cw = colW-8;
-    T(SYSS[k], cx + cw/2, y+60, { s:13, f:FD, w:700, a:'center', c:SYSC[k], ls:1 });
+    drawSysIcon(ctx, k, cx + 12, y+55, 15, SYSC[k]); T(SYSS[k], cx + 24, y+60, { s:13, f:FD, w:700, c:SYSC[k], ls:1 });
+    tip(cx, y+40, cw, 160, SYSN[k], `${sysDesc(k)} Level ${sy.max}, power ${sy.power}${bonus?` (+${bonus} Voltan)`:''}${sy.dmg?`, ${sy.dmg} damaged`:''}.`);
     const areaH = 108, bh = Math.min(20, (areaH - (sy.max-1)*3)/sy.max), bw = Math.min(46, cw-10), bx = cx + cw/2 - bw/2;
     for(let b=0;b<sy.max;b++){ const by = y+70 + areaH - (b+1)*(bh+3);
       let fill = null, stroke = C.line;
@@ -487,6 +522,7 @@ function drawArmory(){
     const d = DATA.weapons[wp.id]; if(!d) continue; const sel = UI.selWeapon===i, ready = wp.on && wp.charge >= d.charge;
     rr(cx,cy,cw,ch,8); ctx.fillStyle = sel ? hexA(C.amber,.14) : C.panel2; ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : wp.on ? hexA(C.amber,.5) : C.line; ctx.stroke();
     para(`${i+1} ${d.name}`, cx+8, cy+20, cw-14, { s:14, f:FD, w:700, lh:16, max:2, c: wp.on ? C.ink : C.muted });
+    tip(cx, cy, cw, 96, d.name, `${d.type}. ${d.heal ? 'Heals '+d.heal+' per crew.' : d.type==='bomb' ? (d.sysDamage||0)+' system damage, ignores shields.' : (d.damage||0)+' damage × '+(d.shots||1)+(d.type==='beam' ? ', hits '+(d.rooms||2)+' rooms' : '')+'.'} ${d.power} power, ${d.charge}s charge.${d.fire?' Can start fires.':''}${d.breach?' Can breach hulls.':''}${d.type==='missile'?' Ignores shields, uses a missile.':''}${d.type==='ion'?' Drains shields and systems.':''}${d.desc?' '+d.desc:''}`);
     const tc = d.type==='missile'||d.type==='bomb' ? '#ffffff' : d.type==='ion' ? C.cyan : d.type==='beam' ? C.violet : d.type==='flak' ? C.warn : C.amber;
     label(d.type, cx+8, cy+52, tc, 'left', 11);
     T(d.heal ? `heal ${d.heal}` : d.type==='bomb' ? `${d.sysDamage||0} sys` : `${d.damage}×${d.shots||1}`, cx+cw-8, cy+52, { s:12, a:'right', c:C.muted });
@@ -514,6 +550,7 @@ function drawArmory(){
     const bp = DATA.drones[dr.id]; if(!bp) continue;
     rr(cx,cy,dw,86,8); ctx.fillStyle = C.panel2; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = dr.on ? '#f0a6ff' : C.line; ctx.stroke();
     T(bp.name, cx+8, cy+20, { s:13, f:FD, w:700, c: dr.on ? C.ink : C.muted });
+    tip(cx, cy, dw, 44, bp.name, `${bp.kind} drone, ${bp.power} power. ${{attack:'Orbits the enemy and fires on its rooms.',defense:'Shoots down incoming missiles and drones.',anti:'Hunts enemy drones.',internal:bp.role==='repair'?'Walks your ship repairing systems.':'Walks your ship fighting intruders.',boarding:'Rams the enemy and fights inside it.',hull:'Repairs hull out of combat.'}[bp.kind]||''} ${bp.desc||''}`);
     for(let p=0;p<bp.power;p++){ rr(cx+8+p*14, cy+28, 11, 8, 2); ctx.fillStyle = dr.on ? '#f0a6ff' : C.line; ctx.fill(); }
     const status = !dr.on ? (bp.kind==='hull' ? 'Use out of combat' : 'Off') : dr.unit ? 'Deployed' : (G.parts<=0 && !hasAug(s,'recovery')) ? 'No parts!' : ['attack','defense','anti','boarding'].includes(bp.kind) && !G.enemy ? 'Waits for combat' : 'Deploying';
     T(status, cx+dw-8, cy+36, { s:11, a:'right', c: dr.unit ? C.good : C.muted });
@@ -527,9 +564,14 @@ function drawArmory(){
 function unitPos(u){ const s = shipBySide(u.orbit); const b = s?._b; if(!b) return { x:800, y:330 };
   const cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2, rx = (b.x1-b.x0)/2 + b.nose*.6 + 40, ry = (b.y1-b.y0)/2 + 44;
   return { x: cx + Math.cos(u.ang)*rx, y: cy + Math.sin(u.ang)*ry }; }
-function drawUnits(){ for(const u of G.units){ const p = unitPos(u); u._x = p.x; u._y = p.y; const bp = DATA.drones[u.bp];
-  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(u.ang); ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(-7,7); ctx.lineTo(-3,0); ctx.lineTo(-7,-7); ctx.closePath();
-  ctx.fillStyle = u.side==='p' ? (bp?.kind==='defense' ? C.cyan : '#f0a6ff') : C.hostile; ctx.fill(); ctx.restore(); } }
+function drawUnits(){ const t = G.time; for(const u of G.units){ const p = unitPos(u); u._x = p.x; u._y = p.y; const bp = DATA.drones[u.bp];
+  const col = u.side==='p' ? (bp?.kind==='defense' ? C.cyan : '#f0a6ff') : C.hostile;
+  glow(p.x, p.y, 16, col, .45);
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(u.ang + Math.PI/2);
+  ctx.fillStyle = '#2a3150'; ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-8,8); ctx.lineTo(-4,0); ctx.lineTo(-8,-8); ctx.closePath(); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(2,0,2.5,0,7); ctx.fill();
+  ctx.strokeStyle = hexA(col,.6); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0,0,14,t*6,t*6+1); ctx.stroke(); ctx.restore(); } }
+
 function projOrigin(p){
   if(p._ox==null){
     if(p.unit){ const u = G.units.find(x=>x.id===p.unit); if(u && u._x!=null){ p._ox = u._x; p._oy = u._y; } }
@@ -539,88 +581,136 @@ function projOrigin(p){
   return { x:p._ox, y:p._oy };
 }
 function drawProjectiles(){
+  const live = !G.paused && !G.modal;
   for(const p of G.proj){
     if(p.t<0) continue;
     const dst = shipBySide(p.to); if(!dst) continue;
-    const a = projOrigin(p), b = roomCenter(dst, p.room), d = p.d, k = clamp(p.t/p.dur,0,1);
-    if(d.type==='beam'){ ctx.strokeStyle = hexA(d.fire ? C.fire : d.crewDamage ? C.good : C.violet, 1-k*.6); ctx.lineWidth = 6*(1-k)+2;
-      for(const r of (p.rooms||[p.room])){ const c = roomCenter(dst, r); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(c.x,c.y); ctx.stroke(); } continue; }
-    if(d.type==='bomb' || d.heal){ ctx.beginPath(); ctx.arc(b.x, b.y, 8 + k*20, 0, 7); ctx.strokeStyle = hexA(d.heal ? C.good : '#ffffff', 1-k); ctx.lineWidth = 3; ctx.stroke(); p._x = b.x; p._y = b.y; continue; }
-    const x = a.x + (b.x-a.x)*k, y = a.y + (b.y-a.y)*k - Math.sin(k*Math.PI)*(p.from==='h'?0:60); p._x = x; p._y = y;
-    const kind = projKind(p);
-    const col = kind==='hack' ? '#ff9de2' : kind==='bdrone' ? '#f0a6ff' : kind==='asteroid' ? '#9a8a7a' : d.type==='ion' ? C.cyan : d.type==='missile' ? '#ffffff' : d.type==='flak' ? C.warn : (p.from==='p' ? C.amber : C.hostile);
-    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x,y, kind==='asteroid'?9 : kind==='missile'||d.type==='missile'||kind==='hack'||kind==='bdrone' ? 7 : 5, 0, 7); ctx.fill();
-    const kk = Math.max(0,k-.06), tx = a.x + (b.x-a.x)*kk, ty = a.y + (b.y-a.y)*kk - Math.sin(kk*Math.PI)*(p.from==='h'?0:60);
-    ctx.strokeStyle = hexA(col,.5); ctx.lineWidth = d.type==='missile'?4:3; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(x,y); ctx.stroke();
+    const a = projOrigin(p), d = p.d, k = clamp(p.t/p.dur,0,1), kind = projKind(p);
+    let b = roomCenter(dst, p.room);
+    const blockable = (dst.shield>0 && ['laser','ion','flak'].includes(d.type)) || (dst.super>0 && d.type!=='bomb');
+    if(blockable && dst._shieldE){ const e = ellipseEdge(dst, a.x, a.y); if(e) b = e; }
+    if(d.type==='beam'){
+      const col = d.fire ? C.fire : d.crewDamage ? C.good : C.violet; const wob = Math.sin(G.time*60)*2;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for(const r of (p.rooms||[p.room])){ let c = roomCenter(dst, r); if(blockable && dst._shieldE){ const e = ellipseEdge(dst, a.x, a.y); if(e) c = e; }
+        ctx.strokeStyle = hexA(col, .35*(1-k*.5)); ctx.lineWidth = 16*(1-k)+4; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(c.x,c.y+wob); ctx.stroke();
+        ctx.strokeStyle = hexA('#ffffff', .9*(1-k*.6)); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(c.x,c.y+wob); ctx.stroke();
+        ctx.drawImage(glowSprite(col), c.x-26, c.y-26, 52, 52); if(live && Math.random()<.4) sparks(c.x, c.y, col, 2); }
+      ctx.drawImage(glowSprite(col), a.x-20, a.y-20, 40, 40); ctx.restore(); p._x = b.x; p._y = b.y; continue; }
+    if(d.type==='bomb' || d.heal){ const col = d.heal ? C.good : '#ffffff'; ctx.beginPath(); ctx.arc(b.x, b.y, 8 + k*24, 0, 7); ctx.strokeStyle = hexA(col, 1-k); ctx.lineWidth = 3; ctx.stroke(); glow(b.x, b.y, 30*(1-k)+8, d.heal ? C.good : C.violet, .6); p._x = b.x; p._y = b.y; continue; }
+    const arc = (d.type==='missile' || kind==='hack' || kind==='bdrone') ? 50 : 0;
+    const x = a.x + (b.x-a.x)*k, y = a.y + (b.y-a.y)*k - Math.sin(k*Math.PI)*arc; p._x = x; p._y = y;
+    const kk = Math.max(0,k-.03), px_ = a.x + (b.x-a.x)*kk, py_ = a.y + (b.y-a.y)*kk - Math.sin(kk*Math.PI)*arc;
+    const ang = Math.atan2(y-py_, x-px_);
+    if(kind==='asteroid'){ ctx.save(); ctx.translate(x,y); ctx.rotate(G.time*2 + (p.id?.charCodeAt?.(0)||0)); drawRock(ctx, 0, 0, 9, srng(hashStr(p.id||'a'))); ctx.restore(); if(live && Math.random()<.4) trail(x, y, '#6a6055'); continue; }
+    if(kind==='hack' || kind==='bdrone'){ const col = kind==='hack' ? '#ff9de2' : '#f0a6ff'; glow(x,y,16,col,.6); ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle = '#2a3150'; ctx.fillRect(-8,-5,16,10); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(-8,-5,16,10); ctx.restore(); if(live) trail(x, y, '#9a8ab0'); continue; }
+    const col = d.type==='ion' ? C.cyan : d.type==='missile' ? '#ffd9a0' : d.type==='flak' ? C.warn : (p.from==='p' ? C.amber : C.hostile);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if(d.type==='missile'){ ctx.restore(); if(live){ trail(x - Math.cos(ang)*8, y - Math.sin(ang)*8); } glow(x - Math.cos(ang)*9, y - Math.sin(ang)*9, 14, '#ff8a3d', .8);
+      ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle = '#d8dce8'; ctx.beginPath(); ctx.moveTo(9,0); ctx.lineTo(3,-3.5); ctx.lineTo(-8,-3.5); ctx.lineTo(-8,3.5); ctx.lineTo(3,3.5); ctx.closePath(); ctx.fill(); ctx.fillStyle = C.hostile; ctx.fillRect(-8,-5,4,10); ctx.restore(); continue; }
+    if(d.type==='ion'){ ctx.drawImage(glowSprite(C.cyan), x-16, y-16, 32, 32); ctx.strokeStyle = 'rgba(200,250,255,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); for(let i=0;i<3;i++){ const r1 = Math.random()*6.28; ctx.moveTo(x,y); ctx.lineTo(x+Math.cos(r1)*12, y+Math.sin(r1)*12); } ctx.stroke(); ctx.restore(); continue; }
+    if(d.type==='flak'){ for(let i=0;i<3;i++){ ctx.drawImage(glowSprite(C.warn), x-8+i*5-5, y-8+(i%2)*6-3, 14, 14); } ctx.restore(); continue; }
+    const tail = 26; ctx.strokeStyle = hexA(col,.55); ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(x - Math.cos(ang)*tail, y - Math.sin(ang)*tail); ctx.lineTo(x,y); ctx.stroke();
+    ctx.strokeStyle = '#fff6e0'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x - Math.cos(ang)*tail*.7, y - Math.sin(ang)*tail*.7); ctx.lineTo(x,y); ctx.stroke();
+    ctx.drawImage(glowSprite(col), x-14, y-14, 28, 28); ctx.restore();
   }
 }
+
 function drawFX(){
   for(const f of G.fx){ const k = f.t/1.1;
-    if(f.type==='boom'){ ctx.beginPath(); ctx.arc(f.x,f.y, 10 + k*60, 0, 7); ctx.fillStyle = `rgba(255,${180-k*120|0},80,${(1-k)*.7})`; ctx.fill(); }
-    else if(f.type==='shield'){ ctx.beginPath(); ctx.arc(f.x,f.y, 20 + k*70, 0, 7); ctx.strokeStyle = hexA(C.cyan, 1-k); ctx.lineWidth = 4; ctx.stroke(); }
-    else if(f.type==='super'){ ctx.beginPath(); ctx.arc(f.x,f.y, 20 + k*80, 0, 7); ctx.strokeStyle = hexA(C.good, 1-k); ctx.lineWidth = 5; ctx.stroke(); }
-    else if(f.type==='ion' || f.type==='tele'){ ctx.beginPath(); ctx.arc(f.x,f.y, 14 + k*50, 0, 7); ctx.strokeStyle = hexA(f.type==='tele'?'#c6e05a':C.cyan, (1-k)*.9); ctx.lineWidth = 6; ctx.stroke(); }
-    else if(f.type==='heal'){ ctx.beginPath(); ctx.arc(f.x,f.y, 14 + k*50, 0, 7); ctx.strokeStyle = hexA(C.good, (1-k)*.9); ctx.lineWidth = 6; ctx.stroke(); }
-    else if(f.type==='zap'){ ctx.beginPath(); ctx.arc(f.x,f.y, 6 + k*24, 0, 7); ctx.strokeStyle = hexA(C.cyan, 1-k); ctx.lineWidth = 3; ctx.stroke(); }
+    if(f.type==='boom'){ glow(f.x, f.y, 20 + k*50, '#ff8a3d', (1-k)*.6); }
+    else if(f.type==='shield' || f.type==='super'){ const col = f.type==='super' ? C.good : C.cyan; ctx.beginPath(); ctx.arc(f.x,f.y, 10 + k*50, 0, 7); ctx.strokeStyle = hexA(col, 1-k); ctx.lineWidth = 5*(1-k)+1; ctx.stroke(); glow(f.x, f.y, 40*(1-k)+10, col, (1-k)*.8); }
+    else if(f.type==='ion' || f.type==='tele'){ const col = f.type==='tele' ? '#c6e05a' : C.cyan; ctx.beginPath(); ctx.arc(f.x,f.y, 14 + k*50, 0, 7); ctx.strokeStyle = hexA(col, (1-k)*.9); ctx.lineWidth = 6; ctx.stroke(); glow(f.x, f.y, 50*(1-k), col, .5); }
+    else if(f.type==='heal'){ ctx.beginPath(); ctx.arc(f.x,f.y, 14 + k*50, 0, 7); ctx.strokeStyle = hexA(C.good, (1-k)*.9); ctx.lineWidth = 6; ctx.stroke(); glow(f.x, f.y, 40*(1-k), C.good, .5); }
+    else if(f.type==='zap'){ ctx.beginPath(); ctx.arc(f.x,f.y, 6 + k*24, 0, 7); ctx.strokeStyle = hexA(C.cyan, 1-k); ctx.lineWidth = 3; ctx.stroke(); glow(f.x, f.y, 24*(1-k), '#ffffff', .7); }
     else if(f.type==='text'){ ctx.globalAlpha = 1-k; T(f.text, f.x, f.y - k*40, { s:24, f:FD, w:700, a:'center', c: f.text==='MISS' || f.text==='RESISTED' ? C.ink : C.hostile }); ctx.globalAlpha = 1; } }
+  drawParts();
 }
 
 /* ---------------- modals ---------------- */
-function mframe(w,h,title,col=C.amber){
-  ctx.fillStyle = 'rgba(4,6,12,.74)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,()=>{});
-  const x = (W-w)/2, y = (H-h)/2; rr(x,y,w,h,14); ctx.fillStyle = C.panel; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
-  if(title) T(title.toUpperCase(), x+32, y+52, { s:26, f:FD, w:700, c:col, ls:3 });
+function mframe(w,h,title,col=C.amber,m){
+  ctx.fillStyle = 'rgba(4,6,12,.74)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,() => { if(m) m.skip = true; });
+  const x = (W-w)/2, y = (H-h)/2; rr(x,y,w,h,14); const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,'#131b36'); g.addColorStop(1,'#090e1d'); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
+  ctx.save(); rr(x,y,w,h,14); ctx.clip(); const hg = ctx.createLinearGradient(x,0,x+w,0); hg.addColorStop(0,hexA(col,.25)); hg.addColorStop(1,hexA(col,0)); ctx.fillStyle = hg; ctx.fillRect(x,y,w,68); ctx.fillStyle = hexA(col,.5); ctx.fillRect(x,y+68,w,1.5); ctx.restore();
+  corners(x-5,y-5,w+10,h+10,col,18);
+  if(title) T(title.toUpperCase(), x+32, y+46, { s:24, f:FD, w:700, c:col, ls:3 });
+  TIP_MODAL = true;
   return { x, y, w, h };
 }
+
 function drawModal(){
   const m = G.modal;
   switch(m.type){
-    case 'msg': { const f = mframe(940, 440, m.title); para(m.text, f.x+32, f.y+104, f.w-64, { s:21 });
-      btn(f.x+f.w-332, f.y+f.h-92, 300, 62, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true }); break; }
+    case 'msg': { const f = mframe(960, clamp(230 + lines(m.text||'', 896, `400 21px ${FM}`).length*31, 340, 560), m.title, C.amber, m); const txt = fillText(m.text, m.ctx||{ crew:randomCrewName() }); m.ctx = m.ctx || { crew:randomCrewName() }; const sh_ = typed(m, txt);
+      para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
+      if(sh_.length===txt.length) btn(f.x+f.w-332, f.y+f.h-92, 300, 62, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true }); else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'event': drawEventModal(m); break;
-    case 'result': { const f = mframe(940, 520, m.title||'Outcome'); const hgt = para(m.text||'', f.x+32, f.y+104, f.w-64, { s:21 });
-      (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+140 + hgt + i*32, { s:19, c: /^-|lost|damaged|fire/i.test(l) ? C.hostile : C.good }));
-      btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Continue', () => closeResult(m), { fill:true }); break; }
+    case 'result': { const f = mframe(960, clamp(220 + lines(m.text||'', 896, `400 21px ${FM}`).length*31 + Math.min(8,(m.lines||[]).length)*32, 360, 620), m.title||'Outcome', C.amber, m); const sh_ = typed(m, m.text||''); const hgt = para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
+      if(sh_.length===(m.text||'').length){ (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+146 + hgt + i*32, { s:19, c: /^-|lost|damaged|fire|injured|closer/i.test(l) ? C.hostile : C.good }));
+        btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Continue', () => closeResult(m), { fill:true }); } else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'map': drawMapModal(); break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
-    case 'exit': { const f = mframe(1000, 500, 'Exit beacon', C.good);
-      para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+100, f.w-64, { s:20 });
-      (m.opts||[]).forEach((t,i) => { const sd = DATA.sectors[t]; const bx = f.x+32 + i*480, by = f.y+170;
-        rr(bx, by, 450, 190, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.strokeStyle = sd.color||C.cyan; ctx.lineWidth = 2; ctx.stroke();
-        T(sd.name, bx+20, by+42, { s:24, f:FD, w:700, c:sd.color||C.cyan });
-        const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · Stores ${mix.store||0}%`, bx+20, by+76, { s:14, c:C.muted });
-        T(sd.nebula>.3 ? 'Mostly nebula: no sensors, slower fleet' : sd.final ? 'The Flaggship and Fedoration command' : `Expect: ${(sd.enemyTags||[]).join(', ') || 'anyone'}`, bx+20, by+102, { s:14, c:C.muted });
-        btn(bx+20, by+120, 410, 52, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col:sd.color||C.good }); });
+    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*400+64), 520, 'Exit beacon', C.good);
+      para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
+      const cw = (f.w-64-(opts.length-1)*20)/opts.length;
+      opts.forEach((t,i) => { const sd = DATA.sectors[t]; const bx = f.x+32 + i*(cw+20), by = f.y+160;
+        const art = eventArt(sd.secret ? 'glass' : sd.nebula>.3 ? 'nebula' : sd.final ? 'fleet' : 'planet', t, Math.floor(cw), 90);
+        rr(bx, by, cw, 240, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.save(); rr(bx, by, cw, 90, 10); ctx.clip(); ctx.drawImage(art, bx, by); ctx.restore(); ctx.strokeStyle = sd.color||C.cyan; ctx.lineWidth = 2; rr(bx, by, cw, 240, 10); ctx.stroke();
+        T(sd.name, bx+18, by+124, { s:21, f:FD, w:700, c:sd.color||C.cyan });
+        const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · Stores ${mix.store||0}%`, bx+18, by+152, { s:13, c:C.muted });
+        T(sd.secret ? 'Uncharted. Unknown.' : sd.nebula>.3 ? 'Nebula: no sensors, slower fleet' : sd.final ? 'The Flaggship and Fedoration command' : `Expect: ${(sd.enemyTags||[]).join(', ') || 'anyone'}`, bx+18, by+174, { s:13, c:C.muted });
+        btn(bx+16, by+184, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col:sd.color||C.good, s:17 }); });
       btn(f.x+f.w-232, f.y+f.h-82, 200, 56, 'Stay here', () => { G.modal = null; }); break; }
     case 'stranded': { const f = mframe(940, 420, 'Out of fuel', C.hostile);
       para('The tanks are dry. You can broadcast a distress call for fuel, but the Rebuff Fleet will hear it too and close in.', f.x+32, f.y+104, f.w-64, { s:21 });
       btn(f.x+32, f.y+f.h-92, 420, 62, 'Broadcast distress call', () => { G.fuel += 3; G.fleetX += .3; G.modal = { type:'msg', title:'Signal answered', text:'A passing trader sells you 3 fuel cells at a mercy price. The fleet is much closer now.', btn:'Open map', then:openMap }; }, { fill:true, col:C.hostile });
       btn(f.x+f.w-252, f.y+f.h-92, 220, 62, 'Not yet', () => { G.modal = null; }); break; }
-    case 'surrender': { const f = mframe(940, 440, 'They surrender', C.good);
+    case 'surrender': { const f = mframe(940, 470, 'They surrender', C.good);
       const parts = []; const o = m.offer; if(o.scrap) parts.push(`${o.scrap} scrap`); if(o.fuel) parts.push(`${o.fuel} fuel`); if(o.missiles) parts.push(`${o.missiles} missiles`); if(o.parts) parts.push(`${o.parts} drone parts`); if(o.weapon) parts.push('a weapon');
-      para(`"Enough! Enough!" The ${m.name} offers ${parts.join(', ')} if you let them go.`, f.x+32, f.y+104, f.w-64, { s:21 });
+      const y2 = para(m.line || '"Enough!"', f.x+32, f.y+104, f.w-64, { s:21, c:C.ink });
+      para(`The ${m.name} offers ${parts.join(', ')} if you let them go.`, f.x+32, f.y+120+y2, f.w-64, { s:19, c:C.muted });
       btn(f.x+32, f.y+f.h-92, 340, 62, 'Accept surrender', () => { G.modal = null; finishCombat('surrender', o); }, { fill:true, col:C.good });
       btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Keep firing', () => { G.modal = null; }, { col:C.hostile }); break; }
   }
 }
+
 function drawEventModal(m){
-  const ev = DATA.events[m.id]; if(!ev){ G.modal = null; return; }
-  const f = mframe(1080, 800, G.map?.nodes[G.map.cur]?.distress ? 'Distress beacon' : 'Beacon');
-  const th = para(ev.text, f.x+32, f.y+104, f.w-64, { s:21 });
-  let y = f.y + 126 + th;
-  const choices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));
+  const base = DATA.events[m.id]; const ev = m.inline || base; if(!ev){ G.modal = null; return; }
+  const node = G.map?.nodes[G.map.cur];
+  const title = m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
+  m.ctx = m.ctx || { crew:randomCrewName() }; m.who = m.who || {};
+  const fullText = fillText(ev.text, m.ctx);
+  const visChoices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));
+  let need = 272 + lines(fullText, 1056, `400 20px ${FM}`).length*29 + 16 + (m.lines ? Math.min(4, m.lines.length)*26 + 4 : 0);
+  for(const c of visChoices){ const rk = c.req?.race || '_'; if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : m.ctx.crew;
+    need += lines(`1. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`, 1010, `400 19px ${FM}`).length*27 + 32; }
+  const f = mframe(1120, clamp(need + 30, 480, 940), title, m.combat ? C.hostile : C.amber, m);
+  const ak = artFor(base || ev, m); const art = eventArt(ak, (m.id||'x') + (m.inline ? ':' + (ev.text||'').length : ''), 1056, 150);
+  ctx.drawImage(art, f.x+32, f.y+84); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.strokeRect(f.x+32, f.y+84, 1056, 150);
+  if(m.combat && G.enemy?._art){ const a = G.enemy._art.c; const sc = Math.min(560/a.width, 140/a.height); const w = a.width*sc, h = a.height*sc; ctx.drawImage(a, f.x+32+1056-w-20, f.y+84+(150-h)/2, w, h); glow(f.x+32+1056-w*.2, f.y+84+75, 60, C.hostile, .15); }
+  let y = f.y + 272;
+  const text = fillText(ev.text, m.ctx); const shown = typed(m, text); const done = shown.length===text.length;
+  y += para(shown, f.x+32, y, f.w-64, { s:20, lh:29 });
+  if(!done){ T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); return; }
+  if(m.lines && m.lines.length){ y += 4; for(const l of m.lines.slice(0,4)){ T('› ' + l, f.x+32, y+4, { s:17, c: /^-|lost|injured|fire|closer/i.test(l) ? C.hostile : C.good }); y += 26; } }
+  y += 12;
+  const choices = visChoices;
   choices.forEach((c,i) => {
     const ok = reqMet(c.req), blue = reqHidden(c.req);
-    const txt = `${i+1}. ${reqLabel(c.req)}${c.text}${costLabel(c.cost)}`;
-    const ls = lines(txt, f.w-110, `400 20px ${FM}`); const h = ls.length*28 + 24;
+    const rk = c.req?.race || '_'; if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : m.ctx.crew;
+    const txt = `${i+1}. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`;
+    const ls = lines(txt, f.w-110, `400 19px ${FM}`); const h = ls.length*27 + 22;
     const hov = ok && hovered(f.x+32, y, f.w-64, h);
-    rr(f.x+32, y, f.w-64, h, 8); ctx.fillStyle = hov ? hexA(blue?C.cyan:C.amber,.16) : C.panel2; ctx.fill(); ctx.lineWidth = hov?3:1.5; ctx.strokeStyle = !ok ? C.line : blue ? C.cyan : (hov?C.amber:C.line); ctx.stroke();
-    ls.forEach((l,k) => T(l, f.x+54, y+33+k*28, { s:20, c: !ok ? C.muted : blue ? C.cyan : C.ink }));
+    rr(f.x+32, y, f.w-64, h, 8); const g = ctx.createLinearGradient(f.x, 0, f.x+f.w, 0); g.addColorStop(0, hov ? hexA(blue?C.cyan:C.amber,.22) : '#18203c'); g.addColorStop(1, '#0f1529'); ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = hov?3:1.5; ctx.strokeStyle = !ok ? C.line : blue ? C.cyan : (hov?C.amber:C.line); ctx.stroke();
+    if(hov){ ctx.fillStyle = blue ? C.cyan : C.amber; ctx.fillRect(f.x+32, y+4, 4, h-8); }
+    ls.forEach((l,k) => T(l, f.x+54, y+31+k*27, { s:19, c: !ok ? C.muted : blue ? C.cyan : C.ink }));
     if(ok) region(f.x+32, y, f.w-64, h, () => chooseOption(c));
     y += h + 10;
   });
 }
+
 function drawMapModal(){
   const f = mframe(1500, 920, `Sector ${G.sector} · ${sectorDef().name}`, C.cyan), nodes = G.map.nodes, cur = nodes[G.map.cur];
   const mx = n => f.x + 80 + n.x*(f.w-160), my = n => f.y + 130 + n.y*(f.h-270);
@@ -642,10 +732,10 @@ function drawMapModal(){
     if(isCur){ ctx.beginPath(); ctx.arc(x,y,32,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.stroke(); }
     let tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : '';
     if(flagHere) tag = 'FLAGGSHIP';
-    const inner = !n.visited && !['store','exit','base','start'].includes(n.type) ? (scan ? (n.type==='combat' ? '!' : n.type==='event' ? '?' : '·') : '?') : '';
+    const known = scan || n.revealed; const inner = !n.visited && !['store','exit','base','start'].includes(n.type) ? (known ? (n.type==='combat' ? '!' : n.type==='event' ? '?' : '·') : '?') : '';
     if(inner) T(inner, x, y+1, { s:20, f:FD, w:700, a:'center', b:'middle', c: inner==='!' ? C.hostile : C.muted });
     if(tag) label(tag, x, y+48, col, 'center', 13);
-    if(n.hazard && (scan || n.visited || reach)) label(HAZARDS[n.hazard].split(' ')[0], x, y-30, C.warn, 'center', 11);
+    if(n.hazard && (scan || n.revealed || n.visited || reach)) label(HAZARDS[n.hazard].split(' ')[0], x, y-30, C.warn, 'center', 11);
     if(flagHere){ ctx.beginPath(); ctx.moveTo(x+26, y-8); ctx.lineTo(x+46, y); ctx.lineTo(x+26, y+8); ctx.closePath(); ctx.fillStyle = C.hostile; ctx.fill(); }
     if(n.x < G.fleetX && !isCur) { ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
@@ -657,6 +747,7 @@ function drawMapModal(){
 function drawStoreModal(m){
   const node = G.map.nodes[m.node], st = node.store; const s = G.ship;
   const f = mframe(1440, 880, 'Store', C.good);
+  if(!m.greet) m.greet = pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian); T(m.greet, f.x+160, f.y+44, { s:16, c:C.muted });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
   tabs(f.x+32, f.y+76, [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['sell','Sell']], UI.storeTab, t => UI.storeTab = t, 186);
   const y0 = f.y+150, cx = f.x+32;
@@ -699,13 +790,13 @@ function drawStoreModal(m){
   }
   btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; save(); });
 }
-function sysDesc(k){ return { drones:'Power drones that fight, defend, repair or board.', teleporter:'Send up to 4 crew to the enemy ship and bring them back.', cloaking:'Vanish: +60% evasion and enemy weapons stop charging.',
+function sysDesc(k){ return { shields:'Every 2 power gives one shield layer that blocks a shot and recharges.', engines:'More power means more evasion. Needs a pilot at the helm.', oxygen:'Keeps the air breathable in every room.', weapons:'Powers your weapons. Each weapon needs its own power.', piloting:'Someone must sit at the helm to dodge and to charge the jump drive. Higher levels add an autopilot.', drones:'Power drones that fight, defend, repair or board.', teleporter:'Send up to 4 crew to the enemy ship and bring them back.', cloaking:'Vanish: +60% evasion and enemy weapons stop charging.',
   hacking:'Attach a drone to an enemy system, then pulse it to shut it down.', mindcontrol:'Turn an enemy crew member to your side for a while.', medbay:'Heals crew standing inside it.', clonebay:'Brings dead crew back after a short delay.',
   battery:'A backup battery that adds temporary reactor power.', sensors:'See inside enemy ships: damage at level 1, crew at 2, weapon charge at 3.', doors:'Lets you open and close doors. Stronger doors slow boarders.' }[k] || ''; }
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['augments','Augments']], UI.tab, t => UI.tab = t, 230);
+  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['augments','Augments'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 220);
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
@@ -748,6 +839,10 @@ function drawShipModal(){
       const full = it.kind==='weapon' ? s.weapons.length>=R.weaponSlots : s.drones.length>=R.droneSlots;
       btn(rx+460, y+4, 170, 42, 'Mount', () => { s.cargo.splice(i,1); if(it.kind==='weapon') s.weapons.push({ id:it.id, charge:0, on:false, target:null }); else s.drones.push({ id:it.id, on:false, unit:null }); }, { disabled: full || lock, s:15 }); });
     if(lock) T('Gear cannot be swapped mid-fight.', cx, f.y+f.h-40, { s:16, c:C.warn });
+  } else if(UI.tab==='log'){
+    label('Captain\'s log', cx, y0+10, C.muted, 'left', 14);
+    const entries = (G.log||[]).slice(-17).reverse(); if(!entries.length) T('Nothing logged yet.', cx, y0+56, { s:18, c:C.muted });
+    entries.forEach((e,i) => { T(`S${e.s}`, cx, y0+46+i*36, { s:14, f:FD, w:700, c:C.amber }); para(e.t, cx+50, y0+46+i*36, 1280, { s:15, lh:18, max:1 }); });
   } else {
     label(`Augments (${s.augments.length}/${R.augmentSlots})`, cx, y0+10, C.muted, 'left', 14);
     if(!s.augments.length) T('No augments yet. Find them in events and stores.', cx, y0+56, { s:18, c:C.muted });

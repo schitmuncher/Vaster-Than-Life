@@ -32,8 +32,8 @@ In VR, a **holotable** under the console shows both ships in 3D, with fires, dam
 ## What's in the game
 
 **Ships and crew**
-- 14 ships: 7 cruiser classes, each with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
-- 6 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog and Mantlis.
+- 16 ships: 8 cruiser classes, each with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
+- 7 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog, Mantlis and the secret Glassborn.
 - Crew skills in Piloting, Engines, Shields, Weapons, Repair and Combat, which improve as crew work.
 - Renaming your ship and crew, and dismissing crew.
 
@@ -68,8 +68,34 @@ In VR, a **holotable** under the console shows both ships in 3D, with fires, dam
 - The Rebuff Fleet advances every jump.
 - The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
 
+**Story and dialogue**
+- About 130 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
+- Ships hail you before most fights. Every faction has its own hails, and you can bluff, bribe, intimidate or sneak past.
+- Ten multi-beacon quest lines:
+  - The Glass Shard: unlocks a secret sector, the Glasswork Expanse, with a new race (the Glassborn) and two new ships.
+  - The Defector: a Rebuff officer whose codes weaken the Flaggship.
+  - The Pyrate King's treasure map, found in three pieces.
+  - A loan shark who comes to collect.
+  - The Ghost Ship.
+  - The Voltan Prophecy.
+  - The Enjinn genie lamp.
+  - Mantlis honour duels.
+  - The Weevil nest.
+  - A medical escort mission.
+- Named enemy ships, enemy taunts, surrender speeches, sector intros and store-keeper greetings.
+- Crew chatter in speech bubbles (with lines for each race), and a captain's log of everything you did.
+
+**Graphics**
+- Procedurally textured hulls with plating, fins, nacelles, cockpit glass and weapon hardpoints.
+- Tiled deck floors, system icons, and animated crew sprites for every race.
+- Particle effects: explosions, sparks, smoke, debris, fire embers, venting breaches and missile trails.
+- Glowing lasers, ion bolts and beams; shield bubbles that ripple where they are hit.
+- Nebula backgrounds with planets and hazards that change at every beacon.
+- Illustrated event scenes and tooltips everywhere.
+- In VR: a nebula skybox, a textured planet with atmosphere, a framed console, and a holotable that shows your actual hull art in 3D.
+
 **Around the game**
-- 17 achievements and three difficulties.
+- 20 achievements and three difficulties.
 - Autosave between jumps.
 - Procedural music, sound effects and controller haptics.
 
@@ -107,7 +133,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 | `ships` | `name`, `cls` (groups A/B layouts in the hangar), `layout`, `desc`, `hull`, `reactor`, `color`, `image` (a picture to use as the hull), `systems` (name → level), `reserve` (empty rooms for later systems), `weapons`, `drones`, `crew` (race ids), `augments`, `fuel`, `missiles`, `parts`, `pattern` or `rooms`, `unlock` (`{"sector":3}`, `{"win":"shipId"}`, `{"ach":"id"}`, `{"kills":25}`) |
 | `enemies` | `name`, `tags`, `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
 | `sectors` | `name`, `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
-| `events` | `text`, `weight`, `minSector`, `maxSector`, `tags`, `nebula`, `distress`, `questOnly`, `choices` |
+| `events` | `text`, `weight`, `minSector`, `maxSector`, `tags`, `nebula`, `distress`, `questOnly`, `once`, `flag`, `noFlag`, `hail` (a faction tag, used before fights), `art`, `choices` |
 
 **Event choices**
 - Each choice needs `text` plus either an `effect`, or a `chance` with `success` and `fail` effects.
@@ -120,7 +146,10 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 - Crew: `crew` (a race id or `"random"`), `crewLoss`
 - Gear: `weapon`, `drone`, `augment` (an id or `"random"`)
 - Ship changes: `install` (a system or `"random"`), `upgrade`, `damageSystem`, `reactor`, `fire`
-- Story: `fight` (an enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (chains to another event), `quest` (marks a quest beacon with that event), `store`
+- Story: `fight` (an enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (chains to another event), `quest` (marks a quest beacon with that event), `later` (`{"event":"id","jumps":4}` fires an event after some jumps), `store`
+- Dialogue: `choices` (continue the conversation on a new page), `setFlag` / `clearFlag` (story flags that choices and events can require), `begin` / `dismiss` (in hails: start the fight, or end the encounter)
+- More: `crewHeal`, `crewHurt`, `maxHull`, `xp` (`{"skill":"pilot","amt":20}`), `reveal` (shows the sector map), `fleetPush`, `mapPiece`
+- Text can use `{crew}`, `{who}` (the crew member who meets a race requirement), `{ship}`, `{enemy}` and `{sector}`.
 - Progress: `unlock`, `achievement`
 
 **Ship layouts**
@@ -153,6 +182,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | File | Contents |
 | --- | --- |
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
+| `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
+| `js/gfx.js` | Procedural hulls, planets, nebulae, icons, crew sprites, particles, event art |
 | `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |
 | `js/ship.js` | Layout generator, doors and airlocks, pathfinding, crew |
 | `js/sim.js` | Power, systems, damage, fire, oxygen, drones, crew AI, enemy AI, hazards |

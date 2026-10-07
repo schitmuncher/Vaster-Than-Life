@@ -89,6 +89,7 @@ function ionize(sh, k, n){
 function igniteRoom(sh, ri_){ const r = sh.rooms[ri_]; if(!r) return; r.fire = Math.min(r.w*r.h, r.fire + 1); }
 function roomCenter(sh, ri_){ const q = sh._rects?.[ri_]; return q ? { x:q.x+q.w/2, y:q.y+q.h/2 } : { x: sh.isEnemy ? 1200 : 400, y:330 }; }
 function fx(type, x, y, text){ G.fx.push({ type, x, y, t:0, text }); }
+function fxAtProj(p, sh, type){ if(p._x!=null){ fx(type, p._x, p._y); sparks(p._x, p._y, type==='super' ? '#7be0a0' : '#bff4ff', 8); } else fxAtRoom(sh, p.room, type); }
 function fxAtRoom(sh, ri_, type, text){ const c = roomCenter(sh, ri_); fx(type, c.x, c.y - (type==='text'?30:0), text); }
 function hitRoom(sh, ri_, d, o={}){
   const r = sh.rooms[ri_]; if(!r) return;
@@ -97,12 +98,13 @@ function hitRoom(sh, ri_, d, o={}){
   const sysd = dmg + (d.sysDamage||0);
   if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15)) damageSystem(sh, r.sys, sysd); }
   const crewDmg = 15*dmg + (d.crewDamage||0);
-  if(crewDmg>0) for(const c of sh.crew) if(c.room===ri_){ c.hp -= crewDmg; c.lastBy = o.by || null; }
-  if(d.fire && Math.random() < d.fire) igniteRoom(sh, ri_);
-  if(d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)) r.breach = Math.min(r.w*r.h, r.breach + 1);
+  if(crewDmg>0) for(const c of sh.crew) if(c.room===ri_){ c.hp -= crewDmg*(raceOf(c).armor||1); c.lastBy = o.by || null; }
+  if(d.fire && Math.random() < d.fire){ igniteRoom(sh, ri_); if(sh.side==='p') say('fire', { force:true }); }
+  if(d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
   if(d.ion && d.type!=='ion') { if(r.sys) ionize(sh, r.sys, d.ion); }
   if(d.stun) for(const c of sh.crew) if(c.room===ri_) c.stunT = Math.max(c.stunT, d.stun);
-  const c = roomCenter(sh, ri_); fx('boom', c.x, c.y); if(dmg>0) fx('text', c.x, c.y-34, `-${dmg}`);
+  const c = roomCenter(sh, ri_); burst(c.x, c.y, .5 + .3*Math.max(1,dmg), '#ffb547'); if(dmg>1) debris(c.x, c.y, sh.color, 4); if(dmg>0) fx('text', c.x, c.y-34, `-${dmg}`);
+  if(sh.side==='p' && dmg>0 && Math.random()<.4) say('hit');
   sfx('hit');
   if(!sh.isEnemy){ G.shake = Math.min(1, G.shake + .35*Math.max(1,dmg)); haptic(.5 + .15*dmg, 90 + 40*dmg); }
 }
@@ -139,11 +141,11 @@ function resolve(p){
   if(d.heal){ for(const c of tgt.crew) if(c.room===p.room && crewSide(c)===p.from) c.hp = Math.min(c.maxHp, c.hp + d.heal); fxAtRoom(tgt, p.room, 'heal'); return; }
   if(d.type==='bomb'){
     if(tgt.cloak.t>0){ fxAtRoom(tgt, p.room, 'text', 'MISS'); sfx('miss'); return; }
-    if(tgt.super>0){ tgt.super = Math.max(0, tgt.super-1); fxAtRoom(tgt, p.room, 'super'); sfx('shield'); return; }
+    if(tgt.super>0){ tgt.super = Math.max(0, tgt.super-1); fxAtProj(p, tgt, 'super'); sfx('shield'); return; }
     hitRoom(tgt, p.room, d, { noHull:true, by:p.from }); return;
   }
   if(d.type==='beam'){
-    if(tgt.super>0){ tgt.super = Math.max(0, tgt.super - Math.max(1, d.damage||1)); fxAtRoom(tgt, p.room, 'super'); sfx('shield'); return; }
+    if(tgt.super>0){ tgt.super = Math.max(0, tgt.super - Math.max(1, d.damage||1)); fxAtProj(p, tgt, 'super'); sfx('shield'); return; }
     const pen = (d.damage||0) - tgt.shield;
     if(tgt.shield>0 && pen<=0){ fxAtRoom(tgt, p.room, 'shield'); sfx('shield'); return; }
     for(const r of (p.rooms||[p.room])) hitRoom(tgt, r, Object.assign({}, d, { damage:Math.max(0,pen) }), { by:p.from });
@@ -154,9 +156,9 @@ function resolve(p){
     const pc = mannedCrew(tgt,'piloting'); if(pc) gainXP(pc,'pilot',2); const ec = mannedCrew(tgt,'engines'); if(ec) gainXP(ec,'engines',2);
     return;
   }
-  if(tgt.super>0){ tgt.super = Math.max(0, tgt.super - Math.max(1, d.damage||1)); fxAtRoom(tgt, p.room, 'super'); sfx('shield'); return; }
+  if(tgt.super>0){ tgt.super = Math.max(0, tgt.super - Math.max(1, d.damage||1)); fxAtProj(p, tgt, 'super'); sfx('shield'); return; }
   if(d.type!=='missile' && tgt.shield>0 && !((d.pierce||0) >= tgt.shield)){
-    tgt.shield--; tgt.shieldT = 0; fxAtRoom(tgt, p.room, 'shield'); sfx('shield');
+    tgt.shield--; tgt.shieldT = 0; fxAtProj(p, tgt, 'shield'); sfx('shield'); if(tgt.side==='p' && tgt.shield===0) say('shieldsDown');
     if(d.type==='ion') ionize(tgt, 'shields', d.damage||1);
     return;
   }
@@ -338,6 +340,7 @@ function killCrew(sh, c){
   if(home && !home.dead && home.systems.clonebay){ home.clones.push({ c, t:12 }); if(c.owner==='p') toast(`${c.name} died. The clone bay is regrowing them.`); }
   else if(c.owner==='p' && hasAug(G.ship,'dna')){ G.dna.push(c); toast(`${c.name} died. Their DNA backup will restore them after the fight.`); }
   else if(c.owner==='p'){ toast(`${c.name} has died.`); G.lost.push(c.name); }
+  if(c.owner==='p') say('death', { force:true });
   if(UI.selCrew===c.id) UI.selCrew = null;
   if(UI.selCrews) UI.selCrews = UI.selCrews.filter(id => id!==c.id);
 }
@@ -425,7 +428,7 @@ function tickShip(sh, dt, foe){
       if(r.fire>0){ r.fireP += rate*2.6*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
       else if(r.breach>0){ r.breachP += rate; if(r.breachP>=1){ r.breachP = 0; r.breach--; workers.forEach(c=>gainXP(c,'repair',1)); } }
       else if(r.sys && sh.systems[r.sys] && sh.systems[r.sys].dmg>0){ const s = sh.systems[r.sys]; s.rep += rate;
-        if(s.rep>=1){ s.rep = 0; s.dmg--; workers.forEach(c=>gainXP(c,'repair',1));
+        if(s.rep>=1){ s.rep = 0; s.dmg--; workers.forEach(c=>gainXP(c,'repair',1)); if(sh.side==='p' && Math.random()<.25) say('repair', { crew:workers[0] });
           if(!sh.isEnemy && s.prev > s.power && reactorFree(sh)>0 && s.power < s.max - s.dmg){ s.power++; if(s.power>=s.prev) s.prev = 0; }
           if(r.sys==='weapons') sh.isEnemy ? autoPowerWeapons(sh) : null; } }
     } else {
@@ -479,7 +482,7 @@ function enemyBrain(sh, foe, dt){
   if(sh.systems.teleporter && (sh.board || !sh.boss) && !boarding && canTele(sh, foe) && G.combatT > 8 && Math.random()<.25){
     const home = sh.crew.filter(c => c.owner==='e' && crewSide(c)==='e' && !c.drone);
     const group = home.filter(c => c.room!==roomOf(sh,'piloting')).slice(0, 2 + (sh.boss?1:0));
-    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); } }
+    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); say('boarders', { force:true }); } }
   }
   if(sh.systems.hacking && G.combatT>4 && canHackLaunch(sh, foe)){ const k = pick(['shields','weapons','piloting']); const r = roomOf(foe,k); if(r>=0 && foe.systems[k]) hackLaunch(sh, foe, r); }
   if(canHackPulse(sh, foe)) hackPulse(sh, foe);
