@@ -44,11 +44,11 @@ const BASE = {
     bust1:      { name:'Bust Laser I',       type:'laser',   damage:1, shots:2, charge:11, power:2, cost:50, tier:1 },
     bust2:      { name:'Bust Laser II',      type:'laser',   damage:1, shots:3, charge:12, power:2, cost:80, tier:2 },
     bust3:      { name:'Bust Laser III',     type:'laser',   damage:1, shots:5, charge:19, power:4, cost:95, tier:3 },
-    heavy1:     { name:'Heavy Laser I',      type:'laser',   damage:2, shots:1, charge:9,  power:1, cost:55, tier:1, fire:0.1, breach:0.1 },
+    heavy1:     { name:'Heavy Laser I',      type:'laser',   damage:2, shots:1, charge:9,  power:1, cost:55, tier:1, fire:0.3, breach:0.21 },
     heavy2:     { name:'Heavy Laser II',     type:'laser',   damage:2, shots:2, charge:13, power:3, cost:65, tier:2, fire:0.2, breach:0.2 },
     duel:       { name:'Duel Lasers',        type:'laser',   damage:1, shots:4, charge:16, power:3, cost:70, tier:2, desc:'Two lasers settling their differences on your enemy.' },
-    lego:       { name:'Lego Missile',       type:'missile', damage:1, shots:1, charge:9,  power:1, cost:30, tier:1, breach:0.3, desc:'Small, but they will remember stepping on it.' },
-    arty:       { name:'Arty Missile',       type:'missile', damage:2, shots:1, charge:11, power:1, cost:38, tier:1, breach:0.2 },
+    lego:       { name:'Lego Missile',       type:'missile', damage:1, shots:1, charge:9,  power:1, cost:30, tier:1, fire:0.1, breach:0.09, desc:'Small, but they will remember stepping on it.' },
+    arty:       { name:'Arty Missile',       type:'missile', damage:2, shots:1, charge:11, power:1, cost:38, tier:1, fire:0.1, breach:0.09 },
     hermies:    { name:'Hermies Missile',    type:'missile', damage:3, shots:1, charge:14, power:3, cost:45, tier:2, fire:0.3, breach:0.5 },
     breachm:    { name:'Breach Missile',     type:'missile', damage:4, shots:1, charge:22, power:3, cost:65, tier:3, breach:0.9 },
     pegasaurus: { name:'Pegasaurus Missile', type:'missile', damage:2, shots:2, charge:20, power:3, cost:60, tier:3, breach:0.2 },
@@ -166,9 +166,9 @@ const BASE = {
       systems:{ shields:4, engines:2, weapons:8, drones:6, teleporter:2, oxygen:2, medbay:2, piloting:2, sensors:2, doors:3 },
       weapons:['bust2','heavy2','hermies','ion2'], drones:[], crew:['pebblekin','pebblekin','human','human','human','mantlis'],
       phases:[
-        { name:'Phase 1: Boarders', hull:24, weapons:['bust2','heavy2','hermies','ion2'], drones:[], board:true },
-        { name:'Phase 2: Drones and Super Shield', hull:24, weapons:['bust2','ion2'], drones:['combat2','defense1','beamd'], super:8, superRegen:6 },
-        { name:'Phase 3: Power Surge', hull:28, weapons:['bust2','heavy2','flak1'], drones:['defense1'], surge:26 } ] }
+        { name:'Phase 1: Boarders', hull:22, weapons:['bust2','heavy2','hermies','ion2'], drones:[], board:true },
+        { name:'Phase 2: Drones and Super Shield', hull:22, weapons:['bust2','ion2'], drones:['combat2','defense1','beamd'], super:8, superRegen:6 },
+        { name:'Phase 3: Power Surge', hull:22, weapons:['bust2','heavy2','flak1'], drones:['defense1'], surge:26 } ] }
   },
 
   sectors: {

@@ -323,7 +323,7 @@ function initBridge(){
   // captain's chair behind the player position
   const chair = new THREE.Group(); chair.position.set(0, 0, .55);
   const seat = new THREE.Mesh(new THREE.BoxGeometry(.55, .1, .5), stdMat({ color:0x3a2a26, metalness:.2, roughness:.7 })); seat.position.y = .48; chair.add(seat);
-  const back = new THREE.Mesh(new THREE.BoxGeometry(.55, .75, .09), stdMat({ color:0x3a2a26, metalness:.2, roughness:.7 })); back.position.set(0, .88, .23); back.rotation.x = -.12; chair.add(back);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(.55, .5, .09), stdMat({ color:0x3a2a26, metalness:.2, roughness:.7 })); back.position.set(0, .76, .26); back.rotation.x = -.12; chair.add(back);
   const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .14, .45, 16), frameM); post.position.y = .22; chair.add(post);
   for(const s of [-1,1]){ const arm = new THREE.Mesh(new THREE.BoxGeometry(.07, .06, .45), frameM); arm.position.set(s*.31, .66, 0); chair.add(arm); const al = new THREE.Mesh(new THREE.BoxGeometry(.071, .012, .3), strip(0xffb547)); al.position.set(s*.31, .695, -.04); chair.add(al); }
   g.add(chair); chair.visible = false;   // shown only when the player is seated far enough back

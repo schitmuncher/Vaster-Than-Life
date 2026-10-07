@@ -205,8 +205,9 @@ function drawSettings(){
   tog(460, 'Unlock all ships', 'unlockAll', 'Skip the unlock conditions and pick any ship.');
   tog(530, 'Allow mod scripts', 'allowScripts', 'Lets mods run their own JavaScript. Only turn this on for mods you trust.');
   tog(600, 'Smart pause', 'smartPause', 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
-  label('VR comfort & clarity', 820, 190, C.cyan, 'left', 16);
+  label('VR comfort & clarity', 820, 136, C.cyan, 'left', 16);
   const vrow = (y, name, opts, key, def) => { T(name, 820, y+34, { s:20 }); opts.forEach(([v,l],i) => btn(1080 + i*150, y+6, 140, 46, l, () => { SET[key] = v; saveProfile(); }, { fill:(SET[key] ?? def)===v, s:15 })); };
+  T('Play position', 820, 184, { s:20 }); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(1080 + i*150, 156, 140, 46, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:15 }));
   vrow(210, 'Turning', [['30','Snap 30°'],['45','Snap 45°'],['smooth','Smooth']], 'vrTurn', '30');
   vrow(270, 'Walking', [['smooth','Stick + teleport'],['teleport','Teleport only']], 'vrMove', 'smooth');
   vrow(330, 'Comfort vignette', [[true,'On'],[false,'Off']], 'vrVignette', true);
@@ -275,7 +276,8 @@ function drawGame(){
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0){ ctx.fillStyle = `rgba(255,236,200,${warpAmt()*.5})`; ctx.fillRect(0,0,W,H); }
   if(G.paused && !G.modal && !UI.hint){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
-    panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted }); }
+    panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted });
+    if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); } }
   if(G.modal) drawModal();
 }
 function drawTopBar(){
@@ -794,7 +796,7 @@ function drawStoreModal(m){
       if(!st.systems.length) T('No new systems for sale here.', cx, y0+40, { s:18, c:C.muted }); break;
     case 'supplies': {
       const rows = [ ['Fuel cell', 'One jump\'s worth.', 3, () => G.fuel++], ['Missile', 'Ammo for missiles and bombs.', 6, () => G.missiles++], ['Drone part', 'Each drone deployment and hacking drone uses one.', 8, () => G.parts++],
-        ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, 2 + Math.floor(G.sector/3), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull], ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, 5*(2 + Math.floor(G.sector/3)) - 1, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
+        ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, 2 + Math.floor((G.sector-1)/3), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull], ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, 5*(2 + Math.floor((G.sector-1)/3)) - 1, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
       rows.forEach((r,i) => { const c = price(r[2], st); const y = y0 + i*82; panel(cx, y, 640, 72, 8); T(r[0], cx+20, y+32, { s:20, f:FD, w:700 }); T(r[1], cx+20, y+56, { s:14, c:C.muted });
         btn(cx+420, y+12, 200, 48, `Buy · ${c}`, () => buy(c, r[3]), { disabled: r[4] || G.scrap < c, col:C.good }); });
       const race = DATA.races[st.crewRace]; const rx = cx+680; panel(rx, y0, 680, 300, 8); label('Crew for hire', rx+20, y0+34, C.muted);

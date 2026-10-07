@@ -161,7 +161,7 @@ function makeShip(def, side, o={}){
   rooms.forEach(r => Object.assign(r, { o2:100, fire:0, fireP:0, fireOut:0, fireDmg:0, breach:0, breachP:0, sab:0 }));
   const diff = DIFFICULTY[SET.difficulty] || DIFFICULTY.normal;
   let hull = phase?.hull ?? def.hull;
-  if(enemy && !def.boss) hull += Math.round(1.5*(sector-1)) + diff.enemyHull;
+  if(enemy && !def.boss) hull += Math.min(sector-1, 8) + diff.enemyHull;   // FTL: +1 hull per sector
   if(enemy && def.boss) hull += diff.enemyHull*2;
   const sh = { side, isEnemy:enemy, id:def.id, name:o.name || def.name || def.id, cls:def.cls||'', color:def.color || (enemy?C.hostile:C.amber),
     boss:!!def.boss, phase:o.phase||0, auto:!!def.auto, image:def.image||null,

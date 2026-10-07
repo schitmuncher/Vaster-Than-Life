@@ -126,7 +126,7 @@ function loop(){
   if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); }
   update(dt); draw();
   if(xr){
-    if(recenterIn>0){ recenterIn--; if(recenterIn===0){ recenter(); nav.sessionT = 0; } }
+    if(recenterIn>0){ recenterIn--; if(recenterIn===0){ applyPlayMode(); nav.sessionT = 0; } }
     if((++fc & 1)===0) tex.needsUpdate = true;
     update3D(dt);
     const warp = warpAmt();

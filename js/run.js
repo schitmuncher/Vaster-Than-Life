@@ -36,7 +36,7 @@ function loadSave(){
 
 /* ---------------- sectors & map ---------------- */
 function sectorDef(t){ return DATA.sectors[t || G.sectorType] || DATA.sectors.civilian || Object.values(DATA.sectors)[0]; }
-function genSector(n, type){
+function genSector(n, type){ if(G) G.fleetFights = 0;
   G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final;
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
@@ -278,10 +278,11 @@ function pickEnemy(n){
   return wpick(pool, e => (e.tags||[]).some(t=>bias.includes(t)) ? 4 : 1);
 }
 function startCombat(id, o={}){
-  const n = Math.min(G.sector + (o.harder?1:0), 9);
+  if(o.harder) G.fleetFights = (G.fleetFights||0) + 1;
+  const n = Math.min(G.sector + (o.harder ? 1 + Math.floor(((G.fleetFights||1)-1)/3) : 0), 9);
   const def = id==='flag' ? DATA.enemies[R.bossId] : (id && id!=='random' && DATA.enemies[id]) ? DATA.enemies[id] : pickEnemy(n);
   if(!def){ G.modal = { type:'msg', title:'All clear', text:'Sensors show no hostiles.' }; return; }
-  G.enemy = makeShip(def, 'e', { sector:n, phase:o.phase||0 });
+  G.enemy = makeShip(def, 'e', { sector:n, phase:o.phase||0 }); G.enemy.fleet = !!o.harder;
   const tags = def.tags || []; G.enemy.faction = tags.find(t => TAUNTS.start[t]) || (def.auto ? 'auto' : 'generic');
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
@@ -319,12 +320,14 @@ function finishCombat(kind, offer){
   const L = [];
   if(kind==='surrender') L.push(...applyEffect(offer));
   else {
+    if(e.fleet){ L.push(...applyEffect({ scrap: ri(3,8) })); L.unshift('Fleet warships are stripped for war: there is almost nothing worth salvaging. Get ahead of the fleet!'); }
+    else {
     const reward = { scrap: Math.round((ri(18,28) + G.sector*9) * (kind==='crew' ? 1.5 : 1)) };
     if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
     if(Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
-    L.push(...applyEffect(reward));
+    L.push(...applyEffect(reward)); }
   }
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',

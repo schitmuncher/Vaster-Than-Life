@@ -91,7 +91,7 @@ function damageSystem(sh, k, n){
 function ionize(sh, k, n){
   const s = sh.systems[k]; if(!s) return;
   if(hasAug(sh,'ionField') && Math.random()<.2){ fxAtRoom(sh, roomOf(sh,k), 'text', 'RESISTED'); return; }
-  s.ion = Math.min(s.max, s.ion + n); s.ionT = 6;
+  s.ion = Math.min(s.max, s.ion + n); s.ionT = Math.min(25, Math.max(0, s.ionT||0) + 5*n);   // FTL: 5s lock per ion, stacking to 25s
   if(k==='weapons') weaponBudget(sh); if(k==='drones') droneBudget(sh);
 }
 function igniteRoom(sh, ri_){ const r = sh.rooms[ri_]; if(!r) return; r.fire = Math.min(r.w*r.h, r.fire + 1); }
@@ -107,8 +107,8 @@ function hitRoom(sh, ri_, d, o={}){
   if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15)) damageSystem(sh, r.sys, sysd); }
   const crewDmg = 15*dmg + (d.crewDamage||0);
   if(crewDmg>0) for(const c of sh.crew) if(c.room===ri_){ c.hp -= crewDmg*(raceOf(c).armor||1); c.lastBy = o.by || null; }
-  if(d.fire && Math.random() < d.fire){ igniteRoom(sh, ri_); if(sh.side==='p') say('fire', { force:true }); }
-  if(d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
+  const lit = d.fire && Math.random() < d.fire; if(lit){ igniteRoom(sh, ri_); if(sh.side==='p') say('fire', { force:true }); }
+  if(!lit && d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
   if(d.ion && d.type!=='ion') { if(r.sys) ionize(sh, r.sys, d.ion); }
   if(d.stun) for(const c of sh.crew) if(c.room===ri_) c.stunT = Math.max(c.stunT, d.stun);
   const c = roomCenter(sh, ri_); burst(c.x, c.y, .5 + .3*Math.max(1,dmg), '#ffb547'); if(dmg>1) debris(c.x, c.y, sh.color, 4); if(dmg>0) fx('text', c.x, c.y-34, `-${dmg}`);
@@ -438,8 +438,8 @@ function tickShip(sh, dt, foe){
   // oxygen
   const ox = eff(sh,'oxygen'), oxHack = hackedNow(sh,'oxygen') || (sh.hacked?.pulseT>0 && sh.rooms[sh.hacked.room]?.sys==='oxygen');
   for(const r of sh.rooms){
-    if(sh.systems.oxygen){ r.o2 += ox>0 ? dt*(1.2 + ox*1.2) : -dt*.8; if(oxHack) r.o2 -= dt*4; }
-    r.o2 -= dt*(6*r.breach + 1.4*r.fire);
+    if(sh.systems.oxygen){ r.o2 += ox>0 ? dt*[1.2, 4.8, 8.4][Math.min(2, ox-1)] : -dt*1.2; if(oxHack) r.o2 -= dt*4; }   // FTL: +1.2/4.8/8.4 per level, -1.2 unpowered
+    r.o2 -= dt*(8*r.breach + 1.4*r.fire);
   }
   for(const d of sh.doors){
     if(d.passT>0) d.passT -= dt;

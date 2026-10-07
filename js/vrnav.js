@@ -65,7 +65,7 @@ function moveRigBy(dx, dz){
 function teleportTo(world){ nav.fadeTo = world.clone(); nav.fade = .001; }
 function applyTeleport(){ const h = headWorld(); rig.position.x += nav.fadeTo.x - h.x; rig.position.z += nav.fadeTo.z - h.z; nav.fadeTo = null; }
 function snapTurn(angle){ const h = headWorld(); rig.position.sub(h); rig.position.applyAxisAngle(new THREE.Vector3(0,1,0), angle); rig.position.add(h); rig.rotateY(angle); hapticFn?.(.15, 20); }
-function goHome(){ if(!anchor.pos) return; const h = headWorld(); rig.position.x += anchor.pos.x - h.x; rig.position.z += anchor.pos.z - h.z;
+function goHome(){ if(playPose()!=='standing'){ applyPlayMode(); return; } if(!anchor.pos) return; const h = headWorld(); rig.position.x += anchor.pos.x - h.x; rig.position.z += anchor.pos.z - h.z;
   const d = new THREE.Vector3(); camera.getWorldDirection(d); d.y = 0; d.normalize(); const want = Math.atan2(-anchor.dir.x, -anchor.dir.z), cur = Math.atan2(-d.x, -d.z); snapTurn(want - cur); }
 function bringConsole(){ const p = headWorld(), d = new THREE.Vector3(); camera.getWorldDirection(d); d.y = 0; if(d.lengthSq()<1e-4) d.set(0,0,-1); d.normalize();
   panelGroup.position.set(p.x + d.x*panelDist, Math.max(.9, p.y - .1), p.z + d.z*panelDist); panelGroup.lookAt(p.x, panelGroup.position.y, p.z);
@@ -126,3 +126,36 @@ function hoverTick(i, x, y, src){
   let idx = -1; for(let k=HR.length-1;k>=0;k--){ const r = HR[k]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h){ idx = k + Math.round(r.x)*1000 + Math.round(r.y)*7; break; } }
   if(idx!==nav.hoverIdx[i]){ if(idx!==-1) pulse(src, .07, 8); nav.hoverIdx[i] = idx; }
 }
+
+/* ---------------- play position: standing, seated or lying down ----------------
+   Standing uses your real height. Seated lifts your view to captain's-chair height
+   and puts the chair under you. Lying down pitches the whole world so that looking
+   at the ceiling shows the bridge in front of you, then seats you in the chair. */
+const POSE_EYE = { seated:1.22, lying:1.22 };
+function playPose(){ return SET.vrPose || 'standing'; }
+function applyPlayMode(){
+  if(!rig || !camera) return;
+  rig.position.set(0,0,0); rig.quaternion.identity(); rig.updateMatrixWorld(true);
+  const pose = playPose();
+  if(pose==='lying'){
+    const head = headWorld(), d = new THREE.Vector3(), up = new THREE.Vector3(0,1,0);
+    camera.getWorldDirection(d);
+    const H = up.clone().applyQuaternion(camera.getWorldQuaternion(new THREE.Quaternion()));   // towards the top of your head
+    // only pitch the world when you are actually looking mostly upward
+    if(d.y > .35){
+      H.addScaledVector(d, -H.dot(d)).normalize();
+      const S = new THREE.Matrix4().makeBasis(d, H, new THREE.Vector3().crossVectors(d, H));
+      const f = H.clone().setY(0); if(f.lengthSq() < 1e-4) f.set(0,0,1); f.normalize().negate();
+      const T = new THREE.Matrix4().makeBasis(f, up, new THREE.Vector3().crossVectors(f, up));
+      const R = new THREE.Quaternion().setFromRotationMatrix(T.multiply(S.clone().transpose()));
+      rig.position.sub(head).applyQuaternion(R).add(head); rig.quaternion.premultiply(R); rig.updateMatrixWorld(true);
+    }
+  }
+  if(POSE_EYE[pose]){ const h = headWorld(); rig.position.y += POSE_EYE[pose] - h.y; rig.updateMatrixWorld(true); }
+  recenter();
+  if(bridge && bridge.chair){
+    const seated = pose!=='standing'; bridge.chair.visible = seated;
+    if(seated){ bridge.group.updateMatrixWorld(true); const local = toBridge(headWorld()); bridge.chair.position.set(local.x, 0, local.z + .12); }
+  }
+}
+function setPlayPose(p){ SET.vrPose = p; saveProfile(); if(inXR()){ applyPlayMode(); toast(p==='lying' ? 'Lying down: look at the ceiling, then click the right stick to re-aim.' : p==='seated' ? 'Seated mode: the bridge is set to chair height.' : 'Standing mode: walk around the bridge.'); } }

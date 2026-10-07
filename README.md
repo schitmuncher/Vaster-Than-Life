@@ -23,6 +23,8 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 | B / Y | Open or close the map |
 | Grip | Bring the console in front of you |
 
+**Play position.** Choose **Standing**, **Seated** or **Lying down** in Settings, or from the pause screen while in VR. Seated puts you in the captain's chair at chair height. Lying down tilts the whole bridge so that looking at the ceiling shows the console in front of you: lie back, look up, and click the right stick to re-aim if needed. The right stick click always resets your position for the chosen mode.
+
 Look at either controller to see a label of what its buttons do. Turning style, teleport-only movement, the vignette, the magnifier, bigger VR text and the controller labels are all in **Settings → VR comfort & clarity**. Hovering over buttons gives a small haptic tick, the console texture is mipmapped so small text stays sharp, and small fonts are enlarged in VR.
 
 In VR you stand on the bridge of your ship. A **holotable** under the console shows 3D models of both ships, with fires, damage, crew, drones and shots in flight, and the enemy ship is out there beyond the canopy. You can turn the holotable off in Settings.
@@ -110,6 +112,13 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 - Short, contextual tips appear the first time each mechanic matters: targeting shields, volley fire, missiles and beams, spare power, fire, breaches, boarders, low oxygen, mind control, the medbay, fleeing, upgrading, stores, fuel, the fleet, being outgunned, and a Flagship briefing before the last sector.
 - Combat tips pause the game and highlight the part of the screen they talk about. Turn them off with "No more tips", or replay them from Settings.
 - First-time captains start on Easy.
+
+**Mechanics tuned to FTL reference numbers**
+- Oxygen refills at 1.2 / 4.8 / 8.4 % per second by level and drains at 1.2 % per second when unpowered; breaches drain 8 % per second.
+- Ion damage locks a system for 5 seconds per hit, stacking up to 25 seconds.
+- Weapons use FTL's fire and breach chances, and a hit only rolls for a breach if it didn't start a fire.
+- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase.
+- Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
 - 20 achievements and three difficulties.
