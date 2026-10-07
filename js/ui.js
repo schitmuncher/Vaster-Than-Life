@@ -202,10 +202,11 @@ function drawSettings(){
   tog(390, 'Holotable in VR', 'holotable', '3D models of both ships on a table below the console.');
   tog(460, 'Unlock all ships', 'unlockAll', 'Skip the unlock conditions and pick any ship.');
   tog(530, 'Allow mod scripts', 'allowScripts', 'Lets mods run their own JavaScript. Only turn this on for mods you trust.');
-  if(UI.confirmReset){ T('Erase all achievements, unlocks and stats?', 80, 660, { s:22, c:C.hostile });
-    btn(80, 680, 220, 52, 'Yes, erase', () => { for(const k of Object.keys(PROFILE.ach)) delete PROFILE.ach[k]; PROFILE.maxSector = 1; PROFILE.kills = 0; PROFILE.wins = {}; PROFILE.runs = 0; saveProfile(); UI.confirmReset = false; toast('Profile reset.'); }, { col:C.hostile, fill:true });
-    btn(320, 680, 160, 52, 'Cancel', () => { UI.confirmReset = false; }); }
-  else btn(80, 640, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
+  tog(600, 'Smart pause', 'smartPause', 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
+  if(UI.confirmReset){ T('Erase all achievements, unlocks and stats?', 80, 700, { s:22, c:C.hostile });
+    btn(80, 720, 220, 52, 'Yes, erase', () => { for(const k of Object.keys(PROFILE.ach)) delete PROFILE.ach[k]; PROFILE.maxSector = 1; PROFILE.kills = 0; PROFILE.wins = {}; PROFILE.runs = 0; saveProfile(); UI.confirmReset = false; toast('Profile reset.'); }, { col:C.hostile, fill:true });
+    btn(320, 720, 160, 52, 'Cancel', () => { UI.confirmReset = false; }); }
+  else btn(80, 690, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
   T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)}`, 80, 790, { s:18, c:C.muted });
   btn(80, 860, 200, 64, 'Back', () => { UI.screen = 'title'; UI.confirmReset = false; });
 }
@@ -253,9 +254,10 @@ function drawGame(){
   drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
   drawRoster(); if(G.enemy) drawEnemyStrip();
   drawSystems(); drawArmory();
-  const hint = UI.selWeapon!=null ? (DATA.weapons[G.ship.weapons[UI.selWeapon]?.id]?.heal ? 'Point at one of YOUR rooms to target the burst' : 'Point at an enemy room to target it')
+  const sw_ = UI.selWeapon!=null ? DATA.weapons[G.ship.weapons[UI.selWeapon]?.id] : null;
+  const hint = UI.selWeapon!=null ? (sw_?.heal ? 'Point at one of YOUR rooms to target the burst' : `Point at an enemy room · ${sw_?.type==='beam'||sw_?.type==='bomb' ? 100 : 100-evasion(G.enemy||G.ship)}% to hit · ${G.enemy?.shield||0} shield layer${(G.enemy?.shield||0)===1?'':'s'}`)
     : UI.mode==='tele' ? 'Point at an enemy room to teleport your away team' : UI.mode==='hack' ? 'Point at an enemy room to launch the hacking drone'
-    : UI.mode==='mind' ? 'Point at an enemy crew member to take control' : UI.selCrew ? 'Point at a room to move your crew member' : '';
+    : UI.mode==='mind' ? 'Point at an enemy crew member to take control' : UI.selCrew ? ((UI.selCrews||[]).length>1 ? `Point at a room to move ${UI.selCrews.length} crew` : 'Point at a room to move your crew member') : '';
   if(hint){ panel(W/2-330, 520, 660, 40, 8); T(hint, W/2, 541, { s:17, a:'center', b:'middle', c:C.amber }); }
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0){ ctx.fillStyle = `rgba(255,236,200,${warpAmt()*.5})`; ctx.fillRect(0,0,W,H); }
@@ -360,9 +362,11 @@ function drawShip(sh, box, facing, isEnemy, mini){
         else if(UI.mode==='tele') region(q.x,q.y,q.w,q.h, () => { if(teleSend(G.ship, G.enemy, i)) UI.mode = null; else toast('Gather crew in the teleporter room first, and wait for it to charge.'); });
         else if(UI.mode==='hack') region(q.x,q.y,q.w,q.h, () => { if(hackLaunch(G.ship, G.enemy, i)) UI.mode = null; });
         else if(UI.selCrew) region(q.x,q.y,q.w,q.h, () => moveSelected(sh, i));
+        else if(sh.crew.some(c => c.room===i && controlled(c))) region(q.x,q.y,q.w,q.h, () => selectRoomCrew(sh, i));
       } else {
         if(healSel) region(q.x,q.y,q.w,q.h, () => { selW.target = i; UI.selWeapon = null; });
         else if(UI.selCrew) region(q.x,q.y,q.w,q.h, () => moveSelected(sh, i));
+        else if(sh.crew.some(c => c.room===i && controlled(c))) region(q.x,q.y,q.w,q.h, () => selectRoomCrew(sh, i));
       }
     }
   });
@@ -384,14 +388,14 @@ function drawShip(sh, box, facing, isEnemy, mini){
     if(isEnemy && !seeCrew && c.owner!=='p' && !ownIn.has(c.room)){ c._sx = null; continue; }
     const p = cellXY(sh, c.x, c.y); const px = p.x, py = p.y + (mini?0:2);
     const face = c._sx!=null && Math.abs(px - c._sx) > .05 ? Math.sign(px - c._sx) : (c._face || (isEnemy ? -1 : 1)); c._face = face; c._sx = px; c._sy = py;
-    if(!mini && UI.selCrew===c.id){ ctx.beginPath(); ctx.ellipse(px, py+rad*.95, rad*1.25, rad*.45, 0, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); glow(px, py+rad*.9, rad*1.3, C.amber, .3); }
+    if(!mini && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id))){ ctx.beginPath(); ctx.ellipse(px, py+rad*.95, rad*1.25, rad*.45, 0, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); glow(px, py+rad*.9, rad*1.3, C.amber, .3); }
     drawCrewSprite(px, py, rad, c, { hostile: c.owner==='e' && !mini, face });
     if(!mini){
       const hw = rad*1.9, fr = clamp(c.hp/c.maxHp,0,1); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(px-hw/2-1, py-rad*1.6-1, hw+2, 5); ctx.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; ctx.fillRect(px-hw/2, py-rad*1.6, hw*fr, 3);
       if(c.mcT>0){ ctx.beginPath(); ctx.arc(px,py,rad+7,0,7); ctx.strokeStyle = C.violet; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); }
       if(c.stunT>0) T('z', px+rad, py-rad, { s:14, f:FD, w:700, c:C.cyan });
       if(crewSide(c)!==sh.side && c.owner==='p'){ ctx.beginPath(); ctx.arc(px,py,rad+3,0,7); ctx.strokeStyle = hexA(C.amber,.6); ctx.lineWidth = 1.5; ctx.stroke(); }
-      if(G && controlled(c)) region(px-rad-6, py-rad-8, rad*2+12, rad*2+14, () => { UI.selCrew = UI.selCrew===c.id ? null : c.id; UI.selWeapon = null; UI.mode = null; });
+      if(G && controlled(c)) region(px-rad-6, py-rad-8, rad*2+12, rad*2+14, () => { UI.selCrew = UI.selCrew===c.id && !(UI.selCrews||[]).length ? null : c.id; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; });
       else if(G && UI.mode==='mind' && crewSide(c)!=='p') region(px-rad-6, py-rad-8, rad*2+12, rad*2+14, () => { if(mindControl(G.ship, c)) UI.mode = null; });
     }
   }
@@ -409,10 +413,14 @@ function drawShip(sh, box, facing, isEnemy, mini){
 }
 
 function moveSelected(sh, ri_){
-  const c = sh.crew.find(x => x.id===UI.selCrew);
-  if(!c){ toast('Crew can only walk within the ship they are on. Use the teleporter to cross.'); UI.selCrew = null; return; }
-  if(!orderMove(sh, c, ri_)) toast('That room is full.'); UI.selCrew = null;
+  const ids = UI.selCrews && UI.selCrews.length ? UI.selCrews : [UI.selCrew];
+  const group = sh.crew.filter(x => ids.includes(x.id) && controlled(x));
+  if(!group.length){ toast('Crew can only walk within the ship they are on. Use the teleporter to cross.'); UI.selCrew = null; UI.selCrews = []; return; }
+  let moved = 0; for(const c of group){ if(orderMove(sh, c, ri_)){ moved++; c.manualT = 10; if(sh===G.ship) c.station = ri_; } }
+  if(!moved) toast('That room is full.'); else if(moved < group.length) toast('Not everyone fits in that room.');
+  UI.selCrew = null; UI.selCrews = [];
 }
+function selectRoomCrew(sh, ri_){ const ids = sh.crew.filter(c => c.room===ri_ && controlled(c)).map(c => c.id); if(!ids.length) return false; UI.selCrew = ids[0]; UI.selCrews = ids; UI.selWeapon = null; UI.mode = null; return true; }
 function drawQuiet(){
   const b = EBOX; const node = G.map?.nodes[G.map.cur];
   ctx.beginPath(); ctx.arc(b.x+b.w*.62, b.y+b.h*.46, 150, 0, 7); const pg = ctx.createRadialGradient(b.x+b.w*.55,b.y+b.h*.38,10,b.x+b.w*.62,b.y+b.h*.46,150);
@@ -504,7 +512,9 @@ function drawSystems(){
   btn(hx+20+bw2, hy+74, bw2, 36, 'Close', () => { if(!setAllDoors(s, false, true)) toast('Door control is down.'); }, { s:13, col:'#c9a27e' });
   const vent = s.doors.some(d => d.b<0 && d.open);
   btn(hx+10, hy+116, subW-20, 36, vent ? 'Seal airlocks' : 'Vent airlocks', () => { if(!canDoors(s)){ toast('Door control is down.'); return; } for(const d of s.doors) if(d.b<0) d.open = !vent; }, { s:13, col:C.cyan, fill:vent });
-  btn(hx+10, hy+158, subW-20, 36, 'Crew to stations', () => returnToStations(s), { s:13 });
+  btn(hx+10, hy+158, (subW-30)/2, 36, 'Stations', () => returnToStations(s), { s:13 });
+  btn(hx+20+(subW-30)/2, hy+158, (subW-30)/2, 36, G.crewAuto ? 'Auto on' : 'Auto off', () => { G.crewAuto = !G.crewAuto; toast(G.crewAuto ? 'Crew autopilot on: idle crew handle damage, fires and boarders.' : 'Crew autopilot off.'); }, { s:13, fill:G.crewAuto, col:C.good });
+  tip(hx+10, hy+158, subW-20, 36, 'Crew stations and autopilot', 'Stations sends everyone back to their posts. With autopilot on, idle crew repair damage, fight fires and boarders, visit the medbay when hurt, then return to their posts. Moving someone by hand makes that room their new post.');
   if(s.systems.battery){ const b = s.battery; btn(hx+10, hy+200, subW-20, 36, b.t>0 ? `Battery ${b.t.toFixed(0)}s` : b.cd>0 ? `Recharging ${Math.ceil(b.cd)}s` : 'Battery boost', () => activateBattery(s), { s:13, col:C.warn, disabled:!canBattery(s) }); }
   if(s.systems.teleporter){ btn(hx+10, hy+242, subW-20, 32, 'Gather at teleporter', () => { const tr = roomOf(s,'teleporter'); let n = 0; for(const c of s.crew){ if(!controlled(c) || n>=4) continue; if(c.room===roomOf(s,'piloting')) continue; if(orderMove(s, c, tr)) n++; } if(!n) toast('No free crew to send.'); }, { s:12, col:'#c6e05a' }); }
 }
@@ -513,6 +523,7 @@ function drawArmory(){
   panel(x,y,w,h);
   label('Weapons', x+16, y+28, C.hostile, 'left', 16);
   T(`${weaponPowerUsed(s)}/${eff(s,'weapons')} pwr · ${G.missiles} msl`, x+120, y+28, { s:14, c:C.muted });
+  if(G.enemy && !G.enemy.dead){ const ready = s.weapons.filter(w => w.on && w.charge >= (DATA.weapons[w.id]?.charge||1) && ['laser','flak','ion'].includes(DATA.weapons[w.id]?.type)).reduce((t,w)=>t+(DATA.weapons[w.id].shots||1),0); if(G.hold || ready) T(`${ready} shot${ready===1?'':'s'} ready vs ${G.enemy.shield} shield${G.enemy.shield===1?'':'s'}`, x+120, y+212, { s:13, c: ready > G.enemy.shield ? C.good : C.warn }); }
   btn(x+w-150, y+8, 136, 30, G.autofire ? 'Autofire on' : 'Autofire off', () => { G.autofire = !G.autofire; }, { s:13, fill:G.autofire, col:C.hostile });
   btn(x+w-296, y+8, 136, 30, G.hold ? 'Fire volley' : 'Hold fire', () => { G.hold = !G.hold; }, { s:13, fill:!!G.hold, col:C.warn });
   const slots = R.weaponSlots, gap = 8, cw = (w - 28 - gap*(slots-1))/slots, ch = 152;
@@ -770,7 +781,7 @@ function drawStoreModal(m){
       if(!st.systems.length) T('No new systems for sale here.', cx, y0+40, { s:18, c:C.muted }); break;
     case 'supplies': {
       const rows = [ ['Fuel cell', 'One jump\'s worth.', 3, () => G.fuel++], ['Missile', 'Ammo for missiles and bombs.', 6, () => G.missiles++], ['Drone part', 'Each drone deployment and hacking drone uses one.', 8, () => G.parts++],
-        ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, 2, () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull], ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, 9, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
+        ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, 2 + Math.floor(G.sector/3), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull], ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, 5*(2 + Math.floor(G.sector/3)) - 1, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
       rows.forEach((r,i) => { const c = price(r[2], st); const y = y0 + i*82; panel(cx, y, 640, 72, 8); T(r[0], cx+20, y+32, { s:20, f:FD, w:700 }); T(r[1], cx+20, y+56, { s:14, c:C.muted });
         btn(cx+420, y+12, 200, 48, `Buy · ${c}`, () => buy(c, r[3]), { disabled: r[4] || G.scrap < c, col:C.good }); });
       const race = DATA.races[st.crewRace]; const rx = cx+680; panel(rx, y0, 680, 300, 8); label('Crew for hire', rx+20, y0+34, C.muted);

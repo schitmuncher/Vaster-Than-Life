@@ -139,8 +139,8 @@ function roomOf(sh, k){ return sh.rooms.findIndex(r => r.sys===k); }
 function scaledEnemySystems(def, sector){
   const s = Object.assign({}, def.systems||{});
   if(def.boss) return s;
-  if(sector>=3 && ((s.shields||0)>0 || sector>=4)) s.shields = Math.min(8, (s.shields||0) + 2);
-  if(sector>=6) s.shields = Math.min(8, (s.shields||0) + 2);
+  if(sector>=4 && ((s.shields||0)>0 || sector>=5)) s.shields = Math.min(8, (s.shields||0) + 2);
+  if(sector>=7) s.shields = Math.min(8, (s.shields||0) + 2);
   s.weapons = Math.min(8, (s.weapons||1) + Math.floor((sector-1)/2));
   s.engines = Math.min(8, (s.engines||1) + Math.floor((sector-1)/3));
   if(s.drones) s.drones = Math.min(8, s.drones + Math.floor((sector-1)/3));
@@ -161,7 +161,7 @@ function makeShip(def, side, o={}){
   rooms.forEach(r => Object.assign(r, { o2:100, fire:0, fireP:0, fireOut:0, fireDmg:0, breach:0, breachP:0, sab:0 }));
   const diff = DIFFICULTY[SET.difficulty] || DIFFICULTY.normal;
   let hull = phase?.hull ?? def.hull;
-  if(enemy && !def.boss) hull += 2*(sector-1) + diff.enemyHull;
+  if(enemy && !def.boss) hull += Math.round(1.5*(sector-1)) + diff.enemyHull;
   if(enemy && def.boss) hull += diff.enemyHull*2;
   const sh = { side, isEnemy:enemy, id:def.id, name:o.name || def.name || def.id, cls:def.cls||'', color:def.color || (enemy?C.hostile:C.amber),
     boss:!!def.boss, phase:o.phase||0, auto:!!def.auto, image:def.image||null,

@@ -21,7 +21,7 @@ const SAVE_KEY = 'vtl2.save', MOD_KEY = 'vtl.mods', PROFILE_KEY = 'vtl2.profile'
 
 /* ---------------- profile, settings, unlocks ---------------- */
 const PROFILE = Object.assign({ ach:{}, maxSector:1, kills:0, wins:{}, runs:0 }, LS.get(PROFILE_KEY, {}));
-PROFILE.settings = Object.assign({ music:.5, sfx:.7, difficulty:'normal', unlockAll:false, allowScripts:false, holotable:true }, PROFILE.settings||{});
+PROFILE.settings = Object.assign({ music:.5, sfx:.7, difficulty:'normal', unlockAll:false, allowScripts:false, holotable:true, smartPause:true }, PROFILE.settings||{});
 const SET = PROFILE.settings;
 function saveProfile(){ LS.set(PROFILE_KEY, PROFILE); }
 function grant(id){

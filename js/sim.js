@@ -24,8 +24,15 @@ function reactorUsed(sh){ let u = 0; for(const k of MAIN) u += sh.systems[k]?.po
 function reactorFree(sh){ return reactorAvail(sh) - reactorUsed(sh); }
 function shedPower(sh){
   let over = reactorUsed(sh) - reactorAvail(sh); if(over<=0) return;
-  for(const k of [...MAIN].reverse()){ const s = sh.systems[k]; while(over>0 && s && s.power>0){ s.power--; over--; } }
+  for(const k of SHED_ORDER){ const s = sh.systems[k]; while(over>0 && s && s.power>0){ if(!sh.isEnemy) s.prev = Math.max(s.prev, s.power); s.power--; over--; } }
   weaponBudget(sh); droneBudget(sh);
+}
+const SHED_ORDER = ['clonebay','medbay','mindcontrol','hacking','cloaking','teleporter','drones','engines','weapons','oxygen','shields'];
+/* when power comes back (storm passes, battery recharged, repairs), restore what was lost */
+function restorePower(sh){
+  if(sh.isEnemy || reactorFree(sh)<=0) return;
+  for(const k of [...SHED_ORDER].reverse()){ const s = sh.systems[k]; if(!s || s.prev<=s.power) continue;
+    if(s.power < s.max - s.dmg && reactorFree(sh)>0){ s.power++; if(k==='weapons') autoPowerWeapons(sh); if(s.power>=s.prev) s.prev = 0; return; } }
 }
 function addPower(sh, k){
   const s = sh.systems[k]; if(!s || SUB.includes(k)) return 'none';
@@ -208,7 +215,7 @@ function tickUnits(dt){
     u.ang += dt*(bp.kind==='attack' ? .7 : .9); u.cd -= dt;
     if(u.cd>0) continue;
     if(bp.kind==='attack' && foe && !foe.dead){
-      const room = aiTargetRoom(foe); const shot = Object.assign({ name:bp.name }, bp.shot);
+      const shot = Object.assign({ name:bp.name }, bp.shot); const room = aiTargetRoom(foe, shot);
       launch(u.side, foe.side, shot, room, { unit:u.id, rooms: shot.type==='beam' ? beamRooms(foe, room, shot.rooms||2) : undefined, dur: shot.type==='beam' ? .5 : .7 });
       sfx(shot.type==='ion'?'ion':shot.type==='beam'?'beam':'laser'); u.cd = (bp.rate||4) * (u.side==='e' ? 1.35 : 1);
     } else if(bp.kind==='defense'){
@@ -269,7 +276,14 @@ function setAllDoors(sh, open, airlocks){ if(!canDoors(sh)) return false; for(co
 function returnToStations(sh){ for(const c of sh.crew){ if(c.owner!==sh.side || c.drone || c.mcT>0 || c.station==null) continue; orderMove(sh, c, c.station); } }
 
 /* ---------------- targeting AI ---------------- */
-function aiTargetRoom(foe){
+function aiTargetRoom(foe, d){
+  const at = k => { const i = roomOf(foe,k); return i>=0 && foe.systems[k] ? i : -1; };
+  if(d && G && G.sector>=2){ const r = Math.random();
+    if(d.type==='ion'){ const s = at('shields'); if(s>=0 && r<.8) return s; }
+    if(d.type==='missile' || d.type==='bomb'){ const s = at(r<.5 ? 'weapons' : 'shields'); if(s>=0) return s; }
+    if(d.type==='beam'){ const c = ['weapons','piloting','shields','oxygen'].map(at).filter(i=>i>=0); if(c.length && r<.75) return pick(c); }
+    if(d.type==='laser' || d.type==='flak'){ if(foe.shield>0 && r<.45){ const s = at('shields'); if(s>=0) return s; } const c = ['weapons','shields','piloting','engines','oxygen','medbay'].map(at).filter(i=>i>=0); if(c.length && r<.85) return pick(c); }
+  }
   const opts = [];
   foe.rooms.forEach((r,i) => { if(!r.sys || !foe.systems[r.sys]) return; const wgt = ['weapons','shields'].includes(r.sys) ? 4 : ['piloting','engines','oxygen'].includes(r.sys) ? 2 : 1; for(let k=0;k<wgt;k++) opts.push(i); });
   return opts.length ? pick(opts) : Math.floor(Math.random()*foe.rooms.length);
@@ -309,6 +323,50 @@ function crewAI(sh, c){
     orderMove(sh, c, Math.random()<.7 ? cands[0] : pick(cands));
   }
 }
+/* crew autopilot: idle player crew answer emergencies, then go back to their posts */
+function autoCrew(sh, c){
+  if(c.path.length || c.stunT>0) return;
+  const here = c.room, race = raceOf(c);
+  if(hostilesFor(sh, here, 'p')){
+    const foeStr = sh.crew.filter(o => o.room===here && crewSide(o)!=='p').reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
+    const ourStr = sh.crew.filter(o => o.room===here && crewSide(o)==='p').reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
+    if((race.combat<=.5 || c.hp < c.maxHp*.3) && ourStr < foeStr*.7){ const safe = sh.rooms.map((r,i)=>i).filter(i => !hostilesFor(sh, i, 'p') && sh.rooms[i].o2 > 30 && sh.rooms[i].fire===0);
+      const med = roomOf(sh,'medbay'); const dest = safe.includes(med) && eff(sh,'medbay')>0 ? med : safe.sort((a,b) => roomDist(sh,here,a) - roomDist(sh,here,b))[0];
+      if(dest!=null){ orderMove(sh, c, dest); c.manualT = 6; } }
+    return; }
+  const helm = roomOf(sh,'piloting');
+  const soleOn = k => { const i = roomOf(sh,k); return here===i && !sh.crew.some(o => o!==c && controlled(o) && o.room===i && !o.path.length); };
+  const med = roomOf(sh,'medbay');
+  if(c.hp < c.maxHp*(G.enemy ? .35 : .75) && med>=0 && eff(sh,'medbay')>0 && !hostilesFor(sh, med, 'p') && sh.rooms[med].fire===0){ if(here!==med && !(soleOn('piloting') && G.enemy)) orderMove(sh, c, med); return; }
+  const intruderRooms = sh.rooms.map((r,i)=>i).filter(i => hostilesFor(sh, i, 'p'));
+  if(intruderRooms.length && race.combat > .5){
+    const pilotStays = G.enemy && soleOn('piloting');
+    if(!pilotStays){
+      const strength = i => sh.crew.filter(o => o.room===i && crewSide(o)!=='p').reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
+      const defense = i => sh.crew.filter(o => crewSide(o)==='p' && (o.path.length ? sh.cellRoom[o.tx+','+o.ty]===i : o.room===i)).reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
+      const needy = intruderRooms.filter(i => defense(i) < strength(i)*1.6 && roomCount(sh, i, 'p') < cap2(sh, i)).sort((a,b) => roomDist(sh,here,a) - roomDist(sh,here,b));
+      if(needy.length){ if(needy[0]!==here) orderMove(sh, c, needy[0]); return; } }
+  }
+  let best = null, bd = 1e9;
+  sh.rooms.forEach((r,i) => {
+    let w = 0, cap = 2; const host = hostilesFor(sh, i, 'p');
+    if(host){ w = 3*(race.combat>=1.5 ? 1.6 : race.combat<=.5 ? .35 : 1); cap = 5; }
+    else if(r.fire>0 && r.o2>=8){ w = 2.2; }
+    else if(r.breach>0){ w = 1.8; }
+    else if(r.sys && sh.systems[r.sys]?.dmg>0){ w = 1.4*(race.repair>=2 ? 1.6 : race.repair<=.5 ? .6 : 1);
+      if(r.sys==='oxygen'){ const avg = sh.rooms.reduce((t,x)=>t+x.o2,0)/sh.rooms.length; w *= avg < 50 ? 4 : 2; }
+      if(r.sys==='shields' || r.sys==='weapons' || r.sys==='piloting') w *= 1.4; }
+    if(!w) return; if(!host && r.o2 < 8 && r.breach===0 && r.sys!=='oxygen') return;
+    if(i!==here && roomCount(sh, i, 'p') >= cap) return;
+    const d = (roomDist(sh, here, i) + 1)/w; if(d < bd){ bd = d; best = i; } });
+  if(best!=null && best!==here){
+    if(G.enemy && (soleOn('piloting') || soleOn('weapons')) && !hostilesFor(sh, best, 'p')) return;
+    orderMove(sh, c, best); return; }
+  if(best===here) return;
+  if(sh.rooms[here].o2 < 10 && !raceOf(c).noAir){ const ok = sh.rooms.map((r,i)=>i).filter(i => sh.rooms[i].o2 > 40).sort((a,b) => roomDist(sh,here,a) - roomDist(sh,here,b)); if(ok.length){ orderMove(sh, c, ok[0]); return; } }
+  if(c.station!=null && sh.rooms[c.station] && here!==c.station && sh.rooms[c.station].o2 > 15) orderMove(sh, c, c.station);
+}
+function cap2(sh, i){ const r = sh.rooms[i]; return r.w*r.h; }
 function moveCrewStep(sh, c, dt){
   if(!c.path.length || c.stunT>0) return;
   const [nx, ny] = c.path[0]; const cx = Math.round(c.x), cy = Math.round(c.y);
@@ -340,7 +398,7 @@ function killCrew(sh, c){
   if(home && !home.dead && home.systems.clonebay){ home.clones.push({ c, t:12 }); if(c.owner==='p') toast(`${c.name} died. The clone bay is regrowing them.`); }
   else if(c.owner==='p' && hasAug(G.ship,'dna')){ G.dna.push(c); toast(`${c.name} died. Their DNA backup will restore them after the fight.`); }
   else if(c.owner==='p'){ toast(`${c.name} has died.`); G.lost.push(c.name); }
-  if(c.owner==='p') say('death', { force:true });
+  if(c.owner==='p'){ say('death', { force:true }); smartPause(`${c.name} died`); }
   if(UI.selCrew===c.id) UI.selCrew = null;
   if(UI.selCrews) UI.selCrews = UI.selCrews.filter(id => id!==c.id);
 }
@@ -355,7 +413,10 @@ function tickShip(sh, dt, foe){
     if(!hacker || hacker.dead || hacker===sh){ sh.hacked = null; }
     else if(h.pulseT>0){ h.pulseT -= dt; if(eff(hacker,'hacking')<=0 && !hackedNow(sh,'hacking')) h.pulseT = 0; if(h.pulseT<=0){ h.pulseT = 0; h.cd = 15; } }
     else if(h.cd>0) h.cd -= dt; }
-  shedPower(sh);
+  shedPower(sh); sh.restT = (sh.restT||0) - dt; if(sh.restT<=0){ sh.restT = .5; restorePower(sh); }
+  if(sh.side==='p' && sh.systems.oxygen){ const avg = sh.rooms.reduce((t,r)=>t+r.o2,0)/sh.rooms.length;
+    if(avg < 35 && !sh.o2Warned){ sh.o2Warned = true; toast('Oxygen is running low! Power and repair the Oxygen system.'); say('breach', { force:true }); smartPause('oxygen low'); }
+    else if(avg > 60) sh.o2Warned = false; }
   // shields
   const layers = shieldLayers(sh);
   if(sh.shield > layers) sh.shield = layers;
@@ -396,7 +457,8 @@ function tickShip(sh, dt, foe){
   for(const c of sh.crew){
     if(c.stunT>0) c.stunT -= dt;
     if(c.mcT>0){ c.mcT -= dt; if(c.mcT<=0){ c.mcT = 0; c.path = []; } }
-    c.aiT -= dt; if(c.aiT<=0){ c.aiT = .6 + Math.random()*.4; crewAI(sh, c); }
+    if(c.manualT>0) c.manualT -= dt;
+    c.aiT -= dt; if(c.aiT<=0){ c.aiT = .6 + Math.random()*.4; if(controlled(c)){ if(G.crewAuto && sh===G.ship && !(c.manualT>0)) autoCrew(sh, c); } else crewAI(sh, c); }
     moveCrewStep(sh, c, dt);
     const race = raceOf(c), r = sh.rooms[c.room];
     if(r){
@@ -463,7 +525,13 @@ function tickShip(sh, dt, foe){
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     w.charge = Math.min(d.charge, w.charge + dt*mult);
     if(w.charge >= d.charge){
-      if(sh.isEnemy && w.target==null) w.target = aiTargetRoom(foe);
+      if(sh.isEnemy && w.target==null) w.target = aiTargetRoom(foe, d);
+      if(sh.isEnemy && G.sector>=2 && foe.shield>0 && ['laser','flak','ion'].includes(d.type)){
+        const ready = sh.weapons.filter(x => x.on && DATA.weapons[x.id] && x.charge >= DATA.weapons[x.id].charge).reduce((t,x) => t + (DATA.weapons[x.id].shots||1), 0);
+        const soon = sh.weapons.some(x => x.on && DATA.weapons[x.id] && x.charge < DATA.weapons[x.id].charge && x.charge > DATA.weapons[x.id].charge*.55);
+        if(ready <= foe.shield && soon && (w.hold = (w.hold||0) + dt) < 5) continue;
+      }
+      w.hold = 0;
       if(w.target!=null && !(sh.side==='p' && G.hold) && !((d.type==='missile'||d.type==='bomb') && sh.side==='p' && G.missiles<=0)) fireWeapon(sh, w, foe);
     }
   }
@@ -482,13 +550,13 @@ function enemyBrain(sh, foe, dt){
   if(sh.systems.teleporter && (sh.board || !sh.boss) && !boarding && canTele(sh, foe) && G.combatT > 8 && Math.random()<.25){
     const home = sh.crew.filter(c => c.owner==='e' && crewSide(c)==='e' && !c.drone);
     const group = home.filter(c => c.room!==roomOf(sh,'piloting')).slice(0, 2 + (sh.boss?1:0));
-    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); say('boarders', { force:true }); } }
+    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); say('boarders', { force:true }); smartPause('intruders aboard'); } }
   }
   if(sh.systems.hacking && G.combatT>4 && canHackLaunch(sh, foe)){ const k = pick(['shields','weapons','piloting']); const r = roomOf(foe,k); if(r>=0 && foe.systems[k]) hackLaunch(sh, foe, r); }
   if(canHackPulse(sh, foe)) hackPulse(sh, foe);
   if(sh.systems.mindcontrol && canMind(sh) && G.combatT>5){
     const cands = foe.crew.filter(c => c.owner==='p' && !c.drone && !DATA.races[c.race]?.mindImmune && c.mcT<=0);
-    if(cands.length){ const c = pick(cands); if(mindControl(sh, c)) toast(`${c.name} has been mind controlled!`); }
+    if(cands.length){ const c = pick(cands); if(mindControl(sh, c)){ toast(`${c.name} has been mind controlled!`); smartPause('crew mind controlled'); } }
   }
   // surrender or flee
   if(!sh.boss && !sh.auto && !sh.surrenderAsked && sh.hull <= sh.maxHull*.4){

@@ -243,7 +243,7 @@ const STORY_EVENTS = {
     { text:'Attack the barge.', effect:{ text:'The guard ship moves to intercept.', fight:'rebuff_fighter', afterWin:{ text:'You free the prisoners. Two of them join you.', crew:'human', scrap:20 } } },
     { text:'Teleport in a rescue team.', req:{ system:'teleporter', level:1 }, chance:.7, success:{ text:'In and out. One prisoner, a veteran gunner, joins your crew.', crew:'human', xp:{ skill:'weapons', amt:10 } }, fail:{ text:'Alarms! Your team escapes, but the guards are coming.', fight:'rebuff_fighter' } },
     { text:'Not worth the risk.', effect:{ text:'You leave them behind.' } } ] },
-  enjinn_market:{ tags:['enjinn'], art:'market', text:'An Enjinn bazaar floats here, selling everything from spare parts to suspiciously cheap drones.', choices:[
+  enjinn_market:{ tags:['enjinn'], weight:.4, art:'market', text:'An Enjinn bazaar floats here, selling everything from spare parts to suspiciously cheap drones.', choices:[
     { text:'Browse.', effect:{ text:'They are delighted to have a customer.', store:true } },
     { text:'Buy a bag of drone parts (20 scrap).', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'Five parts, slightly used.', parts:5 } } ] },
   enjinn_overhaul:{ tags:['enjinn'], text:'An Enjinn mechanic offers a full ship overhaul. "Thirty scrap. I will fix everything. I will also fix some things that were not broken."', choices:[
@@ -319,7 +319,7 @@ const STORY_EVENTS = {
 
 /* ---------------- secret sector content ---------------- */
 const STORY_RACES = {
-  glassborn:{ name:'Glassborn', color:'#d8f6ff', hp:120, repair:1, combat:1.1, speed:.8, armor:.6, desc:'Living crystal. Takes 40% less damage from weapon hits. Rarely leaves home.' }
+  glassborn:{ name:'Glassborn', secret:true, color:'#d8f6ff', hp:120, repair:1, combat:1.1, speed:.8, armor:.6, desc:'Living crystal. Takes 40% less damage from weapon hits. Rarely leaves home.' }
 };
 const STORY_SHIPS = {
   glasscannon:{ name:'The Glass Cannon', layout:'A', cls:'Glassborn Cruiser', color:'#bff4ff', pattern:'TBABN', hull:24, reactor:9, fuel:16, missiles:2, parts:2,
@@ -330,10 +330,10 @@ const STORY_SHIPS = {
     reserve:['drones','teleporter'], weapons:['ion2','lego'], crew:['glassborn','glassborn','glassborn'], unlock:{ win:'glasscannon' } }
 };
 const STORY_ENEMIES = {
-  glass_sentinel:{ name:'Glass Sentinel', tags:['glass'], hull:12, sectors:[1,9], systems:{ shields:4, engines:2, weapons:4, oxygen:1, piloting:1, doors:2 }, weapons:['halbird','heavy1'], crew:['glassborn','glassborn','glassborn'], color:'#bff4ff' }
+  glass_sentinel:{ name:'Glass Sentinel', tags:['glass'], onlyTagged:true, hull:12, sectors:[1,9], systems:{ shields:4, engines:2, weapons:4, oxygen:1, piloting:1, doors:2 }, weapons:['halbird','heavy1'], crew:['glassborn','glassborn','glassborn'], color:'#bff4ff' }
 };
 const STORY_SECTORS = {
-  glass:{ name:'The Glasswork Expanse', secret:true, color:'#bff4ff', mix:{ event:52, combat:28, store:12, empty:8 }, tags:['glass'], enemyTags:['glass'], hazards:{ pulsar:.06 }, nebula:.25,
+  glass:{ name:'The Glasswork Expanse', secret:true, color:'#bff4ff', mix:{ event:52, combat:36, empty:12 }, tags:['glass'], enemyTags:['glass'], hazards:{ pulsar:.06 }, nebula:.25,
     intro:['Light bends strangely here. Every surface seems to hum. The Glassborn have been waiting a very long time for visitors.'] }
 };
 const SECTOR_INTROS = {

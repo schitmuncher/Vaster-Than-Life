@@ -15,7 +15,7 @@ function newRun(shipId, name){
     scrap:Math.max(0, R.startScrap + diff.startScrap), fuel:def.fuel ?? 16, missiles:def.missiles ?? 8, parts:def.parts ?? R.startParts,
     paused:false, modal:null, ftl:0, warp:0, warpNode:null, fleetX:-.2, boss:false, dieT:0, shake:0, flash:0, map:null,
     hazard:null, hzT:6, hzWarn:false, nebula:false, autofire:true, combatT:0, time:0, afterWin:null, flag:null, questQueue:[],
-    stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false };
+    stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true };
   genSector(1, 'civilian');
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
@@ -30,7 +30,7 @@ function save(){ if(!G || G.enemy || UI.screen!=='game') return;
 function loadSave(){
   const s = LS.get(SAVE_KEY, null); if(!s || !s.G || !s.DATA) return false;
   DATA = s.DATA; R = DATA.rules; G = s.G; G.modal = null; G.fx = []; G.proj = []; G.units = [];
-  G.flags = G.flags||{}; G.seen = G.seen||{}; G.later = G.later||[]; G.log = G.log||[]; G.chat = []; G.mapPieces = G.mapPieces||0;
+  if(G.crewAuto===undefined) G.crewAuto = true; G.flags = G.flags||{}; G.seen = G.seen||{}; G.later = G.later||[]; G.log = G.log||[]; G.chat = []; G.mapPieces = G.mapPieces||0;
   buildGraph(G.ship); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; return true;
 }
 
@@ -46,7 +46,7 @@ function genSector(n, type){
     for(let k=0;k<count;k++){
       const x = clamp((c + (c>0 && c<cols-1 ? rand(-.18,.18) : 0))/(cols-1), 0, 1);
       const y = count===1 ? .5 : clamp((k+.5)/count + rand(-.08,.08), .08, .92);
-      let type = wpick(Object.keys(mix), t => mix[t]);
+      let type = wpick(Object.keys(mix), t => mix[t]); if(type==='store') type = Math.random()<.6 ? 'event' : 'combat';
       if(c===0) type = 'start'; if(c===cols-1) type = final ? 'base' : 'exit';
       const node = { x, y, col:c, type, links:[], visited:c===0, store:null, hazard:null, nebula:false, distress:false, quest:null };
       if(c>0 && c<cols-1){
@@ -65,7 +65,8 @@ function genSector(n, type){
   }
   for(const b of nodes) if(b.col>0 && !b.links.some(i => nodes[i].col<b.col)) link(nodes, pick(nodes.filter(a=>a.col===b.col-1)), b);
   const mids = nodes.filter(nd => nd.col>=2 && nd.col<=cols-2);
-  if(!nodes.some(nd=>nd.type==='store') && mids.length) pick(mids).type = 'store';
+  const storeN = final ? 2 : (Math.random() < .3 ? 2 : 1); const placed = [];
+  for(const nd of shuffle(mids.slice())){ if(placed.length>=storeN) break; if(placed.some(p => Math.abs(p.col - nd.col) < 2)) continue; nd.type = 'store'; nd.distress = false; placed.push(nd); }
   G.map = { nodes, cur:0 }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
   G.flag = null;
@@ -198,12 +199,12 @@ function sign(n){ return (n>0?'+':'') + n; }
 function applyEffect(e){
   const L = [], s = G.ship; if(!e) return L;
   const sm = (DIFFICULTY[SET.difficulty]||DIFFICULTY.normal).scrap * (hasAug(s,'scrapArm') ? 1.1 : 1);
-  if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
+  if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
   if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
   if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
-  if(e.crew){ const races = Object.keys(DATA.races); const race = e.crew==='random' ? pick(races) : e.crew;
+  if(e.crew){ const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
     if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); checkCrewAch(); } else L.push('No bunk free for a new crew member'); }
   if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); } }
   if(e.weapon) L.push(giveWeapon(e.weapon));
@@ -268,7 +269,7 @@ function closeResult(m){
 /* ---------------- combat lifecycle ---------------- */
 function pickEnemy(n){
   const sd = sectorDef(); const bias = sd.enemyTags || [];
-  let pool = Object.values(DATA.enemies).filter(e => !e.boss && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
+  let pool = Object.values(DATA.enemies).filter(e => !e.boss && (!e.onlyTagged || (e.tags||[]).some(t=>bias.includes(t))) && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
   if(!pool.length) pool = Object.values(DATA.enemies).filter(e => !e.boss);
   return wpick(pool, e => (e.tags||[]).some(t=>bias.includes(t)) ? 4 : 1);
 }
@@ -314,9 +315,9 @@ function finishCombat(kind, offer){
   const L = [];
   if(kind==='surrender') L.push(...applyEffect(offer));
   else {
-    const reward = { scrap: ri(10,16) + G.sector*5 + (kind==='crew' ? 12 : 0) };
+    const reward = { scrap: Math.round((ri(18,28) + G.sector*9) * (kind==='crew' ? 1.5 : 1)) };
     if(Math.random()<.45) reward.fuel = ri(1,2); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
-    if(Math.random() < (kind==='crew' ? .3 : .12)) reward.weapon = 'random';
+    if(Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
     L.push(...applyEffect(reward));
@@ -339,6 +340,7 @@ function endRun(win, reason){
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
 }
 
+function smartPause(reason){ if(SET.smartPause && G && !G.modal && !G.paused && UI.screen==='game'){ G.paused = true; toast(`Auto-paused: ${reason}`); } }
 /* ---------------- crew chatter & enemy taunts ---------------- */
 function say(trigger, o={}){
   if(!G) return; if(!o.force && G.time - (G.lastSay ?? -99) < 3.5) return;
@@ -357,7 +359,7 @@ function makeStore(){
   const dp = Object.values(DATA.drones).filter(d=>!d.noLoot).map(d=>d.id); shuffle(dp);
   const ap = Object.keys(DATA.augments).filter(k => !s.augments.includes(k)); shuffle(ap);
   const sp = Object.keys(INSTALL).filter(k => !s.systems[k] && !(k==='clonebay' && s.systems.medbay) && !(k==='medbay' && s.systems.clonebay)); shuffle(sp);
-  return { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(Object.keys(DATA.races)), crewSold:false, discount: G.sectorType==='pyrate' ? .85 : 1 };
+  return { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')), crewSold:false, discount: G.sectorType==='pyrate' ? .85 : 1 };
 }
 function price(v, st){ return Math.round(v * (st?.discount||1)); }
 function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; fn(); sfx('buy'); save(); return true; }
@@ -399,7 +401,7 @@ function update(dt){
     for(const b of (G.chat||[])) b.t -= dt;
     if(foe){ if(!foe.hurtSaid && foe.hull < foe.maxHull*.5){ foe.hurtSaid = true; taunt('hurt'); say('enemyHurt'); }
       if(!foe.gloatSaid && G.ship.hull < G.ship.maxHull*.4){ foe.gloatSaid = true; taunt('gloat'); }
-      if(!foe.lowSaid && G.ship.hull < G.ship.maxHull*.3){ foe.lowSaid = true; say('lowHull', { force:true }); } }
+      if(!foe.lowSaid && G.ship.hull < G.ship.maxHull*.3){ foe.lowSaid = true; say('lowHull', { force:true }); smartPause('hull critical'); } }
     else { G.idleT = (G.idleT||0) + dt; if(G.idleT > 22){ G.idleT = 0; if(Math.random()<.35) say('idle'); } }
     updateParts(dt);
     emit('tick', dt);

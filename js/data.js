@@ -156,12 +156,12 @@ const BASE = {
     pyrate_bomber:  { name:'Pyrate Boom-barge', tags:['pyrate'], hull:11, sectors:[2,8], systems:{ shields:2, engines:1, weapons:3, oxygen:1, piloting:1, doors:1 }, weapons:['firebomb','basic'], crew:['human','pebblekin','human'] },
     auto_scoundrel: { name:'Auto-Scoundrel',    tags:['auto','enjinn'], auto:true, hull:9, sectors:[1,8], systems:{ shields:2, engines:2, weapons:3, drones:2, piloting:1 }, weapons:['basic','lego'], drones:['combat1'], crew:[] },
     auto_assault:   { name:'Auto-Assaulter',    tags:['auto','rebuff'], auto:true, hull:12, sectors:[4,8], systems:{ shields:4, engines:2, weapons:4, drones:4, piloting:1 }, weapons:['bust1','hermies'], drones:['defense1'], crew:[] },
-    mantlis_raider: { name:'Mantlis Raider',    tags:['mantlis'], hull:10, sectors:[1,8], systems:{ shields:2, engines:2, weapons:2, teleporter:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['basic','lego'], crew:['mantlis','mantlis','mantlis','mantlis'] },
-    voltan_peace:   { name:'Voltan Peacemonger',tags:['voltan'], hull:10, sectors:[2,8], super:4, systems:{ shields:2, engines:3, weapons:3, oxygen:1, piloting:1, doors:1 }, weapons:['ion','pike'], crew:['voltan','voltan','voltan'] },
+    mantlis_raider: { name:'Mantlis Raider',    tags:['mantlis'], hull:10, sectors:[2,8], systems:{ shields:2, engines:2, weapons:2, teleporter:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['basic','lego'], crew:['mantlis','mantlis','mantlis','mantlis'] },
+    voltan_peace:   { name:'Voltan Peacemonger',tags:['voltan'], hull:10, sectors:[3,8], super:4, systems:{ shields:2, engines:3, weapons:3, oxygen:1, piloting:1, doors:1 }, weapons:['ion','pike'], crew:['voltan','voltan','voltan'] },
     pebble_brute:   { name:'Pebblekin Brute',   tags:['pebblekin'], hull:14, sectors:[1,8], systems:{ shields:2, engines:1, weapons:3, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','arty'], crew:['pebblekin','pebblekin','pebblekin'] },
-    sloog_hacker:   { name:'Sloog Interloper',  tags:['sloog'], hull:10, sectors:[2,8], systems:{ shields:2, engines:2, weapons:3, hacking:2, oxygen:1, piloting:1, sensors:2, doors:1 }, weapons:['biobeam','basic'], crew:['sloog','sloog','sloog'] },
+    sloog_hacker:   { name:'Sloog Interloper',  tags:['sloog'], hull:10, sectors:[3,8], systems:{ shields:2, engines:2, weapons:3, hacking:2, oxygen:1, piloting:1, sensors:2, doors:1 }, weapons:['biobeam','basic'], crew:['sloog','sloog','sloog'] },
     sloog_mind:     { name:'Sloog Puppeteer',   tags:['sloog'], hull:10, sectors:[3,8], systems:{ shields:2, engines:2, weapons:2, mindcontrol:2, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['bust1'], crew:['sloog','sloog','human'] },
-    enjinn_carrier: { name:'Enjinn Dronecarrier',tags:['enjinn'], hull:11, sectors:[2,8], systems:{ shields:2, engines:2, weapons:1, drones:5, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['ion'], drones:['combat1','defense1'], crew:['enjinn','enjinn','enjinn'] },
+    enjinn_carrier: { name:'Enjinn Dronecarrier',tags:['enjinn'], hull:11, sectors:[3,8], systems:{ shields:2, engines:2, weapons:1, drones:5, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['ion'], drones:['combat1','defense1'], crew:['enjinn','enjinn','enjinn'] },
     flaggship:      { name:'The Flaggship', boss:true, color:'#ff5a7a', hull:24, pattern:'TBBABBAN', sectors:[99,99],
       systems:{ shields:4, engines:2, weapons:8, drones:6, teleporter:2, oxygen:2, medbay:2, piloting:2, sensors:2, doors:3 },
       weapons:['bust2','heavy2','hermies','ion2'], drones:[], crew:['pebblekin','pebblekin','human','human','human','mantlis'],
@@ -172,16 +172,16 @@ const BASE = {
   },
 
   sectors: {
-    civilian:  { name:'Civilian Sector',      color:'#7be0a0', mix:{ event:50, combat:26, store:12, empty:12 }, tags:[],          enemyTags:[],            hazards:{ asteroid:.06, sun:.05, ionstorm:.04, pulsar:.02 }, nebula:0 },
-    rebuff:    { name:'Rebuff Stronghold',    color:'#ff5a7a', mix:{ event:30, combat:52, store:8,  empty:10 }, tags:['rebuff'],  enemyTags:['rebuff'],    hazards:{ asteroid:.06, sun:.06, ionstorm:.05, pulsar:.03 }, nebula:.05 },
-    pyrate:    { name:'Pyrate Haven',         color:'#ffd166', mix:{ event:40, combat:40, store:12, empty:8 },  tags:['pyrate'],  enemyTags:['pyrate'],    hazards:{ asteroid:.1,  sun:.05 }, nebula:0 },
-    nebula:    { name:'Uncharted Nebula',     color:'#8b6fd6', mix:{ event:46, combat:30, store:8,  empty:16 }, tags:['nebula'],  enemyTags:[],            hazards:{ ionstorm:.08 }, nebula:.85, fleetMult:.6 },
-    sloog:     { name:'Sloog Nebula',         color:'#9fdc7a', mix:{ event:46, combat:34, store:8,  empty:12 }, tags:['sloog','nebula'], enemyTags:['sloog'], hazards:{ ionstorm:.06 }, nebula:.7, fleetMult:.6 },
-    pebblekin: { name:'Pebblekin Homeworlds', color:'#c9a27e', mix:{ event:46, combat:34, store:10, empty:10 }, tags:['pebblekin'], enemyTags:['pebblekin'], hazards:{ asteroid:.16, sun:.04 }, nebula:0 },
-    enjinn:    { name:'Enjinn Controlled',    color:'#5fd3e6', mix:{ event:46, combat:34, store:10, empty:10 }, tags:['enjinn'],  enemyTags:['enjinn','auto'], hazards:{ asteroid:.06, pulsar:.04 }, nebula:0 },
-    voltan:    { name:'Voltan Homeworlds',    color:'#ffe27a', mix:{ event:48, combat:32, store:10, empty:10 }, tags:['voltan'],  enemyTags:['voltan'],    hazards:{ pulsar:.08, sun:.05 }, nebula:0 },
-    mantlis:   { name:'Mantlis Hives',        color:'#c6e05a', mix:{ event:36, combat:46, store:8,  empty:10 }, tags:['mantlis'], enemyTags:['mantlis'],   hazards:{ asteroid:.06, sun:.06 }, nebula:0 },
-    laststand: { name:'The Last Stand',       color:'#ff5a7a', final:true, mix:{ event:28, combat:46, store:16, empty:10 }, tags:['rebuff'], enemyTags:['rebuff'], hazards:{ asteroid:.05, sun:.05 }, nebula:0, fleetMult:.5 }
+    civilian:  { name:'Civilian Sector',      color:'#7be0a0', mix:{ event:46, combat:40, empty:14 }, tags:[],          enemyTags:[],            hazards:{ asteroid:.06, sun:.05, ionstorm:.04, pulsar:.02 }, nebula:0 },
+    rebuff:    { name:'Rebuff Stronghold',    color:'#ff5a7a', mix:{ event:32, combat:56, empty:12 }, tags:['rebuff'],  enemyTags:['rebuff'],    hazards:{ asteroid:.06, sun:.06, ionstorm:.05, pulsar:.03 }, nebula:.05 },
+    pyrate:    { name:'Pyrate Haven',         color:'#ffd166', mix:{ event:42, combat:48, empty:10 },  tags:['pyrate'],  enemyTags:['pyrate'],    hazards:{ asteroid:.1,  sun:.05 }, nebula:0 },
+    nebula:    { name:'Uncharted Nebula',     color:'#8b6fd6', mix:{ event:48, combat:36, empty:16 }, tags:['nebula'],  enemyTags:[],            hazards:{ ionstorm:.08 }, nebula:.85, fleetMult:.6 },
+    sloog:     { name:'Sloog Nebula',         color:'#9fdc7a', mix:{ event:46, combat:42, empty:12 }, tags:['sloog','nebula'], enemyTags:['sloog'], hazards:{ ionstorm:.06 }, nebula:.7, fleetMult:.6 },
+    pebblekin: { name:'Pebblekin Homeworlds', color:'#c9a27e', mix:{ event:46, combat:44, empty:10 }, tags:['pebblekin'], enemyTags:['pebblekin'], hazards:{ asteroid:.16, sun:.04 }, nebula:0 },
+    enjinn:    { name:'Enjinn Controlled',    color:'#5fd3e6', mix:{ event:46, combat:44, empty:10 }, tags:['enjinn'],  enemyTags:['enjinn','auto'], hazards:{ asteroid:.06, pulsar:.04 }, nebula:0 },
+    voltan:    { name:'Voltan Homeworlds',    color:'#ffe27a', mix:{ event:48, combat:42, empty:10 }, tags:['voltan'],  enemyTags:['voltan'],    hazards:{ pulsar:.08, sun:.05 }, nebula:0 },
+    mantlis:   { name:'Mantlis Hives',        color:'#c6e05a', mix:{ event:36, combat:54, empty:10 }, tags:['mantlis'], enemyTags:['mantlis'],   hazards:{ asteroid:.06, sun:.06 }, nebula:0 },
+    laststand: { name:'The Last Stand',       color:'#ff5a7a', final:true, mix:{ event:30, combat:58, empty:12 }, tags:['rebuff'], enemyTags:['rebuff'], hazards:{ asteroid:.05, sun:.05 }, nebula:0, fleetMult:.5 }
   },
 
   events: {
@@ -237,7 +237,7 @@ const BASE = {
       { text:'Could be a trap. Refuse.', effect:{ text:'They sigh and drift away.' } } ] },
     quiet:{ weight:.5, text:'The beacon is silent. Stars, dust and the hum of your own engines.', choices:[
       { text:'Continue.', effect:{ text:'You use the calm to run diagnostics.' } } ] },
-    merchant:{ weight:.8, text:'A merchant convoy flashes its open sign. "Everything must go! Mostly because we are being chased."', choices:[
+    merchant:{ weight:.2, text:'A merchant convoy flashes its open sign. "Everything must go! Mostly because we are being chased."', choices:[
       { text:'Browse their wares.', effect:{ text:'The cargo bay doors slide open.', store:true } },
       { text:'Not today.', effect:{ text:'They wave and keep running.' } } ] },
     augdealer:{ weight:.7, text:'A twitchy dealer offers ship augments "that fell off a cruiser". Fifty scrap.', choices:[
