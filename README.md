@@ -1,64 +1,161 @@
 # Vaster Than Life
 
-A starship-command roguelike for WebXR, built for Meta Quest 2 and newer. It also plays on any desktop or phone browser.
+A starship-command roguelike for WebXR, built for Meta Quest 2 and newer. It also plays in any desktop or phone browser.
 
-You command a Fedoration courier carrying stolen data. Cross five sectors, one jump at a time, while the Rebuff Fleet closes in behind you. Power your systems, aim your weapons at enemy rooms, send crew to repair damage, and spend scrap on upgrades. At the end, the Flaggship is waiting.
+You command a Fedoration courier carrying data that could end the war. Cross eight sectors, one jump at a time, while the Rebuff Fleet closes in behind you. Then chase down the Flaggship before it destroys Fedoration command.
 
-It is a fan homage to *FTL: Faster Than Light*, with original code, art, names and writing, and plenty of puns.
+It's a fan homage to *FTL: Faster Than Light*. The code, art, names and writing are all original, with plenty of puns.
 
 ## Play
 
-Open `index.html` in a browser, or host it on GitHub Pages (Settings → Pages → deploy from the `main` branch, root folder).
-
-On a Quest, open the Pages link in the Meta Quest Browser and press **Enter VR** (or **Enter mixed reality** for passthrough).
+Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**. On a Quest, open the Pages link in the Meta Quest Browser and press **Enter VR**, or **Enter mixed reality** for passthrough.
 
 | Quest control | Action |
 | --- | --- |
 | Point + trigger (or pinch with hands) | Click |
-| A / X | Pause / resume |
-| B / Y | Open / close the map |
-| Grip | Recenter the screen in front of you |
-| Right stick up / down | Move the screen closer or further |
+| A / X | Pause or resume |
+| B / Y | Open or close the map |
+| Grip | Recenter the console in front of you |
+| Right stick up / down | Move the console closer or further |
 
-Keyboard: **Space** pause, **M** map, **1–4** select a weapon to target, **Esc** close.
+In VR, a **holotable** under the console shows both ships in 3D, with fires, damage, crew, drones and shots in flight. You can turn it off in Settings.
 
-## What is in it
+| Keyboard | Action |
+| --- | --- |
+| Space | Pause |
+| M | Map |
+| 1–4 | Select a weapon to target |
+| C | Cloak |
+| V | Hold fire / fire volley |
+| Esc | Close or cancel |
 
-- Reactor power management across Shields, Engines, Oxygen, Weapons and Medbay, with a crewed Helm
-- Laser, missile, ion and beam weapons, targeted at individual enemy rooms
-- Shield layers, evasion, system damage, ion lockout, oxygen, crew health, repairs and the medbay
-- Five crew races: Human, Pebblekin, Enjinn, Voltan, Sloog (each with a perk)
-- Three ships: The Pestrel, The Taurus, The Rolling Stone
-- A branching sector map with stores, events, exit beacons and an advancing Rebuff Fleet
-- Text events with race and system "blue options"
-- Ship upgrades, weapon stores, crew hiring, cargo
-- A final boss, the Flaggship
-- Autosave between jumps (in your browser)
+## What's in the game
+
+**Ships and crew**
+- 14 ships: 7 cruiser classes, each with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
+- 6 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog and Mantlis.
+- Crew skills in Piloting, Engines, Shields, Weapons, Repair and Combat, which improve as crew work.
+- Renaming your ship and crew, and dismissing crew.
+
+**Systems**
+- Main systems: Shields, Engines, Oxygen, Weapons, Drones, Medbay, Clone Bay, Teleporter, Cloaking, Hacking and Mind Control.
+- Subsystems: Helm (with autopilot), Sensors, Doors and Backup Battery.
+- Reactor power management, plus upgrades for every system.
+
+**Ship interiors**
+- Room-by-room oxygen.
+- Doors and airlocks you can open, close and vent.
+- Fires that spread, and hull breaches.
+- Crew who walk through corridors, repair, put out fires and fight boarders.
+
+**Combat**
+- Weapons: lasers, missiles, ion, beams, flak, and bombs (fire, breach, ion, small and healing).
+- Volley fire, autofire, shield layers, Voltan super shields, evasion and cloaking.
+- Teleporter boarding: send crew over, recall them, and win by killing the whole enemy crew.
+- Hacking drones with timed pulses, mind control, and enemies who board, hack and mind-control you back.
+- Drones: combat, beam, ion, defense, anti-drone, system repair, anti-personnel, boarding and hull repair.
+- Enemies that surrender or try to flee.
+
+**Augments**
+- 16 augments, such as Scrapture Arm, Weapon Pre-Igniter, Long-Range Scanners and Backup DNA Bank.
+
+**The journey**
+- 10 sector types, including Civilian, Rebuff Stronghold, Pyrate Haven, Nebula, the race homeworlds and the Last Stand.
+- At each exit you choose between two next sectors.
+- Beacon hazards: asteroid fields, solar flares, ion storms, pulsars and nebulae, where sensors go blind.
+- About 40 events with race, system and equipment "blue options", distress beacons and quest chains.
+- Stores with tabs for weapons, drones, augments, new systems, supplies, crew and selling.
+- The Rebuff Fleet advances every jump.
+- The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
+
+**Around the game**
+- 17 achievements and three difficulties.
+- Autosave between jumps.
+- Procedural music, sound effects and controller haptics.
 
 ## Mods
 
-Mods are JSON files. In the game, press **Mods**, then **Choose mod files**. On a Quest, exit VR first so the file picker can open. Mods are saved in the browser and apply when you start a new run. Toggle them on and off from the Mods screen, in VR or out.
+Mods are JSON files. In the game, open **Mods**:
 
-See `mods/space-pirates.json` for a complete example. Top-level keys:
+- **Mod library**: installs any mod listed in `mods/index.json`. This works inside VR on GitHub Pages.
+- **Add mod files**: loads `.json` files from your device. On Quest, exit VR first so the file picker can open.
 
-| Key | What it does |
+Mods are saved in the browser and apply when you start a new run. Turn them on or off from the Mods screen.
+
+Example mods are in `mods/`: `space-pirates.json`, `party-laser.json` (which includes a script) and `ironman.json`.
+
+### Format
+
+```json
+{ "name": "My Mod", "version": "1.0", "author": "You",
+  "rules": { "startScrap": 40 },
+  "races": [], "weapons": [], "drones": [], "augments": [],
+  "ships": [], "enemies": [], "sectors": [], "events": [],
+  "remove": { "events": ["quiet"] },
+  "script": "VTL.on('arrive', function(node){ VTL.toast('Hello!'); });" }
+```
+
+Every list holds objects with an `id`. Reusing an existing id replaces that item, so mods can also rebalance base content.
+
+| Kind | Fields |
 | --- | --- |
-| `name` | Required. The mod's name. |
-| `version`, `author` | Optional labels. |
-| `rules` | Overrides game rules, e.g. `startScrap`, `sectors`, `fleetSpeed`, `enemyPace`, `weaponSlots`, `maxCrew`, `bossId`, `beaconMix`. |
-| `races` | `{ id, name, color, hp, repair, heal, power, desc }` |
-| `weapons` | `{ id, name, type, damage, shots, charge, power, cost }`. `type` is `laser`, `missile`, `ion` or `beam`. |
-| `ships` | Player ships: `{ id, name, desc, hull, reactor, color, systems, weapons, crew, fuel, missiles, rooms }` |
-| `enemies` | `{ id, name, hull, systems, weapons, crew, sectors:[min,max], boss }` |
-| `events` | `{ id, text, weight, minSector, maxSector, choices }` |
-| `remove` | Delete base content, e.g. `{ "events": ["quiet"] }` |
+| `rules` | `sectors`, `startScrap`, `fleetSpeed`, `shieldRegen`, `repairRate`, `enemyPace`, `bossId`, `maxCrew`, `weaponSlots`, `droneSlots`, `augmentSlots`, `baseHP`, `startParts` |
+| `races` | `name`, `color`, `hp`, `repair`, `combat`, `speed`, `power` (free power to the room's system), `heal`, `fireproof`, `telepathic`, `mindImmune`, `deathBurst`, `learn`, `desc` |
+| `weapons` | `name`, `type` (`laser`, `missile`, `ion`, `beam`, `flak`, `bomb`), `damage`, `shots`, `charge`, `power`, `cost`, `tier`, `fire`, `breach`, `sysDamage`, `crewDamage`, `ion`, `stun`, `pierce`, `rooms` (beams), `radius` (flak), `heal` (bombs), `desc` |
+| `drones` | `name`, `kind` (`attack`, `defense`, `anti`, `internal`, `boarding`, `hull`), `power`, `cost`, `rate`, `shot` (a weapon object for attack drones), `targets` (defense), `role` (`repair` or `fight` for internal), `heal` (hull) |
+| `augments` | `name`, `cost`, `desc`. Built-in effects use the base ids. Custom augments can do things through scripts. |
+| `ships` | `name`, `cls` (groups A/B layouts in the hangar), `layout`, `desc`, `hull`, `reactor`, `color`, `image` (a picture to use as the hull), `systems` (name → level), `reserve` (empty rooms for later systems), `weapons`, `drones`, `crew` (race ids), `augments`, `fuel`, `missiles`, `parts`, `pattern` or `rooms`, `unlock` (`{"sector":3}`, `{"win":"shipId"}`, `{"ach":"id"}`, `{"kills":25}`) |
+| `enemies` | `name`, `tags`, `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
+| `sectors` | `name`, `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
+| `events` | `text`, `weight`, `minSector`, `maxSector`, `tags`, `nebula`, `distress`, `questOnly`, `choices` |
 
-`systems` uses `shields`, `engines`, `oxygen`, `weapons`, `medbay`, `piloting`, each with a level. `rooms` is optional; give a list of `{ "sys": "shields", "x": 0, "y": 0, "w": 2, "h": 2 }` grid cells, or leave it out for an automatic layout.
+**Event choices**
+- Each choice needs `text` plus either an `effect`, or a `chance` with `success` and `fail` effects.
+- `req` limits who can pick it: `race`, `system` + `level`, `weaponType`, `drone`, `augment`, `scrap`, `fuel`, `missiles`, `parts`, `crewCount`. Race, system and equipment requirements show as blue options.
+- `cost` takes `scrap`, `fuel`, `missiles` or `parts`.
 
-Event choices have either an `effect`, or a `chance` with `success` and `fail` effects. A choice can have `req` (`race`, `system` + `level`, `weaponType`, `scrap`, `fuel`, `missiles`) and `cost` (`scrap`, `fuel`, `missiles`). Effects can include `text`, `scrap`, `fuel`, `missiles`, `hull`, `crew` (race id or `"random"`), `crewLoss`, `weapon` (id or `"random"`), `fight` (enemy id or `"random"`), `event` (chain to another event id), `damageSystem`, `upgrade`, `reactor`.
+**Effects** can include:
+- `text`
+- Resources: `scrap`, `fuel`, `missiles`, `parts`, `hull`
+- Crew: `crew` (a race id or `"random"`), `crewLoss`
+- Gear: `weapon`, `drone`, `augment` (an id or `"random"`)
+- Ship changes: `install` (a system or `"random"`), `upgrade`, `damageSystem`, `reactor`, `fire`
+- Story: `fight` (an enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (chains to another event), `quest` (marks a quest beacon with that event), `store`
+- Progress: `unlock`, `achievement`
 
-Using an id that already exists replaces that item, so mods can rebalance base content too.
+**Ship layouts**
+- `pattern` builds the layout from columns: `T` tail, `A` small/big/small, `B` two big rooms, `C` one big room, `D` two narrow rooms, `N` nose. For example `"TABAN"`.
+- Or give `rooms` yourself as `{"sys":"shields","x":0,"y":0,"w":2,"h":2}` grid cells. Doors and airlocks are added automatically.
+
+### Scripts
+
+Scripts only run when **Allow mod scripts** is turned on in Settings. Only turn it on for mods you trust.
+
+A script receives a `VTL` object with:
+- `on(event, fn)`. Events are `runStart`, `arrive`, `event`, `combatStart`, `combatEnd`, `fire`, `tick` and `runEnd`.
+- `toast(text)`, `applyEffect(effect)`, `startCombat(id)`, `giveWeapon(id)`, `addEvent(id, event)`, `rand` and `pick`.
+- Live access to `G` (the current run), `DATA` and `UI`.
+
+### Mod library
+
+List mods in `mods/index.json` so players can install them from the Mods screen, including in VR:
+
+```json
+{ "mods": [ { "file": "my-mod.json", "name": "My Mod", "desc": "One line about it." } ] }
+```
 
 ## Tech
 
-One self-contained `index.html`. three.js r128 from cdnjs for WebXR. The whole interface is drawn on a 1600×1000 canvas, shown directly on flat screens and as a floating console texture in VR.
+The game is plain HTML and JavaScript with no build step. It uses three.js r128 from cdnjs for WebXR.
+
+The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas is shown directly; in VR it becomes the texture of a floating console, with the holotable rendered in 3D below it.
+
+| File | Contents |
+| --- | --- |
+| `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
+| `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |
+| `js/ship.js` | Layout generator, doors and airlocks, pathfinding, crew |
+| `js/sim.js` | Power, systems, damage, fire, oxygen, drones, crew AI, enemy AI, hazards |
+| `js/run.js` | Run flow, map, events, stores, combat start and end, the Flaggship chase, saving |
+| `js/ui.js` | All canvas drawing and input |
+| `js/xr.js` | WebXR console, holotable, controllers, haptics, dialogs, boot |

@@ -1,0 +1,18 @@
+{
+  "name": "Ironman Rules",
+  "version": "1.0",
+  "author": "Vaster Than Life",
+  "rules": {
+    "startScrap": 5,
+    "fleetSpeed": 0.14,
+    "enemyPace": 0.85,
+    "baseHP": 2
+  },
+  "remove": {
+    "events": [
+      "dock",
+      "repairstation",
+      "fedscout"
+    ]
+  }
+}

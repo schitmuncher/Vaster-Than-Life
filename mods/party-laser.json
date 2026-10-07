@@ -1,0 +1,56 @@
+{
+  "name": "Party Laser",
+  "version": "1.0",
+  "author": "Vaster Than Life",
+  "weapons": [
+    {
+      "id": "partylaser",
+      "name": "Party Laser",
+      "type": "laser",
+      "damage": 1,
+      "shots": 6,
+      "charge": 18,
+      "power": 3,
+      "cost": 90,
+      "tier": 3,
+      "fire": 0.15,
+      "desc": "Every shot is a celebration."
+    }
+  ],
+  "augments": [
+    {
+      "id": "discoball",
+      "name": "Disco Ball",
+      "cost": 25,
+      "desc": "Purely for vibes. Requires mod scripts to sparkle."
+    }
+  ],
+  "events": [
+    {
+      "id": "rave",
+      "text": "A drifting space rave is pumping out bass so hard your hull rattles.",
+      "weight": 1.5,
+      "choices": [
+        {
+          "text": "Join the party.",
+          "chance": 0.7,
+          "success": {
+            "text": "Best night of the war. Someone leaves you a gift.",
+            "weapon": "partylaser"
+          },
+          "fail": {
+            "text": "Somebody spilled a drink in the reactor.",
+            "hull": -2
+          }
+        },
+        {
+          "text": "Keep the volume down and move on.",
+          "effect": {
+            "text": "Spoilsport."
+          }
+        }
+      ]
+    }
+  ],
+  "script": "VTL.on('arrive', function(){ if(VTL.G && VTL.G.ship.augments.indexOf('discoball')>=0) VTL.toast('The disco ball sparkles. The crew feels great.'); });"
+}

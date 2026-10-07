@@ -1,0 +1,19 @@
+{
+  "mods": [
+    {
+      "file": "space-pirates.json",
+      "name": "Space Pirates Ahoy",
+      "desc": "A pirate ship, a parrot race, a broadside cannon and buried treasure."
+    },
+    {
+      "file": "party-laser.json",
+      "name": "Party Laser",
+      "desc": "A six-shot laser, a space rave and a script-powered disco ball."
+    },
+    {
+      "file": "ironman.json",
+      "name": "Ironman Rules",
+      "desc": "Less scrap, a faster fleet, tougher enemies and no free repairs."
+    }
+  ]
+}
