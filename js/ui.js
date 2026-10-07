@@ -16,7 +16,7 @@ function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.
 function region(x,y,w,h,cb){ HR.push({ x,y,w,h,cb }); }
 function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
 function T(t,x,y,o={}){ ctx.font = `${o.w||400} ${o.s||22}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
-  if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
+  if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; if(o.max) ctx.fillText(t,x,y,o.max); else ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
 function label(t,x,y,c=C.muted,a='left',s=16){ T(String(t).toUpperCase(),x,y,{ s, f:FD, w:600, c, ls:2, a }); }
 function lines(text, maxW, font){ ctx.font = font; const out = [];
   for(const para of String(text).split('\n')){ let line = ''; for(const word of para.split(' ')){ const t = line ? line+' '+word : word; if(ctx.measureText(t).width > maxW && line){ out.push(line); line = word; } else line = t; } out.push(line); }
@@ -389,9 +389,9 @@ function drawShip(sh, box, facing, isEnemy, mini){
     const p = cellXY(sh, c.x, c.y); const px = p.x, py = p.y + (mini?0:2);
     const face = c._sx!=null && Math.abs(px - c._sx) > .05 ? Math.sign(px - c._sx) : (c._face || (isEnemy ? -1 : 1)); c._face = face; c._sx = px; c._sy = py;
     if(!mini && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id))){ ctx.beginPath(); ctx.ellipse(px, py+rad*.95, rad*1.25, rad*.45, 0, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); glow(px, py+rad*.9, rad*1.3, C.amber, .3); }
-    drawCrewSprite(px, py, rad, c, { hostile: c.owner==='e' && !mini, face });
+    drawCrewSprite(px, py, rad, c, { hostile: c.owner==='e' && !mini, face, ship: sh });
     if(!mini){
-      const hw = rad*1.9, fr = clamp(c.hp/c.maxHp,0,1); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(px-hw/2-1, py-rad*1.6-1, hw+2, 5); ctx.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; ctx.fillRect(px-hw/2, py-rad*1.6, hw*fr, 3);
+      const hw = rad*1.9, fr = clamp(c.hp/c.maxHp,0,1); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(px-hw/2-1, py-rad*2.6-1, hw+2, 5); ctx.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; ctx.fillRect(px-hw/2, py-rad*2.6, hw*fr, 3);
       if(c.mcT>0){ ctx.beginPath(); ctx.arc(px,py,rad+7,0,7); ctx.strokeStyle = C.violet; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); }
       if(c.stunT>0) T('z', px+rad, py-rad, { s:14, f:FD, w:700, c:C.cyan });
       if(crewSide(c)!==sh.side && c.owner==='p'){ ctx.beginPath(); ctx.arc(px,py,rad+3,0,7); ctx.strokeStyle = hexA(C.amber,.6); ctx.lineWidth = 1.5; ctx.stroke(); }
@@ -439,11 +439,11 @@ function drawRoster(){
   const n = list.length, x0 = 24, y0 = 572, gap = 6, cw = Math.min(160, (760 - gap*(n-1))/Math.max(1,n));
   list.forEach(([c, s], i) => { const x = x0 + i*(cw+gap), sel = UI.selCrew===c.id, race = DATA.races[c.race] || {};
     rr(x,y0,cw,66,8); ctx.fillStyle = sel ? hexA(C.amber,.16) : hexA(C.panel,.94); ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : c.mcT>0 ? C.violet : hovered(x,y0,cw,66) ? C.muted : C.line; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x+16, y0+22, 8, 0, 7); ctx.fillStyle = race.color||'#fff'; ctx.fill();
-    T(c.name, x+30, y0+28, { s: cw<110 ? 14 : 17, f:FD, w:600 });
+    drawPortrait(x+21, y0+27, 16, c, false);
+    T(c.name, x+43, y0+24, { s: cw<120 ? 14 : 16, f:FD, w:600, max: cw-50 });
     const where = c.mcT>0 ? 'Controlled!' : s!==G.ship ? 'Enemy ship' : c.path.length ? 'Moving' : (s.rooms[c.room]?.sys ? SYSS[s.rooms[c.room].sys] : 'Hall');
-    if(cw>=110) T(where, x+cw-8, y0+28, { s:12, a:'right', c: s!==G.ship || c.mcT>0 ? C.hostile : C.muted });
-    bar(x+10, y0+46, cw-20, 8, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
+    T(where, x+43, y0+42, { s:11, c: s!==G.ship || c.mcT>0 ? C.hostile : C.muted });
+    bar(x+43, y0+50, cw-53, 7, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
     tip(x, y0, cw, 66, `${c.name} · ${race.name||''}`, `${race.desc||''} Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}.`);
     if(c.mcT<=0) region(x,y0,cw,66, () => { UI.selCrew = sel ? null : c.id; UI.selWeapon = null; UI.mode = null; }); });
 }
@@ -786,8 +786,10 @@ function drawStoreModal(m){
         btn(cx+420, y+12, 200, 48, `Buy · ${c}`, () => buy(c, r[3]), { disabled: r[4] || G.scrap < c, col:C.good }); });
       const race = DATA.races[st.crewRace]; const rx = cx+680; panel(rx, y0, 680, 300, 8); label('Crew for hire', rx+20, y0+34, C.muted);
       const crewN = s.crew.filter(c=>c.owner==='p'&&!c.drone).length; const cc = price(50, st);
-      if(race && !st.crewSold){ T(race.name, rx+20, y0+80, { s:26, f:FD, w:700, c:race.color }); para(race.desc||'', rx+20, y0+116, 640, { s:16, lh:22, c:C.muted });
-        btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { addCrew(s, st.crewRace, 'p'); st.crewSold = true; checkCrewAch(); }), { disabled: G.scrap<cc || crewN>=R.maxCrew, fill:G.scrap>=cc && crewN<R.maxCrew, col:C.good });
+      if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = newCrew(st.crewRace, 'p'); const cand = st._cand; ensureLook(cand);
+        drawPortrait(rx+60, y0+120, 40, cand, false);
+        T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para(race.desc||'', rx+120, y0+148, 540, { s:15, lh:20, c:C.muted });
+        btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { const nc = addCrew(s, st.crewRace, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; st.crewSold = true; checkCrewAch(); }), { disabled: G.scrap<cc || crewN>=R.maxCrew, fill:G.scrap>=cc && crewN<R.maxCrew, col:C.good });
         if(crewN>=R.maxCrew) T('Crew quarters are full.', rx+280, y0+254, { s:15, c:C.warn }); }
       else T('Nobody else is looking for work.', rx+20, y0+80, { s:18, c:C.muted });
       break; }
@@ -824,9 +826,9 @@ function drawShipModal(){
   } else if(UI.tab==='crew'){
     const crew = []; for(const sh of [G.ship, G.enemy]) if(sh) for(const c of sh.crew) if(c.owner==='p' && !c.drone) crew.push(c);
     crew.forEach((c,i) => { const x = cx + (i%2)*690, y = y0 + Math.floor(i/2)*150, race = DATA.races[c.race]||{};
-      panel(x, y, 670, 138, 8); ctx.beginPath(); ctx.arc(x+30, y+32, 12, 0, 7); ctx.fillStyle = race.color||'#fff'; ctx.fill();
-      T(c.name, x+52, y+40, { s:22, f:FD, w:700 }); T(`${race.name} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+52, y+64, { s:14, c:C.muted });
-      SKILLS.forEach((k,j) => { const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; const sx = x+20 + j*106, sy = y+86;
+      panel(x, y, 670, 138, 8); drawPortrait(x+42, y+40, 28, c, false);
+      T(c.name, x+82, y+38, { s:22, f:FD, w:700 }); T(`${race.name} · ${c.gender==='f'?'♀':'♂'} ${pronouns(c)} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+82, y+62, { s:14, c:C.muted });
+      SKILLS.forEach((k,j) => { const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; const sx = x+20 + j*106, sy = y+80;
         T(SKILLN[k], sx, sy+12, { s:12, c:C.muted }); bar(sx, sy+20, 96, 8, lv>=2 ? 1 : lv===1 ? .5 + .5*(v-t[0])/(t[1]-t[0]) : .5*v/t[0], lv>=2 ? C.amber : lv===1 ? C.good : C.cyan); });
       btn(x+440, y+14, 100, 40, inXR() ? 'Reroll' : 'Rename', () => { if(inXR()) c.name = pick(NAMES); else openRename('crew', c); }, { s:14 });
       btn(x+550, y+14, 100, 40, 'Dismiss', () => { if(crew.length<=1){ toast('You need at least one crew member.'); return; } UI.confirmDismiss = c.id; }, { s:14, col:C.hostile });

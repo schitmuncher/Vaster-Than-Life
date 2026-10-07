@@ -18,7 +18,7 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 | Grip | Recenter the console in front of you |
 | Right stick up / down | Move the console closer or further |
 
-In VR, a **holotable** under the console shows both ships in 3D, with fires, damage, crew, drones and shots in flight. You can turn it off in Settings.
+In VR you stand on the bridge of your ship. A **holotable** under the console shows 3D models of both ships, with fires, damage, crew, drones and shots in flight, and the enemy ship is out there beyond the canopy. You can turn the holotable off in Settings.
 
 | Keyboard | Action |
 | --- | --- |
@@ -87,12 +87,17 @@ In VR, a **holotable** under the console shows both ships in 3D, with fires, dam
 
 **Graphics**
 - Procedurally textured hulls with plating, fins, nacelles, cockpit glass and weapon hardpoints.
-- Tiled deck floors, system icons, and animated crew sprites for every race.
+- Tiled deck floors and system icons.
+- Hand-shaded, outlined crew sprites for every race, with idle, walking, repairing and fighting frames. Every crew member has a gender and a unique look (skin tone, hairstyle, hair colour, colour morph, accessories) that stays with them all run, plus portraits in the roster, crew screen and store.
+- Each species has its own silhouette: uniformed humans, faceted Pebblekin, smoke-tailed Enjinn mechanics, glowing Voltans, eyestalked Sloogs, insectoid Mantlis, crystalline Glassborn, and repair, combat and boarding drones.
 - Particle effects: explosions, sparks, smoke, debris, fire embers, venting breaches and missile trails.
 - Glowing lasers, ion bolts and beams; shield bubbles that ripple where they are hit.
 - Nebula backgrounds with planets and hazards that change at every beacon.
 - Illustrated event scenes and tooltips everywhere.
-- In VR: a nebula skybox, a textured planet with atmosphere, a framed console, and a holotable that shows your actual hull art in 3D.
+- In VR you stand on a starship bridge: a plated deck, canopy ribs open to space, a rear bulkhead with a door, side consoles with live hull, crew and power readouts, and alert lighting that turns amber in combat and flashes red when you're in trouble.
+- The holotable shows extruded 3D models of both ships (metal hulls with your room layout on top, nacelles with engine glow, wings, canopy, turrets, fresnel shields) with tiny holographic crew walking about.
+- The enemy ship flies outside the canopy. Shots streak between you, it flashes when hit, your own shield bubble ripples when it blocks a shot, and beaten ships explode into debris.
+- Physically based materials with image-based lighting, tuned for Quest 2 (no shadows, low draw calls). Mixed-reality mode hides the bridge and keeps the console and holotable.
 
 **Around the game**
 - 20 achievements and three difficulties.
@@ -183,10 +188,12 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | --- | --- |
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
 | `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
-| `js/gfx.js` | Procedural hulls, planets, nebulae, icons, crew sprites, particles, event art |
+| `js/gfx.js` | Procedural hulls, planets, nebulae, icons, particles, event art |
+| `js/sprites.js` | Crew looks, sprites, poses and portraits for every race |
 | `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |
 | `js/ship.js` | Layout generator, doors and airlocks, pathfinding, crew |
 | `js/sim.js` | Power, systems, damage, fire, oxygen, drones, crew AI, enemy AI, hazards |
 | `js/run.js` | Run flow, map, events, stores, combat start and end, the Flaggship chase, saving |
 | `js/ui.js` | All canvas drawing and input |
-| `js/xr.js` | WebXR console, holotable, controllers, haptics, dialogs, boot |
+| `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
+| `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

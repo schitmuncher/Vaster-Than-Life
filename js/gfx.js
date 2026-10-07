@@ -106,12 +106,12 @@ function floorTile(){
 }
 
 /* ---------------- ship art (cached) ---------------- */
-function hullShape(g, b){
+function hullPoints(b){
   const { x0,y0,x1,y1,nose,facing } = b, cy = (y0+y1)/2, Hh = y1-y0, cx = (x0+x1)/2;
   const X = x => facing>0 ? x : 2*cx - x;
-  const P = [[x0+22,y0],[x1-14,y0],[x1+nose*.55,cy-Hh*.2],[x1+nose,cy-Hh*.04],[x1+nose,cy+Hh*.04],[x1+nose*.55,cy+Hh*.2],[x1-14,y1],[x0+22,y1],[x0+4,y1-18],[x0,y1-30],[x0,y0+30],[x0+4,y0+18]];
-  g.beginPath(); P.forEach((p,i)=> i ? g.lineTo(X(p[0]),p[1]) : g.moveTo(X(p[0]),p[1])); g.closePath();
+  return [[x0+22,y0],[x1-14,y0],[x1+nose*.55,cy-Hh*.2],[x1+nose,cy-Hh*.04],[x1+nose,cy+Hh*.04],[x1+nose*.55,cy+Hh*.2],[x1-14,y1],[x0+22,y1],[x0+4,y1-18],[x0,y1-30],[x0,y0+30],[x0+4,y0+18]].map(p => [X(p[0]), p[1]]);
 }
+function hullShape(g, b){ const P = hullPoints(b); g.beginPath(); P.forEach((p,i)=> i ? g.lineTo(p[0],p[1]) : g.moveTo(p[0],p[1])); g.closePath(); }
 function nacelles(b){
   const { x0,y0,x1,y1,facing } = b, L = x1-x0, cx = (x0+x1)/2; const X = x => facing>0 ? x : 2*cx - x;
   const h = Math.max(14, (y1-y0)*.13);
@@ -193,55 +193,6 @@ function engineGlow(sh, t){
   const b = sh._b; if(!b) return; const col = sh.color || C.amber; const f = .75 + Math.sin(t*23 + (sh.isEnemy?2:0))*.12 + Math.random()*.08;
   for(const n of nacelles(b)){ const tx = b.facing>0 ? Math.min(n.x0,n.x1) : Math.max(n.x0,n.x1);
     glow(tx - b.facing*6, n.y + n.h/2, n.h*1.9*f, col, .9); glow(tx - b.facing*18, n.y + n.h/2, n.h*1.1*f, '#ffffff', .35); }
-}
-
-/* ---------------- crew sprites ---------------- */
-function drawCrewSprite(x, y, r, c, o={}){
-  const race = c.drone ? 'drone' : c.race; const R_ = DATA.races[c.race] || {};
-  const col = o.hostile ? '#ff5a7a' : (c.drone ? '#f0a6ff' : (R_.color || '#e8c49a'));
-  const t = (G?.time||0), moving = c.path && c.path.length, bob = moving ? Math.sin(t*14 + (c.id?.charCodeAt?.(0)||0))*r*.12 : 0;
-  const uniform = o.hostile ? '#6a2233' : '#2c3f6e';
-  ctx.save(); ctx.translate(x, y + bob); if(o.face<0) ctx.scale(-1,1);
-  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0, r*.95 - bob, r*.7, r*.22, 0, 0, 7); ctx.fill();
-  switch(race){
-    case 'pebblekin':
-      ctx.fillStyle = shade(col,-.15); ctx.beginPath(); ctx.ellipse(0, r*.2, r*.95, r*.8, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(r*.1, -r*.45, r*.55, r*.45, 0, 0, 7); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-r*.4,0); ctx.lineTo(-r*.1,r*.3); ctx.lineTo(-r*.3,r*.6); ctx.stroke();
-      ctx.fillStyle = '#ffd166'; ctx.fillRect(r*.25, -r*.5, r*.18, r*.1); break;
-    case 'enjinn':
-      ctx.fillStyle = uniform; ctx.beginPath(); ctx.ellipse(0, r*.35, r*.55, r*.55, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, -r*.3, r*.55, 0, 7); ctx.fill();
-      ctx.fillStyle = '#0c2a3a'; ctx.fillRect(-r*.1, -r*.45, r*.6, r*.22); ctx.fillStyle = '#7ff7ff'; ctx.fillRect(r*.05, -r*.42, r*.4, r*.14);
-      ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0,-r*.85); ctx.lineTo(0,-r*1.15); ctx.stroke(); ctx.fillStyle = '#7ff7ff'; ctx.beginPath(); ctx.arc(0,-r*1.18,r*.12,0,7); ctx.fill(); break;
-    case 'voltan':
-      ctx.restore(); glow(x, y+bob, r*1.8, '#ffe27a', .45); ctx.save(); ctx.translate(x, y+bob);
-      ctx.fillStyle = hexA(col,.85); ctx.beginPath(); ctx.moveTo(0,-r*1.0); ctx.quadraticCurveTo(r*.8,-r*.2,r*.35,r*.8); ctx.lineTo(-r*.35,r*.8); ctx.quadraticCurveTo(-r*.8,-r*.2,0,-r*1.0); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-r*.18,-r*.3,r*.1,0,7); ctx.arc(r*.18,-r*.3,r*.1,0,7); ctx.fill(); break;
-    case 'sloog':
-      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-r*.9, r*.8); ctx.quadraticCurveTo(-r*.8, -r*.4, 0, -r*.4); ctx.quadraticCurveTo(r*.8, -r*.4, r*.9, r*.8); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = col; ctx.lineWidth = r*.14; ctx.beginPath(); ctx.moveTo(-r*.2,-r*.35); ctx.lineTo(-r*.35,-r*1.0); ctx.moveTo(r*.2,-r*.35); ctx.lineTo(r*.35,-r*1.0); ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-r*.35,-r*1.05,r*.17,0,7); ctx.arc(r*.35,-r*1.05,r*.17,0,7); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-r*.3,-r*1.05,r*.08,0,7); ctx.arc(r*.4,-r*1.05,r*.08,0,7); ctx.fill(); break;
-    case 'mantlis':
-      ctx.fillStyle = shade(col,-.2); ctx.beginPath(); ctx.ellipse(0, r*.35, r*.4, r*.6, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-r*.5,-r*.75); ctx.lineTo(r*.5,-r*.75); ctx.lineTo(0,-r*.05); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.ellipse(-r*.25,-r*.6,r*.14,r*.2,.4,0,7); ctx.ellipse(r*.25,-r*.6,r*.14,r*.2,-.4,0,7); ctx.fill();
-      ctx.strokeStyle = col; ctx.lineWidth = r*.12; ctx.beginPath(); ctx.moveTo(r*.3,r*.1); ctx.lineTo(r*.9,-r*.3); ctx.lineTo(r*.75,r*.25); ctx.stroke();
-      ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-r*.2,-r*.75); ctx.lineTo(-r*.5,-r*1.2); ctx.moveTo(r*.2,-r*.75); ctx.lineTo(r*.5,-r*1.2); ctx.stroke(); break;
-    case 'glassborn':
-      ctx.restore(); glow(x, y+bob, r*1.5, '#bff4ff', .3); ctx.save(); ctx.translate(x, y+bob);
-      ctx.fillStyle = hexA('#d8f6ff',.85); ctx.beginPath(); ctx.moveTo(0,-r*1.05); ctx.lineTo(r*.6,-r*.2); ctx.lineTo(r*.4,r*.85); ctx.lineTo(-r*.4,r*.85); ctx.lineTo(-r*.6,-r*.2); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(80,140,170,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0,-r*1.05); ctx.lineTo(0,r*.85); ctx.moveTo(-r*.6,-r*.2); ctx.lineTo(r*.6,-r*.2); ctx.stroke(); break;
-    case 'drone':
-      ctx.fillStyle = '#3a3f5a'; ctx.beginPath(); ctx.moveTo(0,-r*.9); ctx.lineTo(r*.85,0); ctx.lineTo(0,r*.9); ctx.lineTo(-r*.85,0); ctx.closePath(); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = o.hostile ? '#ff5a7a' : '#7ff7ff'; ctx.beginPath(); ctx.arc(0,0,r*.25,0,7); ctx.fill(); break;
-    default:
-      ctx.fillStyle = uniform; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(-r*.5, -r*.05, r, r*.9, r*.3); else ctx.rect(-r*.5,-r*.05,r,r*.9); ctx.fill();
-      ctx.fillStyle = o.hostile ? '#ff5a7a' : C.amber; ctx.fillRect(-r*.5, r*.15, r, r*.1);
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, -r*.45, r*.42, 0, 7); ctx.fill();
-      ctx.fillStyle = shade(col,-.55); ctx.beginPath(); ctx.arc(0, -r*.58, r*.42, Math.PI*1.05, Math.PI*1.95); ctx.fill();
-  }
-  ctx.restore();
 }
 
 /* ---------------- particles ---------------- */
