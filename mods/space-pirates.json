@@ -1,0 +1,115 @@
+{
+  "name": "Space Pirates Ahoy",
+  "version": "1.0",
+  "author": "You",
+  "rules": {
+    "startScrap": 60
+  },
+  "races": [
+    {
+      "id": "parrot",
+      "name": "Squawkling",
+      "color": "#ff9de2",
+      "hp": 90,
+      "repair": 1.5,
+      "desc": "Repeats every order. Repairs fairly fast."
+    }
+  ],
+  "weapons": [
+    {
+      "id": "cannon",
+      "name": "Broadside Cannon",
+      "type": "laser",
+      "damage": 1,
+      "shots": 3,
+      "charge": 14,
+      "power": 2,
+      "cost": 70
+    }
+  ],
+  "ships": [
+    {
+      "id": "jollyroger",
+      "name": "The Jolly Rover",
+      "desc": "A pirate ship with a big broadside.",
+      "hull": 28,
+      "reactor": 9,
+      "color": "#ff9de2",
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "oxygen": 1,
+        "weapons": 3,
+        "medbay": 1,
+        "piloting": 1
+      },
+      "weapons": [
+        "cannon",
+        "arty"
+      ],
+      "crew": [
+        "parrot",
+        "human",
+        "sloog"
+      ],
+      "fuel": 15,
+      "missiles": 6
+    }
+  ],
+  "enemies": [
+    {
+      "id": "kraken",
+      "name": "Space Kraken Hunter",
+      "hull": 15,
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "weapons": 3,
+        "oxygen": 1,
+        "piloting": 1
+      },
+      "weapons": [
+        "cannon"
+      ],
+      "crew": [
+        "parrot",
+        "human"
+      ],
+      "sectors": [
+        2,
+        5
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "treasure",
+      "text": "A floating chest marked with an X. Probably fine.",
+      "weight": 2,
+      "choices": [
+        {
+          "text": "Open it.",
+          "chance": 0.5,
+          "success": {
+            "text": "Doubloons! Well, scrap.",
+            "scrap": 40
+          },
+          "fail": {
+            "text": "The chest bites.",
+            "hull": -3
+          }
+        },
+        {
+          "text": "[Squawkling] Ask the parrot what it thinks.",
+          "req": {
+            "race": "parrot"
+          },
+          "effect": {
+            "text": "It says \"open it\" eleven times. You do. Treasure!",
+            "scrap": 45
+          }
+        }
+      ]
+    }
+  ]
+}

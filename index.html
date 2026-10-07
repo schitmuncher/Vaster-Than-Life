@@ -1,0 +1,1335 @@
+<title>Vaster Than Life</title>
+<meta name="description" content="A WebXR starship-command roguelike for Meta Quest, with user mods.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one fixed console screen, scaled to fit, with a slim control strip under it. Single committed dark look. */
+:root{
+  --void:#070a14; --panel:#0e1426; --line:#26324f; --ink:#dfe6f5; --muted:#8592b0;
+  --amber:#ffb547; --cyan:#5fd3e6; --hostile:#ff5a7a;
+  --display:'Chakra Petch','Segoe UI',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--void);color:var(--ink)}
+body{font-family:var(--mono);overflow:hidden;padding-inline:16px;box-sizing:border-box}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#game{display:block;background:var(--void);border:1px solid var(--line);border-radius:10px;touch-action:none;max-width:100%}
+#bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+button{font:600 15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--amber);background:var(--panel);border:2px solid var(--amber);border-radius:6px;padding:10px 14px;cursor:pointer}
+button:hover{background:#1f1a12}
+button:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+button.ghost{color:var(--muted);border-color:var(--line)}
+#xrNote{font-size:13px;color:var(--muted)}
+#modPanel{position:fixed;inset:0;background:rgba(4,6,12,.86);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(760px,100%);max-height:100%;overflow:auto;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sheet h2{font:700 26px var(--display);margin:0;color:var(--amber);letter-spacing:.04em;text-wrap:balance}
+.sheet p{margin:0;line-height:1.55;color:var(--ink);max-width:65ch}
+.drop{display:block;border:2px dashed var(--amber);border-radius:10px;padding:18px;text-align:center;color:var(--amber);font:600 16px var(--display);cursor:pointer}
+.drop input{display:block;margin:10px auto 0;color:var(--muted);max-width:100%}
+textarea{width:100%;min-height:140px;box-sizing:border-box;background:var(--void);color:var(--ink);border:1px solid var(--line);border-radius:8px;font:13px var(--mono);padding:10px}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+summary{cursor:pointer;color:var(--cyan);font:600 15px var(--display);letter-spacing:.04em}
+details>*:not(summary){margin-top:10px}
+pre{background:var(--void);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:12px;line-height:1.45;color:var(--ink)}
+#modMsg{font-size:14px;line-height:1.5;min-height:1em}
+#modMsg.err{color:var(--hostile)} #modMsg.ok{color:#7be0a0}
+#modList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#modList li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:10px;flex-wrap:wrap}
+#modList .meta{min-width:0;flex:1}
+#modList b{font-family:var(--display);color:var(--ink);font-size:16px}
+#modList small{display:block;color:var(--muted);margin-top:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+code{color:var(--cyan)}
+</style>
+
+<div id="app">
+  <canvas id="game" aria-label="Vaster Than Life game screen"></canvas>
+  <div id="bar">
+    <button id="vrBtn" hidden>Enter VR</button>
+    <button id="arBtn" hidden>Enter mixed reality</button>
+    <button id="modBtn" class="ghost">Mods</button>
+    <span id="xrNote"></span>
+  </div>
+</div>
+
+<div id="modPanel" hidden role="dialog" aria-labelledby="modTitle">
+  <div class="sheet">
+    <header><h2 id="modTitle">Mods</h2><button id="modClose" class="ghost">Close</button></header>
+    <p>Mods are JSON files that add or replace ships, weapons, crew races, enemies, events and rules. They are saved in this browser and apply when you start a new run.</p>
+    <label class="drop" for="modFile">Choose mod files (.json)
+      <input type="file" id="modFile" accept=".json,application/json" multiple>
+    </label>
+    <details>
+      <summary>Paste mod JSON instead</summary>
+      <textarea id="modPaste" spellcheck="false" placeholder='{ "name": "My mod", "weapons": [ ... ] }'></textarea>
+      <div class="row"><button id="modPasteBtn">Add pasted mod</button></div>
+    </details>
+    <div id="modMsg" role="status"></div>
+    <ul id="modList"></ul>
+    <details>
+      <summary>Mod format and example</summary>
+      <p>Top-level keys: <code>name</code> (required), <code>version</code>, <code>author</code>, <code>rules</code>, <code>races</code>, <code>weapons</code>, <code>ships</code>, <code>enemies</code>, <code>events</code>, <code>remove</code>. Each list is an array of objects with an <code>id</code>. Using an id that already exists replaces that item. Weapon types: <code>laser</code>, <code>missile</code>, <code>ion</code>, <code>beam</code>. Systems: <code>shields</code>, <code>engines</code>, <code>oxygen</code>, <code>weapons</code>, <code>medbay</code>, <code>piloting</code>. Ships may give <code>rooms</code> as <code>{"sys":"shields","x":0,"y":0,"w":2,"h":2}</code> grid cells, or leave them out for an automatic layout.</p>
+      <pre id="modExample"></pre>
+      <div class="row"><button id="copyEx">Copy example</button></div>
+    </details>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+/* =========================================================================
+   VASTER THAN LIFE — a WebXR starship-command roguelike
+   One 1600x1000 canvas is the whole UI. On a flat screen it is shown directly;
+   in VR it becomes the texture of a floating console that controllers point at.
+   ========================================================================= */
+const W = 1600, H = 1000;
+const cv = document.getElementById('game');
+cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d');
+
+const C = { void:'#070a14', panel:'#0e1426', panel2:'#141c33', room:'#1a2442', line:'#26324f', ink:'#dfe6f5',
+  muted:'#8592b0', amber:'#ffb547', cyan:'#5fd3e6', hostile:'#ff5a7a', good:'#7be0a0', warn:'#ffd166', violet:'#b49cff' };
+const FD = "'Chakra Petch','Segoe UI',system-ui,sans-serif", FM = "'IBM Plex Mono',ui-monospace,Menlo,monospace";
+const SYS = ['shields','engines','oxygen','weapons','medbay','piloting'];
+const POWERED = ['shields','engines','oxygen','weapons','medbay'];
+const SYSN = { shields:'Shields', engines:'Engines', oxygen:'Oxygen', weapons:'Weapons', medbay:'Medbay', piloting:'Helm' };
+const SYSC = { shields:C.cyan, engines:C.amber, oxygen:'#9fd8ff', weapons:C.hostile, medbay:C.good, piloting:C.violet };
+const CAPS = { shields:8, engines:8, oxygen:3, weapons:8, medbay:3 };
+const NAMES = ['Ash','Bryn','Coll','Dara','Eli','Fen','Gale','Hollis','Ione','Jory','Kit','Lark','Mosi','Noor','Oren','Pell','Quin','Rhea','Sol','Tam','Ude','Vale','Wren','Yara','Zeb','Moss','Pip','Juno'];
+
+/* ---------------- base game data (mods merge over this) ---------------- */
+const BASE = {
+  rules: { sectors:5, startScrap:25, fleetSpeed:0.11, shieldRegen:2, repairRate:0.16, enemyPace:0.7, bossId:'flaggship', maxCrew:8, weaponSlots:4,
+    beaconMix:{ event:46, combat:34, store:8, empty:12 } },
+  races: {
+    human:     { name:'Human',     color:'#e8c49a', hp:100, repair:1,   desc:'Perfectly average at everything. Proudly.' },
+    pebblekin: { name:'Pebblekin', color:'#9aa7b8', hp:150, repair:0.5, desc:'Rock-solid and slow to fix things. Takes a lot of chipping.' },
+    enjinn:    { name:'Enjinn',    color:'#b9f3ff', hp:85,  repair:2,   desc:'Wish-granting mechanics. Repair twice as fast.' },
+    voltan:    { name:'Voltan',    color:'#ffe27a', hp:70,  repair:1,   power:1, desc:'Fragile, but add one free power to any system they stand in.' },
+    sloog:     { name:'Sloog',     color:'#9fdc7a', hp:100, repair:1,   heal:1.5, desc:'Slimy, smug, and slowly heal anywhere.' }
+  },
+  weapons: {
+    basic:   { name:'Basic Laser',      type:'laser',   damage:1, shots:1, charge:10, power:1, cost:30 },
+    bust1:   { name:'Bust Laser I',     type:'laser',   damage:1, shots:2, charge:11, power:2, cost:50 },
+    bust2:   { name:'Bust Laser II',    type:'laser',   damage:1, shots:3, charge:12, power:2, cost:80 },
+    heavy:   { name:'Heavy Laser',      type:'laser',   damage:2, shots:1, charge:9,  power:1, cost:55 },
+    arty:    { name:'Arty Missile',     type:'missile', damage:2, shots:1, charge:11, power:1, cost:45 },
+    breach:  { name:'Breach Missile',   type:'missile', damage:3, shots:1, charge:17, power:2, cost:65 },
+    ion:     { name:'Ion Blast',        type:'ion',     damage:1, shots:1, charge:8,  power:1, cost:35 },
+    ion2:    { name:'Ion Blast II',     type:'ion',     damage:1, shots:1, charge:5,  power:3, cost:70 },
+    pike:    { name:'Pike Bream',       type:'beam',    damage:1, shots:1, charge:13, power:1, cost:40 },
+    halbird: { name:'Hal-Bird Beam',    type:'beam',    damage:2, shots:1, charge:14, power:3, cost:75 }
+  },
+  ships: {
+    pestrel: { name:'The Pestrel', desc:'Fedoration courier. Annoyingly reliable. The classic start.', hull:30, reactor:8, color:'#ffb547',
+      systems:{ shields:2, engines:2, oxygen:1, weapons:3, medbay:1, piloting:1 },
+      weapons:['bust1','arty'], crew:['human','human','human'], fuel:16, missiles:8,
+      rooms:[ {sys:'engines',x:0,y:1,w:2,h:2}, {sys:'oxygen',x:2,y:0,w:2,h:1}, {sys:'medbay',x:2,y:1,w:2,h:2}, {sys:'',x:2,y:3,w:2,h:1},
+        {sys:'shields',x:4,y:1,w:2,h:2}, {sys:'',x:6,y:0,w:2,h:1}, {sys:'weapons',x:6,y:1,w:2,h:2}, {sys:'',x:6,y:3,w:2,h:1}, {sys:'piloting',x:8,y:1,w:1,h:2} ] },
+    taurus: { name:'The Taurus', desc:'Enjinn cruiser. Bull-headed ion fire and a crew that fixes anything.', hull:26, reactor:9, color:'#5fd3e6',
+      systems:{ shields:2, engines:3, oxygen:1, weapons:3, medbay:1, piloting:1 },
+      weapons:['ion','pike','basic'], crew:['enjinn','enjinn','human'], fuel:16, missiles:3 },
+    stone: { name:'The Rolling Stone', desc:'Pebblekin brick with missiles. Gathers no moss, takes a beating.', hull:36, reactor:8, color:'#c9a27e',
+      systems:{ shields:2, engines:1, oxygen:1, weapons:3, medbay:1, piloting:1 },
+      weapons:['heavy','breach'], crew:['pebblekin','pebblekin','voltan'], fuel:14, missiles:10 }
+  },
+  enemies: {
+    scout:    { name:'Rebuff Scout',      hull:8,  systems:{ engines:1, weapons:1, oxygen:1, piloting:1 }, weapons:['basic'], crew:['human','human'], sectors:[1,2] },
+    fighter:  { name:'Rebuff Fighter',    hull:10, systems:{ shields:2, engines:1, weapons:2, oxygen:1, piloting:1 }, weapons:['basic','basic'], crew:['human','human','human'], sectors:[1,3] },
+    pyrate:   { name:'Pyrate Gunship',    hull:12, systems:{ shields:2, engines:2, weapons:3, oxygen:1, medbay:1, piloting:1 }, weapons:['basic','arty'], crew:['human','sloog','human'], sectors:[2,5] },
+    drone:    { name:'Auto-Scoundrel',    hull:11, systems:{ shields:2, engines:2, weapons:3, piloting:1 }, weapons:['arty','ion'], crew:['enjinn','enjinn'], sectors:[2,5] },
+    mantlis:  { name:'Mantlis Bruiser',   hull:14, systems:{ shields:4, engines:2, weapons:4, oxygen:1, piloting:1 }, weapons:['bust2','heavy'], crew:['pebblekin','pebblekin','human'], sectors:[3,5] },
+    voltship: { name:'Voltan Peacemonger',hull:12, systems:{ shields:4, engines:3, weapons:4, oxygen:1, piloting:1 }, weapons:['halbird','basic'], crew:['voltan','voltan'], sectors:[3,5] },
+    flaggship:{ name:'The Flaggship',     hull:40, boss:true, color:'#ff5a7a', systems:{ shields:6, engines:2, weapons:8, oxygen:2, medbay:2, piloting:1 },
+      weapons:['bust2','heavy','breach','ion'], crew:['pebblekin','pebblekin','human','human','human'], sectors:[9,9] }
+  },
+  events: {
+    derelict:{ text:'A gutted freighter tumbles through the beacon light. Its cargo doors hang open, but the reactor still glows.', choices:[
+      { text:'Send a team aboard to search it.', chance:.6, success:{ text:'Your team returns with salvage and a crate of missile casings.', scrap:22, missiles:2 }, fail:{ text:'A rigged power coupling blows as the team leaves. Your hull takes the blast.', hull:-3, scrap:8 } },
+      { text:'Have your Enjinn trace the live circuits first.', req:{ race:'enjinn' }, effect:{ text:'Your Enjinn grant themselves three wishes and spend them all on not exploding. You strip the ship clean.', scrap:30, fuel:2 } },
+      { text:'Leave it alone.', effect:{ text:'You give the wreck a wide berth.' } } ] },
+    distress:{ text:'A looping distress call: "Life support failing. Anyone. Please." The signal is weak but steady.', choices:[
+      { text:'Answer the call.', chance:.55, success:{ text:'A lone survivor stumbles aboard, grateful and eager to work.', crew:'random' }, fail:{ text:'It was bait. A Rebuff ship drops its cloak off your bow.', fight:'random' } },
+      { text:'Keep moving.', effect:{ text:'The call fades behind you. Nobody mentions it.' } } ] },
+    fueltrader:{ text:'A tanker captain hails you. "Fuel for scrap, fair and simple. Four cells, twenty scrap. I am not fuelling around."', choices:[
+      { text:'Buy four fuel cells.', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'The cells transfer cleanly.', fuel:4 } },
+      { text:'Sell two fuel cells for fifteen scrap.', req:{ fuel:3 }, cost:{ fuel:2 }, effect:{ text:'The captain pays without haggling.', scrap:15 } },
+      { text:'Decline.', effect:{ text:'"Your loss," the captain says, and cuts the channel.' } } ] },
+    miners:{ text:'Asteroid miners are pinned under a rockslide. They need explosives to clear it. "Please, we are between a rock and a hard place."', choices:[
+      { text:'Give them two missiles.', req:{ missiles:2 }, cost:{ missiles:2 }, effect:{ text:'The charges clear the slide. The miners load your hold with refined ore.', scrap:32 } },
+      { text:'Ask your Pebblekin to talk to the rocks.', req:{ race:'pebblekin' }, effect:{ text:'A long, low conversation follows. The rocks move. The miners are deeply unsettled but pay well.', scrap:28, fuel:1 } },
+      { text:'You cannot spare anything.', effect:{ text:'You leave them to dig.' } } ] },
+    toll:{ text:'Three Pyrate gunships block the beacon. "Toll is twenty-five scrap. Pay up or walk the plank. Into space. Without a suit."', choices:[
+      { text:'Pay the toll.', req:{ scrap:25 }, cost:{ scrap:25 }, effect:{ text:'They wave you through, laughing.' } },
+      { text:'Outrun them on full engines.', req:{ system:'engines', level:3 }, effect:{ text:'Your engines scream and the gunships fall behind.', fuel:-1 } },
+      { text:'Refuse and fight.', effect:{ text:'One gunship peels off to deal with you.', fight:'pyrate' } } ] },
+    storm:{ text:'An ion storm boils across the beacon. Scrap from old wrecks glitters inside it.', choices:[
+      { text:'Dive in and grab what you can.', chance:.6, success:{ text:'You haul in a full net of salvage before the storm closes.', scrap:28 }, fail:{ text:'Lightning arcs through the hull before you escape.', hull:-4, scrap:10 } },
+      { text:'Burn extra fuel to go around.', req:{ fuel:2 }, cost:{ fuel:1 }, effect:{ text:'You skirt the storm without trouble.' } },
+      { text:'Let your Voltan drink the lightning.', req:{ race:'voltan' }, effect:{ text:'Your Voltan glow with smug satisfaction. The salvage is yours, and the ship hums for days.', scrap:30 } } ] },
+    pod:{ text:'An escape pod drifts past, its occupant waving through the frost on the window.', choices:[
+      { text:'Bring the pod aboard.', effect:{ text:'The survivor thanks you and asks for a job. Pod-ner for life.', crew:'random' } },
+      { text:'Tow it toward the nearest station.', effect:{ text:'You set the pod on a safe course. A small reward pings your account.', scrap:10 } } ] },
+    cache:{ text:'A sealed weapons locker floats in the debris of an old battle. Its lock still blinks red.', choices:[
+      { text:'Cut it open.', chance:.5, success:{ text:'Inside is a working weapon, packed in foam.', weapon:'random' }, fail:{ text:'The locker was rigged. An Auto-Scoundrel wakes and opens fire.', fight:'drone' } },
+      { text:'Let your Pebblekin crack it by hand.', req:{ race:'pebblekin' }, effect:{ text:'Stone fingers crush the lock before the trap can fire.', weapon:'random' } },
+      { text:'Leave it.', effect:{ text:'Some things stay sealed for a reason.' } } ] },
+    smuggler:{ text:'A Sloog smuggler slides up. "Got something with real bite. Forty scrap and it is yours. No questions. Especially from you."', choices:[
+      { text:'Pay forty scrap.', req:{ scrap:40 }, cost:{ scrap:40 }, effect:{ text:'The crate is exactly what was promised, which surprises everyone.', weapon:'random' } },
+      { text:'No deal.', effect:{ text:'The smuggler leaves a faint trail of disappointment.' } } ] },
+    comet:{ text:'A comet streaks through the system, shedding ice and volatile gas.', choices:[
+      { text:'Skim its tail for fuel.', chance:.75, success:{ text:'The scoops fill with usable fuel.', fuel:3 }, fail:{ text:'A chunk of ice slams into the hull. Cool.', hull:-2, fuel:1 } },
+      { text:'Just watch it pass.', effect:{ text:'The crew gathers at the viewports. Morale improves. Morale is not a stat.' } } ] },
+    ghost:{ text:'A signal repeats one coordinate, over and over, in a language nobody aboard knows.', choices:[
+      { text:'Hold position behind strong shields and listen.', req:{ system:'shields', level:4 }, effect:{ text:'Whatever was out there tests your shields, gives up, and leaves a cache behind.', scrap:35 } },
+      { text:'Follow the coordinate.', chance:.5, success:{ text:'You find an abandoned depot with spare parts.', scrap:20, missiles:2 }, fail:{ text:'It leads straight into a minefield.', hull:-5 } },
+      { text:'Ignore it.', effect:{ text:'You log the signal and move on.' } } ] },
+    dock:{ text:'A Sloog repair dock floats here, tended by slow, patient hands. "Stay a while. Let us goo-p you up."', choices:[
+      { text:'Accept repairs.', effect:{ text:'Your hull is patched with something warm and alarmingly alive.', hull:6 } },
+      { text:'Politely refuse.', effect:{ text:'The Sloog look hurt. Slowly.' } } ] },
+    fedscout:{ text:'A Fedoration scout tips its hat. "M\'lady. The Rebuff Fleet is three jumps behind you. Take this, and godspeed."', minSector:2, choices:[
+      { text:'Accept the supplies.', effect:{ text:'They hand over fuel and a slightly smug salute.', fuel:3, missiles:2 } } ] },
+    sale:{ text:'A Rebuff deserter wants out. "I will give you my sidearm and my ship\'s location codes. Just take me with you."', minSector:2, choices:[
+      { text:'Welcome aboard.', effect:{ text:'The deserter joins your crew and rebuffs their old life.', crew:'human', scrap:10 } },
+      { text:'Could be a trap. Refuse.', effect:{ text:'They sigh and drift away.' } } ] },
+    quiet:{ weight:.6, text:'The beacon is silent. Stars, dust, and the hum of your own engines.', choices:[
+      { text:'Continue.', effect:{ text:'You use the calm to run diagnostics.' } } ] }
+  }
+};
+
+const EXAMPLE_MOD = {
+  name:'Space Pirates Ahoy', version:'1.0', author:'You',
+  rules:{ startScrap:60 },
+  races:[ { id:'parrot', name:'Squawkling', color:'#ff9de2', hp:90, repair:1.5, desc:'Repeats every order. Repairs fairly fast.' } ],
+  weapons:[ { id:'cannon', name:'Broadside Cannon', type:'laser', damage:1, shots:3, charge:14, power:2, cost:70 } ],
+  ships:[ { id:'jollyroger', name:'The Jolly Rover', desc:'A pirate ship with a big broadside.', hull:28, reactor:9, color:'#ff9de2',
+    systems:{ shields:2, engines:2, oxygen:1, weapons:3, medbay:1, piloting:1 }, weapons:['cannon','arty'], crew:['parrot','human','sloog'], fuel:15, missiles:6 } ],
+  enemies:[ { id:'kraken', name:'Space Kraken Hunter', hull:15, systems:{ shields:2, engines:2, weapons:3, oxygen:1, piloting:1 }, weapons:['cannon'], crew:['parrot','human'], sectors:[2,5] } ],
+  events:[ { id:'treasure', text:'A floating chest marked with an X. Probably fine.', weight:2, choices:[
+    { text:'Open it.', chance:0.5, success:{ text:'Doubloons! Well, scrap.', scrap:40 }, fail:{ text:'The chest bites.', hull:-3 } },
+    { text:'[Squawkling] Ask the parrot what it thinks.', req:{ race:'parrot' }, effect:{ text:'It says "open it" eleven times. You do. Treasure!', scrap:45 } } ] } ]
+};
+
+/* ---------------- utilities ---------------- */
+const rand = (a,b) => a + Math.random()*(b-a);
+const ri = (a,b) => Math.floor(rand(a,b+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const clone = o => JSON.parse(JSON.stringify(o));
+const LS = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const SAVE_KEY = 'vtl.save', MOD_KEY = 'vtl.mods';
+function hexA(hex, a){ const h = hex.replace('#',''); const n = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+function wpick(items, wf){ const tot = items.reduce((s,i)=>s+wf(i),0); let r = Math.random()*tot; for(const i of items){ r -= wf(i); if(r<=0) return i; } return items[items.length-1]; }
+
+/* ---------------- mods ---------------- */
+let MODS = LS.get(MOD_KEY, []);
+let DATA = null, R = null;
+const KINDS = ['weapons','races','ships','enemies','events'];
+function toMap(x){ if(!x) return {}; if(Array.isArray(x)){ const m={}; x.forEach(o=>{ if(o && o.id!=null) m[o.id]=o; }); return m; } return typeof x==='object' ? x : {}; }
+function applyMods(){
+  DATA = clone(BASE);
+  for(const k of KINDS) for(const id in DATA[k]) DATA[k][id].id = id;
+  for(const m of MODS){
+    if(!m.enabled) continue; const d = m.data || {};
+    if(d.rules && typeof d.rules==='object') Object.assign(DATA.rules, d.rules);
+    for(const k of KINDS){ const mp = toMap(d[k]); for(const id in mp) DATA[k][id] = Object.assign({}, DATA[k][id]||{}, mp[id], { id }); }
+    if(d.remove && typeof d.remove==='object') for(const k in d.remove) if(DATA[k] && Array.isArray(d.remove[k])) d.remove[k].forEach(id => delete DATA[k][id]);
+  }
+  R = DATA.rules;
+}
+function validateMod(d){
+  const E = [];
+  if(!d || typeof d!=='object' || Array.isArray(d)) return ['The file must contain one JSON object, starting with { and ending with }.'];
+  if(typeof d.name!=='string' || !d.name.trim()) E.push('Add a "name" string so the mod can be listed.');
+  for(const k of KINDS){ if(Array.isArray(d[k])) d[k].forEach((o,i)=>{ if(!o || o.id==null) E.push(`${k}[${i}] needs an "id".`); }); }
+  const types = ['laser','missile','ion','beam'];
+  const Wm = toMap(d.weapons); for(const id in Wm){ const w = Wm[id];
+    if(!types.includes(w.type)) E.push(`Weapon "${id}": "type" must be one of ${types.join(', ')}.`);
+    for(const f of ['damage','charge','power']) if(typeof w[f]!=='number') E.push(`Weapon "${id}": "${f}" must be a number.`); }
+  const Rm = toMap(d.races); for(const id in Rm){ if(typeof Rm[id].hp!=='number') E.push(`Race "${id}": "hp" must be a number.`); }
+  for(const [k,label] of [['ships','Ship'],['enemies','Enemy']]){ const M = toMap(d[k]); for(const id in M){ const s = M[id];
+    if(typeof s.hull!=='number') E.push(`${label} "${id}": "hull" must be a number.`);
+    if(!s.systems || typeof s.systems!=='object') E.push(`${label} "${id}": add a "systems" object, e.g. {"shields":2}.`);
+    if(s.rooms && !Array.isArray(s.rooms)) E.push(`${label} "${id}": "rooms" must be a list.`); } }
+  const Ev = toMap(d.events); for(const id in Ev){ const e = Ev[id];
+    if(typeof e.text!=='string') E.push(`Event "${id}": add a "text" string.`);
+    if(!Array.isArray(e.choices) || !e.choices.length) E.push(`Event "${id}": add at least one entry in "choices".`);
+    else e.choices.forEach((c,i)=>{ if(typeof c.text!=='string') E.push(`Event "${id}" choice ${i+1}: add a "text" string.`);
+      if(!c.effect && c.chance==null) E.push(`Event "${id}" choice ${i+1}: add an "effect", or "chance" with "success" and "fail".`); }); }
+  return E;
+}
+function modSummary(d){ const parts=[]; for(const k of KINDS){ const n = Object.keys(toMap(d[k])).length; if(n) parts.push(`${n} ${k}`); }
+  if(d.rules) parts.push('rule changes'); return parts.join(', ') || 'no content'; }
+function addModText(txt, label){
+  let d; try{ d = JSON.parse(txt); }catch(e){ return { ok:false, msg:`${label}: this is not valid JSON (${e.message}).` }; }
+  const errs = validateMod(d);
+  if(errs.length) return { ok:false, msg:`${label} was not added:\n• ` + errs.slice(0,8).join('\n• ') + (errs.length>8?`\n…and ${errs.length-8} more.`:'') };
+  const entry = { name:d.name.trim(), version:d.version||'', author:d.author||'', enabled:true, data:d, added:Date.now() };
+  const i = MODS.findIndex(m=>m.name===entry.name); if(i>=0) MODS[i]=entry; else MODS.push(entry);
+  if(!LS.set(MOD_KEY, MODS)) return { ok:true, msg:`${entry.name} is active for this session, but this browser would not save it for next time.` };
+  return { ok:true, msg:`Added ${entry.name} (${modSummary(d)}). It applies to new runs.` };
+}
+function saveMods(){ LS.set(MOD_KEY, MODS); }
+
+/* ---------------- audio ---------------- */
+let AC = null;
+function ensureAudio(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==='suspended') AC.resume(); }
+function tone(f,d,type='square',v=.05,slide=0){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide), t+d);
+  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.03); }
+function noise(d,v){ if(!AC) return; const b=AC.createBuffer(1, AC.sampleRate*d, AC.sampleRate), a=b.getChannelData(0);
+  for(let i=0;i<a.length;i++) a[i]=(Math.random()*2-1)*(1-i/a.length); const s=AC.createBufferSource(), g=AC.createGain(); s.buffer=b; g.gain.value=v; s.connect(g); g.connect(AC.destination); s.start(); }
+function sfx(n){ switch(n){
+  case 'click': tone(880,.04,'square',.025); break;
+  case 'laser': tone(1300,.14,'sawtooth',.035,.35); break;
+  case 'missile': tone(160,.45,'triangle',.06,2.4); break;
+  case 'ion': tone(600,.25,'sine',.05,2.5); break;
+  case 'beam': tone(300,.5,'sawtooth',.03,1.3); break;
+  case 'hit': noise(.35,.14); tone(90,.3,'square',.05,.5); break;
+  case 'shield': tone(420,.25,'sine',.06,1.8); break;
+  case 'miss': tone(700,.1,'triangle',.03,1.4); break;
+  case 'jump': tone(70,1.1,'sawtooth',.05,8); noise(.8,.05); break;
+  case 'buy': tone(660,.08,'square',.03); setTimeout(()=>tone(990,.1,'square',.03),70); break;
+  case 'alarm': tone(520,.18,'square',.04); setTimeout(()=>tone(390,.22,'square',.04),190); break;
+} }
+
+/* ---------------- ships ---------------- */
+function autoRooms(sys){
+  const list = SYS.filter(k => k!=='piloting' && (sys[k]||0) > 0);
+  const rooms = list.map((k,i) => ({ sys:k, x:Math.floor(i/2)*2, y:(i%2)*2, w:2, h:2 }));
+  const cols = Math.ceil(list.length/2);
+  rooms.push({ sys:'', x:cols*2, y:0, w:1, h:1 });
+  rooms.push({ sys:'piloting', x:cols*2, y:1, w:1, h:2 });
+  rooms.push({ sys:'', x:cols*2, y:3, w:1, h:1 });
+  return rooms;
+}
+function newWeapon(id){ return { id, charge:0, on:false, target:null }; }
+function makeShip(def, isEnemy, sector=1){
+  const sysDef = Object.assign({}, def.systems||{}); sysDef.piloting = 1;
+  if(isEnemy && !def.boss){
+    if(sector>=4) sysDef.shields = (sysDef.shields||0) + 2;
+    if(sector>=3) sysDef.weapons = (sysDef.weapons||0) + 1;
+  }
+  const rooms = clone(Array.isArray(def.rooms) && def.rooms.length ? def.rooms : autoRooms(sysDef));
+  let maxX = 0; rooms.forEach(r => maxX = Math.max(maxX, r.x + r.w));
+  const s = { id:def.id, name:def.name||def.id, isEnemy, boss:!!def.boss, color:def.color || (isEnemy?C.hostile:C.amber),
+    hull:def.hull, maxHull:def.hull, reactor:def.reactor||8, systems:{}, rooms, weapons:[], cargo:[], crew:[], shield:0, shieldT:0, oxygen:100 };
+  if(isEnemy && !def.boss){ s.hull += 2*(sector-1); s.maxHull = s.hull; }
+  for(const k of SYS){
+    const lv = Math.round(sysDef[k]||0); if(lv<=0) continue;
+    if(!rooms.some(r=>r.sys===k)){ rooms.push({ sys:k, x:maxX, y:0, w:2, h:2 }); maxX += 2; }
+    s.systems[k] = { max:lv, power:0, dmg:0, ion:0, ionT:0, rep:0, prev:0 };
+  }
+  s.systems.piloting.power = 1;
+  if(isEnemy){ for(const k of POWERED) if(s.systems[k]) s.systems[k].power = s.systems[k].max; }
+  else { let left = s.reactor; for(const k of POWERED){ const y = s.systems[k]; if(!y) continue; const p = Math.min(y.max, left); y.power = p; left -= p; } }
+  let wl = (def.weapons||[]).filter(id => DATA.weapons[id]);
+  if(isEnemy && !def.boss && sector>=3 && wl.length<3 && DATA.weapons.basic) wl.push('basic');
+  s.weapons = wl.slice(0, isEnemy ? 6 : R.weaponSlots).map(newWeapon);
+  autoPowerWeapons(s);
+  (def.crew||['human']).forEach(r => addCrew(s, r));
+  return s;
+}
+function roomOf(sh, k){ return sh.rooms.findIndex(r => r.sys===k); }
+function occupancy(sh, ri){ return sh.crew.filter(c => (c.moveTo!=null ? c.moveTo : c.room)===ri).length; }
+function cap(sh, ri){ const r = sh.rooms[ri]; return r.w*r.h; }
+function freeRoom(sh){
+  for(const p of ['piloting','weapons','shields','engines','oxygen','medbay']){ const i = roomOf(sh,p); if(i>=0 && occupancy(sh,i) < Math.min(1,cap(sh,i)) ) return i; }
+  for(let i=0;i<sh.rooms.length;i++) if(occupancy(sh,i) < cap(sh,i)) return i;
+  return 0;
+}
+function addCrew(sh, race){
+  const rid = DATA.races[race] ? race : 'human', r = DATA.races[rid];
+  const c = { id:Math.random().toString(36).slice(2,9), name:pick(NAMES), race:rid, hp:r.hp, maxHp:r.hp, room:freeRoom(sh), moveTo:null, moveT:0 };
+  sh.crew.push(c); return c;
+}
+function crewIn(sh, ri){ return sh.crew.filter(c => c.room===ri && c.moveTo==null); }
+function manned(sh, k){ const i = roomOf(sh,k); return i>=0 && crewIn(sh,i).length>0; }
+function bonusPower(sh, k){ const i = roomOf(sh,k); if(i<0) return 0; return crewIn(sh,i).reduce((s,c)=>s + (DATA.races[c.race]?.power||0), 0); }
+function eff(sh, k){ const s = sh.systems[k]; if(!s) return 0;
+  let e = Math.min(s.power + (k!=='piloting' ? bonusPower(sh,k) : 0), s.max - s.dmg);
+  if(s.ionT>0) e -= s.ion; return Math.max(0, e); }
+function reactorUsed(sh){ return POWERED.reduce((t,k)=>t + (sh.systems[k]?.power||0), 0); }
+function reactorFree(sh){ return sh.reactor - reactorUsed(sh); }
+function evasion(sh){
+  if(eff(sh,'piloting')<=0 || !manned(sh,'piloting')) return 0;
+  const e = eff(sh,'engines'); if(e<=0) return 0;
+  return Math.min(60, e*5 + 5 + (manned(sh,'engines')?5:0));
+}
+function weaponPowerUsed(sh){ return sh.weapons.reduce((t,w)=>t + (w.on ? DATA.weapons[w.id].power : 0), 0); }
+function weaponBudget(sh){ let capP = eff(sh,'weapons'); for(const w of sh.weapons){ if(!w.on) continue; const p = DATA.weapons[w.id].power; if(p<=capP) capP -= p; else w.on = false; } }
+function autoPowerWeapons(sh){ let free = eff(sh,'weapons') - weaponPowerUsed(sh); for(const w of sh.weapons){ const p = DATA.weapons[w.id].power; if(!w.on && p<=free){ w.on = true; free -= p; } } }
+function shieldLayers(sh){ return Math.floor(eff(sh,'shields')/2); }
+
+/* ---------------- run state ---------------- */
+let G = null;
+const UI = { screen:'title', selCrew:null, selWeapon:null, page:0, selShip:null, toast:null, modsMsg:'' };
+function toast(t){ UI.toast = { text:t, t:2.4 }; }
+
+function newRun(shipId){
+  applyMods();
+  const def = DATA.ships[shipId] || Object.values(DATA.ships)[0];
+  G = { ship:makeShip(def,false,1), enemy:null, proj:[], fx:[], sector:1, scrap:R.startScrap, fuel:def.fuel??16, missiles:def.missiles??8,
+    paused:false, modal:null, ftl:0, warp:0, warpNode:null, fleetX:-0.2, boss:false, dieT:0, shake:0, map:null,
+    stats:{ kills:0, scrap:0, jumps:0 }, log:[] };
+  genSector(1);
+  UI.screen = 'game'; UI.selCrew = null; UI.selWeapon = null;
+  G.modal = { type:'msg', title:'Sector 1', text:`You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors to Fedoration space. Open the map to plot your first jump.`, btn:'Open map', then:openMap };
+  save();
+}
+function save(){ if(!G || G.enemy) return; const copy = Object.assign({}, G, { modal:null, enemy:null, proj:[], fx:[], warp:0, warpNode:null }); LS.set(SAVE_KEY, { G:copy, DATA }); }
+function loadSave(){ const s = LS.get(SAVE_KEY, null); if(!s || !s.G || !s.DATA) return false; DATA = s.DATA; R = DATA.rules; G = s.G; G.fx=[]; G.proj=[]; UI.screen='game'; UI.selCrew=null; UI.selWeapon=null; return true; }
+
+/* ---------------- sector map ---------------- */
+function genSector(n){
+  const cols = 7, nodes = [], mix = R.beaconMix;
+  for(let c=0;c<cols;c++){
+    const count = (c===0 || c===cols-1) ? 1 : ri(2,3);
+    for(let k=0;k<count;k++){
+      const x = clamp((c + (c>0 && c<cols-1 ? rand(-.18,.18) : 0))/(cols-1), 0, 1);
+      const y = count===1 ? .5 : clamp((k+.5)/count + rand(-.08,.08), .08, .92);
+      let type = wpick(Object.keys(mix), t => mix[t]);
+      if(c===0) type = 'start';
+      if(c===cols-1) type = (n>=R.sectors) ? 'boss' : 'exit';
+      nodes.push({ x, y, col:c, type, links:[], visited:c===0, store:null });
+    }
+  }
+  for(const a of nodes){
+    const next = nodes.filter(b => b.col===a.col+1).sort((p,q)=>Math.abs(p.y-a.y)-Math.abs(q.y-a.y));
+    next.slice(0, next.length>1 && Math.random()<.6 ? 2 : 1).forEach(b => link(nodes, a, b));
+    const same = nodes.filter(b => b.col===a.col && b!==a && Math.abs(b.y-a.y)<.45);
+    if(same.length && Math.random()<.35) link(nodes, a, same[0]);
+  }
+  for(const b of nodes) if(b.col>0 && !b.links.some(i => nodes[i].col<b.col)){ const prev = nodes.filter(a=>a.col===b.col-1); link(nodes, pick(prev), b); }
+  const mids = nodes.filter(nd => nd.col>=2 && nd.col<=5);
+  if(!nodes.some(nd=>nd.type==='store') && mids.length) pick(mids).type = 'store';
+  G.map = { nodes, cur:0 }; G.fleetX = -0.2;
+}
+function link(nodes, a, b){ const ia = nodes.indexOf(a), ib = nodes.indexOf(b); if(!a.links.includes(ib)) a.links.push(ib); if(!b.links.includes(ia)) b.links.push(ia); }
+function openMap(){ UI.selWeapon = null; save(); G.modal = { type:'map' }; }
+function canJump(){ return !G.enemy || G.ftl>=1; }
+function jumpTo(i){
+  if(!canJump()) { toast('The VTL drive is still charging.'); return; }
+  if(G.fuel<=0){ G.modal = { type:'stranded' }; return; }
+  G.fuel--; G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump');
+}
+function leaveCombat(){ G.enemy = null; G.proj = []; G.ftl = 0; UI.selWeapon = null; G.boss = false; for(const w of G.ship.weapons){ w.charge = 0; w.target = null; } }
+function arrive(i){
+  const node = G.map.nodes[i]; G.map.cur = i; G.fleetX += R.fleetSpeed; G.stats.jumps++;
+  const first = !node.visited; node.visited = true;
+  if(node.x < G.fleetX - .02 && node.type!=='boss'){
+    startCombat('random', { harder:true, title:'Rebuff Fleet', text:'The Rebuff Fleet has overrun this beacon. A fleet warship locks on before your drive cools.' });
+    return;
+  }
+  if(node.type==='store'){ if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
+  if(!first){ G.modal = { type:'msg', title:'Familiar beacon', text:'You have been here before. Nothing new on sensors.' }; save(); return; }
+  switch(node.type){
+    case 'event': startEvent(pickEvent()); break;
+    case 'combat': startCombat('random'); break;
+    case 'exit': G.modal = { type:'exit' }; save(); break;
+    case 'boss': startCombat(R.bossId, { boss:true, title:'The Flaggship', text:'The Rebuff Flaggship fills your viewport. It is very large and very cross. Destroy it and the war is over.' }); break;
+    default: G.modal = { type:'msg', title:'Quiet beacon', text:'Empty space. A good place to breathe, patch up and plan.' }; save();
+  }
+}
+function nextSector(){ G.modal = null; G.warp = 1; G.warpNode = 'sector'; sfx('jump'); }
+
+/* ---------------- events ---------------- */
+function pickEvent(){
+  const list = Object.values(DATA.events).filter(e => (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector && !e.chainOnly);
+  if(!list.length) return null;
+  return wpick(list, e => e.weight ?? 1).id;
+}
+function startEvent(id){
+  const ev = id && DATA.events[id];
+  if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
+  G.modal = { type:'event', id };
+}
+function reqMet(q){
+  if(!q) return true; const s = G.ship;
+  if(q.race && !s.crew.some(c=>c.race===q.race)) return false;
+  if(q.system && (!s.systems[q.system] || s.systems[q.system].max < (q.level||1))) return false;
+  if(q.weaponType && !s.weapons.some(w=>DATA.weapons[w.id]?.type===q.weaponType)) return false;
+  if(q.scrap!=null && G.scrap < q.scrap) return false;
+  if(q.fuel!=null && G.fuel < q.fuel) return false;
+  if(q.missiles!=null && G.missiles < q.missiles) return false;
+  if(q.crewCount!=null && s.crew.length < q.crewCount) return false;
+  return true;
+}
+function reqLabel(q){
+  if(!q) return '';
+  if(q.race) return `[${DATA.races[q.race]?.name||q.race}] `;
+  if(q.system) return `[${SYSN[q.system]||q.system} ${q.level||1}] `;
+  if(q.weaponType) return `[${q.weaponType}] `;
+  return '';
+}
+function costLabel(c){ if(!c) return ''; const p=[]; for(const k of ['scrap','fuel','missiles']) if(c[k]) p.push(`${c[k]} ${k}`); return p.length ? ` (costs ${p.join(', ')})` : ''; }
+function chooseOption(ch){
+  if(ch.cost){ G.scrap -= ch.cost.scrap||0; G.fuel -= ch.cost.fuel||0; G.missiles -= ch.cost.missiles||0; }
+  let eff_ = ch.effect || {};
+  if(ch.chance!=null) eff_ = Math.random() < ch.chance ? (ch.success||{}) : (ch.fail||{});
+  const lines = applyEffect(eff_);
+  G.modal = { type:'result', title:'Outcome', text:eff_.text||'', lines, after:{ fight:eff_.fight, event:eff_.event } };
+}
+function sign(n){ return (n>0?'+':'') + n; }
+function applyEffect(e){
+  const L = [], s = G.ship;
+  if(e.scrap){ G.scrap = Math.max(0, G.scrap + e.scrap); if(e.scrap>0) G.stats.scrap += e.scrap; L.push(`${sign(e.scrap)} scrap`); }
+  if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
+  if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
+  if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
+  if(e.crew){ const races = Object.keys(DATA.races); const race = e.crew==='random' ? pick(races) : e.crew;
+    if(s.crew.length < R.maxCrew){ const c = addCrew(s, race); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); } else L.push('No bunk free for a new crew member'); }
+  if(e.crewLoss){ for(let i=0;i<e.crewLoss && s.crew.length;i++){ const c = s.crew.splice(Math.floor(Math.random()*s.crew.length),1)[0]; L.push(`${c.name} is lost`); } }
+  if(e.weapon) L.push(giveWeapon(e.weapon));
+  if(e.damageSystem && s.systems[e.damageSystem]){ damageSystem(s, e.damageSystem, 1); L.push(`${SYSN[e.damageSystem]} damaged`); }
+  if(e.upgrade && s.systems[e.upgrade]){ s.systems[e.upgrade].max = Math.min(CAPS[e.upgrade]||8, s.systems[e.upgrade].max+1); L.push(`${SYSN[e.upgrade]} upgraded`); }
+  if(e.reactor){ s.reactor += e.reactor; L.push(`${sign(e.reactor)} reactor power`); }
+  return L;
+}
+function giveWeapon(id){
+  const pool = Object.values(DATA.weapons).filter(w => !w.noLoot);
+  const w = (id==='random' || !DATA.weapons[id]) ? pick(pool) : DATA.weapons[id];
+  if(!w) return 'Nothing useful inside';
+  if(G.ship.weapons.length < R.weaponSlots){ G.ship.weapons.push(newWeapon(w.id)); return `${w.name} mounted (power it up)`; }
+  G.ship.cargo.push(w.id); return `${w.name} stowed in cargo`;
+}
+function closeResult(m){
+  G.modal = null;
+  if(m.after?.fight) startCombat(m.after.fight);
+  else if(m.after?.event) startEvent(m.after.event);
+  else save();
+}
+
+/* ---------------- combat ---------------- */
+function pickEnemy(n){
+  const pool = Object.values(DATA.enemies).filter(e => !e.boss && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
+  const any = Object.values(DATA.enemies).filter(e => !e.boss);
+  return pick(pool.length ? pool : any);
+}
+function startCombat(id, o={}){
+  const n = Math.min(G.sector + (o.harder?1:0), 8);
+  const def = (id && id!=='random' && DATA.enemies[id]) ? DATA.enemies[id] : pickEnemy(n);
+  if(!def){ G.modal = { type:'msg', title:'All clear', text:'Sensors show no hostiles.' }; return; }
+  G.enemy = makeShip(def, true, n); G.proj = []; G.ftl = 0; G.boss = !!o.boss; G.dieT = 0;
+  autoPowerWeapons(G.ship);
+  sfx('alarm');
+  G.modal = { type:'msg', title:o.title || 'Hostile contact', text:o.text || `The ${G.enemy.name} powers its weapons. Pick targets, then fire. Pause any time to think.`, btn:'Battle stations' };
+}
+function damageSystem(sh, k, d){
+  const s = sh.systems[k]; if(!s) return;
+  if(!sh.isEnemy) s.prev = Math.max(s.prev, s.power);
+  s.dmg = Math.min(s.max, s.dmg + d);
+  if(!sh.isEnemy) s.power = Math.min(s.power, s.max - s.dmg);
+  if(k==='weapons') weaponBudget(sh);
+}
+function roomCenter(sh, ri){ const q = sh._rects?.[ri]; return q ? { x:q.x+q.w/2, y:q.y+q.h/2 } : { x:sh.isEnemy?1200:400, y:330 }; }
+function fx(type, x, y, text){ G.fx.push({ type, x, y, t:0, text }); }
+function fire(sh, w){
+  const d = DATA.weapons[w.id];
+  if(d.type==='missile' && !sh.isEnemy){ if(G.missiles<=0){ return; } G.missiles--; }
+  w.charge = 0;
+  const shots = d.shots||1, from = sh.isEnemy ? 'e' : 'p';
+  for(let i=0;i<shots;i++) G.proj.push({ from, room:w.target, wid:w.id, t:-i*.2, dur:d.type==='beam' ? .55 : (d.type==='missile' ? 1.4 : 1.05) });
+  sfx(d.type==='missile'?'missile':d.type==='ion'?'ion':d.type==='beam'?'beam':'laser');
+  if(sh.isEnemy) w.target = null;
+}
+function aiTarget(foe){
+  const opts = []; foe.rooms.forEach((r,i)=>{ if(r.sys) { const wgt = (r.sys==='weapons'||r.sys==='shields') ? 2 : 1; for(let k=0;k<wgt;k++) opts.push(i); } });
+  return opts.length ? pick(opts) : 0;
+}
+function resolve(p){
+  const foe = p.from==='p' ? G.enemy : G.ship; if(!foe || foe.dead) return;
+  const d = DATA.weapons[p.wid]; if(!d) return;
+  const c = roomCenter(foe, p.room);
+  if(d.type!=='beam' && Math.random()*100 < evasion(foe)){ fx('text', c.x, c.y-30, 'MISS'); sfx('miss'); return; }
+  if((d.type==='laser' || d.type==='ion') && foe.shield>0){
+    foe.shield--; foe.shieldT = 0; fx('shield', c.x, c.y); sfx('shield');
+    if(d.type==='ion') ionize(foe, 'shields', d.damage);
+    return;
+  }
+  if(d.type==='ion'){ const k = foe.rooms[p.room]?.sys; if(k) ionize(foe, k, d.damage); fx('ion', c.x, c.y); sfx('ion'); return; }
+  let dmg = d.damage;
+  if(d.type==='beam'){ dmg = Math.max(0, dmg - foe.shield); if(dmg<=0){ fx('shield', c.x, c.y); sfx('shield'); return; } }
+  hitRoom(foe, p.room, dmg);
+}
+function ionize(sh, k, n){ const s = sh.systems[k]; if(!s) return; s.ion = Math.min(s.max, s.ion + n); s.ionT = 6; }
+function hitRoom(sh, ri, dmg){
+  sh.hull = Math.max(0, sh.hull - dmg);
+  const r = sh.rooms[ri]; if(r && r.sys) damageSystem(sh, r.sys, dmg);
+  for(const c of sh.crew) if(c.room===ri) c.hp -= 14*dmg;
+  const c = roomCenter(sh, ri); fx('boom', c.x, c.y); fx('text', c.x, c.y-34, `-${dmg}`); sfx('hit');
+  if(!sh.isEnemy) G.shake = Math.min(1, G.shake + .45*dmg);
+}
+function tickShip(sh, dt, foe){
+  for(const k in sh.systems){ const s = sh.systems[k]; if(s.ionT>0){ s.ionT -= dt; if(s.ionT<=0){ s.ion = 0; s.ionT = 0; } } }
+  const maxL = shieldLayers(sh);
+  if(sh.shield > maxL) sh.shield = maxL;
+  if(sh.shield < maxL){ sh.shieldT += dt; if(sh.shieldT >= R.shieldRegen){ sh.shield++; sh.shieldT = 0; } } else sh.shieldT = 0;
+  if(sh.systems.oxygen){ const ox = eff(sh,'oxygen'); sh.oxygen = ox>0 ? Math.min(100, sh.oxygen + dt*4*ox) : Math.max(0, sh.oxygen - dt*2.2); }
+  const med = roomOf(sh,'medbay'), medE = eff(sh,'medbay');
+  for(const c of sh.crew){
+    if(c.moveTo!=null){ c.moveT -= dt; if(c.moveT<=0){ c.room = c.moveTo; c.moveTo = null; } }
+    const race = DATA.races[c.race] || {};
+    if(race.heal) c.hp = Math.min(c.maxHp, c.hp + race.heal*dt);
+    if(c.room===med && c.moveTo==null && medE>0) c.hp = Math.min(c.maxHp, c.hp + 7*medE*dt);
+    if(sh.oxygen < 12) c.hp -= 4*dt;
+  }
+  const dead = sh.crew.filter(c => c.hp<=0);
+  if(dead.length){ sh.crew = sh.crew.filter(c => c.hp>0); if(!sh.isEnemy){ dead.forEach(c => toast(`${c.name} has died.`)); if(dead.some(c=>c.id===UI.selCrew)) UI.selCrew = null; } }
+  for(const k in sh.systems){ const s = sh.systems[k]; if(s.dmg<=0){ s.rep = 0; continue; }
+    const ri_ = roomOf(sh,k); const crew = ri_>=0 ? crewIn(sh, ri_) : [];
+    let rate = crew.reduce((t,c)=>t + (DATA.races[c.race]?.repair ?? 1), 0) * R.repairRate;
+    if(sh.isEnemy && !crew.length) rate = .03;
+    s.rep += rate*dt;
+    if(s.rep>=1){ s.rep = 0; s.dmg--; if(!sh.isEnemy && s.prev > s.power && reactorFree(sh)>0 && s.power < s.max - s.dmg){ s.power++; if(s.power>=s.prev) s.prev = 0; } if(k==='weapons' && sh.isEnemy) autoPowerWeapons(sh); }
+  }
+  weaponBudget(sh);
+  if(sh.isEnemy) autoPowerWeapons(sh);
+  for(const w of sh.weapons){
+    const d = DATA.weapons[w.id];
+    if(!foe || !w.on){ w.charge = Math.max(0, w.charge - dt*3); continue; }
+    const pace = sh.isEnemy ? (sh.boss ? 1 : Math.min(1, (R.enemyPace ?? .7) + .06*(G.sector-1))) : 1;
+    w.charge = Math.min(d.charge, w.charge + dt*pace*(manned(sh,'weapons') ? 1.1 : 1));
+    if(w.charge >= d.charge){
+      if(sh.isEnemy && w.target==null) w.target = aiTarget(foe);
+      if(w.target!=null && !(d.type==='missile' && !sh.isEnemy && G.missiles<=0)) fire(sh, w);
+    }
+  }
+}
+
+function update(dt){
+  updateStars(dt);
+  if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
+  if(UI.screen!=='game' || !G) return;
+  for(const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
+  G.shake = Math.max(0, G.shake - dt*2);
+  if(G.warp>0){ G.warp -= dt;
+    if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
+      if(n==='sector'){ G.sector++; genSector(G.sector); G.modal = { type:'msg', title:`Sector ${G.sector}`, text: G.sector>=R.sectors ? 'The last sector. The Flaggship waits at the far beacon. Arm up before you face it.' : 'A fresh sector, and the Rebuff Fleet is already plotting its pursuit.', btn:'Open map', then:openMap }; save(); }
+      else arrive(n); } }
+  const live = !G.paused && !G.modal && G.warp<=0;
+  if(live){
+    tickShip(G.ship, dt, G.enemy && !G.enemy.dead ? G.enemy : null);
+    if(G.enemy && !G.enemy.dead) tickShip(G.enemy, dt, G.ship);
+    for(const p of G.proj) p.t += dt;
+    const done = G.proj.filter(p => p.t >= p.dur); G.proj = G.proj.filter(p => p.t < p.dur);
+    done.forEach(resolve);
+    if(G.enemy && !G.enemy.dead){
+      const s = G.ship; const ok = eff(s,'engines')>0 && eff(s,'piloting')>0 && manned(s,'piloting');
+      if(ok) G.ftl = Math.min(1, G.ftl + dt*(.022 + .007*eff(s,'engines')));
+    }
+    if(G.enemy && G.enemy.dead){ G.dieT -= dt; if(G.dieT<=0) finishCombat(); }
+  }
+  if(G.enemy && !G.enemy.dead && (G.enemy.hull<=0 || G.enemy.crew.length===0)){
+    G.enemy.dead = true; G.enemy.crewKill = G.enemy.hull>0; G.dieT = 1.3; G.proj = G.proj.filter(p=>p.from==='p');
+    const b = G.enemy._b; if(b){ for(let i=0;i<5;i++) fx('boom', rand(b.x0,b.x1), rand(b.y0,b.y1)); } sfx('hit');
+  }
+  if(G.ship.hull<=0 || G.ship.crew.length===0){ UI.screen = 'over'; UI.overReason = G.ship.hull<=0 ? 'Your hull gave out. The Rebuff Fleet collects the pieces.' : 'Your last crew member is gone. The ship drifts on, empty.'; LS.del(SAVE_KEY); }
+}
+function finishCombat(){
+  const e = G.enemy, wasBoss = G.boss; leaveCombat(); G.stats.kills++;
+  if(wasBoss){ UI.screen = 'win'; LS.del(SAVE_KEY); return; }
+  const L = []; const scrap = ri(10,16) + G.sector*5 + (e.crewKill?8:0);
+  G.scrap += scrap; G.stats.scrap += scrap; L.push(`+${scrap} scrap`);
+  if(Math.random()<.5){ const f = ri(1,2); G.fuel += f; L.push(`+${f} fuel`); }
+  if(Math.random()<.4){ const m = ri(1,3); G.missiles += m; L.push(`+${m} missiles`); }
+  if(Math.random()<.14) L.push(giveWeapon('random'));
+  G.modal = { type:'result', title:'Hostile defeated', text: e.crewKill ? `The ${e.name} drifts silent, its crew gone. You salvage everything that is not bolted down, then the bolts.` : `The ${e.name} breaks apart. Your crew sweeps the debris for anything useful.`, lines:L, after:{} };
+}
+
+/* ---------------- store & upgrades ---------------- */
+function makeStore(){
+  const pool = Object.values(DATA.weapons).filter(w=>!w.noLoot).map(w=>w.id);
+  const ws = []; while(ws.length<3 && ws.length<pool.length){ const id = pick(pool); if(!ws.includes(id)) ws.push(id); }
+  return { weapons:ws, sold:[], crewRace:pick(Object.keys(DATA.races)), crewSold:false };
+}
+function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return; } G.scrap -= cost; fn(); sfx('buy'); }
+function upgradeCost(k, lv){ return (k==='shields' ? 25 : k==='weapons' ? 22 : 15) + lv*14; }
+function reactorCost(){ return 20 + G.ship.reactor*2; }
+
+/* ---------------- background stars ---------------- */
+const STARS = Array.from({length:240}, () => ({ x:Math.random()*W, y:Math.random()*H, z:rand(.2,1) }));
+function updateStars(dt){ const warp = G && G.warp>0 ? (1-Math.abs(G.warp-.5)*2) : 0; const sp = 6 + warp*2600;
+  for(const s of STARS){ s.x -= s.z*sp*dt; if(s.x<0){ s.x += W; s.y = Math.random()*H; } } }
+
+/* ---------------- drawing helpers ---------------- */
+let HR = [];
+const PTR = [{ x:-1, y:-1, on:false }, { x:-1, y:-1, on:false, xr:true }, { x:-1, y:-1, on:false, xr:true }];
+function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
+function region(x,y,w,h,cb){ HR.push({ x,y,w,h,cb }); }
+function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
+function T(t,x,y,o={}){ ctx.font = `${o.w||400} ${o.s||22}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
+  if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
+function label(t,x,y,c=C.muted,a='left',s=16){ T(t.toUpperCase(),x,y,{ s, f:FD, w:600, c, ls:2, a }); }
+function lines(text, maxW, font){ ctx.font = font; const out = [];
+  for(const para of String(text).split('\n')){ let line = ''; for(const word of para.split(' ')){ const t = line ? line+' '+word : word; if(ctx.measureText(t).width > maxW && line){ out.push(line); line = word; } else line = t; } out.push(line); }
+  return out; }
+function para(text,x,y,maxW,o={}){ const s = o.s||22, lh = o.lh||Math.round(s*1.45), font = `${o.w||400} ${s}px ${o.f||FM}`; const ls = lines(text,maxW,font);
+  ls.forEach((l,i)=>T(l,x,y+i*lh,{ s, f:o.f||FM, w:o.w||400, c:o.c||C.ink, a:o.a||'left' })); return ls.length*lh; }
+function btn(x,y,w,h,text,cb,o={}){
+  const dis = !!o.disabled, hov = !dis && hovered(x,y,w,h), col = o.col||C.amber;
+  rr(x,y,w,h,6); ctx.fillStyle = o.fill ? (dis?C.line:col) : (hov ? hexA(col,.18) : C.panel2); ctx.fill();
+  if(o.fill && hov){ ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fill(); }
+  ctx.lineWidth = hov ? 3 : 2; ctx.strokeStyle = dis ? C.line : col; ctx.stroke();
+  T(text, x+w/2, y+h/2+1, { a:'center', b:'middle', s:o.s||20, f:FD, w:600, c: dis ? C.muted : (o.fill ? C.void : col), ls:1 });
+  if(!dis && cb) region(x,y,w,h,cb);
+}
+function panel(x,y,w,h,r=10){ rr(x,y,w,h,r); ctx.fillStyle = hexA(C.panel,.92); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.line; ctx.stroke(); }
+function bar(x,y,w,h,frac,col,bg=C.panel2){ rr(x,y,w,h,3); ctx.fillStyle = bg; ctx.fill(); if(frac>0){ rr(x,y,Math.max(4,w*clamp(frac,0,1)),h,3); ctx.fillStyle = col; ctx.fill(); } }
+
+/* ---------------- main draw ---------------- */
+function draw(){
+  HR = [];
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = C.void; ctx.fillRect(0,0,W,H);
+  drawStars();
+  switch(UI.screen){
+    case 'title': drawTitle(); break;
+    case 'select': drawSelect(); break;
+    case 'mods': drawModsScreen(); break;
+    case 'help': drawHelpScreen(); break;
+    case 'game': drawGame(); break;
+    case 'over': case 'win': drawEnd(); break;
+  }
+  if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = ctx.measureText(UI.toast.text).width + 48;
+    panel(W/2-tw/2, 88, tw, 50, 8); T(UI.toast.text, W/2, 114, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
+  for(const p of PTR){ if(!p.xr || !p.on) continue; ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
+}
+function drawStars(){
+  const warp = G && UI.screen==='game' && G.warp>0 ? (1-Math.abs(G.warp-.5)*2) : 0;
+  for(const s of STARS){ const a = .25 + s.z*.6; ctx.fillStyle = `rgba(223,230,245,${a})`;
+    if(warp>0.05){ ctx.fillRect(s.x, s.y, 4 + s.z*warp*260, 1.6); } else ctx.fillRect(s.x, s.y, s.z*2.2, s.z*2.2); }
+}
+
+/* ---------------- title / select / mods / help ---------------- */
+function drawTitle(){
+  const g = ctx.createRadialGradient(1180,420,20,1180,420,520); g.addColorStop(0,'rgba(255,181,71,.22)'); g.addColorStop(1,'rgba(255,181,71,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  ctx.beginPath(); ctx.arc(1240,470,230,0,7); const pg = ctx.createLinearGradient(1040,280,1440,680); pg.addColorStop(0,'#3b2a3f'); pg.addColorStop(1,'#0b0f1d'); ctx.fillStyle = pg; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(1240,470,360,70,-.25,0,7); ctx.strokeStyle = hexA(C.amber,.35); ctx.lineWidth = 3; ctx.stroke();
+  label('A Fedoration courier roguelike', 110, 220, C.cyan, 'left', 20);
+  T('VASTER', 104, 340, { s:132, f:FD, w:700, c:C.amber, ls:10 });
+  T('THAN LIFE', 108, 448, { s:96, f:FD, w:700, c:C.ink, ls:12 });
+  para('Outrun the Rebuff Fleet across five sectors, one jump at a time. Built for Meta Quest, playable on any screen.', 112, 510, 680, { s:22, c:C.muted });
+  const hasSave = !!LS.get(SAVE_KEY, null);
+  let y = 610;
+  if(hasSave){ btn(110, y, 360, 64, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 80; }
+  btn(110, y, 360, 64, 'New run', () => { applyMods(); UI.selShip = Object.keys(DATA.ships)[0]; UI.page = 0; UI.screen = 'select'; }, { fill:!hasSave }); y += 80;
+  const on = MODS.filter(m=>m.enabled).length;
+  btn(110, y, 360, 64, on ? `Mods (${on} on)` : 'Mods', () => { UI.screen = 'mods'; }); y += 80;
+  btn(110, y, 360, 64, 'How to play', () => { UI.screen = 'help'; });
+  label('Quest: point and pull the trigger · A/X pause · B/Y map · grip recenters · right stick moves the screen', 110, H-36, C.muted, 'left', 15);
+}
+function drawSelect(){
+  label('Choose your ship', 80, 92, C.cyan, 'left', 20);
+  T('Hangar', 80, 150, { s:56, f:FD, w:700, c:C.ink });
+  const ids = Object.keys(DATA.ships), per = 3, pages = Math.ceil(ids.length/per);
+  UI.page = clamp(UI.page, 0, pages-1);
+  const show = ids.slice(UI.page*per, UI.page*per+per);
+  show.forEach((id,i) => {
+    const def = DATA.ships[id], x = 80 + i*490, y = 190, w = 460, h = 600, sel = UI.selShip===id;
+    rr(x,y,w,h,12); ctx.fillStyle = sel ? hexA(C.amber,.08) : hexA(C.panel,.9); ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : (hovered(x,y,w,h)?C.muted:C.line); ctx.stroke();
+    region(x,y,w,h,()=>{ UI.selShip = id; });
+    T(def.name, x+24, y+52, { s:32, f:FD, w:700, c:def.color||C.amber });
+    para(def.desc||'', x+24, y+92, w-48, { s:18, c:C.muted, lh:26 });
+    let temp; try{ temp = makeShip(def,false,1); }catch(e){ temp = null; }
+    if(temp){ drawShip(temp, { x:x+10, y:y+150, w:w-20, h:220 }, 1, false, true);
+      const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
+        ['Crew', temp.crew.map(c=>DATA.races[c.race].name).join(', ')], ['Fuel / missiles', `${def.fuel??16} / ${def.missiles??8}`] ];
+      rows.forEach((r,k) => { label(r[0], x+24, y+408+k*38, C.muted, 'left', 14); para(String(r[1]), x+170, y+408+k*38, w-200, { s:17, lh:22 }); });
+    } else T('This ship has an error in its data.', x+24, y+260, { s:18, c:C.hostile });
+  });
+  if(pages>1){ btn(80, 820, 140, 60, '‹ Prev', ()=>UI.page--, { disabled:UI.page<=0 }); T(`${UI.page+1} / ${pages}`, 300, 852, { s:20, a:'center', b:'middle', c:C.muted }); btn(380, 820, 140, 60, 'Next ›', ()=>UI.page++, { disabled:UI.page>=pages-1 }); }
+  btn(W-420, 820, 340, 72, 'Launch', () => newRun(UI.selShip), { fill:true, s:26, disabled:!UI.selShip });
+  btn(W-620, 820, 180, 72, 'Back', () => { UI.screen = 'title'; });
+}
+function drawModsScreen(){
+  label('User content', 80, 92, C.cyan, 'left', 20);
+  T('Mods', 80, 150, { s:56, f:FD, w:700 });
+  para('Mods are JSON files that add or replace ships, weapons, races, enemies and events. Turn them on or off here; changes apply when you start a new run.', 80, 196, 900, { s:20, c:C.muted });
+  if(!MODS.length) para('No mods yet. Use "Add mod files" to load one. On Quest, exit VR first so the file picker can open.', 80, 300, 900, { s:22 });
+  MODS.slice(0,7).forEach((m,i) => {
+    const y = 280 + i*84; panel(80, y, 1100, 70, 8);
+    T(m.name, 104, y+32, { s:24, f:FD, w:700, c: m.enabled ? C.ink : C.muted });
+    T(`${m.version ? 'v'+m.version+' · ' : ''}${m.author ? m.author+' · ' : ''}${modSummary(m.data)}`, 104, y+56, { s:16, c:C.muted });
+    btn(880, y+12, 140, 46, m.enabled ? 'On' : 'Off', () => { m.enabled = !m.enabled; saveMods(); }, { fill:m.enabled, col:m.enabled?C.good:C.muted });
+    btn(1034, y+12, 130, 46, 'Remove', () => { MODS.splice(MODS.indexOf(m),1); saveMods(); renderModList(); }, { col:C.hostile });
+  });
+  if(MODS.length>7) T(`+${MODS.length-7} more in the mod panel`, 80, 880, { s:18, c:C.muted });
+  btn(1220, 280, 300, 64, 'Add mod files', () => { if(inXR()) toast('Exit VR to pick files, then come back in.'); else openModPanel(); }, { fill:true });
+  btn(1220, 360, 300, 64, 'Back', () => { UI.screen = 'title'; });
+}
+function drawHelpScreen(){
+  label('Field manual', 80, 92, C.cyan, 'left', 20);
+  T('How to play', 80, 150, { s:56, f:FD, w:700 });
+  const items = [
+    ['Power', 'Your reactor has a fixed number of bars. Press + or − under a system to move power into it. Unpowered systems do nothing.'],
+    ['Weapons', 'Press POWER on a weapon, then TARGET, then point at an enemy room. It fires every time it charges until you clear the target.'],
+    ['Shields', 'Every 2 shield power gives one layer. A layer blocks one laser or ion shot, then recharges. Missiles ignore shields. Beams lose 1 damage per layer.'],
+    ['Crew', 'Select a crew member, then a room. Crew repair damaged systems, fly the ship from the Helm (needed to dodge and to charge the VTL drive), and speed up weapons and engines.'],
+    ['Survival', 'Oxygen keeps crew alive. The medbay heals anyone inside it. Hull at zero or no crew left ends the run.'],
+    ['The map', 'Each jump costs 1 fuel. The Rebuff Fleet advances every jump, so keep heading for the exit beacon. Spend scrap at stores and on ship upgrades.'],
+    ['Pause', 'Pause at any time, issue orders, then resume. Space bar, the PAUSE button, or A/X on a Quest controller.'] ];
+  let y = 210;
+  items.forEach(([h,t],i) => { const col = i%2 ? 820 : 80, row = Math.floor(i/2); const yy = y + row*170;
+    label(h, col, yy, C.amber, 'left', 18); para(t, col, yy+34, 680, { s:19, lh:28 }); });
+  btn(80, 890, 200, 64, 'Back', () => { UI.screen = 'title'; });
+}
+function drawEnd(){
+  const win = UI.screen==='win';
+  label(win ? 'Mission complete' : 'Run over', W/2, 260, win ? C.good : C.hostile, 'center', 22);
+  T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 360, { s:88, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
+  para(win ? 'The data reaches Fedoration command. The Rebuff Fleet scatters, rebuffed. You are, briefly, vaster than life.' : (UI.overReason||''), W/2-420, 430, 840, { s:24, c:C.muted, a:'left' });
+  if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap collected', G.stats.scrap], ['Jumps', G.stats.jumps]];
+    st.forEach((s,i) => { const x = W/2 - 540 + i*270; label(s[0], x+120, 600, C.muted, 'center', 16); T(String(s[1]), x+120, 660, { s:52, f:FD, w:700, a:'center' }); }); }
+  btn(W/2-180, 760, 360, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { fill:true, s:24 });
+}
+
+/* ---------------- game screen ---------------- */
+const PBOX = { x:24, y:96, w:760, h:466 }, EBOX = { x:816, y:96, w:760, h:466 };
+function drawGame(){
+  drawTopBar();
+  ctx.save(); if(G.shake>0) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
+  drawShip(G.ship, PBOX, 1, false, false); ctx.restore();
+  if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else drawQuiet();
+  drawProjectiles(); drawFX();
+  drawRoster(); if(G.enemy) drawEnemyStrip();
+  drawSystems(); drawWeapons();
+  if(G.warp>0){ const a = 1-Math.abs(G.warp-.5)*2; ctx.fillStyle = `rgba(255,236,200,${a*.5})`; ctx.fillRect(0,0,W,H); }
+  if(G.paused && !G.modal){ ctx.fillStyle = 'rgba(7,10,20,.35)'; ctx.fillRect(0,76,W,H-76);
+    panel(W/2-210, 300, 420, 120, 10); T('PAUSED', W/2, 352, { s:44, f:FD, w:700, a:'center', c:C.amber, ls:8 });
+    T('Give orders, then resume', W/2, 392, { s:18, a:'center', c:C.muted }); }
+  if(G.modal) drawModal();
+}
+function drawTopBar(){
+  const s = G.ship;
+  ctx.fillStyle = hexA(C.panel,.95); ctx.fillRect(0,0,W,76); ctx.fillStyle = C.line; ctx.fillRect(0,75,W,1.5);
+  label('Hull', 24, 32, C.muted, 'left', 15);
+  const n = s.maxHull, bw = 330, seg = bw/n;
+  for(let i=0;i<n;i++){ ctx.fillStyle = i < s.hull ? (s.hull/n > .5 ? C.good : s.hull/n > .25 ? C.warn : C.hostile) : C.panel2; ctx.fillRect(84+i*seg, 14, Math.max(1,seg-2), 22); }
+  T(`${s.hull}/${n}`, 84+bw+12, 32, { s:20, w:600 });
+  label('Shields', 24, 64, C.muted, 'left', 15);
+  const ml = shieldLayers(s), mx = Math.floor((s.systems.shields?.max||0)/2);
+  for(let i=0;i<mx;i++){ const x = 124+i*30; ctx.beginPath(); ctx.moveTo(x,50); ctx.lineTo(x+11,59); ctx.lineTo(x,68); ctx.lineTo(x-11,59); ctx.closePath();
+    ctx.fillStyle = i < s.shield ? C.cyan : (i<ml ? hexA(C.cyan,.25) : C.panel2); ctx.fill(); }
+  label(`Evade ${evasion(s)}%`, 140 + Math.max(mx,1)*30, 64, evasion(s)>0 ? C.ink : C.hostile, 'left', 15);
+  label(`O2 ${Math.round(s.oxygen)}%`, 300 + Math.max(mx,1)*30, 64, s.oxygen<40 ? C.hostile : C.ink, 'left', 15);
+  const res = [['Scrap', G.scrap, C.amber], ['Fuel', G.fuel, G.fuel<=3?C.hostile:C.ink], ['Missiles', G.missiles, C.ink]];
+  res.forEach((r,i) => { const x = 560 + i*150; label(r[0], x, 28, C.muted, 'left', 14); T(String(r[1]), x, 64, { s:30, f:FD, w:700, c:r[2] }); });
+  label(`Sector ${G.sector} / ${R.sectors}`, 1020, 28, C.cyan, 'left', 15);
+  label('VTL drive', 1020, 52, C.muted, 'left', 13);
+  const charge = G.enemy ? G.ftl : 1; bar(1020, 58, 230, 10, charge, charge>=1 ? C.good : C.amber);
+  btn(1268, 12, 104, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
+  btn(1380, 12, 92, 52, 'Ship', () => { G.modal = { type:'ship' }; });
+  btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
+}
+function layoutShip(sh, box, facing, mini){
+  let gw = 0, gh = 0; for(const r of sh.rooms){ gw = Math.max(gw, r.x+r.w); gh = Math.max(gh, r.y+r.h); }
+  const pad = mini ? 12 : 22, nose = mini ? 34 : 64;
+  const cell = Math.min(mini ? 44 : 72, (box.w - 2*pad - nose - 40)/gw, (box.h - 2*pad - (mini?10:70))/gh);
+  const sw = gw*cell, shh = gh*cell;
+  const ox = box.x + (box.w - sw)/2 - facing*nose*.35, oy = box.y + (box.h - shh)/2 + (mini?0:6);
+  sh._rects = sh.rooms.map(r => ({ x: facing>0 ? ox + r.x*cell : ox + (gw - r.x - r.w)*cell, y: oy + r.y*cell, w:r.w*cell, h:r.h*cell }));
+  sh._b = { x0:ox-pad, y0:oy-pad, x1:ox+sw+pad, y1:oy+shh+pad, cell, nose, facing };
+  return sh._b;
+}
+function hullPath(b){
+  const { x0,y0,x1,y1,nose,facing } = b, cy = (y0+y1)/2;
+  const P = facing>0 ? [[x0+20,y0],[x1-8,y0],[x1+nose,cy],[x1-8,y1],[x0+20,y1],[x0,y1-24],[x0,y0+24]]
+                     : [[x1-20,y0],[x0+8,y0],[x0-nose,cy],[x0+8,y1],[x1-20,y1],[x1,y1-24],[x1,y0+24]];
+  ctx.beginPath(); P.forEach((p,i)=> i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1])); ctx.closePath();
+}
+function gunPoint(sh){ const b = sh._b; if(!b) return { x: sh.isEnemy?1100:500, y:330 }; const cy = (b.y0+b.y1)/2; return b.facing>0 ? { x:b.x1+b.nose*.6, y:cy } : { x:b.x0-b.nose*.6, y:cy }; }
+function drawShip(sh, box, facing, isEnemy, mini){
+  const b = layoutShip(sh, box, facing, mini), cell = b.cell, cy = (b.y0+b.y1)/2, col = sh.color;
+  const alpha = sh.dead ? Math.max(0, G?.dieT/1.3 || 0) : 1; ctx.globalAlpha = alpha;
+  // engine glow
+  const tail = facing>0 ? b.x0 : b.x1;
+  for(const dy of [-.25,.25]){ const yy = cy + dy*(b.y1-b.y0); const g = ctx.createRadialGradient(tail,yy,2,tail,yy,mini?26:46);
+    g.addColorStop(0,hexA(col,.7)); g.addColorStop(1,hexA(col,0)); ctx.fillStyle = g; ctx.fillRect(tail-60,yy-50,120,100); }
+  hullPath(b); const hg = ctx.createLinearGradient(0,b.y0,0,b.y1); hg.addColorStop(0,'#1b2440'); hg.addColorStop(1,'#10162a');
+  ctx.fillStyle = hg; ctx.fill(); ctx.lineWidth = mini?2:3; ctx.strokeStyle = hexA(col,.8); ctx.stroke();
+  const selW = isEnemy && UI.selWeapon!=null && !mini;
+  sh.rooms.forEach((r,i) => {
+    const q = sh._rects[i], s = r.sys ? sh.systems[r.sys] : null;
+    ctx.fillStyle = C.room; ctx.fillRect(q.x,q.y,q.w,q.h);
+    if(sh.oxygen < 60){ ctx.fillStyle = hexA(C.hostile, (60-sh.oxygen)/60*.35); ctx.fillRect(q.x,q.y,q.w,q.h); }
+    ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+    for(let gx=1; gx<r.w; gx++){ ctx.beginPath(); ctx.moveTo(q.x+gx*cell,q.y); ctx.lineTo(q.x+gx*cell,q.y+q.h); ctx.stroke(); }
+    for(let gy=1; gy<r.h; gy++){ ctx.beginPath(); ctx.moveTo(q.x,q.y+gy*cell); ctx.lineTo(q.x+q.w,q.y+gy*cell); ctx.stroke(); }
+    if(s && s.dmg>0){ ctx.fillStyle = hexA(C.hostile, .14 + .25*s.dmg/s.max); ctx.fillRect(q.x,q.y,q.w,q.h); }
+    if(s && s.ionT>0){ ctx.save(); ctx.beginPath(); ctx.rect(q.x,q.y,q.w,q.h); ctx.clip(); ctx.strokeStyle = hexA(C.cyan,.45); ctx.lineWidth = 3;
+      for(let k=-q.h;k<q.w;k+=14){ ctx.beginPath(); ctx.moveTo(q.x+k,q.y+q.h); ctx.lineTo(q.x+k+q.h,q.y); ctx.stroke(); } ctx.restore(); }
+    const hov = !mini && hovered(q.x,q.y,q.w,q.h);
+    ctx.lineWidth = 2; ctx.strokeStyle = (selW && hov) ? C.hostile : (hov && !isEnemy && UI.selCrew) ? C.amber : '#3a4a72'; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2);
+    if(r.sys){
+      const ic = SYSC[r.sys]||C.ink;
+      ctx.fillStyle = hexA(ic,.9); ctx.fillRect(q.x+3,q.y+3,mini?3:5,Math.min(q.h-6, mini?12:24));
+      if(!mini) T(SYSN[r.sys].slice(0, q.w<cell*1.5 ? 4 : 9).toUpperCase(), q.x+12, q.y+20, { s: q.w<cell*1.5 ? 12 : 14, f:FD, w:600, c:ic, ls:1 });
+      if(!mini && s && s.dmg>0){ const crew = crewIn(sh,i).length; if(crew){ bar(q.x+8, q.y+q.h-14, q.w-16, 7, s.rep, C.good, 'rgba(0,0,0,.5)'); } else T('DAMAGED', q.x+q.w/2, q.y+q.h-10, { s:12, f:FD, w:700, a:'center', c:C.hostile, ls:1 }); }
+    }
+    if(!mini){
+      if(isEnemy && UI.selWeapon!=null) region(q.x,q.y,q.w,q.h, () => { const w = G.ship.weapons[UI.selWeapon]; if(w){ w.target = i; UI.selWeapon = null; } });
+      if(!isEnemy && UI.selCrew) region(q.x,q.y,q.w,q.h, () => moveCrew(i));
+    }
+  });
+  // crew
+  const counts = {}, rad = Math.max(5, Math.min(17, cell*.26));
+  for(const c of sh.crew){
+    const room = c.moveTo!=null ? c.moveTo : c.room; const r = sh.rooms[room], q = sh._rects[room]; if(!r || !q) continue;
+    const k = counts[room] = (counts[room]||0); counts[room]++;
+    const x = q.x + ((k % r.w) + .5)*cell, y = q.y + (Math.floor(k / r.w) % r.h + .5)*cell + (mini?0:4);
+    const race = DATA.races[c.race] || { color:'#fff' };
+    ctx.globalAlpha = alpha * (c.moveTo!=null ? .5 : 1);
+    ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fillStyle = isEnemy ? hexA(C.hostile,.85) : race.color; ctx.fill();
+    if(!mini){ ctx.beginPath(); ctx.arc(x,y,rad+4,-Math.PI/2,-Math.PI/2 + Math.PI*2*clamp(c.hp/c.maxHp,0,1)); ctx.strokeStyle = c.hp/c.maxHp>.5 ? C.good : c.hp/c.maxHp>.25 ? C.warn : C.hostile; ctx.lineWidth = 3; ctx.stroke();
+      T(c.name[0], x, y+1, { s:Math.round(rad), f:FD, w:700, a:'center', b:'middle', c:C.void }); }
+    if(!isEnemy && !mini && UI.selCrew===c.id){ ctx.beginPath(); ctx.arc(x,y,rad+9,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke(); }
+    ctx.globalAlpha = alpha;
+    if(!isEnemy && !mini) region(x-rad-6, y-rad-6, rad*2+12, rad*2+12, () => { UI.selCrew = UI.selCrew===c.id ? null : c.id; });
+  }
+  // shields
+  if(!mini && sh.shield>0){ const scx = (b.x0+b.x1)/2 + facing*b.nose*.3; ctx.beginPath(); ctx.ellipse(scx, cy, (b.x1-b.x0)/2 + b.nose*.55 + 14, (b.y1-b.y0)/2 + 26, 0, 0, 7);
+    ctx.fillStyle = hexA(C.cyan, .04 + .03*sh.shield); ctx.fill(); ctx.strokeStyle = hexA(C.cyan, .35 + .12*sh.shield); ctx.lineWidth = 1.5 + sh.shield*1.4; ctx.stroke(); }
+  // targets on enemy
+  if(isEnemy && !mini){ G.ship.weapons.forEach((w,wi) => { if(w.target==null) return; const q = sh._rects[w.target]; if(!q) return; const x = q.x+q.w/2 + (wi-1.5)*14, y = q.y+q.h/2;
+    ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x,y,16,0,7); ctx.moveTo(x-24,y); ctx.lineTo(x-8,y); ctx.moveTo(x+8,y); ctx.lineTo(x+24,y); ctx.moveTo(x,y-24); ctx.lineTo(x,y-8); ctx.moveTo(x,y+8); ctx.lineTo(x,y+24); ctx.stroke();
+    T(String(wi+1), x, y+1, { s:15, f:FD, w:700, a:'center', b:'middle', c:C.amber }); }); }
+  ctx.globalAlpha = 1;
+  if(!mini && !isEnemy){ label(sh.name, box.x+8, box.y+18, hexA(col,.9), 'left', 16); }
+}
+function moveCrew(ri_){
+  const c = G.ship.crew.find(x => x.id===UI.selCrew); if(!c) { UI.selCrew = null; return; }
+  if((c.moveTo!=null ? c.moveTo : c.room)===ri_){ UI.selCrew = null; return; }
+  if(occupancy(G.ship, ri_) >= cap(G.ship, ri_)){ toast('That room is full.'); return; }
+  c.moveTo = ri_; c.moveT = .9; UI.selCrew = null;
+}
+function drawQuiet(){
+  const b = EBOX; const node = G.map?.nodes[G.map.cur];
+  ctx.beginPath(); ctx.arc(b.x+b.w*.62, b.y+b.h*.46, 150, 0, 7); const pg = ctx.createRadialGradient(b.x+b.w*.55,b.y+b.h*.38,10,b.x+b.w*.62,b.y+b.h*.46,150);
+  pg.addColorStop(0,'#3a4f7a'); pg.addColorStop(1,'#0c1226'); ctx.fillStyle = pg; ctx.fill();
+  label(node?.type==='store' ? 'Store beacon' : node?.type==='exit' ? 'Exit beacon' : 'Beacon', b.x+20, b.y+34, C.cyan, 'left', 18);
+  T('No hostiles in range.', b.x+20, b.y+74, { s:24, f:FD, w:600 });
+  T('Open the map to plot your next jump.', b.x+20, b.y+106, { s:18, c:C.muted });
+  if(node?.type==='store') btn(b.x+20, b.y+b.h-90, 260, 64, 'Open store', () => { if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:G.map.cur }; }, { fill:true });
+  if(node?.type==='exit') btn(b.x+20, b.y+b.h-90, 320, 64, 'Jump to next sector', () => { G.modal = { type:'exit' }; }, { fill:true, col:C.good });
+  btn(b.x+b.w-200, b.y+b.h-90, 180, 64, 'Map', openMap);
+}
+function drawRoster(){
+  const s = G.ship, n = s.crew.length, x0 = 24, y0 = 574, gap = 8, cw = Math.min(180, (760 - gap*(n-1))/Math.max(1,n));
+  s.crew.forEach((c,i) => { const x = x0 + i*(cw+gap), sel = UI.selCrew===c.id, race = DATA.races[c.race];
+    rr(x,y0,cw,64,8); ctx.fillStyle = sel ? hexA(C.amber,.16) : hexA(C.panel,.92); ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : hovered(x,y0,cw,64) ? C.muted : C.line; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x+20, y0+24, 9, 0, 7); ctx.fillStyle = race?.color||'#fff'; ctx.fill();
+    T(c.name, x+36, y0+30, { s: cw<120 ? 15 : 18, f:FD, w:600 });
+    const where = c.moveTo!=null ? 'Moving' : (s.rooms[c.room]?.sys ? SYSN[s.rooms[c.room].sys] : 'Corridor');
+    if(cw>=120) T(where, x+cw-10, y0+30, { s:13, a:'right', c:C.muted });
+    bar(x+12, y0+44, cw-24, 8, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
+    region(x,y0,cw,64, () => { UI.selCrew = sel ? null : c.id; }); });
+}
+function drawEnemyStrip(){
+  const e = G.enemy, x = 816, y = 574;
+  panel(x, y, 760, 64, 8);
+  T(e.name, x+16, y+28, { s:20, f:FD, w:700, c:C.hostile });
+  label(`Hull ${e.hull}/${e.maxHull}`, x+16, y+52, C.muted, 'left', 13);
+  bar(x+170, y+42, 260, 12, e.hull/e.maxHull, C.hostile);
+  label(`Shields ${e.shield}`, x+460, y+52, C.cyan, 'left', 13);
+  label(`Evade ${evasion(e)}%`, x+600, y+52, C.ink, 'left', 13);
+  if(UI.selWeapon!=null){ T('Point at an enemy room to target it', x+744, y+28, { s:16, a:'right', c:C.amber }); }
+}
+function drawSystems(){
+  const s = G.ship, x = 24, y = 652, w = 760, h = 328;
+  panel(x,y,w,h);
+  label('Power', x+20, y+32, C.amber, 'left', 17);
+  const free = reactorFree(s);
+  T(`Reactor ${free} free of ${s.reactor}`, x+110, y+32, { s:16, c:C.muted });
+  const segW = Math.min(22, (w-380)/s.reactor);
+  for(let i=0;i<s.reactor;i++){ ctx.fillStyle = i < free ? C.good : hexA(C.good,.15); ctx.fillRect(x+w-20-(i+1)*segW, y+16, segW-3, 22); }
+  const list = POWERED.filter(k => s.systems[k]);
+  const helmW = 118, colW = Math.min(124, (w - 40 - helmW)/list.length);
+  list.forEach((k,i) => {
+    const y0 = y+56, cx = x+20 + i*colW, sy = s.systems[k], e = eff(s,k), bonus = bonusPower(s,k);
+    T(SYSN[k].toUpperCase(), cx + colW/2 - 6, y0+16, { s:15, f:FD, w:700, a:'center', c:SYSC[k], ls:1 });
+    const areaH = 132, bh = Math.min(22, (areaH - (sy.max-1)*4)/sy.max), bw = 52, bx = cx + colW/2 - 6 - bw/2;
+    for(let b=0;b<sy.max;b++){ const by = y0 + 34 + areaH - (b+1)*(bh+4);
+      let fill = null, stroke = C.line;
+      if(b >= sy.max - sy.dmg){ fill = hexA(C.hostile,.75); stroke = C.hostile; }
+      else if(b < e){ fill = b >= sy.power ? C.warn : C.amber; stroke = fill; }
+      else if(b < Math.min(sy.power + bonus, sy.max - sy.dmg)){ stroke = C.cyan; }
+      rr(bx, by, bw, bh, 3); if(fill){ ctx.fillStyle = fill; ctx.fill(); } ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); }
+    if(manned(s,k)) T('MANNED', cx + colW/2 - 6, y0+186, { s:12, f:FD, w:600, a:'center', c:C.good, ls:1 });
+    if(k==='shields') T(`${shieldLayers(s)} layer${shieldLayers(s)===1?'':'s'}`, cx + colW/2 - 6, y0+186, { s:12, a:'center', c:C.cyan });
+    const bwid = (colW-20)/2;
+    btn(cx, y0+200, bwid, 52, '−', () => { if(sy.power>0){ sy.power--; sy.prev = 0; if(k==='weapons') weaponBudget(s); } }, { s:28, disabled: sy.power<=0 });
+    btn(cx + bwid + 6, y0+200, bwid, 52, '+', () => { if(reactorFree(s)<=0) toast('No reactor power free.'); else if(sy.power >= sy.max - sy.dmg) toast(sy.dmg ? `${SYSN[k]} is damaged. Send crew to repair it.` : `${SYSN[k]} is at full power. Upgrade it in Ship.`); else { sy.power++; if(k==='weapons') autoPowerWeapons(s); } }, { s:28 });
+  });
+  const hx = x + w - helmW - 12, hy = y+56; const p = s.systems.piloting;
+  rr(hx, hy-6, helmW, 260, 8); ctx.fillStyle = C.panel2; ctx.fill();
+  T('HELM', hx+helmW/2, hy+16, { s:15, f:FD, w:700, a:'center', c:C.violet, ls:1 });
+  const mn = manned(s,'piloting'), ok = mn && eff(s,'piloting')>0;
+  T(ok ? 'Pilot ready' : (p.dmg ? 'Damaged' : 'No pilot'), hx+helmW/2, hy+56, { s:15, a:'center', c: ok ? C.good : C.hostile });
+  T('Evade', hx+helmW/2, hy+104, { s:14, a:'center', c:C.muted });
+  T(`${evasion(s)}%`, hx+helmW/2, hy+142, { s:32, f:FD, w:700, a:'center' });
+  if(!ok) para('Move a crew member to the Helm to dodge and charge the VTL drive.', hx+10, hy+176, helmW-20, { s:12, lh:16, c:C.muted });
+}
+function drawWeapons(){
+  const s = G.ship, x = 816, y = 652, w = 760, h = 328;
+  panel(x,y,w,h);
+  label('Weapons', x+20, y+32, C.hostile, 'left', 17);
+  const used = weaponPowerUsed(s), cap_ = eff(s,'weapons');
+  T(`Power ${used}/${cap_} · Missiles ${G.missiles}`, x+140, y+32, { s:16, c:C.muted });
+  if(!G.enemy) T('Weapons charge in combat', x+w-20, y+32, { s:15, a:'right', c:C.muted });
+  const slots = R.weaponSlots, gap = 12, cw = (w - 40 - gap*(slots-1))/slots, ch = 262;
+  for(let i=0;i<slots;i++){
+    const cx = x+20 + i*(cw+gap), cy = y+50, wp = s.weapons[i];
+    if(!wp){ rr(cx,cy,cw,ch,8); ctx.setLineDash([6,6]); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); T('Empty mount', cx+cw/2, cy+ch/2, { s:15, a:'center', c:C.muted }); continue; }
+    const d = DATA.weapons[wp.id], sel = UI.selWeapon===i, ready = wp.on && wp.charge >= d.charge;
+    rr(cx,cy,cw,ch,8); ctx.fillStyle = sel ? hexA(C.amber,.14) : C.panel2; ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : wp.on ? hexA(C.amber,.5) : C.line; ctx.stroke();
+    T(`${i+1}`, cx+12, cy+26, { s:16, f:FD, w:700, c:C.muted });
+    para(d.name, cx+32, cy+26, cw-40, { s:17, f:FD, w:700, lh:20, c: wp.on ? C.ink : C.muted });
+    const tc = d.type==='missile' ? '#ffffff' : d.type==='ion' ? C.cyan : d.type==='beam' ? C.violet : C.amber;
+    label(d.type, cx+12, cy+82, tc, 'left', 12);
+    T(`${d.damage} dmg × ${d.shots||1}`, cx+12, cy+104, { s:14, c:C.muted });
+    for(let p=0;p<d.power;p++){ rr(cx+12+p*22, cy+116, 18, 12, 2); ctx.fillStyle = wp.on ? C.amber : C.line; ctx.fill(); }
+    bar(cx+12, cy+140, cw-24, 12, wp.charge/d.charge, ready ? C.good : C.amber);
+    T(!wp.on ? 'Unpowered' : ready ? (wp.target==null ? 'Ready' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+12, cy+172, { s:14, c: ready ? C.good : C.muted });
+    btn(cx+8, cy+184, cw-16, 34, wp.on ? 'Power off' : 'Power on', () => {
+      if(wp.on){ wp.on = false; if(UI.selWeapon===i) UI.selWeapon = null; }
+      else if(eff(s,'weapons') - weaponPowerUsed(s) >= d.power) wp.on = true;
+      else toast('Not enough weapon power. Add power to Weapons.'); }, { s:14, col: wp.on ? C.muted : C.amber });
+    btn(cx+8, cy+222, cw-16, 34, wp.target!=null ? 'Clear target' : (sel ? 'Pick a room' : 'Target'), () => {
+      if(wp.target!=null){ wp.target = null; UI.selWeapon = null; }
+      else if(!wp.on) toast('Power the weapon first.');
+      else if(!G.enemy) toast('No enemy to target.');
+      else UI.selWeapon = sel ? null : i; }, { s:14, col:C.hostile, fill: sel });
+  }
+}
+function drawProjectiles(){
+  for(const p of G.proj){
+    if(p.t<0) continue;
+    const src = p.from==='p' ? G.ship : G.enemy, dst = p.from==='p' ? G.enemy : G.ship; if(!src || !dst) continue;
+    const a = gunPoint(src), b = roomCenter(dst, p.room), d = DATA.weapons[p.wid]; const k = clamp(p.t/p.dur,0,1);
+    if(d.type==='beam'){ ctx.strokeStyle = hexA(C.violet, 1-k*.6); ctx.lineWidth = 6*(1-k)+2; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); continue; }
+    const x = a.x + (b.x-a.x)*k, y = a.y + (b.y-a.y)*k - Math.sin(k*Math.PI)*60;
+    const col = d.type==='ion' ? C.cyan : d.type==='missile' ? '#ffffff' : (p.from==='p' ? C.amber : C.hostile);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x,y, d.type==='missile'?7:5, 0, 7); ctx.fill();
+    const tx = a.x + (b.x-a.x)*Math.max(0,k-.06), ty = a.y + (b.y-a.y)*Math.max(0,k-.06) - Math.sin(Math.max(0,k-.06)*Math.PI)*60;
+    ctx.strokeStyle = hexA(col,.5); ctx.lineWidth = d.type==='missile'?4:3; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(x,y); ctx.stroke();
+  }
+}
+function drawFX(){
+  for(const f of G.fx){ const k = f.t/1.1;
+    if(f.type==='boom'){ ctx.beginPath(); ctx.arc(f.x,f.y, 10 + k*60, 0, 7); ctx.fillStyle = `rgba(255,${180-k*120|0},80,${(1-k)*.7})`; ctx.fill(); }
+    else if(f.type==='shield'){ ctx.beginPath(); ctx.arc(f.x,f.y, 20 + k*70, 0, 7); ctx.strokeStyle = hexA(C.cyan, 1-k); ctx.lineWidth = 4; ctx.stroke(); }
+    else if(f.type==='ion'){ ctx.beginPath(); ctx.arc(f.x,f.y, 14 + k*50, 0, 7); ctx.strokeStyle = hexA(C.cyan, (1-k)*.9); ctx.lineWidth = 6; ctx.stroke(); }
+    else if(f.type==='text'){ ctx.globalAlpha = 1-k; T(f.text, f.x, f.y - k*40, { s:26, f:FD, w:700, a:'center', c: f.text==='MISS' ? C.ink : C.hostile }); ctx.globalAlpha = 1; } }
+}
+
+/* ---------------- modals ---------------- */
+function mframe(w,h,title,col=C.amber){
+  ctx.fillStyle = 'rgba(4,6,12,.72)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,()=>{});
+  const x = (W-w)/2, y = (H-h)/2; rr(x,y,w,h,14); ctx.fillStyle = C.panel; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
+  if(title) T(title.toUpperCase(), x+36, y+56, { s:30, f:FD, w:700, c:col, ls:3 });
+  return { x, y, w, h };
+}
+function drawModal(){
+  const m = G.modal;
+  switch(m.type){
+    case 'msg': { const f = mframe(900, 420, m.title); para(m.text, f.x+36, f.y+110, f.w-72, { s:22 });
+      btn(f.x+f.w-336, f.y+f.h-96, 300, 64, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true }); break; }
+    case 'event': drawEventModal(m); break;
+    case 'result': { const f = mframe(900, 480, m.title||'Outcome'); let hgt = para(m.text||'', f.x+36, f.y+110, f.w-72, { s:22 });
+      (m.lines||[]).forEach((l,i) => T('› ' + l, f.x+36, f.y+150 + hgt + i*34, { s:21, c: /^-|lost|damaged/.test(l) ? C.hostile : C.good }));
+      btn(f.x+f.w-336, f.y+f.h-96, 300, 64, 'Continue', () => closeResult(m), { fill:true }); break; }
+    case 'map': drawMapModal(); break;
+    case 'store': drawStoreModal(m); break;
+    case 'ship': drawShipModal(); break;
+    case 'exit': { const f = mframe(900, 400, 'Exit beacon', C.good);
+      para(`The jump to Sector ${G.sector+1} is clear. Once you leave, you cannot come back to this sector.`, f.x+36, f.y+110, f.w-72, { s:22 });
+      btn(f.x+36, f.y+f.h-96, 360, 64, 'Jump to next sector', nextSector, { fill:true, col:C.good });
+      btn(f.x+f.w-256, f.y+f.h-96, 220, 64, 'Stay here', () => { G.modal = null; }); break; }
+    case 'stranded': { const f = mframe(900, 420, 'Out of fuel', C.hostile);
+      para('The tanks are dry. You can broadcast a distress call for fuel, but the Rebuff Fleet will hear it too and close in.', f.x+36, f.y+110, f.w-72, { s:22 });
+      btn(f.x+36, f.y+f.h-96, 420, 64, 'Broadcast distress call', () => { G.fuel += 3; G.fleetX += .3; G.modal = { type:'msg', title:'Signal answered', text:'A passing trader sells you 3 fuel cells at a mercy price. The fleet is much closer now.', btn:'Open map', then:openMap }; }, { fill:true, col:C.hostile });
+      btn(f.x+f.w-256, f.y+f.h-96, 220, 64, 'Not yet', () => { G.modal = null; }); break; }
+  }
+}
+function drawEventModal(m){
+  const ev = DATA.events[m.id]; if(!ev){ G.modal = null; return; }
+  const f = mframe(1060, 760, 'Beacon');
+  const th = para(ev.text, f.x+36, f.y+108, f.w-72, { s:22 });
+  let y = f.y + 130 + th;
+  const choices = ev.choices.filter(c => !c.req || reqMet(c.req));
+  choices.forEach((c,i) => {
+    const txt = `${i+1}. ${reqLabel(c.req)}${c.text}${costLabel(c.cost)}`;
+    const ls = lines(txt, f.w-120, `400 21px ${FM}`); const h = ls.length*30 + 28;
+    const blue = !!(c.req && (c.req.race || c.req.system || c.req.weaponType));
+    const hov = hovered(f.x+36, y, f.w-72, h);
+    rr(f.x+36, y, f.w-72, h, 8); ctx.fillStyle = hov ? hexA(blue?C.cyan:C.amber,.16) : C.panel2; ctx.fill(); ctx.lineWidth = hov?3:1.5; ctx.strokeStyle = blue ? C.cyan : (hov?C.amber:C.line); ctx.stroke();
+    ls.forEach((l,k) => T(l, f.x+60, y+36+k*30, { s:21, c: blue ? C.cyan : C.ink }));
+    region(f.x+36, y, f.w-72, h, () => chooseOption(c));
+    y += h + 12;
+  });
+}
+function drawMapModal(){
+  const f = mframe(1480, 900, `Sector ${G.sector} map`, C.cyan), nodes = G.map.nodes, cur = nodes[G.map.cur];
+  const mx = n => f.x + 80 + n.x*(f.w-160), my = n => f.y + 130 + n.y*(f.h-260);
+  const fleetPx = f.x + 80 + G.fleetX*(f.w-160);
+  if(fleetPx > f.x){ ctx.fillStyle = hexA(C.hostile,.14); ctx.fillRect(f.x+2, f.y+90, Math.min(fleetPx-f.x, f.w-4), f.h-200);
+    ctx.strokeStyle = C.hostile; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fleetPx, f.y+90); ctx.lineTo(fleetPx, f.y+f.h-110); ctx.stroke();
+    label('Rebuff Fleet', Math.max(f.x+20, fleetPx-150), f.y+f.h-120, C.hostile, 'left', 14); }
+  const nextPx = f.x + 80 + (G.fleetX+R.fleetSpeed)*(f.w-160);
+  ctx.setLineDash([8,8]); ctx.strokeStyle = hexA(C.hostile,.5); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(nextPx, f.y+90); ctx.lineTo(nextPx, f.y+f.h-110); ctx.stroke(); ctx.setLineDash([]);
+  ctx.lineWidth = 2;
+  nodes.forEach((a,i) => a.links.forEach(j => { if(j<i) return; const b = nodes[j]; const live = (i===G.map.cur || j===G.map.cur);
+    ctx.strokeStyle = live ? C.cyan : hexA(C.muted,.3); ctx.lineWidth = live?3:2; ctx.beginPath(); ctx.moveTo(mx(a),my(a)); ctx.lineTo(mx(b),my(b)); ctx.stroke(); }));
+  const jumpable = canJump() && G.warp<=0;
+  nodes.forEach((n,i) => {
+    const x = mx(n), y = my(n), reach = cur.links.includes(i), isCur = i===G.map.cur, hov = reach && hovered(x-30,y-30,60,60);
+    const col = n.type==='store' ? C.good : n.type==='exit' ? C.good : n.type==='boss' ? C.hostile : n.visited ? C.muted : C.ink;
+    ctx.beginPath(); ctx.arc(x,y, hov?26:20, 0, 7); ctx.fillStyle = n.visited ? C.panel2 : C.room; ctx.fill(); ctx.lineWidth = reach ? 3 : 2; ctx.strokeStyle = col; ctx.stroke();
+    if(isCur){ ctx.beginPath(); ctx.arc(x,y,32,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.stroke(); }
+    const tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='boss' ? 'FLAGGSHIP' : n.type==='start' ? 'START' : n.visited ? '' : '?';
+    if(tag==='?') T('?', x, y+1, { s:20, f:FD, w:700, a:'center', b:'middle', c:C.muted });
+    else if(tag) label(tag, x, y+48, col, 'center', 14);
+    if(n.x < G.fleetX && !isCur) { ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
+    if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
+  });
+  label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+36, f.y+f.h-50, jumpable ? C.muted : C.warn, 'left', 15);
+  T(`Fuel ${G.fuel}`, f.x+f.w-320, f.y+f.h-48, { s:22, f:FD, w:700, c: G.fuel<=3?C.hostile:C.ink });
+  btn(f.x+f.w-196, f.y+f.h-84, 160, 60, 'Close', () => { G.modal = null; });
+}
+function drawStoreModal(m){
+  const node = G.map.nodes[m.node], st = node.store; const s = G.ship;
+  const f = mframe(1380, 860, 'Store', C.good);
+  T(`Scrap ${G.scrap}`, f.x+f.w-220, f.y+56, { s:28, f:FD, w:700, c:C.amber });
+  label('Supplies', f.x+36, f.y+110, C.muted);
+  const rows = [
+    ['Fuel cell', 3, () => G.fuel++],
+    ['Missile', 6, () => G.missiles++],
+    ['Hull repair ×1', 2, () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull],
+    ['Hull repair ×5', 9, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
+  rows.forEach((r,i) => { const y = f.y+130 + i*74; T(r[0], f.x+36, y+40, { s:22 }); btn(f.x+380, y+8, 200, 54, `Buy · ${r[1]}`, () => buy(r[1], r[2]), { disabled: r[3] || G.scrap < r[1] }); });
+  const race = DATA.races[st.crewRace];
+  const cy = f.y+130 + 4*74 + 20; label('Crew for hire', f.x+36, cy, C.muted);
+  if(race && !st.crewSold){ T(`${race.name}`, f.x+36, cy+44, { s:22, c:race.color }); para(race.desc||'', f.x+36, cy+76, 320, { s:15, lh:21, c:C.muted });
+    btn(f.x+380, cy+20, 200, 54, 'Hire · 45', () => buy(45, () => { addCrew(s, st.crewRace); st.crewSold = true; }), { disabled: G.scrap<45 || s.crew.length>=R.maxCrew }); }
+  else T('Nobody else is looking for work.', f.x+36, cy+44, { s:18, c:C.muted });
+  const wx = f.x+660; label('Weapons', wx, f.y+110, C.muted);
+  st.weapons.forEach((id,i) => { const d = DATA.weapons[id]; if(!d) return; const y = f.y+130 + i*100; const sold = st.sold.includes(id);
+    T(d.name, wx, y+32, { s:22, f:FD, w:700, c: sold ? C.muted : C.ink }); T(`${d.type} · ${d.damage} dmg × ${d.shots||1} · ${d.power} power · ${d.charge}s`, wx, y+62, { s:15, c:C.muted });
+    btn(wx+460, y+12, 200, 54, sold ? 'Sold' : `Buy · ${d.cost}`, () => buy(d.cost, () => { st.sold.push(id); toast(giveWeapon(id)); }), { disabled: sold || G.scrap < d.cost }); });
+  label('Sell from cargo', wx, f.y+460, C.muted);
+  if(!s.cargo.length) T('Cargo hold is empty.', wx, f.y+500, { s:18, c:C.muted });
+  s.cargo.slice(0,4).forEach((id,i) => { const d = DATA.weapons[id]; const y = f.y+480 + i*66; T(d?.name||id, wx, y+34, { s:20 }); const val = Math.floor((d?.cost||20)/2);
+    btn(wx+460, y+4, 200, 50, `Sell · ${val}`, () => { s.cargo.splice(i,1); G.scrap += val; sfx('buy'); }); });
+  btn(f.x+f.w-236, f.y+f.h-88, 200, 60, 'Leave', () => { G.modal = null; save(); });
+}
+function drawShipModal(){
+  const s = G.ship, f = mframe(1380, 860, `${s.name} · upgrades`);
+  T(`Scrap ${G.scrap}`, f.x+f.w-220, f.y+56, { s:28, f:FD, w:700, c:C.amber });
+  label('Systems', f.x+36, f.y+110, C.muted);
+  const list = POWERED.filter(k => s.systems[k]);
+  list.forEach((k,i) => { const sy = s.systems[k], y = f.y+128 + i*78, capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
+    T(SYSN[k], f.x+36, y+38, { s:24, f:FD, w:700, c:SYSC[k] });
+    for(let b=0;b<capL;b++){ rr(f.x+210+b*30, y+20, 24, 26, 3); ctx.fillStyle = b<sy.max ? SYSC[k] : C.panel2; ctx.fill(); }
+    btn(f.x+470, y+10, 170, 52, sy.max>=capL ? 'Maxed' : `+1 · ${cost}`, () => buy(cost, () => { sy.max++; }), { disabled: sy.max>=capL || G.scrap<cost }); });
+  const ry = f.y+128 + list.length*78; const rc = reactorCost();
+  T('Reactor', f.x+36, ry+38, { s:24, f:FD, w:700, c:C.good }); T(`${s.reactor} bars`, f.x+210, ry+38, { s:20 });
+  btn(f.x+470, ry+10, 170, 52, s.reactor>=25 ? 'Maxed' : `+1 · ${rc}`, () => buy(rc, () => { s.reactor++; }), { disabled: s.reactor>=25 || G.scrap<rc });
+  const wx = f.x+720; label(`Mounted weapons (${s.weapons.length}/${R.weaponSlots})`, wx, f.y+110, C.muted);
+  s.weapons.forEach((w,i) => { const d = DATA.weapons[w.id], y = f.y+128 + i*66;
+    T(`${i+1}. ${d.name}`, wx, y+36, { s:20 });
+    btn(wx+400, y+6, 200, 50, 'To cargo', () => { s.weapons.splice(i,1); s.cargo.push(w.id); UI.selWeapon = null; }, { disabled: !!G.enemy }); });
+  const cy = f.y+128 + R.weaponSlots*66 + 30; label('Cargo', wx, cy, C.muted);
+  if(!s.cargo.length) T('Empty', wx, cy+40, { s:18, c:C.muted });
+  s.cargo.slice(0,5).forEach((id,i) => { const d = DATA.weapons[id], y = cy+16 + i*62;
+    T(d?.name||id, wx, y+36, { s:20 });
+    btn(wx+400, y+6, 200, 50, 'Mount', () => { s.cargo.splice(i,1); s.weapons.push(newWeapon(id)); }, { disabled: s.weapons.length>=R.weaponSlots || !!G.enemy }); });
+  if(G.enemy) T('Weapons cannot be swapped mid-fight.', wx, f.y+f.h-50, { s:16, c:C.warn });
+  btn(f.x+f.w-236, f.y+f.h-88, 200, 60, 'Done', () => { G.modal = null; });
+}
+
+/* ---------------- input ---------------- */
+function click(x,y){
+  ensureAudio();
+  for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h){ r.cb(); sfx('click'); return; } }
+  if(UI.screen==='game'){ UI.selCrew = null; UI.selWeapon = null; }
+}
+function canvasXY(e){ const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left)/r.width*W, y:(e.clientY - r.top)/r.height*H }; }
+cv.addEventListener('pointermove', e => { const p = canvasXY(e); PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = e.pointerType==='mouse'; });
+cv.addEventListener('pointerleave', () => { PTR[0].on = false; });
+cv.addEventListener('pointerdown', e => { e.preventDefault(); const p = canvasXY(e); PTR[0].x = p.x; PTR[0].y = p.y; click(p.x, p.y); });
+window.addEventListener('keydown', e => {
+  if(e.target.closest && e.target.closest('#modPanel')) return;
+  if(UI.screen!=='game' || !G) return;
+  if(e.code==='Space'){ e.preventDefault(); if(!G.modal) G.paused = !G.paused; }
+  else if(e.key==='m' || e.key==='M'){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
+  else if(/^[1-4]$/.test(e.key) && !G.modal){ const i = +e.key-1, w = G.ship.weapons[i]; if(w && w.on && G.enemy) UI.selWeapon = UI.selWeapon===i ? null : i; }
+  else if(e.key==='Escape'){ if(G.modal && ['map','ship','store'].includes(G.modal.type)) G.modal = null; UI.selCrew = null; UI.selWeapon = null; }
+});
+
+/* ---------------- flat-screen sizing ---------------- */
+const bar_ = document.getElementById('bar');
+function fit(){ const availW = window.innerWidth - 32, availH = window.innerHeight - bar_.offsetHeight - 28;
+  const w = Math.max(200, Math.min(availW, availH*1.6)); cv.style.width = w + 'px'; cv.style.height = (w/1.6) + 'px'; }
+window.addEventListener('resize', fit); fit();
+
+/* ---------------- WebXR ---------------- */
+let renderer = null, scene, camera, panelGroup, panelMesh, tex, starPts, raycaster, controllers = [], xrMode = null, recenterIn = 0, panelDist = 1.8;
+const anchor = { pos:null, dir:null };
+const btnPrev = {};
+function inXR(){ return !!(renderer && renderer.xr.isPresenting); }
+function init3D(){
+  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true; renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.domElement.style.display = 'none'; document.body.appendChild(renderer.domElement);
+  scene = new THREE.Scene(); scene.background = new THREE.Color(0x070a14);
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, .05, 600);
+  tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  panelGroup = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.PlaneGeometry(2.46, 1.56), new THREE.MeshBasicMaterial({ color:0x26324f }));
+  frame.position.z = -.005;
+  panelMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5), new THREE.MeshBasicMaterial({ map:tex }));
+  panelGroup.add(frame, panelMesh); panelGroup.position.set(0, 1.4, -panelDist); scene.add(panelGroup);
+  const N = 2500, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){ const v = new THREE.Vector3().randomDirection ? new THREE.Vector3().randomDirection() : new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize(); v.multiplyScalar(rand(80,220)); pos.set([v.x,v.y,v.z], i*3); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  starPts = new THREE.Points(sg, new THREE.PointsMaterial({ color:0xdfe6f5, size:.7, sizeAttenuation:true })); scene.add(starPts);
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(30, 48, 32), new THREE.MeshLambertMaterial({ color:0x3b4f7a })); planet.position.set(-70, 5, -150); scene.add(planet);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(40, 52, 96), new THREE.MeshBasicMaterial({ color:0xffb547, transparent:true, opacity:.25, side:THREE.DoubleSide })); ring.position.copy(planet.position); ring.rotation.x = 1.25; scene.add(ring);
+  scene.add(new THREE.AmbientLight(0x404a66, .6)); const sun = new THREE.DirectionalLight(0xffd9a0, 1.1); sun.position.set(60, 40, 20); scene.add(sun);
+  scene.userData.space = [starPts, planet, ring];
+  const deck = new THREE.Mesh(new THREE.RingGeometry(.45, .5, 64), new THREE.MeshBasicMaterial({ color:0xffb547, transparent:true, opacity:.35, side:THREE.DoubleSide })); deck.rotation.x = -Math.PI/2; deck.position.y = .01; scene.add(deck);
+  raycaster = new THREE.Raycaster();
+  for(let i=0;i<2;i++){
+    const c = renderer.xr.getController(i);
+    const lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
+    const line = new THREE.Line(lg, new THREE.LineBasicMaterial({ color:0xffb547, transparent:true, opacity:.8 })); c.add(line);
+    c.userData = { line, idx:i, hit:null };
+    c.addEventListener('selectstart', () => { if(c.userData.hit) click(c.userData.hit.x, c.userData.hit.y); });
+    c.addEventListener('connected', e => { c.userData.src = e.data; });
+    c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
+    scene.add(c); controllers.push(c);
+  }
+  renderer.setAnimationLoop(loop);
+  window.addEventListener('resize', () => { if(!inXR()){ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
+}
+const tmpM = window.THREE ? new THREE.Matrix4() : null;
+function xrPointers(){
+  for(const c of controllers){
+    const i = c.userData.idx;
+    if(!c.userData.src){ c.userData.line.visible = false; PTR[1+i].on = false; continue; }
+    c.userData.line.visible = true;
+    tmpM.identity().extractRotation(c.matrixWorld);
+    raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
+    raycaster.ray.direction.set(0,0,-1).applyMatrix4(tmpM);
+    const hits = raycaster.intersectObject(panelMesh);
+    if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; }
+    else { c.userData.hit = null; PTR[1+i].on = false; c.userData.line.scale.z = 4; }
+  }
+}
+function xrButtons(dt){
+  const sess = renderer.xr.getSession(); if(!sess) return;
+  for(const src of sess.inputSources){
+    const gp = src.gamepad; if(!gp) continue; const key = src.handedness || 'none'; const prev = btnPrev[key] || [];
+    const pressed = gp.buttons.map(b => b.pressed);
+    const edge = n => pressed[n] && !prev[n];
+    if(UI.screen==='game' && G){
+      if(edge(4) && !G.modal) G.paused = !G.paused;
+      if(edge(5)){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
+    }
+    if(edge(1)) recenterIn = 1;
+    if(gp.axes.length>=4 && Math.abs(gp.axes[3])>.3 && anchor.pos){ panelDist = clamp(panelDist + gp.axes[3]*dt*1.2, .9, 3.5); placePanel(); }
+    btnPrev[key] = pressed;
+  }
+}
+function recenter(){
+  const p = new THREE.Vector3(), d = new THREE.Vector3();
+  camera.getWorldPosition(p); camera.getWorldDirection(d); d.y = 0; if(d.lengthSq()<1e-4) d.set(0,0,-1); d.normalize();
+  anchor.pos = p; anchor.dir = d; placePanel();
+}
+function placePanel(){ const p = anchor.pos, d = anchor.dir; panelGroup.position.set(p.x + d.x*panelDist, Math.max(.9, p.y - .12), p.z + d.z*panelDist); panelGroup.lookAt(p.x, panelGroup.position.y, p.z); }
+async function enterXR(mode){
+  if(inXR()) return;
+  try{
+    ensureAudio();
+    const sess = await navigator.xr.requestSession(mode, { optionalFeatures:['local-floor','hand-tracking'] });
+    renderer.xr.setReferenceSpaceType('local-floor');
+    await renderer.xr.setSession(sess);
+    xrMode = mode; const ar = mode==='immersive-ar';
+    scene.background = ar ? null : new THREE.Color(0x070a14); scene.userData.space.forEach(o => o.visible = !ar);
+    recenterIn = 3;
+    sess.addEventListener('end', () => { xrMode = null; PTR[1].on = PTR[2].on = false; scene.background = new THREE.Color(0x070a14); });
+  }catch(err){ document.getElementById('xrNote').textContent = 'Could not start VR: ' + (err.message || err); }
+}
+let last = performance.now(), fc = 0;
+function loop(){
+  const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
+  const xr = inXR();
+  if(xr){ xrPointers(); xrButtons(dt); }
+  update(dt); draw();
+  if(xr){
+    if(recenterIn>0){ recenterIn--; if(recenterIn===0) recenter(); }
+    if((++fc & 1)===0) tex.needsUpdate = true;
+    const warp = G && G.warp>0 ? (1-Math.abs(G.warp-.5)*2) : 0;
+    starPts.rotation.y += dt*(.004 + warp*.8); starPts.scale.z = 1 + warp*6;
+    renderer.render(scene, camera);
+  }
+}
+function fallbackLoop(){ const now = performance.now(), dt = Math.min(.05,(now-last)/1000); last = now; update(dt); draw(); requestAnimationFrame(fallbackLoop); }
+
+/* ---------------- mod panel (DOM) ---------------- */
+const modPanel = document.getElementById('modPanel'), modMsg = document.getElementById('modMsg');
+function openModPanel(){ renderModList(); modMsg.textContent = ''; modPanel.hidden = false; document.getElementById('modClose').focus(); }
+function closeModPanel(){ modPanel.hidden = true; }
+function setMsg(t, ok){ modMsg.textContent = t; modMsg.className = ok ? 'ok' : 'err'; modMsg.style.whiteSpace = 'pre-line'; }
+function renderModList(){
+  const ul = document.getElementById('modList'); ul.innerHTML = '';
+  if(!MODS.length){ const li = document.createElement('li'); li.textContent = 'No mods added yet.'; ul.appendChild(li); return; }
+  MODS.forEach((m) => {
+    const li = document.createElement('li'); const meta = document.createElement('div'); meta.className = 'meta';
+    const b = document.createElement('b'); b.textContent = m.name; const sm = document.createElement('small');
+    sm.textContent = `${m.version ? 'v'+m.version+' · ' : ''}${m.author ? m.author+' · ' : ''}${modSummary(m.data)}`; meta.append(b, sm);
+    const tg = document.createElement('button'); tg.textContent = m.enabled ? 'On' : 'Off'; if(!m.enabled) tg.className = 'ghost';
+    tg.onclick = () => { m.enabled = !m.enabled; saveMods(); renderModList(); };
+    const rm = document.createElement('button'); rm.textContent = 'Remove'; rm.className = 'ghost';
+    rm.onclick = () => { MODS.splice(MODS.indexOf(m),1); saveMods(); renderModList(); setMsg(`Removed ${m.name}.`, true); };
+    const row = document.createElement('div'); row.className = 'row'; row.append(tg, rm); li.append(meta, row); ul.appendChild(li);
+  });
+}
+document.getElementById('modBtn').onclick = openModPanel;
+document.getElementById('modClose').onclick = closeModPanel;
+modPanel.addEventListener('keydown', e => { if(e.key==='Escape') closeModPanel(); });
+document.getElementById('modFile').addEventListener('change', async e => {
+  const out = [], ok = [];
+  for(const f of e.target.files){ const txt = await f.text(); const r = addModText(txt, f.name); (r.ok ? ok : out).push(r.msg); }
+  e.target.value = ''; renderModList(); setMsg([...ok, ...out].join('\n\n'), out.length===0);
+});
+document.getElementById('modPasteBtn').onclick = () => { const t = document.getElementById('modPaste').value.trim(); if(!t){ setMsg('Paste some mod JSON into the box first.', false); return; }
+  const r = addModText(t, 'Pasted mod'); setMsg(r.msg, r.ok); if(r.ok) document.getElementById('modPaste').value = ''; renderModList(); };
+const exTxt = JSON.stringify(EXAMPLE_MOD, null, 2); document.getElementById('modExample').textContent = exTxt;
+document.getElementById('copyEx').onclick = async () => { try{ await navigator.clipboard.writeText(exTxt); setMsg('Example copied. Paste it into a .json file to start your own mod.', true); }
+  catch(e){ const r = document.createRange(); r.selectNodeContents(document.getElementById('modExample')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); setMsg('Copy did not work here, so the example is selected. Copy it manually.', false); } };
+
+/* ---------------- boot ---------------- */
+applyMods();
+(document.fonts ? document.fonts.load(`700 40px 'Chakra Petch'`).then(()=>document.fonts.load(`400 20px 'IBM Plex Mono'`)) : Promise.resolve()).catch(()=>{});
+if(window.THREE){
+  init3D();
+  if(navigator.xr){
+    navigator.xr.isSessionSupported('immersive-vr').then(ok => { const b = document.getElementById('vrBtn'); b.hidden = !ok; b.onclick = () => enterXR('immersive-vr'); if(!ok) document.getElementById('xrNote').textContent = 'No VR headset found. Playing in flat mode.'; fit(); }).catch(()=>{});
+    navigator.xr.isSessionSupported('immersive-ar').then(ok => { const b = document.getElementById('arBtn'); b.hidden = !ok; b.onclick = () => enterXR('immersive-ar'); fit(); }).catch(()=>{});
+  } else document.getElementById('xrNote').textContent = 'This browser has no WebXR. Playing in flat mode.';
+} else { document.getElementById('xrNote').textContent = '3D engine failed to load. Playing in flat mode.'; requestAnimationFrame(fallbackLoop); }
+</script>
