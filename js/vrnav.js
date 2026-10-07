@@ -51,7 +51,8 @@ function toBridge(v){ return bridge ? bridge.group.worldToLocal(v.clone()) : v.c
 function inBounds(local){ const B = BRIDGE_BOUNDS; if(local.x < B.x0 || local.x > B.x1 || local.z < B.z0 || local.z > B.z1) return false;
   // keep out of the holotable and side consoles
   if(local.z > .9 && local.x*local.x + (local.z-.9)*(local.z-.9) > 2.95*2.95) return false;
-  const ht = (local.x/0.85)**2 + ((local.z + .8)/0.45)**2 < 1; const cons = Math.abs(Math.abs(local.x) - 1.35) < .45 && Math.abs(local.z + .45) < .35;
+  const hc = holo ? toBridge(holo.group.getWorldPosition(new THREE.Vector3())) : new THREE.Vector3(0,0,-.8); const hs = holo ? holo.top.scale.x : 1;
+  const ht = Math.hypot(local.x - hc.x, local.z - hc.z) < .6*hs; const cons = Math.abs(Math.abs(local.x) - 1.35) < .45 && Math.abs(local.z + .45) < .35;
   return !ht && !cons; }
 function moveRigBy(dx, dz){
   if(!bridge || !bridge.group.visible){ rig.position.x += dx; rig.position.z += dz; return; }
@@ -100,9 +101,9 @@ function updateNav(dt){
 }
 /* called from xrPointers for a ray that missed the console: aim at the floor to teleport */
 function aimFloor(c, origin, dir){
-  if(!bridge || !bridge.group.visible || dir.y > -.05){ return null; }
+  if(!bridge || dir.y > -.05){ return null; }
   const t = -origin.y/dir.y; if(t > 8) return null; const p = origin.clone().addScaledVector(dir, t);
-  if(!inBounds(toBridge(p))) return null; return { p, t };
+  if(bridge.group.visible ? !inBounds(toBridge(p)) : p.distanceTo(headWorld().setY(0)) > 6) return null; return { p, t };
 }
 function updateTeleportMarker(aims){
   const a = aims.find(x => x); if(!a){ tpMarker.visible = false; return; }
@@ -152,6 +153,7 @@ function applyPlayMode(){
     }
   }
   if(POSE_EYE[pose]){ const h = headWorld(); rig.position.y += POSE_EYE[pose] - h.y; rig.updateMatrixWorld(true); }
+  if(SET.vrHeight){ rig.position.y += SET.vrHeight/100; rig.updateMatrixWorld(true); }
   recenter();
   if(bridge && bridge.chair){
     const seated = pose!=='standing'; bridge.chair.visible = seated;

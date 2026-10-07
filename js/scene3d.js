@@ -439,7 +439,7 @@ function updateSpace(dt){
     if(e.shield < space3d.lastShield) M.shHit = 1;
     space3d.lastHull = e.hull; space3d.lastShield = e.shield;
     if(e.dead){ space3d.deadT += dt; if(space3d.deadT < 1.4 && Math.random() < .3){ boomAt(M.group.localToWorld(new THREE.Vector3(rand(-200,200), rand(-30,30), rand(-80,80))), 1.2, Math.random()<.5 ? '#ff8a3d' : '#ffd27a'); }
-      if(space3d.deadT > 1.2 && M.group.visible){ boomAt(M.group.position, 3.5, '#ffd27a'); M.group.visible = false;
+      if(space3d.deadT > 1.2 && M.group.visible){ boomAt(M.group.position, 3.5, '#ffd27a'); if(typeof fxShipExplosion==='function') fxShipExplosion(M.group.position.clone(), spaceFrame().p); M.group.visible = false;
         for(let i=0;i<14;i++){ const chunk = new THREE.Mesh(new THREE.TetrahedronGeometry(rand(.4, 1.4)), M.mats[2]); chunk.position.copy(M.group.position); space3d.group.add(chunk);
           space3d.debris.push({ m:chunk, v:new THREE.Vector3(rand(-1,1), rand(-1,1), rand(-1,1)).normalize().multiplyScalar(rand(3, 10)), w:new THREE.Vector3(rand(-3,3), rand(-3,3), rand(-3,3)), life:6 }); } } }
     else M.group.visible = true;
@@ -456,17 +456,27 @@ function updateSpace(dt){
       const to = mine ? M.group.localToWorld(new THREE.Vector3(rand(-120,120), 10, rand(-50,50))) : new THREE.Vector3().copy(p).addScaledVector(d, 5.5).addScaledVector(r, rand(-2.5,2.5)).add(new THREE.Vector3(0, rand(-1,1.5), 0));
       const head = glowSpriteMesh(col, pj.d?.type==='missile' || pj.d?.type==='bomb' ? 1.4 : 1.1); const core = glowSpriteMesh('#ffffff', .45);
       const trailGeo = new THREE.BufferGeometry().setFromPoints([from.clone(), from.clone()]); const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color:new THREE.Color(col), transparent:true, opacity:.8, blending:THREE.AdditiveBlending }));
-      space3d.group.add(head, core, trail); S = { id:pj.id, from, to, head, core, trail, mine, beam:pj.d?.type==='beam' }; space3d.shots.push(S);
+      space3d.group.add(head, core, trail); S = { id:pj.id, from, to, head, core, trail, mine, beam:pj.d?.type==='beam', type:pj.d?.type, col }; space3d.shots.push(S);
+      if(typeof fxMuzzle==='function'){ fxMuzzle(from, col);
+        if(S.beam){ const len = from.distanceTo(to); const bm = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, len, 10, 1, true), new THREE.MeshBasicMaterial({ color:new THREE.Color(col), transparent:true, opacity:.85, blending:THREE.AdditiveBlending, depthWrite:false }));
+          bm.position.lerpVectors(from, to, .5); bm.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), to.clone().sub(from).normalize()); space3d.group.add(bm); S.bolt = bm; }
+        else if(S.type!=='missile' && S.type!=='bomb'){ const bm = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, 4, 8), new THREE.MeshBasicMaterial({ color:new THREE.Color(col), transparent:true, opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false })); space3d.group.add(bm); S.bolt = bm; } }
       if(mine){ const tr = holo?.ships?.p?.turrets?.[0]; if(tr) tr.flash = 1; }
     }
     const k = clamp(pj.t/pj.dur, 0, 1);
     const cur = new THREE.Vector3().lerpVectors(S.from, S.to, S.beam ? 1 : k); cur.y += Math.sin(k*Math.PI)*(S.mine ? 3 : 2);
+    if(S.bolt && !S.beam){ const ahead = new THREE.Vector3().lerpVectors(S.from, S.to, Math.min(1, k + .01)); ahead.y += Math.sin(Math.min(1,k+.01)*Math.PI)*(S.mine ? 3 : 2); S.bolt.position.copy(cur); S.bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), ahead.sub(cur).normalize()); }
+    if(S.beam && S.bolt) S.bolt.material.opacity = .5 + .4*Math.sin(performance.now()/40);
+    if((S.type==='missile' || S.type==='bomb') && typeof fxSmoke==='function' && Math.random() < .6) fxSmoke(cur);
     S.head.position.copy(cur); S.core.position.copy(cur);
     const tail = S.beam ? S.from : new THREE.Vector3().lerpVectors(S.from, S.to, Math.max(0, k - .08));
     const a = S.trail.geometry.attributes.position; a.setXYZ(0, tail.x, tail.y, tail.z); a.setXYZ(1, cur.x, cur.y, cur.z); a.needsUpdate = true;
   }
   for(let i=space3d.shots.length-1;i>=0;i--){ const S = space3d.shots[i]; if(want.has(S.id)) continue;
-    if(!S.mine) boomAt(S.head.position, .35, '#9fe8ff');
+    if(typeof fxImpact==='function'){ const viewer = spaceFrame().p; const shieldUp = S.mine ? (e && e.shield>0 && S.type!=='missile' && S.type!=='bomb') : (G?.ship?.shield>0 && S.type!=='missile' && S.type!=='bomb');
+      if(shieldUp) fxShieldFlare(S.head.position, viewer); else fxImpact(S.head.position, S.col || '#ffb547', S.type==='missile' || S.type==='bomb', viewer); }
+    else if(!S.mine) boomAt(S.head.position, .35, '#9fe8ff');
+    if(S.bolt){ space3d.group.remove(S.bolt); S.bolt.geometry.dispose(); S.bolt.material.dispose(); }
     space3d.group.remove(S.head, S.core, S.trail); S.trail.geometry.dispose(); S.trail.material.dispose(); S.head.material.dispose(); S.core.material.dispose(); space3d.shots.splice(i, 1); }
   // own shield bubble ripples when it stops a shot; red flash when the hull is hit
   const s = inGame ? G.ship : null, bub = space3d.bubble;
@@ -504,7 +514,7 @@ function initWorld(){
   const fill = new THREE.DirectionalLight(0x5fd3e6, .35); fill.position.set(-100, 30, -60); scene.add(fill);
   scene.userData.space = [sky, starPts, planet, atmo, ring, sunS];
   scene.userData.planet = planet;
-  initBridge(); initHolo(); initSpace();
+  initBridge(); initHolo(); initSpace(); if(typeof initSky==='function') initSky();
 }
 function placeWorld(p, d){
   const yaw = Math.atan2(-d.x, -d.z);
@@ -515,5 +525,5 @@ function placeWorld(p, d){
     holo.ped.scale.set(1, hy, 1);
   }
 }
-function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); }
-function setMixedReality(ar){ if(bridge) bridge.group.visible = !ar; if(space3d) space3d.group.visible = !ar; }
+function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); }
+function setMixedReality(ar){ if(bridge) bridge.group.visible = !ar && SET.bridge !== false; if(space3d) space3d.group.visible = !ar; }

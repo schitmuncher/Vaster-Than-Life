@@ -82,7 +82,7 @@ function placeQuest(evId){
   if(!cands.length){ G.questQueue.push(evId); return false; }
   const n = G.map.nodes[pick(cands)]; n.quest = evId; n.type = 'event'; return true;
 }
-function openMap(){ UI.selWeapon = null; UI.mode = null; save(); G.modal = { type:'map' }; }
+function openMap(){ UI.selWeapon = null; UI.mode = null; save(); G.modal = { type:'map' }; sfx('map'); }
 function canJump(){ return !G.enemy || G.enemy.dead || G.ftl>=1; }
 function jumpTo(i){
   if(!canJump()){ toast('The VTL drive is still charging.'); return; }
@@ -124,7 +124,7 @@ function arrive(i){
   const due = G.later.find(l => --l.jumps <= 0); G.later = G.later.filter(l => l.jumps > 0);
   if(due && DATA.events[due.event] && !['base'].includes(node.type)){ startEvent(due.event); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
-  if(node.type==='store'){ if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
+  if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
   if(!first){ G.modal = { type:'msg', title:'Familiar beacon', text:'You have been here before. Nothing new on sensors.' }; save(); return; }
   if(node.quest){ startEvent(node.quest); return; }
   switch(node.type){
@@ -161,7 +161,7 @@ function randomCrewName(race){ const l = G.ship.crew.filter(c => c.owner==='p' &
 function fillText(t, cx={}){ return String(t||'').replace(/\{crew\}/g, cx.crew||'Your crew').replace(/\{who\}/g, cx.who||cx.crew||'Your crew').replace(/\{ship\}/g, G?.ship?.name||'your ship')
   .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); }
 function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t }); if(G.log.length>80) G.log.shift(); }
-function startEvent(id, o={}){ const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
+function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
   emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:{ crew:randomCrewName() } }; }
 function pickHail(tag){ const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
 function reqHidden(q){ return !!(q && (q.race || q.system || q.weaponType || q.drone || q.augment)); }
@@ -332,7 +332,7 @@ function finishCombat(kind, offer){
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
     text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : (VICTORY_LINES[e.faction]||VICTORY_LINES.generic).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
-  logEntry(`Defeated the ${e.name}.`); say('victory', { force:true });
+  logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
 }
 function flagDefeated(){
   const f = G.flag; grant('phase1');
@@ -342,6 +342,7 @@ function flagDefeated(){
   save();
 }
 function endRun(win, reason){
+  sfx(win ? 'victory' : 'defeat');
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
@@ -379,6 +380,7 @@ function update(dt){
   updateStars(dt);
   if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
   if(typeof checkHints==='function') checkHints(dt);
+  if(typeof updateAmbience==='function') updateAmbience(dt);
   if(UI.screen!=='game' || !G) return;
   for(const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
   G.shake = Math.max(0, G.shake - dt*2); G.flash = Math.max(0, (G.flash||0) - dt*1.5);
@@ -402,7 +404,7 @@ function update(dt){
     tickHazard(dt);
     if(foe){
       const s = G.ship; const ok = eff(s,'engines')>0 && eff(s,'piloting')>0 && (manned(s,'piloting') || eff(s,'piloting')>=2);
-      if(ok && G.ftl<1) G.ftl = Math.min(1, G.ftl + dt*(.02 + .006*eff(s,'engines')));
+      if(ok && G.ftl<1){ G.ftl = Math.min(1, G.ftl + dt*(.02 + .006*eff(s,'engines'))); if(G.ftl>=1) sfx('ftlready'); }
       // stalemate breaker: if nobody has been able to hurt anybody for a while, the enemy gives up and leaves
       if(!foe.dead && !foe.boss){ const sig = s.hull*1000 + foe.hull*7 + Object.values(foe.systems).reduce((t,y)=>t+y.dmg,0)*3 + Object.values(s.systems).reduce((t,y)=>t+y.dmg,0)*5 + Math.round([...s.crew, ...foe.crew].reduce((t,c)=>t+c.hp,0)/10);
         if(sig!==G.stSig){ G.stSig = sig; G.stT = 0; } else if(!G.paused) G.stT = (G.stT||0) + dt;
@@ -420,7 +422,7 @@ function update(dt){
   }
   if(G.enemy && !G.enemy.dead && !G.modal){
     const e = G.enemy;
-    if(e.hull<=0){ e.dead = true; e.deadKind = 'destroyed'; G.dieT = 1.3; G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e');
+    if(e.hull<=0){ e.dead = true; e.deadKind = 'destroyed'; G.dieT = 1.3; sfx('explode'); haptic(.8, 400); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e');
       const b = e._b; if(b){ for(let i=0;i<6;i++) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), 1.4, '#ff8a3d'); debris((b.x0+b.x1)/2, (b.y0+b.y1)/2, e.color, 26); } sfx('hit'); haptic(.6, 300); }
     else if(!e.auto && ownerCrewCount('e')===0){ e.dead = true; e.deadKind = 'crew'; G.dieT = .8; G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e'); }
   }

@@ -46,7 +46,7 @@ function hostilesFor(sh, i, side){ for(const o of sh.crew) if(o.room===i && crew
 function enemySkill(){ return G ? clamp(Math.floor((G.sector-1)/3), 0, 2) : 0; }
 function skillLvl(c, s){ if(!c || c.drone) return 0; if(c.owner==='e') return enemySkill(); const t = SKILLT[s], v = c.sk[s]||0; return v>=t[1] ? 2 : v>=t[0] ? 1 : 0; }
 function gainXP(c, s, amt){ if(!c || c.drone || c.owner!=='p') return; const before = skillLvl(c,s); c.sk[s] = (c.sk[s]||0) + amt*(DATA.races[c.race]?.learn||1);
-  if(skillLvl(c,s) > before) toast(`${c.name} is now ${skillLvl(c,s)===2?'an expert':'skilled'} at ${SKILLN[s]}.`); }
+  if(skillLvl(c,s) > before){ sfx('levelup'); } if(skillLvl(c,s) > before) toast(`${c.name} is now ${skillLvl(c,s)===2?'an expert':'skilled'} at ${SKILLN[s]}.`); }
 function mannedCrew(sh, k){
   if(sh.auto) return null; const i = roomOf(sh,k); if(i<0 || !sh.systems[k]) return null;
   let best = null;
@@ -133,7 +133,7 @@ function fireWeapon(sh, w, foe){
   if(d.type==='flak'){ for(let i=0;i<(d.shots||1);i++) launch(sh.side, to, d, nearbyRoom(foe, w.target, d.radius||1), { t:-i*.04 }); }
   else if(d.type==='beam') launch(sh.side, to, d, w.target, { rooms:beamRooms(foe, w.target, d.rooms||2) });
   else for(let i=0;i<(d.shots||1);i++) launch(sh.side, to, d, w.target, { t:-i*.22 });
-  sfx(d.type==='missile'?'missile':d.type==='ion'?'ion':d.type==='beam'?'beam':d.type==='flak'?'flak':d.type==='bomb'?'bomb':'laser');
+  sfx(d.type==='missile'?'missile':d.type==='ion'?'ion':d.type==='beam'?'beam':d.type==='flak'?'flak':d.type==='bomb'?'bomb':(d.damage||1)>=2?'heavy':'laser', { vol: sh.side==='p' ? 1 : .75 });
   if(sh.side==='e' || !G.autofire) w.target = null;
   emit('fire', { ship:sh, weapon:w });
   return true;
@@ -243,6 +243,7 @@ function activateBattery(sh){ if(!canBattery(sh)) return false; sh.battery.t = 3
 function canHackLaunch(sh, foe){ return !!foe && !foe.dead && eff(sh,'hacking')>0 && !sh.hackLaunched && !(foe.hacked && foe.hacked.by===sh.side); }
 function hackLaunch(sh, foe, room){
   if(!canHackLaunch(sh, foe)) return false;
+  sfx('hack');
   if(sh.side==='p'){ if(G.parts<=0){ toast('You need a drone part to launch a hacking drone.'); return false; } G.parts--; }
   sh.hackLaunched = true; launch(sh.side, foe.side, { type:'hack', name:'Hacking drone' }, room, { kind:'hack' }); sfx('missile'); return true;
 }
@@ -254,7 +255,7 @@ function mindControl(sh, c){
   const race = DATA.races[c.race];
   if(c.drone || race?.mindImmune){ toast(`${c.drone ? 'Drones' : race.name+' crew'} cannot be mind controlled.`); return false; }
   if(crewSide(c)===sh.side) return false;
-  c.mcT = MIND_T[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = 20; sfx('tele'); if(sh.side==='p') grant('mind'); return true;
+  c.mcT = MIND_T[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = 20; sfx('mind'); if(sh.side==='p') grant('mind'); return true;
 }
 function canTele(sh, foe){ return eff(sh,'teleporter')>0 && sh.tele.cd<=0 && !!foe && !foe.dead && foe.super<=0 && foe.cloak.t<=0; }
 function teleSend(sh, foe, room, group){
@@ -390,7 +391,7 @@ function moveCrewStep(sh, c, dt){
 }
 function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]; }
 function killCrew(sh, c){
-  const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1);
+  const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
   const race = DATA.races[c.race];
   if(race?.deathBurst) for(const o of sh.crew) if(o.room===c.room && crewSide(o)!==crewSide(c)) o.hp -= race.deathBurst;
   if(c.lastBy==='p' || c.lastByCrew) { /* credit */ }
@@ -562,7 +563,7 @@ function enemyBrain(sh, foe, dt){
   if(sh.systems.teleporter && (sh.board || !sh.boss) && !boarding && canTele(sh, foe) && G.combatT > 8 && Math.random()<.25){
     const home = sh.crew.filter(c => c.owner==='e' && crewSide(c)==='e' && !c.drone);
     const group = home.filter(c => c.room!==roomOf(sh,'piloting')).slice(0, 2 + (sh.boss?1:0));
-    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); say('boarders', { force:true }); smartPause('intruders aboard'); } }
+    if(group.length>=2 && home.length>=3){ if(teleSend(sh, foe, aiTargetRoom(foe), group)){ sh.tele.cd = Math.max(sh.tele.cd, 30); toast('Intruders aboard!'); sfx('intruder'); say('boarders', { force:true }); smartPause('intruders aboard'); } }
   }
   if(sh.systems.hacking && G.combatT>4 && canHackLaunch(sh, foe)){ const k = pick(['shields','weapons','piloting']); const r = roomOf(foe,k); if(r>=0 && foe.systems[k]) hackLaunch(sh, foe, r); }
   if(canHackPulse(sh, foe)) hackPulse(sh, foe);

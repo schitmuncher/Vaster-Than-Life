@@ -26,7 +26,7 @@ const SET = PROFILE.settings;
 function saveProfile(){ LS.set(PROFILE_KEY, PROFILE); }
 function grant(id){
   if(PROFILE.ach[id]) return; const a = ACHIEVEMENTS.find(x=>x.id===id); if(!a) return;
-  PROFILE.ach[id] = Date.now(); saveProfile();
+  PROFILE.ach[id] = Date.now(); saveProfile(); if(typeof sfx==='function') sfx('achieve');
   if(typeof toast==='function') toast(`Achievement: ${a.name}`); sfx('buy');
 }
 function shipUnlocked(def){
@@ -122,67 +122,4 @@ async function installLibraryMod(m){
 }
 const IMG = {};
 function getImg(src){ if(!src) return null; if(!IMG[src]){ const im = new Image(); im.src = src; IMG[src] = im; } const im = IMG[src]; return im.complete && im.naturalWidth ? im : null; }
-
-/* ---------------- audio ---------------- */
-let AC = null, MASTER = null, SFXG = null, MUSG = null, NOISE = null;
-let hapticFn = null;
-function haptic(v, ms){ if(hapticFn) try{ hapticFn(v, ms); }catch(e){} }
-function ensureAudio(){
-  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.connect(AC.destination);
-    SFXG = AC.createGain(); SFXG.connect(MASTER); MUSG = AC.createGain(); MUSG.connect(MASTER);
-    NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const a = NOISE.getChannelData(0); for(let i=0;i<a.length;i++) a[i] = Math.random()*2-1;
-    applyVolumes(); }catch(e){ AC = null; } }
-  if(AC && AC.state==='suspended') AC.resume();
-  if(AC) startMusic();
-}
-function applyVolumes(){ if(!AC) return; SFXG.gain.value = SET.sfx; MUSG.gain.value = SET.music*.6; }
-function tone(f,d,type='square',v=.05,slide=0,dest){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
-  o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide), t+d);
-  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(dest||SFXG); o.start(t); o.stop(t+d+.03); }
-function noise(d,v,hp=0,dest,when){ if(!AC) return; const t = when ?? AC.currentTime; const s=AC.createBufferSource(), g=AC.createGain(); s.buffer=NOISE;
-  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  if(hp){ const f = AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp; s.connect(f); f.connect(g); } else s.connect(g);
-  g.connect(dest||SFXG); s.start(t); s.stop(t+d+.02); }
-function sfx(n){ if(!AC) return; switch(n){
-  case 'click': tone(880,.04,'square',.025); break;
-  case 'laser': tone(1300,.14,'sawtooth',.035,.35); break;
-  case 'missile': tone(160,.45,'triangle',.06,2.4); break;
-  case 'ion': tone(600,.25,'sine',.05,2.5); break;
-  case 'beam': tone(300,.5,'sawtooth',.03,1.3); break;
-  case 'flak': noise(.18,.08,800); tone(220,.12,'square',.03,.5); break;
-  case 'bomb': tone(90,.3,'sine',.07,3); break;
-  case 'hit': noise(.35,.14); tone(90,.3,'square',.05,.5); break;
-  case 'shield': tone(420,.25,'sine',.06,1.8); break;
-  case 'miss': tone(700,.1,'triangle',.03,1.4); break;
-  case 'jump': tone(70,1.1,'sawtooth',.05,8); noise(.8,.05); break;
-  case 'buy': tone(660,.08,'square',.03); setTimeout(()=>tone(990,.1,'square',.03),70); break;
-  case 'alarm': tone(520,.18,'square',.04); setTimeout(()=>tone(390,.22,'square',.04),190); break;
-  case 'zap': tone(1800,.08,'square',.03,.3); break;
-  case 'tele': tone(300,.6,'sine',.05,4); break;
-  case 'cloak': tone(900,.6,'sine',.04,.2); break;
-  case 'punch': noise(.08,.06,1200); break;
-  case 'fire': noise(.25,.03,300); break;
-} }
-/* procedural music: a slow pad and arpeggio, with a pulse layer during fights */
-const MUS = { timer:null, next:0, step:0 };
-const PROG = [[0,3,7,10],[-4,0,3,7],[-2,2,5,9],[-5,-1,2,5]];
-function startMusic(){ if(!AC || MUS.timer) return; MUS.next = AC.currentTime + .2; MUS.timer = setInterval(musicTick, 60); }
-function musicTick(){ if(!AC) return; if(SET.music<=0){ MUS.next = AC.currentTime + .1; return; }
-  while(MUS.next < AC.currentTime + .3){ playStep(MUS.step, MUS.next); MUS.next += .3; MUS.step++; } }
-function mnote(f, t, d, type, v, cutoff){ const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f;
-  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + Math.min(1.2, d*.3)); g.gain.exponentialRampToValueAtTime(.0001, t + d);
-  if(cutoff){ const fl = AC.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value = cutoff; o.connect(fl); fl.connect(g); } else o.connect(g);
-  g.connect(MUSG); o.start(t); o.stop(t + d + .05); }
-function playStep(s, t){
-  const sector = (typeof G!=='undefined' && G) ? G.sector : 1;
-  const root = 110 * Math.pow(2, ((sector*5) % 12 - 5)/12);
-  const chord = PROG[Math.floor(s/16) % 4];
-  const combat = typeof G!=='undefined' && G && G.enemy && !G.enemy.dead;
-  if(s % 16 === 0) chord.forEach(n => mnote(root*2*Math.pow(2,n/12), t, 5.2, 'triangle', .035, 900));
-  if(s % 2 === 0 && Math.random() < .6){ const n = chord[(s/2) % 4] + (Math.random()<.3?24:12); mnote(root*Math.pow(2,n/12), t, .5, 'sine', .022); }
-  if(combat){
-    if(s % 4 === 0) mnote(root*Math.pow(2,chord[0]/12)/2*2, t, .28, 'sawtooth', .05, 380);
-    if(s % 2 === 1) noise(.04, .025, 6000, MUSG, t);
-    if(s % 8 === 4) noise(.16, .045, 1200, MUSG, t);
-  }
-}
+/* audio lives in audio.js */

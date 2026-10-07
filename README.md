@@ -108,6 +108,26 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 - The enemy ship flies outside the canopy. Shots streak between you, it flashes when hit, your own shield bubble ripples when it blocks a shot, and beaten ships explode into debris.
 - Physically based materials with image-based lighting, tuned for Quest 2 (no shadows, low draw calls). Mixed-reality mode hides the bridge and keeps the console and holotable.
 
+**Sound and music**
+- Everything is synthesised live: distinct sounds for each weapon class, impacts, shields, doors, power, alarms, crew deaths, skill-ups, hails, stores, jumps and explosions, mixed through a compressor and a space reverb.
+- Ship ambience: engine hum that follows engine power and the jump drive, crackling fires, hissing breaches, and a low-hull warning chirp.
+- Adaptive music: a different theme per sector type, a combat layer that fades in during fights, a heavier boss arrangement, and victory/defeat stingers.
+
+**Crew at a glance**
+- Every crew member shows what they're doing: manning a station, repairing, firefighting, patching, healing, fighting, moving or standing by, with a job icon over their head and in the roster.
+- Click a crew member for a detail card: portrait, health, current job, post, race traits, all six skills with progress and what each level does, and buttons to set their post, send them to the medbay or back to their post.
+
+**VR console and holotable**
+- Grip while pointing at the console to carry it anywhere at any angle; grip on its edges or corner brackets to stretch it; use both hands to move and scale at once. Grip at nothing brings it back in front of you.
+- Grab the holotable to move and turn it, or scale it up with two hands. Point at a room on a 3D ship and pull the trigger to target it or move crew there, exactly like the console.
+
+**A living sky**
+- Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
+- Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
+- Battles have bolt-shaped laser fire, muzzle flashes, smoking missiles, impact shockwaves, shield flares and multi-stage ship explosions.
+
+**Settings** are organised into Audio, Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), VR & comfort (play position, height adjustment, turning, walking, vignette, magnifier, text size, controller help, size resets), Gameplay and Profile.
+
 **Captain's tips**
 - Short, contextual tips appear the first time each mechanic matters: targeting shields, volley fire, missiles and beams, spare power, fire, breaches, boarders, low oxygen, mind control, the medbay, fleeing, upgrading, stores, fuel, the fleet, being outgunned, and a Flagship briefing before the last sector.
 - Combat tips pause the game and highlight the part of the screen they talk about. Turn them off with "No more tips", or replay them from Settings.
@@ -217,6 +237,10 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/run.js` | Run flow, map, events, stores, combat start and end, the Flaggship chase, saving |
 | `js/ui.js` | All canvas drawing and input |
 | `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
+| `js/audio.js` | Synthesised sound effects, ambience and adaptive music |
+| `js/crewui.js` | Crew jobs, job icons and the crew detail card |
+| `js/skyfx.js` | Living sky, hyperspace tunnel and battle effects in VR |
+| `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

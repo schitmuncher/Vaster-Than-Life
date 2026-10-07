@@ -50,12 +50,12 @@ function init3D(){
     const emit = glowSpriteMesh(i ? '#5fd3e6' : '#ffb547', .03); emit.position.set(0, .005, -.03); body.add(emit);
     c.add(body);
     c.userData = { line, idx:i, hit:null, src:null };
-    c.addEventListener('selectstart', () => { if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
+    c.addEventListener('selectstart', () => { if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
     c.addEventListener('connected', e => { c.userData.src = e.data; });
     c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
     rig.add(c); controllers.push(c);
   }
-  initNav();
+  initNav(); initGrab();
   hapticFn = (v, ms) => { const s = renderer.xr.getSession(); if(!s) return; for(const src of s.inputSources) pulse(src, v, ms); };
   renderer.setAnimationLoop(loop);
   window.addEventListener('resize', () => { if(!inXR()){ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
@@ -63,6 +63,7 @@ function init3D(){
 
 function pulse(src, v, ms){ try{ const a = src?.gamepad?.hapticActuators?.[0]; if(a && a.pulse) a.pulse(clamp(v,0,1), ms); }catch(e){} }
 function xrPointers(){
+  if(GRAB.ring) GRAB.ring.visible = false;
   for(const c of controllers){
     const i = c.userData.idx;
     if(!c.userData.src){ c.userData.line.visible = false; PTR[1+i].on = false; continue; }
@@ -71,11 +72,14 @@ function xrPointers(){
     raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
     raycaster.ray.direction.set(0,0,-1).applyMatrix4(tmpM);
     const hits = raycaster.intersectObject(panelMesh);
-    c.userData.aim = null;
+    c.userData.aim = null; c.userData.holo = null; GRAB.hoverEdge[i] = false;
     if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; c.userData.line.userData.dot.visible = true;
-      c.userData.line.material.color.set(0xffb547); updateLoupe(c, hits[0]); hoverTick(i, x, y, c.userData.src); }
+      c.userData.line.material.color.set(0xffb547); updateLoupe(c, hits[0]); hoverTick(i, x, y, c.userData.src); noteEdgeHover(i, hits[0]); }
     else { c.userData.hit = null; PTR[1+i].on = false; updateLoupe(c, null);
-      const aim = aimFloor(c, raycaster.ray.origin, raycaster.ray.direction); c.userData.aim = aim;
+      const ro = raycaster.ray.origin.clone(), rd = raycaster.ray.direction.clone();
+      const hp = holoPick(i, ro, rd);
+      if(hp){ c.userData.holo = hp; PTR[1+i].x = hp.x; PTR[1+i].y = hp.y; PTR[1+i].on = true; c.userData.line.scale.z = hp.dist; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(0xffd27a); hoverTick(i, hp.x, hp.y, c.userData.src); continue; }
+      const aim = aimFloor(c, ro, rd); c.userData.aim = aim;
       c.userData.line.scale.z = aim ? aim.t : 3; c.userData.line.userData.dot.visible = !!aim; c.userData.line.material.color.set(aim ? 0x5fd3e6 : 0xffb547); }
   }
   updateTeleportMarker(controllers.map(c => c.userData.aim));
@@ -90,7 +94,7 @@ function xrButtons(dt){
       if(edge(4) && !G.modal) G.paused = !G.paused;
       if(edge(5)){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
     }
-    if(edge(1)) bringConsole();
+    // grip is handled by vrgrab.js (grab, move, resize, or bring the console to you)
     if(edge(3)){ if(src.handedness==='left'){ SET.vrLoupe = SET.vrLoupe===false; saveProfile(); toast(SET.vrLoupe ? 'Magnifier on' : 'Magnifier off'); if(!SET.vrLoupe) loupe.visible = false; } else goHome(); }
     btnPrev[key] = pressed;
   }
@@ -111,8 +115,9 @@ async function enterXR(mode){
   try{
     ensureAudio();
     const sess = await navigator.xr.requestSession(mode, { optionalFeatures:['local-floor','hand-tracking'] });
-    renderer.xr.setReferenceSpaceType('local-floor');
+    renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(SET.vrRes || 1);
     await renderer.xr.setSession(sess);
+    try{ const bl = sess.renderState.baseLayer; if(bl && 'fixedFoveation' in bl) bl.fixedFoveation = SET.vrFov ?? .66; }catch(e){}
     xrMode = mode; const ar = mode==='immersive-ar';
     scene.background = ar ? null : new THREE.Color(0x070a14); scene.userData.space.forEach(o => o.visible = !ar); setMixedReality(ar);
     recenterIn = 3;
@@ -123,7 +128,7 @@ let last = performance.now(), fc = 0;
 function loop(){
   const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
   const xr = inXR();
-  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); }
+  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); updateGrab(dt); }
   update(dt); draw();
   if(xr){
     if(recenterIn>0){ recenterIn--; if(recenterIn===0){ applyPlayMode(); nav.sessionT = 0; } }
