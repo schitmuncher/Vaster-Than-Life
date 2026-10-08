@@ -337,7 +337,7 @@ function initBridge(){
   for(const s of [-1,1]){ const arm = new THREE.Mesh(new THREE.BoxGeometry(.07, .06, .45), frameM); arm.position.set(s*.31, .66, 0); chair.add(arm); const al = new THREE.Mesh(new THREE.BoxGeometry(.071, .012, .3), strip(0xffb547)); al.position.set(s*.31, .695, -.04); chair.add(al); }
   g.add(chair); chair.visible = false;   // shown only when the player is seated far enough back
   // alert light
-  const pl = new THREE.PointLight(0x7fb0ff, .8, 6, 2); pl.position.set(0, 2.6, -.4); g.add(pl);
+  const pl = { color:new THREE.Color(0x9fc0ff), intensity:.8 };   // alert tint, applied to the sky light (saves a real light on Quest)
   bridge = { group:g, lights, screens, pl, chair, alert:0, scrT:0, doorLeaves:leaves, doorOpen:0, doorSign };
   scene.add(g);
 }
@@ -390,14 +390,14 @@ function updateBridge(dt){
   const t = performance.now()/1000;
   const col = target===2 ? (Math.sin(t*5)>0 ? 0xff3050 : 0x5a1020) : target===1 ? 0xffb547 : 0x5fd3e6;
   for(const m of bridge.lights) m.color.set(col);
-  bridge.pl.color.set(target===2 ? 0xff5060 : target===1 ? 0xffd0a0 : 0x9fc0ff); bridge.pl.intensity = target===2 ? .9 + .5*Math.sin(t*5) : .8;
+  bridge.pl.color.set(target===2 ? 0xff5060 : target===1 ? 0xffd0a0 : 0x9fc0ff); bridge.pl.intensity = target===2 ? .9 + .5*Math.sin(t*5) : .8; { const hm = scene.userData.hemi; if(hm){ hm.color.lerp(target===2 ? new THREE.Color(0xff8090) : target===1 ? new THREE.Color(0xffe0c0) : new THREE.Color(0x9fb8ff), .05); hm.intensity = target===2 ? .55 + .2*Math.max(0, Math.sin(t*5)) : .6; } };
   if((bridge.scrT -= dt) <= 0){ bridge.scrT = .5; drawConsoles(); }
 }
 
 /* ---------------- the battle outside ---------------- */
 function initSpace(){
   const g = new THREE.Group();
-  const flash = new THREE.PointLight(0xffc080, 0, 120, 2); g.add(flash);
+  const flash = { position:new THREE.Vector3(), intensity:0 };   // explosions are lit by their own glow sprites
   space3d = { group:g, enemy:null, shots:[], boom:[], debris:[], flash, lastHull:null, lastShield:null, lastPHull:null, lastPShield:null, deadT:0, bubble:null };
   // the player's own shield bubble around the bridge
   const hc = mkCanvas(512, 256), hg = hc.getContext('2d'); hg.strokeStyle = 'rgba(255,255,255,.9)'; hg.lineWidth = 2;
@@ -518,9 +518,8 @@ function initWorld(){
   const atmo = new THREE.Mesh(new THREE.SphereGeometry(31.5, 48, 24), fresnelMat(0x8fc1ff, 3, 1)); atmo.position.copy(planet.position); scene.add(atmo);
   const ring = new THREE.Mesh(new THREE.RingGeometry(40, 52, 96), new THREE.MeshBasicMaterial({ color:0xffb547, transparent:true, opacity:.2, side:THREE.DoubleSide, depthWrite:false })); ring.position.copy(planet.position); ring.rotation.x = 1.25; scene.add(ring);
   const sunS = glowSpriteMesh('#ffd27a', 120); sunS.position.set(260, 160, 120); scene.add(sunS);
-  scene.add(new THREE.HemisphereLight(0x9fb8ff, 0x20141a, .55));
+  const hemi = new THREE.HemisphereLight(0x9fb8ff, 0x20141a, .55); scene.add(hemi); scene.userData.hemi = hemi;
   const sun = new THREE.DirectionalLight(0xffe0b0, 1.6); sun.position.set(260, 160, 120); scene.add(sun);
-  const fill = new THREE.DirectionalLight(0x5fd3e6, .35); fill.position.set(-100, 30, -60); scene.add(fill);
   scene.userData.space = [sky, starPts, planet, atmo, ring, sunS];
   scene.userData.planet = planet;
   initBridge(); initHolo(); initSpace(); if(typeof initSky==='function') initSky();

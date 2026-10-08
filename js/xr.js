@@ -17,7 +17,7 @@ function init3D(){
   renderer.domElement.style.display = 'none'; document.body.appendChild(renderer.domElement);
   scene = new THREE.Scene(); scene.background = new THREE.Color(0x05070f);
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, .05, 900);
-  tmpM = new THREE.Matrix4();
+  tmpM = new THREE.Matrix4(); _fr = new THREE.Frustum(); _frM = new THREE.Matrix4();
   tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
   const gl2 = renderer.capabilities.isWebGL2; tex.generateMipmaps = gl2; tex.minFilter = gl2 ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;   // mipmaps keep small text crisp at a distance
   rig = new THREE.Group(); scene.add(rig); rig.add(camera);
@@ -128,7 +128,7 @@ async function enterXR(mode){
     sess.addEventListener('end', () => { xrMode = null; PTR[1].on = PTR[2].on = false; scene.background = new THREE.Color(0x070a14); scene.userData.space.forEach(o => o.visible = true); setMixedReality(false); });
   }catch(err){ document.getElementById('xrNote').textContent = 'Could not start VR: ' + (err.message || err); }
 }
-let last = performance.now(), fc = 0;
+let last = performance.now(), fc = 0, _fr = null, _frM = null, _bs = null;
 function loop(){
   const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
   const xr = inXR();
@@ -136,7 +136,10 @@ function loop(){
   update(dt); draw();
   if(xr){
     if(recenterIn>0){ recenterIn--; if(recenterIn===0){ applyPlayMode(); nav.sessionT = 0; } }
-    if((++fc & 1)===0) tex.needsUpdate = true;
+    // only upload the console texture when you can actually see the console (or its magnifier)
+    if((++fc & 1)===0){ panelGroup.updateMatrixWorld(); _frM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); _fr.setFromProjectionMatrix(_frM);
+      const bs = _bs || (_bs = new THREE.Sphere()); bs.center.setFromMatrixPosition(panelGroup.matrixWorld); bs.radius = 2.4*panelGroup.scale.x;
+      if(_fr.intersectsSphere(bs) || (typeof loupe!=='undefined' && loupe?.visible)) tex.needsUpdate = true; }
     update3D(dt);
     const warp = warpAmt();
     starPts.rotation.y += dt*(.004 + warp*.8); starPts.scale.z = 1 + warp*6; if(scene.userData.planet) scene.userData.planet.rotation.y += dt*.01;
