@@ -38,6 +38,8 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 | Pinch, or double-tap empty space | Zoom in (up to 4×); double-tap again or tap **Reset zoom** to zoom out |
 | Drag while zoomed | Look around |
 
+**Screen shape** (Settings → Screen & touch): *Fill* stretches the game to the whole screen so no black bars show (the default on phones and tablets), *16:10* is the original shape, *16:9* and *21:9* are wide shapes, and *Crop* zooms in so nothing is left over; drag to see the edges.
+
 Text is larger by default on touch screens (Normal / Large / Huge in Settings). The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
 
 | Keyboard | Action |

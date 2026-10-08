@@ -28,7 +28,12 @@ function layoutGame(){
   // long side of the game runs along the long side of the screen
   const longS = MOB.rot ? ah : aw, shortS = MOB.rot ? aw : ah;
   const pad = MOB.touch ? 0 : 8;
-  const gw = Math.max(160, Math.min(longS - pad*2, (shortS - pad*2)*1.6)); const gh = gw/1.6;
+  // aspect: fill = stretch to the whole screen (within limits), crop = zoom so no bars show (pan to look around), or a fixed ratio
+  const mode = SET.aspect || (MOB.touch ? 'fill' : 'fit'); const LW = longS - pad*2, SH = shortS - pad*2;
+  const ratio = { fit:1.6, r169:16/9, r2:2, r219:21/9 }[mode] || clamp(LW/SH, 1.25, 2.6);
+  let gw, gh; MOB.crop = mode === 'crop';
+  if(MOB.crop){ const k = Math.max(LW/W, SH/H); gw = W*k; gh = H*k; }
+  else { gw = Math.max(160, Math.min(LW, SH*ratio)); gh = gw/ratio; }
   MOB.gw = gw; MOB.gh = gh; MOB.cx = sr.left + aw/2; MOB.cy = sr.top + ah/2;
   cv.style.width = gw + 'px'; cv.style.height = gh + 'px';
   clampPan(); applyTransform();
@@ -44,7 +49,7 @@ function clampPan(){
   const sr = stageEl.getBoundingClientRect();
   const mx = Math.max(0, (sw - sr.width)/2 + 20), my = Math.max(0, (sh - sr.height)/2 + 20);
   MOB.px = clamp(MOB.px, -mx, mx); MOB.py = clamp(MOB.py, -my, my);
-  if(MOB.z <= 1.001){ MOB.px = 0; MOB.py = 0; }
+  if(MOB.z <= 1.001 && !MOB.crop){ MOB.px = 0; MOB.py = 0; }
 }
 /* screen point -> game canvas coordinates, through pan, rotation and zoom */
 function screenToGame(sx, sy, st = MOB){
@@ -91,7 +96,7 @@ cv.addEventListener('pointermove', e => {
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
   const moved = Math.hypot(e.clientX - pr.sx, e.clientY - pr.sy);
   if(moved > 12 && !pr.long){ pr.drag = true; clearTimeout(pr.timer); }
-  if(pr.drag && MOB.z > 1.01){ MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
+  if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
   else if(!pr.drag || pr.long){ PTR[0].x = p.x; PTR[0].y = p.y; }   // hold-and-slide reads tooltips
 });
 cv.addEventListener('pointerleave', e => { if(e.pointerType==='mouse') PTR[0].on = false; });

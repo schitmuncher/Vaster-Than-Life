@@ -249,6 +249,7 @@ function drawSettings(){
       T('Full screen', X, y+30, { s:20 }); btn(VX, y+4, 240, 42, (typeof isFullscreen==='function' && isFullscreen()) ? 'Exit full screen' : 'Go full screen', () => toggleFullscreen(), { s:15, fill:true }); tip(X-10, y, 440, 50, 'Full screen', 'Hides the browser bars. On iPhone, add the game to your home screen instead and it opens full screen.'); y += 50;
       choice('Text size', 'textSize', [['normal','Normal'],['large','Large'],['huge','Huge']], MOB.touch ? 'large' : 'normal', 'Raises the smallest text everywhere. Large is the default on phones and tablets.');
       choice('Turn game sideways', 'rotatePortrait', [[true,'When upright'],[false,'Never']], true, 'If you hold your phone upright, the game turns sideways to fill the screen. Rotate the phone to play.', () => layoutGame());
+      choice('Screen shape', 'aspect', [['fill','Fill'],['fit','16:10'],['r169','16:9'],['r219','21:9'],['crop','Crop']], MOB.touch ? 'fill' : 'fit', 'Fill stretches the game to the whole screen (no black bars). 16:10 is the original shape. 16:9 and 21:9 are wide shapes. Crop zooms in so nothing is left over, and you drag to see the edges.', () => { resetZoom(); layoutGame(); });
       choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
       head('Touch');
       onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
