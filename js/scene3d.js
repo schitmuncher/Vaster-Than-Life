@@ -154,6 +154,9 @@ function buildShipModel(sh, opts={}){
   const e = sh._shieldE || { cx:mx, cy:my, rx:(b.x1-b.x0)/2 + 60, ry:Hh/2 + 40 };
   const shMat = fresnelMat(0x5fd3e6, 2.2, .7);
   const shield = new THREE.Mesh(new THREE.SphereGeometry(1, 36, 18), shMat); shield.scale.set(e.rx, Math.max(e.ry*.55, depth*2.2), e.ry); shield.position.set(e.cx - mx, 0, e.cy - my); group.add(shield);
+  // bake static metalwork (nacelles, wings, fins, keel) into a couple of meshes; keep animated/textured parts
+  hull.userData.noBake = true; shield.userData.noBake = true; turrets.forEach(tr => tr.t.userData.noBake = true); rooms.forEach(m => m.userData.noBake = true); engines.forEach(e_ => e_.disc.userData.noBake = true);
+  if(typeof bakeGroup==='function' && !opts.hostile) bakeGroup(group, o => !mats.includes(o.material) || o.material===darkMat || o.material===greyMat);
   return { group, hull, hullMat, mats, engines, turrets, rooms, shield, shMat, topY, mx, my, depth, cell:b.cell, key:sh.id + ':' + sh._artKey, sh };
 }
 function disposeModel(M){ if(!M) return; M.group.parent?.remove(M.group); M.group.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material && !o.isSprite){ o.material.dispose(); } }); M.hullMat.map?.dispose(); }
@@ -295,9 +298,15 @@ function initBridge(){
   for(const a of [.35, .8, Math.PI/2, Math.PI - .8, Math.PI - .35]){ const sp = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 3.6, 8), frameM); sp.rotation.x = Math.PI/2; sp.position.set(Math.cos(a)*R, Math.sin(a)*R, -.9); g.add(sp); }
   // rear bulkhead (behind the player) with a door and light panels
   const wallT = plate.clone(); wallT.needsUpdate = true; wallT.repeat.set(8, 2);
-  const wall = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 3.2, 48, 1, true, -Math.PI/2, Math.PI), stdMat({ map:wallT, metalness:.7, roughness:.45, side:THREE.BackSide })); wall.position.set(0, 1.6, .9); g.add(wall);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.1, .05), dark); door.position.set(0, 1.05, .9 + R - .05); g.add(door);
-  const doorL = new THREE.Mesh(new THREE.BoxGeometry(.04, 2.1, .06), strip(0xffb547)); doorL.position.set(0, 1.05, .9 + R - .07); g.add(doorL);
+  // rear bulkhead in two halves with a doorway into the ship, plus a lintel above it
+  const wallMat = stdMat({ map:wallT, metalness:.7, roughness:.45, side:THREE.BackSide }); const dTh = Math.asin(.58/R);
+  for(const [a0, a1] of [[-Math.PI/2, -dTh], [dTh, Math.PI/2]]){ const w_ = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 3.2, 24, 1, true, a0, a1 - a0), wallMat); w_.position.set(0, 1.6, .9); w_.userData.shell = true; g.add(w_); }
+  const lint = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 1.0, 6, 1, true, -dTh, dTh*2), wallMat); lint.position.set(0, 2.7, .9); lint.userData.shell = true; g.add(lint);
+  // sliding door into the ship: opens as you walk up to it
+  const leaves = []; for(const sx of [-1,1]){ const lf = new THREE.Group(); const pane = new THREE.Mesh(new THREE.BoxGeometry(.56, 2.1, .05), dark); lf.add(pane); const st = new THREE.Mesh(new THREE.BoxGeometry(.03, 2.1, .06), strip(0xffb547)); st.position.x = -sx*.27; lf.add(st);
+    lf.position.set(sx*.28, 1.05, .9 + R - .06); lf.userData.shell = true; g.add(lf); leaves.push({ g:lf, sx }); }
+  const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(.9, .18), new THREE.MeshBasicMaterial({ map:texFrom((() => { const c = mkCanvas(256, 52), x = c.getContext('2d'); x.fillStyle = '#0a1020'; x.fillRect(0,0,256,52); x.font = "700 26px 'Chakra Petch', sans-serif"; x.fillStyle = '#ffb547'; x.textAlign = 'center'; x.fillText('SHIP INTERIOR', 128, 35); return c; })()) }));
+  doorSign.position.set(0, 2.42, .9 + R - .16); doorSign.rotation.y = Math.PI; g.add(doorSign);
   const ceilT = plate.clone(); ceilT.needsUpdate = true; ceilT.repeat.set(4, 4);
   const ceil = new THREE.Mesh(new THREE.CircleGeometry(R, 48, 0, Math.PI), stdMat({ map:ceilT, metalness:.7, roughness:.5, side:THREE.DoubleSide })); ceil.rotation.x = Math.PI/2; ceil.position.set(0, 3.2, .9); g.add(ceil);
   const ceilRim = new THREE.Mesh(new THREE.BoxGeometry(2*R, .12, .14), frameM); ceilRim.position.set(0, 3.17, .9); g.add(ceilRim);
@@ -329,7 +338,7 @@ function initBridge(){
   g.add(chair); chair.visible = false;   // shown only when the player is seated far enough back
   // alert light
   const pl = new THREE.PointLight(0x7fb0ff, .8, 6, 2); pl.position.set(0, 2.6, -.4); g.add(pl);
-  bridge = { group:g, lights, screens, pl, chair, alert:0, scrT:0 };
+  bridge = { group:g, lights, screens, pl, chair, alert:0, scrT:0, doorLeaves:leaves, doorOpen:0, doorSign };
   scene.add(g);
 }
 function drawConsoles(){
@@ -525,5 +534,5 @@ function placeWorld(p, d){
     holo.ped.scale.set(1, hy, 1);
   }
 }
-function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); }
+function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); if(typeof updateInteriors==='function') updateInteriors(dt); }
 function setMixedReality(ar){ if(bridge) bridge.group.visible = !ar && SET.bridge !== false; if(space3d) space3d.group.visible = !ar; }

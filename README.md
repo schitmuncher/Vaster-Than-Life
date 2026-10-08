@@ -121,6 +121,14 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 - Grip while pointing at the console to carry it anywhere at any angle; grip on its edges or corner brackets to stretch it; use both hands to move and scale at once. Grip at nothing brings it back in front of you.
 - Grab the holotable to move and turn it, or scale it up with two hands. Point at a room on a 3D ship and pull the trigger to target it or move crew there, exactly like the console.
 
+**Your whole ship, in 3D (VR)**
+- The bridge is your cockpit. Walk through the door at the back, down the corridor and into the ship: every room, door, airlock and window is built from your real ship layout, with a working machine for each system (spinning shield rings, glowing engine coils, weapon racks with live charge bars, oxygen tanks and fans, medbay beds, a teleporter pad, a cloaking crystal and more) and a label showing its power, damage and air.
+- Your crew walk the corridors as life-size people of every race: humans of every look, Pebblekin, Enjinn, Voltans, Sloogs, Mantlis, Glassborn and drones. They really do their jobs: manning stations, repairing with sparks flying, putting out fires with extinguishers, healing in the medbay, and brawling with boarders, who arrive in red. Nameplates show each one's name, job and health.
+- Everything you see is the simulation: fires burn and smoke, breaches suck air out of the room, low oxygen hazes red, damaged machines spark and smoke, ion hits arc blue, lights flicker when a room is hit, doors slide open for crew and for you, airlocks vent, broken doors spark.
+- You're the captain: you give orders, the crew do the work. Point at a crew member and pull the trigger to select them, point at a floor to send them there, point at a door to open or close it. Grip brings the console to you anywhere on the ship.
+- In a fight, stand by your teleporter and press **Beam me over** to visit the enemy ship and watch your away team (or the enemy crew) up close; **Beam me back** returns you. You come home automatically if the fight ends.
+- Settings > Gameplay > Ship experience switches between **Full 3D ship** and **Classic cockpit** (just the bridge, console and holotable).
+
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
 - Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
@@ -239,6 +247,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
 | `js/audio.js` | Synthesised sound effects, ambience and adaptive music |
 | `js/crewui.js` | Crew jobs, job icons and the crew detail card |
+| `js/interior.js` | The walkable 3D ship: rooms, machines, doors, hazards, beaming, walking and pointing |
+| `js/crew3d.js` | Life-size 3D crew for every race, animation and nameplates |
 | `js/skyfx.js` | Living sky, hyperspace tunnel and battle effects in VR |
 | `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
 | `js/hints.js` | Contextual captain's tips and their triggers |

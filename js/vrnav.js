@@ -10,6 +10,8 @@ const BRIDGE_BOUNDS = { x0:-2.7, x1:2.7, z0:-2.55, z1:3.6 };   // bridge-local m
 
 function initNav(){
   if(!rig){ rig = new THREE.Group(); scene.add(rig); rig.add(camera); }
+  // a soft headlamp: lights up whatever you're near inside the ship
+  nav.lamp = new THREE.PointLight(0xfff0dc, .2, 7, 1.6); nav.lamp.position.set(0, .15, -.2); camera.add(nav.lamp);
   // comfort vignette: a soft black ring hugging the view while moving
   const vc = mkCanvas(256, 256), vg = vc.getContext('2d'); const gr = vg.createRadialGradient(128,128,40,128,128,128); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(.55,'rgba(0,0,0,.1)'); gr.addColorStop(1,'rgba(0,0,0,1)'); vg.fillStyle = gr; vg.fillRect(0,0,256,256);
   vignette = new THREE.Mesh(new THREE.PlaneGeometry(.42, .42), new THREE.MeshBasicMaterial({ map:texFrom(vc), transparent:true, opacity:0, depthTest:false, depthWrite:false }));
@@ -54,13 +56,19 @@ function inBounds(local){ const B = BRIDGE_BOUNDS; if(local.x < B.x0 || local.x 
   const hc = holo ? toBridge(holo.group.getWorldPosition(new THREE.Vector3())) : new THREE.Vector3(0,0,-.8); const hs = holo ? holo.top.scale.x : 1;
   const ht = Math.hypot(local.x - hc.x, local.z - hc.z) < .6*hs; const cons = Math.abs(Math.abs(local.x) - 1.35) < .45 && Math.abs(local.z + .45) < .35;
   return !ht && !cons; }
+function canStand(world){
+  if(typeof IN!=='undefined' && IN.aboard && IN.foe) return interiorWalk(IN.foe, IN.foe.group.worldToLocal(world.clone()));
+  if(!bridge || !bridge.group.visible) return true;
+  if(inBounds(toBridge(world))) return true;
+  if(typeof IN!=='undefined' && IN.own && IN.own.group.visible) return interiorWalk(IN.own, IN.own.group.worldToLocal(world.clone()));
+  return false;
+}
 function moveRigBy(dx, dz){
-  if(!bridge || !bridge.group.visible){ rig.position.x += dx; rig.position.z += dz; return; }
   const h = headWorld(); const n = new THREE.Vector3(h.x + dx, h.y, h.z + dz);
-  if(inBounds(toBridge(n))){ rig.position.x += dx; rig.position.z += dz; return true; }
+  if(canStand(n)){ rig.position.x += dx; rig.position.z += dz; return true; }
   // slide along walls
-  const nx = new THREE.Vector3(h.x + dx, h.y, h.z); if(inBounds(toBridge(nx))){ rig.position.x += dx; return true; }
-  const nz = new THREE.Vector3(h.x, h.y, h.z + dz); if(inBounds(toBridge(nz))){ rig.position.z += dz; return true; }
+  if(Math.abs(dx) > 1e-4){ const nx = new THREE.Vector3(h.x + dx, h.y, h.z); if(canStand(nx)){ rig.position.x += dx; return true; } }
+  if(Math.abs(dz) > 1e-4){ const nz = new THREE.Vector3(h.x, h.y, h.z + dz); if(canStand(nz)){ rig.position.z += dz; return true; } }
   return false;
 }
 function teleportTo(world){ nav.fadeTo = world.clone(); nav.fade = .001; }
@@ -102,12 +110,13 @@ function updateNav(dt){
 /* called from xrPointers for a ray that missed the console: aim at the floor to teleport */
 function aimFloor(c, origin, dir){
   if(!bridge || dir.y > -.05){ return null; }
-  const t = -origin.y/dir.y; if(t > 8) return null; const p = origin.clone().addScaledVector(dir, t);
-  if(bridge.group.visible ? !inBounds(toBridge(p)) : p.distanceTo(headWorld().setY(0)) > 6) return null; return { p, t };
+  const fy = (typeof IN!=='undefined' && IN.aboard && IN.foe) ? IN.foe.group.position.y : 0;
+  const t = (fy - origin.y)/dir.y; if(t > 12 || t < 0) return null; const p = origin.clone().addScaledVector(dir, t);
+  if(!canStand(p.clone().setY(fy + 1.6))) return null; return { p, t };
 }
 function updateTeleportMarker(aims){
   const a = aims.find(x => x); if(!a){ tpMarker.visible = false; return; }
-  tpMarker.visible = true; tpMarker.position.copy(a.p); tpMarker.position.y = .01; const h = headWorld(); tpMarker.lookAt(h.x, .01, h.z); tpMarker.rotateY(Math.PI);
+  tpMarker.visible = true; tpMarker.position.copy(a.p); tpMarker.position.y += .01; const h = headWorld(); tpMarker.lookAt(h.x, .01, h.z); tpMarker.rotateY(Math.PI);
   const s = 1 + Math.sin(performance.now()/180)*.05; tpMarker.scale.set(s, 1, s);
 }
 function updateLoupe(c, hit){

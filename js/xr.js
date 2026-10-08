@@ -50,7 +50,7 @@ function init3D(){
     const emit = glowSpriteMesh(i ? '#5fd3e6' : '#ffb547', .03); emit.position.set(0, .005, -.03); body.add(emit);
     c.add(body);
     c.userData = { line, idx:i, hit:null, src:null };
-    c.addEventListener('selectstart', () => { if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
+    c.addEventListener('selectstart', () => { if(c.userData.ipick && interiorAct(c.userData.ipick)){ pulse(c.userData.src, .25, 25); return; } if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
     c.addEventListener('connected', e => { c.userData.src = e.data; });
     c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
     rig.add(c); controllers.push(c);
@@ -72,13 +72,17 @@ function xrPointers(){
     raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
     raycaster.ray.direction.set(0,0,-1).applyMatrix4(tmpM);
     const hits = raycaster.intersectObject(panelMesh);
-    c.userData.aim = null; c.userData.holo = null; GRAB.hoverEdge[i] = false;
+    c.userData.aim = null; c.userData.holo = null; c.userData.ipick = null; GRAB.hoverEdge[i] = false;
     if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; c.userData.line.userData.dot.visible = true;
       c.userData.line.material.color.set(0xffb547); updateLoupe(c, hits[0]); hoverTick(i, x, y, c.userData.src); noteEdgeHover(i, hits[0]); }
     else { c.userData.hit = null; PTR[1+i].on = false; updateLoupe(c, null);
       const ro = raycaster.ray.origin.clone(), rd = raycaster.ray.direction.clone();
       const hp = holoPick(i, ro, rd);
       if(hp){ c.userData.holo = hp; PTR[1+i].x = hp.x; PTR[1+i].y = hp.y; PTR[1+i].on = true; c.userData.line.scale.z = hp.dist; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(0xffd27a); hoverTick(i, hp.x, hp.y, c.userData.src); continue; }
+      const ip = typeof interiorPick==='function' ? interiorPick(ro, rd) : null;
+      const command = ip && (ip.kind!=='floor' || UI.selCrew || (UI.selCrews||[]).length || UI.selWeapon!=null);
+      if(command){ c.userData.ipick = ip; c.userData.line.scale.z = ip.hit.distance; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(ip.kind==='beam' ? 0xb48cff : 0xffd27a);
+        if(ip.kind==='crew' || ip.kind==='floor'){ PTR[1+i].x = ip.x; PTR[1+i].y = ip.y; PTR[1+i].on = true; hoverTick(i, ip.x, ip.y, c.userData.src); } continue; }
       const aim = aimFloor(c, ro, rd); c.userData.aim = aim;
       c.userData.line.scale.z = aim ? aim.t : 3; c.userData.line.userData.dot.visible = !!aim; c.userData.line.material.color.set(aim ? 0x5fd3e6 : 0xffb547); }
   }

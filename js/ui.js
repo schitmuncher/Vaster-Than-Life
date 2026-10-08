@@ -262,6 +262,7 @@ function drawSettings(){
     case 'gameplay':
       head('Challenge');
       choice('Difficulty', 'difficulty', Object.keys(DIFFICULTY).map(k => [k, DIFFICULTY[k].name]), 'normal', 'Easy: more dodge, scrap and weaker enemies. Applies to new runs.');
+      choice('Ship experience', 'shipMode', [['full','Full 3D ship'],['classic','Classic cockpit']], 'full', 'Full: walk through your ship in VR and watch your crew work, fight fires and repel boarders, and beam over to enemy ships. Classic: just the cockpit, console and holotable, like before.', () => { if(inXR() && typeof applyPlayMode==='function'){ if(IN.aboard) beamCaptain(false, true); applyPlayMode(); } });
       head('Help');
       onoff('Captain\'s tips', 'hints', true, 'Short tips the first time each mechanic comes up.');
       btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;

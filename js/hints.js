@@ -14,6 +14,7 @@ function roomRect(sh, sys){ if(!sh || !sh._rects) return null; const i = roomOf(
 const HINTS = {
   welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Rebuff Fleet, then defeat the Flaggship. Each jump uses 1 fuel. Press Map (or M) to choose your first beacon.', at:()=>RECT.map },
   vr:        { title:'You\'re on the bridge', text:'Playing seated or lying down? Pause (A) and pick your play position, or choose it in Settings. Walk with the left stick, or aim at the floor and pull the trigger to teleport. Right stick turns. Look at a controller to see what its buttons do. Click the left stick to toggle the magnifier over this console.' },
+  interior:  { title:'Your ship is behind you', text:'Walk through the door at the back of the bridge to go down the corridor into your ship. You\'ll see your crew at work. Point at crew and pull the trigger to select them, point at a floor to send them there, and point at doors to open or close them. During fights you can beam over to the enemy ship from your teleporter.' },
   jumpdmg:   { title:'Damage comes with you', text:'Fires, breaches and intruders don\'t stay behind when you jump. Deal with them first unless you\'re fleeing.', at:()=>RECT.map },
   map:       { title:'Reading the map', text:'Beacons are linked by lanes; you can only jump along them. STORE beacons sell repairs and gear. The red edge on the left is the Rebuff Fleet: it advances every jump, so explore what you can but keep heading for EXIT.' },
   combat:    { title:'Battle stations (game paused)', text:'Click a weapon below, then click a room on the enemy ship. Hit their SHIELDS room first: while their shields are up, most of your shots get blocked. Press Space to pause any time.', at:()=>roomRect(G.enemy,'shields') || RECT.armory, pause:true },
@@ -71,7 +72,7 @@ function checkHints(dt){
   const s = G.ship, e = G.enemy && !G.enemy.dead ? G.enemy : null, m = G.modal;
   if(!m && G.stats.jumps===0 && !G.enemy) hint('welcome');
   if(m?.type==='map'){ hint('map'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
-  if(typeof inXR==='function' && inXR()) hint('vr');
+  if(typeof inXR==='function' && inXR()){ hint('vr'); if(SET.shipMode!=='classic' && UI.hintQ && !UI.hintQ.includes('vr') && UI.hint?.id!=='vr') hint('interior'); }
   if(m?.type==='store'){ hint('store'); if(s.hull < s.maxHull*.6) hint('hull'); }
   if(m?.type==='event') hint('event');
   if(m?.type==='surrender') hint('surrender');
