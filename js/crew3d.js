@@ -120,10 +120,10 @@ function buildCrew3D(c){
       for(const sx of [-1,1]){ add(G_.eye, c3Mat('eyeW', () => sm('#f4f0ea')), sx*.04, 1.655, .094).scale.set(1.2, .9, .6); add(G_.eye, dark, sx*.04, 1.655, .103).scale.setScalar(.6); }
       add(G_.box, c3Mat('mouth', () => sm('#8a4a4a')), 0, 1.575, .1).scale.set(.04, .008, .01);
       if(L.style!=='bald'){ const cap = add(H.hairTop, hair, 0, 1.635, -.008); cap.scale.set(1, L.style==='crop' ? .78 : 1, 1.02);
-        const back = add(G_.box, hair, 0, 1.6, -.075); back.scale.set(.2, .14, .06);
-        if(L.style==='long'){ const lh = add(G_.box, hair, 0, 1.46, -.09); lh.scale.set(.24, .34, .06); for(const sx of [-1,1]){ const sd = add(G_.box, hair, sx*.105, 1.52, -.01); sd.scale.set(.04, .24, .12); } }
+        const back = add(G_.head, hair, 0, 1.6, -.035); back.scale.set(.93, .82, .78);
+        if(L.style==='long'){ const lh = add(G_.head, hair, 0, 1.47, -.07); lh.scale.set(1.0, 1.5, .5); for(const sx of [-1,1]){ const sd = add(G_.box, hair, sx*.105, 1.52, -.01); sd.scale.set(.04, .24, .12); } }
         if(L.style==='bob') for(const sx of [-1,1]){ const sd = add(G_.box, hair, sx*.105, 1.58, -.01); sd.scale.set(.05, .16, .17); }
-        if(L.style==='ponytail' || L.style==='braid'){ const pt = add(G_.box, hair, 0, 1.5, -.13); pt.scale.set(.06, .26, .06); pt.rotation.x = .25; }
+        if(L.style==='ponytail' || L.style==='braid'){ const pt = add(G_.head, hair, 0, 1.5, -.14); pt.scale.set(.32, 1.1, .32); pt.rotation.x = .25; }
         if(L.style==='bun') add(G_.bun, hair, 0, 1.75, -.06);
         if(L.style==='mohawk'){ const m = add(G_.box, hair, 0, 1.77, -.01); m.scale.set(.04, .08, .2); }
         if(L.style==='swept'){ const sw = add(G_.box, hair, .03, 1.73, .06); sw.scale.set(.18, .05, .08); sw.rotation.z = -.3; }
@@ -176,12 +176,12 @@ function animateCrew3D(P, c, o){
   const swing = m ? Math.sin(t*11 + P.phase) : 0;
   P.legs.forEach((l, i) => { l.rotation.x = (i%2 ? 1 : -1) * swing * .6; });
   let armA = [0, 0], armZ = [0, 0];
-  const job = o.job?.k || 'idle';
+  let job = o.job?.k || 'idle'; if(job==='breach' || (job==='board' && !o.lunge)) job = 'repair';
   if(m) armA = [swing*.55, -swing*.55];
   else if(job==='repair'){ const h = Math.max(0, Math.sin(t*9 + P.phase)); armA = [-1.2 - h*.6, -.6]; }
   else if(job==='fire'){ armA = [-1.0, -1.25]; }
   else if(job==='man'){ armA = [-.9 + Math.sin(t*3 + P.phase)*.08, -.95 + Math.sin(t*3.4 + P.phase)*.08]; }
-  else if(job==='fight' || job==='board' && o.foe){ const p = Math.sin(t*12 + P.phase); armA = [-1.3 - Math.max(0,p)*.5, -1.3 - Math.max(0,-p)*.5]; }
+  else if(job==='fight'){ const p = Math.sin(t*12 + P.phase); armA = [-1.3 - Math.max(0,p)*.5, -1.3 - Math.max(0,-p)*.5]; }
   else if(job==='heal'){ armA = [-.2, -.2]; armZ = [.3, -.3]; }
   else if(job==='stun'){ armZ = [.6, -.6]; }
   else if(job==='mind'){ armA = [-2.4, -2.4]; }

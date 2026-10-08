@@ -337,7 +337,7 @@ function syncCrew3D(I, t, dt, here){
     if(job.k==='repair' && Math.random() < dt*4) interiorSpark(I, target.clone().add(new THREE.Vector3(Math.sin(P.yaw)*.5, 1.0, Math.cos(P.yaw)*.5)));
     if(job.k==='mind' && P.aura==null){ P.mcAura = P.mcAura || (() => { const a = glowSpriteMesh('#b48cff', 1.3); a.position.y = 1.2; P.g.add(a); return a; })(); }
     if(P.mcAura) P.mcAura.visible = c.mcT > 0;
-    P.ring.visible = I.own && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id));
+    P.ring.visible = c.owner==='p' && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id));
     const plateD = 4 + 5*q; if(dist < plateD) drawPlate(P, c, c.owner==='p' ? job : null, c.owner==='e');
     P.plate.sprite.visible = dist < plateD;
   }
