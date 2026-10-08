@@ -13,10 +13,10 @@ const FD = "'Chakra Petch','Segoe UI',system-ui,sans-serif", FM = "'IBM Plex Mon
 let HR = [];
 const PTR = [{ x:-1, y:-1, on:false }, { x:-1, y:-1, on:false, xr:true }, { x:-1, y:-1, on:false, xr:true }];
 function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
-let VRTXT = false;   // set each frame: larger minimum text while in VR
+let VRTXT = false, MINF = 0;   // set each frame: larger minimum text in VR or with Settings > Display > Text size
 function region(x,y,w,h,cb){ HR.push({ x,y,w,h,cb }); }
 function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
-function T(t,x,y,o={}){ let fs_ = o.s||22; if(VRTXT && fs_ < 15) fs_ = fs_ < 12 ? fs_ + 3 : 15; ctx.font = `${o.w||400} ${fs_}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
+function T(t,x,y,o={}){ let fs_ = o.s||22; if(MINF && fs_ < MINF) fs_ = Math.max(fs_ + 3, Math.min(MINF, fs_*1.35)); ctx.font = `${o.w||400} ${fs_}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
   if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; if(o.max) ctx.fillText(t,x,y,o.max); else ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
 function label(t,x,y,c=C.muted,a='left',s=16){ T(String(t).toUpperCase(),x,y,{ s, f:FD, w:600, c, ls:2, a }); }
 function lines(text, maxW, font){ ctx.font = font; const out = [];
@@ -49,7 +49,7 @@ function drawWarp2D(){
   const w = warpAmt(), t = performance.now()/1000, cx = W/2, cy = 330, q = { low:.4, medium:.7, high:1, ultra:1.4 }[SET.gfx||'high'] || 1;
   if(!UI._streaks){ UI._streaks = Array.from({ length:220 }, () => ({ a:Math.random()*Math.PI*2, r:Math.random(), s:.4 + Math.random()*1.4, h:Math.random()<.5 ? 200 : 265 })); }
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  const n = Math.round(UI._streaks.length*q);
+  const n = Math.min(UI._streaks.length, Math.round(UI._streaks.length*q));
   for(let i=0;i<n;i++){ const st = UI._streaks[i]; const r0 = ((st.r + t*st.s*(.3 + w*2.5)) % 1); const R0 = 40 + r0*r0*1100, R1 = R0 + 20 + w*w*520*st.s;
     ctx.strokeStyle = `hsla(${st.h},90%,${70 + 25*w}%,${Math.min(1, w*1.8)*(.25 + r0*.75)})`; ctx.lineWidth = .8 + r0*2.6*w;
     ctx.beginPath(); ctx.moveTo(cx + Math.cos(st.a)*R0, cy + Math.sin(st.a)*R0*.62); ctx.lineTo(cx + Math.cos(st.a)*R1, cy + Math.sin(st.a)*R1*.62); ctx.stroke(); }
@@ -93,7 +93,7 @@ function drawBubbles(){
 }
 /* ---------------- main draw ---------------- */
 function draw(){
-  HR = []; TIPS = []; TIP_MODAL = false; VRTXT = SET.vrBigText !== false && typeof inXR==='function' && inXR();
+  HR = []; TIPS = []; TIP_MODAL = false; VRTXT = SET.vrBigText !== false && typeof inXR==='function' && inXR(); MINF = VRTXT ? 15 : ({ large:15, huge:18 }[SET.textSize] || 0);
   ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   drawBG(); drawStars();
   switch(UI.screen){
@@ -109,6 +109,7 @@ function draw(){
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
   if(UI.screen==='game') drawHint();
+  if(typeof mobileFrame==='function') mobileFrame();
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
@@ -133,7 +134,8 @@ function drawTitle(){
   btn(110, y, 160, 58, 'Manual', () => { UI.screen = 'help'; }, { s:18 });
   btn(280, y, 160, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 70;
   btn(110, y, bw, 58, `Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
-  label('Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
+  label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
+  if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
 
 function classGroups(){
@@ -209,7 +211,7 @@ function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);
   T('Settings', 60, 122, { s:50, f:FD, w:700 });
   const tab = UI.setTab || 'audio';
-  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['vr','VR & comfort'],['gameplay','Gameplay'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 200);
+  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR & comfort'],['gameplay','Gameplay'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 236);
   panel(60, 204, 1480, 640, 12);
   const X = 100, VX = 560; let y = 236;
   const head = (t) => { label(t, X, y+18, C.cyan, 'left', 15); y += 34; };
@@ -241,6 +243,17 @@ function drawSettings(){
       head('Comfort');
       onoff('Screen shake', 'shake', true, 'Shake the flat-screen view on hits. Never used in VR.');
       onoff('Reduce flashes', 'reduceFlashes', false, 'Softer jump white-outs, lightning and pulsar flashes.');
+      break;
+    case 'display':
+      head('Screen');
+      T('Full screen', X, y+30, { s:20 }); btn(VX, y+4, 240, 42, (typeof isFullscreen==='function' && isFullscreen()) ? 'Exit full screen' : 'Go full screen', () => toggleFullscreen(), { s:15, fill:true }); tip(X-10, y, 440, 50, 'Full screen', 'Hides the browser bars. On iPhone, add the game to your home screen instead and it opens full screen.'); y += 50;
+      choice('Text size', 'textSize', [['normal','Normal'],['large','Large'],['huge','Huge']], MOB.touch ? 'large' : 'normal', 'Raises the smallest text everywhere. Large is the default on phones and tablets.');
+      choice('Turn game sideways', 'rotatePortrait', [[true,'When upright'],[false,'Never']], true, 'If you hold your phone upright, the game turns sideways to fill the screen. Rotate the phone to play.', () => layoutGame());
+      choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
+      head('Touch');
+      onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
+      btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 60;
+      note('Tap to use anything. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
       break;
     case 'vr':
       head('Body');
@@ -280,7 +293,7 @@ function drawSettings(){
       else btn(X, y, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
       break;
   }
-  btn(60, 870, 200, 64, 'Back', () => { UI.screen = 'title'; UI.confirmReset = false; });
+  btn(60, 870, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; UI.confirmReset = false; });
 }
 function drawAchievements(){
   label('Your record', 60, 70, C.cyan, 'left', 18);
@@ -335,7 +348,11 @@ function drawGame(){
   if(G.warp>0) drawWarp2D();
   if(G.paused && !G.modal && !UI.hint){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
     panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted });
-    if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); } }
+    if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); }
+    else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const n = fsOk ? 2 : 1, bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
+      panel(x0-10, 362, n*bw + (n-1)*12 + 20, 70, 10);
+      btn(x0, 372, bw, 50, '⚙ Settings', () => { UI.setFrom = 'game'; UI.screen = 'settings'; }, { s:16 });
+      if(fsOk) btn(x0 + bw + 12, 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); } }
   if(G.modal) drawModal();
 }
 function drawTopBar(){
@@ -947,9 +964,7 @@ function click(x,y){
   if(UI.screen==='game'){ UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
 }
 function canvasXY(e){ const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left)/r.width*W, y:(e.clientY - r.top)/r.height*H }; }
-cv.addEventListener('pointermove', e => { const p = canvasXY(e); PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = e.pointerType==='mouse'; });
-cv.addEventListener('pointerleave', () => { PTR[0].on = false; });
-cv.addEventListener('pointerdown', e => { e.preventDefault(); const p = canvasXY(e); PTR[0].x = p.x; PTR[0].y = p.y; click(p.x, p.y); });
+/* pointer, touch, pinch-zoom and full-screen handling live in mobile.js */
 window.addEventListener('keydown', e => {
   if(UI.hint && (e.key==='Enter' || e.key==='Escape')){ closeHint(false); e.preventDefault(); return; }
   if(e.target && e.target.closest && e.target.closest('dialog,#modPanel,#renameDlg')) return;

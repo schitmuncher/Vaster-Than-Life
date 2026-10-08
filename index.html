@@ -1,5 +1,13 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070a14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vaster Than Life">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Vaster Than Life</title>
 <meta name="description" content="A WebXR starship-command roguelike for Meta Quest, with user mods.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,11 +22,19 @@
   color-scheme:dark;
 }
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;background:var(--void);color:var(--ink)}
-body{font-family:var(--mono);overflow:hidden;padding-inline:16px;box-sizing:border-box}
-#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-#game{display:block;background:var(--void);border:1px solid var(--line);border-radius:10px;touch-action:none;max-width:100%}
-#bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+html,body{height:100%;margin:0;background:var(--void);color:var(--ink);overscroll-behavior:none}
+body{font-family:var(--mono);overflow:hidden;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+/* the stage fills the screen inside the safe area; the game canvas is centred, scaled, rotated and zoomed by mobile.js */
+#stage{position:fixed;left:env(safe-area-inset-left,0);right:env(safe-area-inset-right,0);top:env(safe-area-inset-top,0);bottom:env(safe-area-inset-bottom,0);overflow:hidden}
+#game{position:absolute;left:50%;top:50%;display:block;background:var(--void);border:1px solid var(--line);border-radius:10px;touch-action:none;transform-origin:center center;will-change:transform}
+.touch #game{border:0;border-radius:0}
+#bar{position:absolute;left:0;right:0;bottom:6px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;pointer-events:none}
+#bar>*{pointer-events:auto}
+.touch #bar{left:auto;right:6px;top:6px;bottom:auto;flex-direction:column;align-items:flex-end;gap:6px;z-index:3}
+.touch #bar button{padding:8px 10px;font-size:12px;opacity:.85}
+.touch #xrNote,.fs #xrNote{display:none}
+.fs #bar,.touch.offtitle #bar,.touch #fsBtn,.touch #modBtn{display:none}
+#zoomReset{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:4;font-size:13px;padding:10px 12px}
 button{font:600 15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--amber);background:var(--panel);border:2px solid var(--amber);border-radius:6px;padding:10px 14px;cursor:pointer}
 button:hover{background:#1f1a12}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
@@ -48,13 +64,27 @@ pre{background:var(--void);border:1px solid var(--line);border-radius:8px;paddin
 code{color:var(--cyan)}
 </style>
 
-<div id="app">
+<div id="stage">
   <canvas id="game" aria-label="Vaster Than Life game screen"></canvas>
   <div id="bar">
+    <button id="fsBtn" class="ghost" title="Full screen">⛶ Full screen</button>
     <button id="vrBtn" hidden>Enter VR</button>
     <button id="arBtn" hidden>Enter mixed reality</button>
     <button id="modBtn" class="ghost">Mods</button>
     <span id="xrNote"></span>
+  </div>
+</div>
+
+<button id="zoomReset" hidden>Reset zoom</button>
+
+<div id="installDlg" class="overlay" hidden role="dialog" aria-labelledby="installTitle">
+  <div class="sheet" style="width:min(520px,100%)">
+    <h2 id="installTitle">Play full screen</h2>
+    <p>This browser can't switch a page to full screen. Install the game instead and it opens full screen, like an app:</p>
+    <p><b>iPhone / iPad (Safari):</b> tap the Share button, then <b>Add to Home Screen</b>, then open Vaster Than Life from your home screen.</p>
+    <p><b>Android (Chrome):</b> open the ⋮ menu, then <b>Install app</b> or <b>Add to Home screen</b>.</p>
+    <p>Turn your phone sideways for the best view. You can also pinch to zoom in on anything.</p>
+    <div class="row"><button id="installClose">Got it</button></div>
   </div>
 </div>
 
@@ -109,4 +139,5 @@ code{color:var(--cyan)}
 <script src="js/interior.js"></script>
 <script src="js/vrnav.js"></script>
 <script src="js/vrgrab.js"></script>
+<script src="js/mobile.js"></script>
 <script src="js/xr.js"></script>

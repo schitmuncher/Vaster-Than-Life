@@ -29,6 +29,17 @@ Look at either controller to see a label of what its buttons do. Turning style, 
 
 In VR you stand on the bridge of your ship. A **holotable** under the console shows 3D models of both ships, with fires, damage, crew, drones and shots in flight, and the enemy ship is out there beyond the canopy. You can turn the holotable off in Settings.
 
+**Phones and tablets.** Tap **Full screen** on the title screen (or pause and tap **⛶ Full screen**) to hide the browser bars and lock to landscape. On iPhone, which has no full-screen mode for web pages, the game shows how to add it to your Home Screen instead; it then opens full screen like an app. Held upright, a phone turns the game sideways for you (switch this off in **Settings → Screen & touch**).
+
+| Touch | Action |
+| --- | --- |
+| Tap | Use anything. Taps that land just off a button still hit it |
+| Press and hold | Show details about what's under your finger, without clicking it |
+| Pinch, or double-tap empty space | Zoom in (up to 4×); double-tap again or tap **Reset zoom** to zoom out |
+| Drag while zoomed | Look around |
+
+Text is larger by default on touch screens (Normal / Large / Huge in Settings). The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
+
 | Keyboard | Action |
 | --- | --- |
 | Space | Pause |
@@ -253,4 +264,5 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
+| `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

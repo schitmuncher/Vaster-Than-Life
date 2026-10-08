@@ -8,7 +8,7 @@
    ========================================================================= */
 let AC = null, MASTER = null, SFXG = null, MUSG = null, AMBG = null, REVERB = null, NOISE = null, COMP = null;
 let hapticFn = null;
-function haptic(v, ms){ if(hapticFn) try{ hapticFn(v, ms); }catch(e){} }
+function haptic(v, ms){ if(typeof inXR==='function' && inXR() && hapticFn){ try{ hapticFn(v, ms); }catch(e){} } else if(typeof mobileHaptic==='function') mobileHaptic(v, ms); }
 function ensureAudio(){
   if(!AC){ try{
     AC = new (window.AudioContext||window.webkitAudioContext)();

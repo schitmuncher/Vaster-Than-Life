@@ -150,9 +150,7 @@ function fallbackLoop(){ const now = performance.now(), dt = Math.min(.05,(now-l
 
 /* ---------------- flat-screen sizing ---------------- */
 const barEl = document.getElementById('bar');
-function fit(){ const availW = window.innerWidth - 32, availH = window.innerHeight - barEl.offsetHeight - 28;
-  const w = Math.max(200, Math.min(availW, availH*1.6)); cv.style.width = w + 'px'; cv.style.height = (w/1.6) + 'px'; }
-window.addEventListener('resize', fit);
+function fit(){ if(typeof layoutGame==='function') layoutGame(); }
 
 /* ---------------- mod panel ---------------- */
 const modPanel = document.getElementById('modPanel'), modMsg = document.getElementById('modMsg');
