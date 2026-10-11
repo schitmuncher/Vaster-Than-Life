@@ -143,7 +143,7 @@ function currentMood(){
   if(/pyrate|pirate/.test(t)) return 'pyrate'; if(/rebuff|rebel/.test(t)) return 'rebuff'; if(/civil|home/.test(t)) return 'civilian';
   return 'alien';
 }
-function startMusic(){ if(!AC || MUS.timer) return; MUS.next = now() + .2; MUS.timer = setInterval(musicTick, 50); }
+function startMusic(){ if(AC && typeof startMedia==='function') startMedia(); if(!AC || MUS.timer) return; MUS.next = now() + .2; MUS.timer = setInterval(musicTick, 50); }
 function musicTick(){
   if(!AC) return; if(SET.music<=0){ MUS.next = now() + .1; return; }
   const inGame = typeof G!=='undefined' && G && typeof UI!=='undefined' && UI.screen==='game';
@@ -151,6 +151,7 @@ function musicTick(){
   MUS.combat += ((fighting ? 1 : 0) - MUS.combat) * .04; MUS.boss += ((boss ? 1 : 0) - MUS.boss) * .04;
   MUS.mood = currentMood();
   const M = MOODS[MUS.mood]; const step = M.tempo * (1 - .12*MUS.combat);
+  if(typeof mediaActive==='function' && mediaActive()){ MUS.next = now() + .1; return; }   // the soundtrack is playing instead of the synth
   while(MUS.next < now() + .3){ playStep(MUS.step, MUS.next, M, step); MUS.next += step; MUS.step++; }
 }
 function mnote(f, t, d, type, v, o={}){ osc(type, f, t, d, v, Object.assign({ dest:MUSG, a:o.a ?? Math.min(1.2, d*.3) }, o)); }

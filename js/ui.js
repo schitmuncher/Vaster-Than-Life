@@ -103,6 +103,7 @@ function draw(){
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
     case 'ach': drawAchievements(); break;
+    case 'gallery': drawGallery(); break;
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); break;
   }
@@ -117,7 +118,7 @@ function draw(){
 
 /* ---------------- title & menus ---------------- */
 function drawTitle(){
-  const t = performance.now()/1000;
+  const t = performance.now()/1000; if(typeof drawWallpaper==='function') drawWallpaper();
   if(!UI._fly){ try{ if(!DATA) applyMods(); UI._fly = makeShip(DATA.ships.pestrel || Object.values(DATA.ships)[0], 'p', {}); UI._fly.crew = []; }catch(e){ UI._fly = null; } }
   if(UI._fly){ const px = ((t*55 + 1150) % 2700) - 950; drawShip(UI._fly, { x:px, y:610, w:430, h:190 }, 1, false, true); }
   label('A Fedoration courier roguelike', 110, 200, C.cyan, 'left', 20);
@@ -133,7 +134,8 @@ function drawTitle(){
   btn(110, y, bw, 58, on ? `Mods (${on} on)` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }); y += 70;
   btn(110, y, 160, 58, 'Manual', () => { UI.screen = 'help'; }, { s:18 });
   btn(280, y, 160, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 70;
-  btn(110, y, bw, 58, `Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
+  btn(110, y, 160, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
+  btn(280, y, 160, 58, `Medals ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
@@ -228,10 +230,12 @@ function drawSettings(){
       slider('Music', 0, `${Math.round(SET.music*100)}%`, ...vol('music'), 'Adaptive soundtrack: calm themes per sector, a combat layer in fights and a heavier boss arrangement.');
       slider('Sound effects', 0, `${Math.round(SET.sfx*100)}%`, ...vol('sfx'), 'Weapons, impacts, doors, alarms, UI.');
       slider('Ship ambience', 0, `${Math.round((SET.amb ?? .5)*100)}%`, ...vol('amb'), 'Engine hum, fire crackle, breach hiss, low-hull warnings.');
+      choice('Music source', 'musicSrc', [['ftl','Soundtrack'],['synth','Generated']], 'ftl', 'Soundtrack plays the licensed FTL tracks by Ben Prunty: title theme, exploration and three battle themes. Generated is the adaptive synth music made in the game.');
       btn(X, y+10, 220, 46, 'Test sounds', () => { ensureAudio(); ['laser','ion','missile','shield','hit','explode'].forEach((n,i) => setTimeout(() => sfx(n), i*260)); });
       break;
     case 'graphics':
       head('Quality');
+      choice('Crew portraits', 'portraits', [['art','FTL artwork'],['drawn','Drawn']], 'art', 'FTL artwork uses the pixel avatars for each race. Drawn uses the portraits painted by the game from each crew member\'s look.');
       choice('Effects quality', 'gfx', [['low','Low'],['medium','Medium'],['high','High'],['ultra','Ultra']], 'high', 'How many particles, streaks and explosion layers to draw. Use Low or Medium if your headset stutters.');
       choice('VR resolution', 'vrRes', [[.7,'70%'],[.85,'85%'],[1,'100%'],[1.2,'120%']], 1, 'Rendering resolution inside the headset. Higher is sharper but slower. Applies next time you enter VR.');
       choice('VR foveation', 'vrFov', [[0,'Off'],[.33,'Low'],[.66,'Medium'],[1,'High']], .66, 'Renders the edges of your view at lower resolution to save performance on Quest. Applies next time you enter VR.');

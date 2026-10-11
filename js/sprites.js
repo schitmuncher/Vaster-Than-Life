@@ -249,6 +249,7 @@ function drawCrewSprite(x, y, r, c, o={}){
 }
 /* head-and-shoulders portrait inside a circle */
 function drawPortrait(x, y, rad, c, hostile){
+  if(typeof drawAvatarPortrait==='function' && drawAvatarPortrait(x, y, rad, c, hostile)) return;
   const img = spriteFor(c, 'idle', !!hostile);
   ctx.save(); ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.clip();
   const bg = ctx.createRadialGradient(x, y - rad*.3, 1, x, y, rad); bg.addColorStop(0, '#2a3a66'); bg.addColorStop(1, '#0c1226'); ctx.fillStyle = bg; ctx.fillRect(x-rad, y-rad, rad*2, rad*2);

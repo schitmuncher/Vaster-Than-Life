@@ -161,13 +161,17 @@ function buildCrew3D(c){
   return parts;
 }
 function drawPlate(P, c, job, hostile){
-  const key = c.name + '|' + Math.ceil(c.hp) + '|' + (job?.k||'') + '|' + (c.mcT>0);
+  const an = typeof avatarName==='function' ? avatarName(c) : null, av = an ? getImg(`assets/avatars/${an}.png`) : null;
+  const key = c.name + '|' + Math.ceil(c.hp) + '|' + (job?.k||'') + '|' + (c.mcT>0) + (av ? 'a' : '');
   if(P.plate.key===key) return; P.plate.key = key;
   const g = P.plate.c.getContext('2d'); g.clearRect(0,0,256,72);
   g.fillStyle = 'rgba(8,12,24,.78)'; if(g.roundRect){ g.beginPath(); g.roundRect(2,2,252,68,12); g.fill(); } else g.fillRect(2,2,252,68);
-  g.font = "700 24px 'Chakra Petch', sans-serif"; g.textAlign = 'center'; g.fillStyle = hostile ? '#ff9aa8' : c.mcT>0 ? '#b48cff' : '#ffffff'; g.fillText(c.name, 128, 28);
-  if(job){ g.font = "500 15px 'IBM Plex Mono', monospace"; g.fillStyle = JOB_COL?.[job.k] || '#c8ccd8'; g.fillText(job.text.slice(0, 28), 128, 48); }
-  const fr = clamp(c.hp/c.maxHp, 0, 1); g.fillStyle = '#1a2440'; g.fillRect(28, 56, 200, 8); g.fillStyle = fr>.5 ? '#7be0a0' : fr>.25 ? '#ffd166' : '#ff5a7a'; g.fillRect(28, 56, 200*fr, 8);
+  g.font = "700 24px 'Chakra Petch', sans-serif"; g.textAlign = 'center';
+  const ox = av ? 34 : 0, bx = av ? 70 : 28, bw = av ? 178 : 200;
+  if(av){ g.fillStyle = hostile ? 'rgba(80,20,30,.9)' : 'rgba(30,44,84,.9)'; g.fillRect(6,6,58,60); g.imageSmoothingEnabled = false; g.drawImage(av, 4, 5, 62, 62); g.strokeStyle = hostile ? '#ff5a7a' : '#f2b441'; g.lineWidth = 2; g.strokeRect(6,6,58,60); }
+  g.fillStyle = hostile ? '#ff9aa8' : c.mcT>0 ? '#b48cff' : '#ffffff'; g.fillText(c.name.slice(0, av ? 10 : 14), 128 + ox, 28);
+  if(job){ g.font = "500 15px 'IBM Plex Mono', monospace"; g.fillStyle = JOB_COL?.[job.k] || '#c8ccd8'; g.fillText(job.text.slice(0, av ? 22 : 28), 128 + ox, 48); }
+  const fr = clamp(c.hp/c.maxHp, 0, 1); g.fillStyle = '#1a2440'; g.fillRect(bx, 56, bw, 8); g.fillStyle = fr>.5 ? '#7be0a0' : fr>.25 ? '#ffd166' : '#ff5a7a'; g.fillRect(bx, 56, bw*fr, 8);
   P.plate.tex.needsUpdate = true;
 }
 /* pose a crew figure for this frame. ctx: { moving, dir(Vector3), job, foeDir, t, dt } */

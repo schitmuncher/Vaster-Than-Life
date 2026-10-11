@@ -267,4 +267,10 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
+| `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |
+
+
+## Credits
+
+Artwork (title wallpaper, concept-art gallery, crew avatars) and five soundtrack tracks come from **FTL: Faster Than Light**, © Subset Games, with music by **Ben Prunty**. They are used with the rights holders' permission and live in `assets/`. The wallpaper has had its logo painted out. In **Settings** you can switch crew portraits to *Drawn* and the music to *Generated* to play without them.
