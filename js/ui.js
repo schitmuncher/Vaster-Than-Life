@@ -427,6 +427,13 @@ function drawShip(sh, box, facing, isEnemy, mini){
     if(!seen){ ctx.fillStyle = 'rgba(8,12,24,.85)'; ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); if(!mini) T('?', q.x+q.w/2, q.y+q.h/2+6, { s:18, f:FD, w:700, a:'center', c:'#2f3a5c' }); }
     else if(!mini){
       if(r.o2 < 60){ ctx.fillStyle = hexA(C.hostile, (60-r.o2)/60*.38); ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); }
+      if(r.scorch>0){ ctx.save(); ctx.beginPath(); ctx.rect(q.x+2,q.y+2,q.w-4,q.h-4); ctx.clip();
+        for(let k=0;k<r.scorch;k++){ const a = (k*2.399 + i*1.7), px_ = q.x + q.w*(.5 + .36*Math.cos(a)*((k%3)+1)/3), py_ = q.y + q.h*(.5 + .36*Math.sin(a*1.3)*((k%2)+1)/2); const rr = Math.min(q.w,q.h)*(.18 + .05*(k%3)); const g = ctx.createRadialGradient(px_,py_,0,px_,py_,rr); g.addColorStop(0,'rgba(0,0,0,.55)'); g.addColorStop(.6,'rgba(30,12,4,.3)'); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(px_-rr,py_-rr,rr*2,rr*2); }
+        ctx.restore(); }
+      const ha = r.hitAt!=null && G ? (G.time||0) - r.hitAt : 99;
+      if(ha >= 0 && ha < 3.2){ const k = 1 - ha/3.2, fl = ha < .35 ? 1 : k; const hc = r.hitIon ? C.cyan : '#ff5a4a';
+        ctx.fillStyle = hexA(hc, .45*fl); ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); ctx.strokeStyle = hexA(hc, .5 + .5*fl); ctx.lineWidth = 3; ctx.strokeRect(q.x+1.5,q.y+1.5,q.w-3,q.h-3);
+        if(r.hitN>0){ const lab = `-${r.hitN}`; ctx.save(); ctx.globalAlpha *= Math.min(1, k*2.2); const bw = Math.max(34, lab.length*15+14), bx = q.x+q.w/2-bw/2, by = q.y+q.h/2-14 - (1-k)*10; ctx.fillStyle = 'rgba(40,6,6,.88)'; ctx.fillRect(bx,by,bw,28); ctx.strokeStyle = hc; ctx.lineWidth = 2; ctx.strokeRect(bx,by,bw,28); T(lab, q.x+q.w/2, by+20, { s:20, f:FD, w:700, a:'center', c:'#ffd0c8' }); ctx.restore(); } }
       if(s && s.dmg>0){ ctx.fillStyle = hexA(C.hostile, (.12 + .22*s.dmg/s.max)*(.75 + .25*Math.sin(t*6))); ctx.fillRect(q.x+2,q.y+2,q.w-4,q.h-4); }
       if(s && s.ionT>0){ ctx.save(); ctx.beginPath(); ctx.rect(q.x,q.y,q.w,q.h); ctx.clip(); ctx.strokeStyle = hexA(C.cyan,.45); ctx.lineWidth = 3;
         for(let k=-q.h;k<q.w;k+=14){ const o = (t*30)%14; ctx.beginPath(); ctx.moveTo(q.x+k+o,q.y+q.h); ctx.lineTo(q.x+k+o+q.h,q.y); ctx.stroke(); } ctx.restore(); }

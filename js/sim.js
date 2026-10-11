@@ -102,6 +102,8 @@ function fxAtRoom(sh, ri_, type, text){ const c = roomCenter(sh, ri_); fx(type, 
 function hitRoom(sh, ri_, d, o={}){
   const r = sh.rooms[ri_]; if(!r) return;
   const dmg = d.damage||0;
+  // remember the hit so the room can show it: a lingering flash and "-N" badge, plus scorch marks that stay
+  if(G){ r.hitAt = G.time||0; r.hitN = (r.hitAt - (r._hitPrev||-9) < 3 ? (r.hitN||0) : 0) + (dmg + (d.sysDamage||0)); r._hitPrev = r.hitAt; r.hitIon = d.type==='ion'; if(dmg>0) r.scorch = Math.min(6, (r.scorch||0) + Math.max(1, dmg)); }
   if(dmg>0 && !o.noHull) sh.hull = Math.max(0, sh.hull - dmg);
   const sysd = dmg + (d.sysDamage||0);
   if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15)) damageSystem(sh, r.sys, sysd); }

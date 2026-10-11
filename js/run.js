@@ -92,6 +92,7 @@ function jumpTo(i){
 }
 function leaveCombat(){
   if(G.enemy){ for(const c of [...G.ship.crew]) if(c.owner==='e' && c.drone) G.ship.crew.splice(G.ship.crew.indexOf(c),1); }
+  for(const r of G.ship.rooms) if(r.scorch>0) r.scorch = Math.max(0, r.scorch - 2);
   for(const c of G.ship.crew) if(c.owner==='p') c.mcT = 0;
   G.enemy = null; G.proj = []; G.units = []; G.ftl = 0; G.boss = false; UI.selWeapon = null; UI.mode = null;
   for(const w of G.ship.weapons){ w.charge = 0; w.target = null; }
