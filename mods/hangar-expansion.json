@@ -1,0 +1,200 @@
+{
+ "name": "Hangar Expansion",
+ "version": "1.0",
+ "author": "Vaster Than Life team",
+ "ships": [
+  {
+   "id": "lanternship",
+   "name": "The Lantern",
+   "cls": "Scout Skiff",
+   "layout": "A",
+   "desc": "Fast and fragile. Jump first, ask later.",
+   "hull": 24,
+   "reactor": 7,
+   "color": "#9ff0ff",
+   "pattern": "TABAN",
+   "systems": {
+    "shields": 1,
+    "engines": 3,
+    "oxygen": 1,
+    "weapons": 2,
+    "piloting": 1,
+    "sensors": 2,
+    "doors": 1
+   },
+   "weapons": [
+    "bust1"
+   ],
+   "drones": [],
+   "crew": [
+    "human",
+    "human"
+   ],
+   "fuel": 18,
+   "missiles": 4,
+   "parts": 1
+  },
+  {
+   "id": "lanternb",
+   "name": "The Dimmer",
+   "cls": "Scout Skiff",
+   "layout": "B",
+   "desc": "Trades speed for a medbay.",
+   "hull": 26,
+   "reactor": 7,
+   "color": "#7fd6e8",
+   "pattern": "TBAAN",
+   "systems": {
+    "shields": 1,
+    "engines": 2,
+    "oxygen": 1,
+    "weapons": 2,
+    "medbay": 1,
+    "piloting": 1,
+    "sensors": 1
+   },
+   "weapons": [
+    "bust1"
+   ],
+   "drones": [],
+   "crew": [
+    "human",
+    "enjinn"
+   ],
+   "fuel": 16,
+   "missiles": 4,
+   "parts": 1
+  },
+  {
+   "id": "anvil",
+   "name": "The Anvil",
+   "cls": "Siege Hulk",
+   "layout": "A",
+   "desc": "Slow, heavy and loaded with guns.",
+   "hull": 36,
+   "reactor": 9,
+   "color": "#c97a5a",
+   "pattern": "TBACN",
+   "systems": {
+    "shields": 2,
+    "engines": 1,
+    "oxygen": 1,
+    "weapons": 4,
+    "medbay": 1,
+    "piloting": 1,
+    "doors": 2
+   },
+   "weapons": [
+    "lancer",
+    "bust1"
+   ],
+   "drones": [],
+   "crew": [
+    "pebblekin",
+    "pebblekin",
+    "human"
+   ],
+   "fuel": 12,
+   "missiles": 10,
+   "parts": 2
+  },
+  {
+   "id": "anvilb",
+   "name": "The Hammer",
+   "cls": "Siege Hulk",
+   "layout": "B",
+   "desc": "Swaps armour for a drone bay.",
+   "hull": 32,
+   "reactor": 9,
+   "color": "#b8684a",
+   "pattern": "TABCN",
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "oxygen": 1,
+    "weapons": 3,
+    "drones": 2,
+    "piloting": 1
+   },
+   "weapons": [
+    "chainlaser"
+   ],
+   "drones": [
+    "gnat"
+   ],
+   "crew": [
+    "pebblekin",
+    "human"
+   ],
+   "fuel": 12,
+   "missiles": 8,
+   "parts": 6
+  },
+  {
+   "id": "tideship",
+   "name": "The Undertow",
+   "cls": "Ion Skirmisher",
+   "layout": "A",
+   "desc": "Disables first, boards second.",
+   "hull": 28,
+   "reactor": 8,
+   "color": "#6aa8ff",
+   "pattern": "TBBCN",
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "oxygen": 1,
+    "weapons": 3,
+    "piloting": 1,
+    "sensors": 1,
+    "doors": 1
+   },
+   "weapons": [
+    "stormcoil",
+    "bust1"
+   ],
+   "drones": [],
+   "crew": [
+    "voltan",
+    "human"
+   ],
+   "fuel": 16,
+   "missiles": 6,
+   "parts": 2
+  },
+  {
+   "id": "tideb",
+   "name": "The Riptide",
+   "cls": "Ion Skirmisher",
+   "layout": "B",
+   "desc": "Brings a hacking-minded crew.",
+   "hull": 28,
+   "reactor": 8,
+   "color": "#4f8ae0",
+   "pattern": "TABAN",
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "oxygen": 1,
+    "weapons": 2,
+    "drones": 1,
+    "piloting": 1,
+    "sensors": 2
+   },
+   "weapons": [
+    "stormcoil"
+   ],
+   "drones": [
+    "gnat"
+   ],
+   "crew": [
+    "voltan",
+    "enjinn"
+   ],
+   "fuel": 16,
+   "missiles": 4,
+   "parts": 4
+  }
+ ],
+ "events": []
+}

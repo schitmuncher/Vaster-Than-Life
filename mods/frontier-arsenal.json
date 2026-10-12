@@ -1,0 +1,188 @@
+{
+ "name": "Frontier Arsenal",
+ "version": "1.0",
+ "author": "Vaster Than Life team",
+ "weapons": [
+  {
+   "id": "chainlaser",
+   "name": "Chain Laser",
+   "type": "laser",
+   "damage": 1,
+   "shots": 4,
+   "charge": 14,
+   "power": 3,
+   "cost": 95,
+   "tier": 3,
+   "desc": "Four rapid shots. Great against low shields."
+  },
+  {
+   "id": "lancer",
+   "name": "Plasma Lance",
+   "type": "laser",
+   "damage": 3,
+   "shots": 1,
+   "charge": 17,
+   "power": 3,
+   "cost": 110,
+   "tier": 3,
+   "fire": 0.25,
+   "desc": "One heavy bolt that can start fires."
+  },
+  {
+   "id": "stormcoil",
+   "name": "Storm Coil",
+   "type": "ion",
+   "damage": 1,
+   "shots": 2,
+   "charge": 12,
+   "power": 2,
+   "cost": 70,
+   "tier": 2,
+   "ion": 2,
+   "desc": "Two ion pulses that overload a system for longer."
+  },
+  {
+   "id": "swarm",
+   "name": "Cluster Rockets",
+   "type": "missile",
+   "damage": 1,
+   "shots": 3,
+   "charge": 13,
+   "power": 2,
+   "cost": 90,
+   "tier": 3,
+   "pierce": 1,
+   "desc": "Three small missiles that ignore shields."
+  },
+  {
+   "id": "hullcutter",
+   "name": "Hull Cutter",
+   "type": "beam",
+   "damage": 2,
+   "charge": 15,
+   "power": 2,
+   "cost": 85,
+   "tier": 2,
+   "rooms": 3,
+   "breach": 0.3,
+   "desc": "A long beam that can tear the hull open."
+  },
+  {
+   "id": "scatterflak",
+   "name": "Scatter Flak",
+   "type": "flak",
+   "damage": 1,
+   "shots": 5,
+   "charge": 15,
+   "power": 2,
+   "cost": 75,
+   "tier": 2,
+   "radius": 1,
+   "desc": "Five bursts across a wide area."
+  },
+  {
+   "id": "stunbomb",
+   "name": "Shock Bomb",
+   "type": "bomb",
+   "damage": 0,
+   "sysDamage": 1,
+   "charge": 17,
+   "power": 2,
+   "cost": 80,
+   "tier": 2,
+   "stun": 6,
+   "crewDamage": 10,
+   "desc": "Teleports inside and stuns the crew."
+  },
+  {
+   "id": "mender",
+   "name": "Mender Burst",
+   "type": "bomb",
+   "heal": 2,
+   "charge": 14,
+   "power": 1,
+   "cost": 60,
+   "tier": 2,
+   "desc": "Repairs two hull points in a chosen room."
+  }
+ ],
+ "drones": [
+  {
+   "id": "gnat",
+   "name": "Gnat Drone",
+   "kind": "attack",
+   "power": 1,
+   "cost": 35,
+   "rate": 4.5,
+   "shot": {
+    "type": "laser",
+    "damage": 1
+   },
+   "desc": "A cheap pest."
+  },
+  {
+   "id": "lancedrone",
+   "name": "Lance Drone",
+   "kind": "attack",
+   "power": 3,
+   "cost": 70,
+   "rate": 6,
+   "shot": {
+    "type": "laser",
+    "damage": 2
+   }
+  },
+  {
+   "id": "shieldwall",
+   "name": "Wall Drone",
+   "kind": "defense",
+   "power": 2,
+   "cost": 50,
+   "targets": "missile"
+  },
+  {
+   "id": "fixbot",
+   "name": "Fixer Drone",
+   "kind": "internal",
+   "power": 2,
+   "cost": 45,
+   "role": "repair"
+  }
+ ],
+ "events": [
+  {
+   "id": "armsdealer",
+   "text": "A freight hauler broadcasts a clearance sale: 'Everything must go, no questions.'",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Buy a crate of rockets. (30 scrap)",
+     "cost": {
+      "scrap": 30
+     },
+     "effect": {
+      "text": "Six missiles, slightly dented.",
+      "missiles": 6
+     }
+    },
+    {
+     "text": "Ask about their best weapon. (80 scrap)",
+     "cost": {
+      "scrap": 80
+     },
+     "effect": {
+      "text": "They wheel out a Chain Laser, still in its packing foam.",
+      "weapon": "chainlaser"
+     }
+    },
+    {
+     "text": "Move on.",
+     "effect": {
+      "text": "You leave them to it."
+     }
+    }
+   ]
+  }
+ ]
+}

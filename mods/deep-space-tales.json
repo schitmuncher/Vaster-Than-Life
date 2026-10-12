@@ -1,0 +1,249 @@
+{
+ "name": "Deep Space Tales",
+ "version": "1.0",
+ "author": "Vaster Than Life team",
+ "events": [
+  {
+   "id": "sleepingtitan",
+   "text": "A ship the size of a moon lies dead in space, one slow beacon lighting its hull.",
+   "weight": 2,
+   "minSector": 3,
+   "choices": [
+    {
+     "text": "Send a boarding party.",
+     "chance": 0.55,
+     "success": {
+      "text": "Cargo bays full of salvage.",
+      "scrap": 55,
+      "parts": 2
+     },
+     "fail": {
+      "text": "Automated defences wake. You flee with damage.",
+      "hull": -6
+     }
+    },
+    {
+     "text": "Scan from a distance.",
+     "effect": {
+      "text": "Interesting readings, nothing else.",
+      "scrap": 15
+     }
+    },
+    {
+     "text": "Leave it alone.",
+     "effect": {
+      "text": "Some things should stay asleep."
+     }
+    }
+   ]
+  },
+  {
+   "id": "lostcolony",
+   "text": "A colony beacon blinks: 'Out of fuel. Out of food. Not out of hope.'",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Give them fuel. (2 fuel)",
+     "cost": {
+      "fuel": 2
+     },
+     "effect": {
+      "text": "They are thrilled, and pay in salvage.",
+      "scrap": 40
+     }
+    },
+    {
+     "text": "Offer a ride to the nearest port.",
+     "effect": {
+      "text": "A grateful engineer joins your crew.",
+      "crew": "random"
+     }
+    },
+    {
+     "text": "Ignore the call.",
+     "effect": {
+      "text": "You jump away. The beacon blinks on."
+     }
+    }
+   ]
+  },
+  {
+   "id": "derelictlab",
+   "text": "A derelict research lab drifts past, lights still on.",
+   "weight": 2,
+   "minSector": 4,
+   "choices": [
+    {
+     "text": "Salvage the equipment.",
+     "chance": 0.6,
+     "success": {
+      "text": "A working prototype!",
+      "augment": "random"
+     },
+     "fail": {
+      "text": "The lab was booby-trapped.",
+      "hull": -4
+     }
+    },
+    {
+     "text": "Download the data.",
+     "effect": {
+      "text": "Valuable star charts.",
+      "scrap": 30,
+      "fuel": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "cosmicwhale",
+   "text": "A herd of space whales drifts by. One keeps pace with you, singing.",
+   "weight": 2,
+   "minSector": 1,
+   "choices": [
+    {
+     "text": "Sing back.",
+     "effect": {
+      "text": "It leaves a gift of glittering scrap.",
+      "scrap": 35
+     }
+    },
+    {
+     "text": "Follow the herd.",
+     "effect": {
+      "text": "They lead you to a calm patch of space. You rest.",
+      "hull": 3
+     }
+    },
+    {
+     "text": "Fire a warning shot.",
+     "effect": {
+      "text": "Rude. It rams your engines.",
+      "hull": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "blackmarket",
+   "text": "A masked trader hails you on a private channel. 'Looking for something... discreet?'",
+   "weight": 2,
+   "minSector": 3,
+   "choices": [
+    {
+     "text": "Browse. (60 scrap)",
+     "cost": {
+      "scrap": 60
+     },
+     "effect": {
+      "text": "A weapon with the serial number filed off.",
+      "weapon": "random"
+     }
+    },
+    {
+     "text": "Report them.",
+     "effect": {
+      "text": "The Federation sends a small reward.",
+      "scrap": 25
+     }
+    },
+    {
+     "text": "Decline.",
+     "effect": {
+      "text": "The channel goes quiet."
+     }
+    }
+   ]
+  },
+  {
+   "id": "stormpilot",
+   "text": "A lone ship is spinning in an ion storm, pilot screaming over the radio.",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Tractor them out.",
+     "chance": 0.7,
+     "success": {
+      "text": "The pilot joins your crew, shaken but grateful.",
+      "crew": "human"
+     },
+     "fail": {
+      "text": "The storm lashes your systems.",
+      "damageSystem": "random"
+     }
+    },
+    {
+     "text": "Leave them.",
+     "effect": {
+      "text": "The signal fades."
+     }
+    }
+   ],
+   "nebula": true
+  },
+  {
+   "id": "meteorharvest",
+   "text": "Rare ore glitters in a slow asteroid shower.",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Harvest carefully.",
+     "chance": 0.65,
+     "success": {
+      "text": "A fine haul of ore.",
+      "scrap": 45
+     },
+     "fail": {
+      "text": "A rock slips through the shields.",
+      "hull": -4
+     }
+    },
+    {
+     "text": "Harvest quickly.",
+     "chance": 0.4,
+     "success": {
+      "text": "You grab a lot.",
+      "scrap": 70
+     },
+     "fail": {
+      "text": "A direct hit.",
+      "hull": -7
+     }
+    }
+   ]
+  },
+  {
+   "id": "oldrival",
+   "text": "A familiar ship hails you. 'Still owe me for last time.'",
+   "weight": 2,
+   "minSector": 4,
+   "choices": [
+    {
+     "text": "Pay up. (35 scrap)",
+     "cost": {
+      "scrap": 35
+     },
+     "effect": {
+      "text": "He grins and gives you a tip about the Flagship.",
+      "fuel": 2
+     }
+    },
+    {
+     "text": "Call his bluff.",
+     "chance": 0.5,
+     "success": {
+      "text": "He backs down and pays you!",
+      "scrap": 30
+     },
+     "fail": {
+      "text": "He opens fire.",
+      "hull": -5
+     }
+    }
+   ]
+  }
+ ]
+}

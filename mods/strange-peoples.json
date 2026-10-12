@@ -1,0 +1,295 @@
+{
+ "name": "Strange Peoples",
+ "version": "1.0",
+ "author": "Vaster Than Life team",
+ "races": [
+  {
+   "id": "crystalline",
+   "name": "Prismari",
+   "color": "#c0f0ff",
+   "hp": 80,
+   "repair": 1,
+   "combat": 0.8,
+   "speed": 1,
+   "power": 0,
+   "mindImmune": true,
+   "desc": "Crystal people. Immune to mind control, brittle in a fight."
+  },
+  {
+   "id": "hiveborn",
+   "name": "Hivelings",
+   "color": "#e8b04a",
+   "hp": 60,
+   "repair": 0.8,
+   "combat": 1,
+   "speed": 1.5,
+   "learn": 1.4,
+   "desc": "Small, quick, learn fast. Fall over easily."
+  },
+  {
+   "id": "embermen",
+   "name": "Ember Kin",
+   "color": "#ff7a45",
+   "hp": 110,
+   "repair": 0.6,
+   "combat": 1.3,
+   "speed": 1,
+   "fireproof": true,
+   "desc": "Walk through fire. Hate vacuum."
+  },
+  {
+   "id": "mender",
+   "name": "Menders",
+   "color": "#9affc0",
+   "hp": 90,
+   "repair": 1.2,
+   "combat": 0.5,
+   "speed": 1,
+   "heal": true,
+   "desc": "Gentle healers who patch nearby crew."
+  }
+ ],
+ "enemies": [
+  {
+   "id": "prism_warden",
+   "name": "Prismari Warden",
+   "tags": [
+    "prismari"
+   ],
+   "hull": 16,
+   "systems": {
+    "shields": 3,
+    "engines": 2,
+    "weapons": 2,
+    "oxygen": 1,
+    "piloting": 1
+   },
+   "weapons": [
+    "bust1"
+   ],
+   "crew": [
+    "crystalline",
+    "crystalline"
+   ],
+   "sectors": [
+    3,
+    8
+   ]
+  },
+  {
+   "id": "hive_swarm",
+   "name": "Hive Skiff",
+   "tags": [
+    "hive"
+   ],
+   "hull": 10,
+   "systems": {
+    "shields": 1,
+    "engines": 3,
+    "weapons": 2,
+    "oxygen": 1,
+    "piloting": 1
+   },
+   "weapons": [
+    "bust1"
+   ],
+   "crew": [
+    "hiveborn",
+    "hiveborn",
+    "hiveborn"
+   ],
+   "sectors": [
+    2,
+    6
+   ]
+  },
+  {
+   "id": "ember_raider",
+   "name": "Ember Raider",
+   "tags": [
+    "ember"
+   ],
+   "hull": 18,
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "weapons": 3,
+    "oxygen": 1,
+    "piloting": 1
+   },
+   "weapons": [
+    "bust1",
+    "arty"
+   ],
+   "crew": [
+    "embermen",
+    "embermen"
+   ],
+   "sectors": [
+    3,
+    8
+   ]
+  }
+ ],
+ "sectors": [
+  {
+   "id": "prismfields",
+   "name": "Prismari Fields",
+   "color": "#c0f0ff",
+   "mix": {
+    "event": 50,
+    "combat": 34,
+    "empty": 16
+   },
+   "tags": [
+    "prismari"
+   ],
+   "enemyTags": [
+    "prismari"
+   ],
+   "hazards": {
+    "pulsar": 0.06
+   },
+   "nebula": 0
+  },
+  {
+   "id": "hivereach",
+   "name": "The Hive Reach",
+   "color": "#e8b04a",
+   "mix": {
+    "event": 44,
+    "combat": 46,
+    "empty": 10
+   },
+   "tags": [
+    "hive"
+   ],
+   "enemyTags": [
+    "hive"
+   ],
+   "hazards": {
+    "asteroid": 0.12
+   },
+   "nebula": 0
+  },
+  {
+   "id": "emberbelt",
+   "name": "The Ember Belt",
+   "color": "#ff7a45",
+   "mix": {
+    "event": 40,
+    "combat": 50,
+    "empty": 10
+   },
+   "tags": [
+    "ember"
+   ],
+   "enemyTags": [
+    "ember"
+   ],
+   "hazards": {
+    "sun": 0.12,
+    "pulsar": 0.04
+   },
+   "nebula": 0
+  }
+ ],
+ "events": [
+  {
+   "id": "hiveoffer",
+   "text": "A cloud of Hivelings swarms your airlock, chattering. One holds up a tiny badge that says 'Hire me'.",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Take one aboard.",
+     "effect": {
+      "text": "She salutes, falls over, and gets up again.",
+      "crew": "hiveborn"
+     }
+    },
+    {
+     "text": "Politely decline.",
+     "effect": {
+      "text": "The swarm drifts off, still chattering."
+     }
+    }
+   ]
+  },
+  {
+   "id": "embercamp",
+   "text": "Ember Kin are roasting something on a drifting furnace. They offer you a seat.",
+   "weight": 2,
+   "minSector": 3,
+   "choices": [
+    {
+     "text": "Sit and eat.",
+     "chance": 0.6,
+     "success": {
+      "text": "Delicious. One of them asks to join you.",
+      "crew": "embermen"
+     },
+     "fail": {
+      "text": "Too spicy. Your crew spends the day in the medbay.",
+      "crewLoss": 0,
+      "hull": -1
+     }
+    },
+    {
+     "text": "Trade for fuel. (10 scrap)",
+     "cost": {
+      "scrap": 10
+     },
+     "effect": {
+      "text": "They hand over two cans.",
+      "fuel": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "prismsong",
+   "text": "Crystal spires hum a single note that makes your teeth ring. A Prismari steps out and offers a trade.",
+   "weight": 2,
+   "minSector": 3,
+   "choices": [
+    {
+     "text": "Accept the offer.",
+     "effect": {
+      "text": "They repair a few hull plates and ask for nothing.",
+      "hull": 4
+     }
+    },
+    {
+     "text": "Ask to join the crew.",
+     "effect": {
+      "text": "'Yes. Quietly, please.'",
+      "crew": "crystalline"
+     }
+    }
+   ]
+  },
+  {
+   "id": "mendercamp",
+   "text": "A hospital ship floats in orbit, flying a plain white flag.",
+   "weight": 2,
+   "minSector": 2,
+   "choices": [
+    {
+     "text": "Ask for a Mender to join you.",
+     "effect": {
+      "text": "A Mender shakes your hand and follows you aboard.",
+      "crew": "mender"
+     }
+    },
+    {
+     "text": "Take free repairs.",
+     "effect": {
+      "text": "They patch the ship and wave you off.",
+      "hull": 5
+     }
+    }
+   ]
+  }
+ ]
+}

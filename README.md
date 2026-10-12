@@ -175,7 +175,7 @@ Mods are JSON files. In the game, open **Mods**:
 
 Mods are saved in the browser and apply when you start a new run. Turn them on or off from the Mods screen.
 
-Example mods are in `mods/`: `space-pirates.json`, `party-laser.json` (which includes a script) and `ironman.json`.
+Example mods are in `mods/`: `space-pirates.json`, `party-laser.json` (which includes a script) and `ironman.json`. Four larger packs of original content come with the game: `frontier-arsenal.json` (8 weapons, 4 drones), `hangar-expansion.json` (6 ships), `strange-peoples.json` (4 races, 3 enemies, 3 sectors, events) and `deep-space-tales.json` (8 events). They are inspired by the kinds of content FTL mods add, but every name, number and line of text is new; nothing is copied from another mod.
 
 ### Format
 
