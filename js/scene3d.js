@@ -533,5 +533,5 @@ function placeWorld(p, d){
     holo.ped.scale.set(1, hy, 1);
   }
 }
-function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); if(typeof updateInteriors==='function') updateInteriors(dt); }
+function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); if(typeof updateInteriors==='function') updateInteriors(dt); if(typeof handsOnUpdate==='function') handsOnUpdate(dt); }
 function setMixedReality(ar){ if(bridge) bridge.group.visible = !ar && SET.bridge !== false; if(space3d) space3d.group.visible = !ar; }

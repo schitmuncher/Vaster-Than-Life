@@ -53,6 +53,8 @@ function mannedCrew(sh, k){
   for(const c of sh.crew){ if(c.drone || c.path.length || c.room!==i || crewSide(c)!==sh.side || c.stunT>0) continue;
     if(hostilesFor(sh, i, sh.side)) continue;
     if(!best || skillLvl(c, SKILL_FOR[k]||'repair') > skillLvl(best, SKILL_FOR[k]||'repair')) best = c; }
+  // the captain standing on a VR station pad covers a post nobody else is manning
+  if(!best && sh.side==='p' && sh.capMan===k && typeof CAPTAIN_CREW!=='undefined' && !hostilesFor(sh, i, sh.side)) return CAPTAIN_CREW;
   return best;
 }
 function manned(sh, k){ return sh.auto ? !!sh.systems[k] : !!mannedCrew(sh,k); }

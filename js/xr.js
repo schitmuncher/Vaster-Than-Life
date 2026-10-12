@@ -50,7 +50,7 @@ function init3D(){
     const emit = glowSpriteMesh(i ? '#5fd3e6' : '#ffb547', .03); emit.position.set(0, .005, -.03); body.add(emit);
     c.add(body);
     c.userData = { line, idx:i, hit:null, src:null };
-    c.addEventListener('selectstart', () => { if(c.userData.vui && vuiClick(c.userData.vui)){ pulse(c.userData.src, .35, 30); return; } if(c.userData.ipick && interiorAct(c.userData.ipick)){ pulse(c.userData.src, .25, 25); return; } if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
+    c.addEventListener('selectstart', () => { if(c.userData.ho) return; if(c.userData.vui && vuiClick(c.userData.vui)){ pulse(c.userData.src, .35, 30); return; } if(c.userData.ipick && interiorAct(c.userData.ipick)){ pulse(c.userData.src, .25, 25); return; } if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
     c.addEventListener('connected', e => { c.userData.src = e.data; });
     c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
     rig.add(c); controllers.push(c);

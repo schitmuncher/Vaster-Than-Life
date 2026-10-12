@@ -149,7 +149,12 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, console and beam buttons you poke with the right ray.
 - **Room consoles**: a small panel on the wall of each room shows power, damage, oxygen and crew, with buttons to add or remove power, send help and open or close doors.
 - **Smart orders**: point at a burning, breached or damaged room with nobody selected and the nearest free crew member goes to deal with it.
-- Planned next: hover outlines on crew and doors, door panels, extinguisher and repair hand actions, and weapon targeting from the room console.
+- **Hands-on bonuses** (Settings > Gameplay, on by default; everything can still be done from the console):
+  - **Fix it yourself**: a burning, breached or damaged room shows a glowing marker. Hold a hand near it and the trigger to put out the fire, patch the breach or repair the machine, about 25% faster than a crew member.
+  - **Captain's station**: rooms with piloting, engines, weapons, shields, sensors, doors, oxygen or medbay have a floor pad. Stand on it for a second to man that system when no crew member does. Step off to stand down.
+  - **Sabotage**: when you beam over to an enemy ship, red markers appear at its power systems. Hold a hand near one with the trigger to lock that system down for 10 seconds. You can't be hurt aboard, so it is safe.
+  - **Salvage**: destroy an enemy and a crate appears in a room of your ship. Hold the trigger near it for a little bonus scrap.
+- Planned next: hover outlines on crew and doors, door panels, and weapon targeting from the room console.
 
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
@@ -276,6 +281,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |
+| `js/handson.js` | VR hands-on bonuses: fixing hazards, captain's station pads, enemy sabotage, salvage crates |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |
