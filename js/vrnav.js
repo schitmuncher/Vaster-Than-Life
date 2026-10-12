@@ -5,7 +5,7 @@
    hover haptics, and controller help labels you can glance at.
    ========================================================================= */
 let rig = null, vignette = null, fader = null, tpMarker = null, loupe = null, ctrlLabels = [];
-const nav = { fade:0, fadeTo:null, turnLatch:{}, moving:0, hoverIdx:[-1,-1], lastActive:1, sessionT:0, home:null };
+const nav = { speed:0, run:0, stepD:0, appliedH:0, fade:0, fadeTo:null, turnLatch:{}, moving:0, hoverIdx:[-1,-1], lastActive:1, sessionT:0, home:null };
 const BRIDGE_BOUNDS = { x0:-2.7, x1:2.7, z0:-2.55, z1:3.6 };   // bridge-local metres the player may stand in
 
 function initNav(){
@@ -38,7 +38,7 @@ function initNav(){
 function makeCtrlLabel(i){
   const c = mkCanvas(640, 300), g = c.getContext('2d'); g.textBaseline = 'alphabetic';
   const lines_ = i===0
-    ? [['Left stick','Walk around the bridge'],['Stick click','Magnifier on/off'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Bring the console to you']]
+    ? [['Left stick','Walk · push fully to run'],['Stick click','Magnifier on/off'],['Glance','Wrist menu appears'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Bring the console to you']]
     : [['Trigger','Select · aim at floor: teleport'],['Stick ← →','Turn'],['Stick ↑ ↓','Console nearer / further'],['Stick click','Back to the captain\'s spot'],['A','Pause'],['B','Map'],['Grip','Bring the console to you']];
   g.fillStyle = 'rgba(8,14,30,.92)'; g.beginPath(); if(g.roundRect) g.roundRect(4,4,632,292,20); else g.rect(4,4,632,292); g.fill(); g.strokeStyle = i ? '#5fd3e6' : '#ffb547'; g.lineWidth = 4; g.stroke();
   g.font = "700 26px 'Chakra Petch', sans-serif"; g.fillStyle = i ? '#5fd3e6' : '#ffb547'; g.fillText(i ? 'RIGHT HAND' : 'LEFT HAND', 22, 40);
@@ -83,12 +83,18 @@ function bringConsole(){ const p = headWorld(), d = new THREE.Vector3(); camera.
 /* per-frame: sticks, turning, teleport aim, vignette, loupe, labels, hover ticks */
 function updateNav(dt){
   if(!inXR()) return;
-  nav.sessionT += dt;
+  nav.sessionT += dt; if(typeof vuiUpdate==='function') vuiUpdate(dt);
   const sess = renderer.xr.getSession(); let moveMag = 0;
   if(sess) for(const src of sess.inputSources){
     const gp = src.gamepad; if(!gp || gp.axes.length < 4) continue; const hand = src.handedness; const ax = gp.axes[2], ay = gp.axes[3];
-    if(hand==='left' && SET.vrMove !== 'teleport'){ const mag = Math.hypot(ax, ay); if(mag > .18){ const d = new THREE.Vector3(); camera.getWorldDirection(d); d.y = 0; d.normalize(); const r = new THREE.Vector3(-d.z, 0, d.x);
-        const sp = 1.4*dt*Math.min(1, (mag-.18)/.7); if(moveRigBy((d.x*-ay + r.x*ax)/mag*sp, (d.z*-ay + r.z*ax)/mag*sp)) moveMag = Math.max(moveMag, mag); } }
+    if(hand==='left' && SET.vrMove !== 'teleport'){ const mag = Math.hypot(ax, ay);
+      // walking, and running when the stick is pushed fully (speed eases up and down so it stays comfortable)
+      const walk = SET.vrWalk ?? 1.4, run = SET.vrRun ?? 3.4, wantRun = SET.vrRunMode !== 'off' && mag > .93 && -ay > .5 && !(typeof IN!=='undefined' && IN.beamT>0);
+      const target = mag > .18 ? (wantRun ? run : walk*Math.min(1, (mag-.18)/.6)) : 0;
+      nav.speed += (target - nav.speed)*Math.min(1, dt*(target > nav.speed ? 5 : 9)); nav.run += ((wantRun && nav.speed > walk*1.2 ? 1 : 0) - nav.run)*Math.min(1, dt*6);
+      if(nav.speed > .08 && mag > .12){ const d = new THREE.Vector3(); camera.getWorldDirection(d); d.y = 0; d.normalize(); const r = new THREE.Vector3(-d.z, 0, d.x);
+        const sp = nav.speed*dt; if(moveRigBy((d.x*-ay + r.x*ax)/mag*sp, (d.z*-ay + r.z*ax)/mag*sp)){ moveMag = Math.max(moveMag, .6 + .4*nav.run); nav.stepD += sp; const stride = 1.05 + .25*nav.run;
+            if(nav.stepD > stride){ nav.stepD = 0; sfx('step', { vol: .35 + .25*nav.run }); if(nav.run > .5) hapticFn?.(.06, 20); } } } }
     if(hand==='right'){
       if(SET.vrTurn==='smooth'){ if(Math.abs(ax) > .25) { const h = headWorld(); const a = -ax*dt*1.6; rig.position.sub(h); rig.position.applyAxisAngle(new THREE.Vector3(0,1,0), a); rig.position.add(h); rig.rotateY(a); moveMag = Math.max(moveMag, Math.abs(ax)); } }
       else { const lat = nav.turnLatch[hand]; if(Math.abs(ax) > .7 && !lat){ nav.turnLatch[hand] = true; snapTurn(-Math.sign(ax) * (SET.vrTurn==='45' ? Math.PI/4 : Math.PI/6)); } else if(Math.abs(ax) < .3) nav.turnLatch[hand] = false; }
@@ -97,7 +103,7 @@ function updateNav(dt){
   }
   // comfort vignette
   nav.moving += ((moveMag>0 ? 1 : 0) - nav.moving) * Math.min(1, dt*8);
-  vignette.material.opacity = SET.vrVignette === false ? 0 : nav.moving*.95; vignette.visible = vignette.material.opacity > .01;
+  vignette.material.opacity = SET.vrVignette === false ? 0 : nav.moving*(.9 + .1*nav.run); vignette.visible = vignette.material.opacity > .01; vignette.scale.setScalar(1 - .22*nav.run);
   // teleport fade
   if(nav.fadeTo || nav.fade>0){ if(nav.fadeTo){ nav.fade = Math.min(1, nav.fade + dt*8); if(nav.fade>=1) applyTeleport(); } else nav.fade = Math.max(0, nav.fade - dt*6); }
   fader.material.opacity = nav.fade; fader.visible = nav.fade > .01;
@@ -105,7 +111,7 @@ function updateNav(dt){
   const camP = headWorld(), camD = new THREE.Vector3(); camera.getWorldDirection(camD);
   ctrlLabels.forEach((L, i) => { const c = controllers[i]; if(!c || !c.userData.src || SET.vrLabels===false){ L.visible = false; return; }
     const cp = new THREE.Vector3().setFromMatrixPosition(c.matrixWorld); const to = cp.clone().sub(camP); const dist = to.length(); to.normalize();
-    L.visible = (dist < .75 && to.dot(camD) > .88) || nav.sessionT < 25; });
+    L.visible = ((dist < .75 && to.dot(camD) > .88) || nav.sessionT < 25) && !(i===0 && typeof VUI!=='undefined' && VUI.wrist && VUI.wrist.shown); });
 }
 /* called from xrPointers for a ray that missed the console: aim at the floor to teleport */
 function aimFloor(c, origin, dir){
@@ -163,6 +169,7 @@ function applyPlayMode(){
   }
   if(POSE_EYE[pose]){ const h = headWorld(); rig.position.y += POSE_EYE[pose] - h.y; rig.updateMatrixWorld(true); }
   if(SET.vrHeight){ rig.position.y += SET.vrHeight/100; rig.updateMatrixWorld(true); }
+  nav.appliedH = SET.vrHeight || 0;
   recenter();
   if(bridge && bridge.chair){
     const seated = pose!=='standing'; bridge.chair.visible = seated;
@@ -170,3 +177,12 @@ function applyPlayMode(){
   }
 }
 function setPlayPose(p){ SET.vrPose = p; saveProfile(); if(inXR()){ applyPlayMode(); toast(p==='lying' ? 'Lying down: look at the ceiling, then click the right stick to re-aim.' : p==='seated' ? 'Seated mode: the bridge is set to chair height.' : 'Standing mode: walk around the bridge.'); } }
+
+/* live height adjustment: moves your view by the change, without resetting where you stand */
+function setVrHeight(cm){ cm = clamp(Math.round(cm), -60, 60); SET.vrHeight = cm; saveProfile(); if(inXR() && rig){ rig.position.y += (cm - (nav.appliedH||0))/100; rig.updateMatrixWorld(true); nav.appliedH = cm; } }
+function applyComfortPreset(p){
+  if(p==='comfortable'){ SET.vrMove = 'teleport'; SET.vrTurn = '45'; SET.vrVignette = true; SET.vrRunMode = 'off'; }
+  else if(p==='advanced'){ SET.vrMove = 'smooth'; SET.vrTurn = 'smooth'; SET.vrVignette = false; SET.vrRunMode = 'push'; SET.vrWalk = 1.8; SET.vrRun = 4.4; }
+  else { SET.vrMove = 'smooth'; SET.vrTurn = '30'; SET.vrVignette = true; SET.vrRunMode = 'push'; SET.vrWalk = 1.4; SET.vrRun = 3.4; }
+  saveProfile(); toast(p==='comfortable' ? 'Comfortable: teleport movement, snap turning, wide vignette.' : p==='advanced' ? 'Advanced: smooth turning, no vignette, fast running.' : 'Recommended: smooth walking, snap turn, vignette.');
+}

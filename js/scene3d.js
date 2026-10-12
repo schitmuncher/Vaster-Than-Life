@@ -271,7 +271,7 @@ function initBridge(){
   const g = new THREE.Group();
   const plate = plateTex('#353d52', 11, 4), grate = gratingTex();
   const metal = stdMat({ map:plate, metalness:.75, roughness:.42 });
-  const dark = stdMat({ color:0x161b2b, metalness:.85, roughness:.35 });
+  const dark = stdMat({ color:0x28304c, metalness:.85, roughness:.35 });
   const frameM = stdMat({ color:0x2b3350, metalness:.9, roughness:.28 });
   const lights = [];
   const strip = (col, alert) => { const m = new THREE.MeshBasicMaterial({ color:col }); if(alert) lights.push(m); return m; };
@@ -299,20 +299,20 @@ function initBridge(){
   // rear bulkhead (behind the player) with a door and light panels
   const wallT = plate.clone(); wallT.needsUpdate = true; wallT.repeat.set(8, 2);
   // rear bulkhead in two halves with a doorway into the ship, plus a lintel above it
-  const wallMat = stdMat({ map:wallT, metalness:.7, roughness:.45, side:THREE.BackSide }); const dTh = Math.asin(.58/R);
+  const wallMat = stdMat({ map:wallT, metalness:.7, roughness:.45, side:THREE.BackSide }); const dTh = Math.asin(.92/R);
   for(const [a0, a1] of [[-Math.PI/2, -dTh], [dTh, Math.PI/2]]){ const w_ = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 3.2, 24, 1, true, a0, a1 - a0), wallMat); w_.position.set(0, 1.6, .9); w_.userData.shell = true; g.add(w_); }
-  const lint = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 1.0, 6, 1, true, -dTh, dTh*2), wallMat); lint.position.set(0, 2.7, .9); lint.userData.shell = true; g.add(lint);
+  const lint = new THREE.Mesh(new THREE.CylinderGeometry(R, R, .75, 6, 1, true, -dTh, dTh*2), wallMat); lint.position.set(0, 2.82, .9); lint.userData.shell = true; g.add(lint);
   // sliding door into the ship: opens as you walk up to it
-  const leaves = []; for(const sx of [-1,1]){ const lf = new THREE.Group(); const pane = new THREE.Mesh(new THREE.BoxGeometry(.56, 2.1, .05), dark); lf.add(pane); const st = new THREE.Mesh(new THREE.BoxGeometry(.03, 2.1, .06), strip(0xffb547)); st.position.x = -sx*.27; lf.add(st);
-    lf.position.set(sx*.28, 1.05, .9 + R - .06); lf.userData.shell = true; g.add(lf); leaves.push({ g:lf, sx }); }
+  const leaves = []; for(const sx of [-1,1]){ const lf = new THREE.Group(); const pane = new THREE.Mesh(new THREE.BoxGeometry(.9, 2.45, .05), stdMat({ color:0x8793b4, metalness:.5, roughness:.4 })); lf.add(pane); const st = new THREE.Mesh(new THREE.BoxGeometry(.04, 2.45, .06), strip(0xffb547)); st.position.x = -sx*.43; lf.add(st);
+    lf.position.set(sx*.45, 1.225, .9 + R - .06); lf.userData.shell = true; g.add(lf); leaves.push({ g:lf, sx }); }
   const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(.9, .18), new THREE.MeshBasicMaterial({ map:texFrom((() => { const c = mkCanvas(256, 52), x = c.getContext('2d'); x.fillStyle = '#0a1020'; x.fillRect(0,0,256,52); x.font = "700 26px 'Chakra Petch', sans-serif"; x.fillStyle = '#ffb547'; x.textAlign = 'center'; x.fillText('SHIP INTERIOR', 128, 35); return c; })()) }));
-  doorSign.position.set(0, 2.42, .9 + R - .16); doorSign.rotation.y = Math.PI; g.add(doorSign);
+  doorSign.position.set(0, 2.7, .9 + R - .16); doorSign.rotation.y = Math.PI; g.add(doorSign);
   const ceilT = plate.clone(); ceilT.needsUpdate = true; ceilT.repeat.set(4, 4);
   const ceil = new THREE.Mesh(new THREE.CircleGeometry(R, 48, 0, Math.PI), stdMat({ map:ceilT, metalness:.7, roughness:.5, side:THREE.DoubleSide })); ceil.rotation.x = Math.PI/2; ceil.position.set(0, 3.2, .9); g.add(ceil);
   const ceilRim = new THREE.Mesh(new THREE.BoxGeometry(2*R, .12, .14), frameM); ceilRim.position.set(0, 3.17, .9); g.add(ceilRim);
   const ceilL = new THREE.Mesh(new THREE.BoxGeometry(2*R - .2, .025, .03), strip(0x5fd3e6, true)); ceilL.position.set(0, 3.1, .82); g.add(ceilL);
-  for(const sx of [-1,1]){ const jamb = new THREE.Mesh(new THREE.BoxGeometry(.12, 2.3, .14), frameM); jamb.position.set(sx*.62, 1.15, .9 + R - .07); g.add(jamb); }
-  const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.36, .14, .14), frameM); lintel.position.set(0, 2.25, .9 + R - .07); g.add(lintel);
+  for(const sx of [-1,1]){ const jamb = new THREE.Mesh(new THREE.BoxGeometry(.14, 2.5, .16), frameM); jamb.position.set(sx*.98, 1.25, .9 + R - .07); g.add(jamb); }
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(2.1, .16, .16), frameM); lintel.position.set(0, 2.5, .9 + R - .07); g.add(lintel);
   for(const sx of [-1,1]){ const pipe = new THREE.Mesh(new THREE.TorusGeometry(R - .12, .045, 8, 40, Math.PI*.32), frameM); pipe.rotation.x = Math.PI/2; pipe.rotation.z = sx>0 ? -Math.PI*.04 : Math.PI*.72; pipe.position.set(0, .35, .9); g.add(pipe); }
   for(const s of [-1,1]) for(let k=0;k<3;k++){ const lp = new THREE.Mesh(new THREE.BoxGeometry(.5, .06, .04), strip(0x5fd3e6, true)); const a = s*(.55 + k*.32); lp.position.set(Math.sin(a)*(R-.06), 2.3, .9 + Math.cos(a)*(R-.06)); lp.rotation.y = a; g.add(lp); }
   // side consoles with live screens

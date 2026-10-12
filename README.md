@@ -142,6 +142,15 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - In a fight, stand by your teleporter and press **Beam me over** to visit the enemy ship and watch your away team (or the enemy crew) up close; **Beam me back** returns you. You come home automatically if the fight ends.
 - Settings > Gameplay > Ship experience switches between **Full 3D ship** and **Classic cockpit** (just the bridge, console and holotable).
 
+**VR ship overhaul: space, height, running and interaction**
+- The interior is roomier and brighter: 2 m cells, 3.4 m ceilings, 1.5 m wide and 2.55 m tall doorways, a 1.8 m wide corridor, lighter paint, lit ceiling panels, wall light strips, large hull windows with a low sill, and skylights open to space. The bridge door is wider too.
+- **Player height** slider in Settings > VR & comfort (-60 to +60 cm, with -/+ buttons) applies live, in the pause screen too. Seated and lying modes keep their own pose.
+- **Walking and running**: push the left stick to walk (speed set in Settings, 0.8 to 2.4 m/s); push it fully forward to run (up to 5 m/s, Running can be set to Off). Speed eases in and out, footsteps sound and tick the controller, and the vignette tightens while you run. **Comfort presets** (Comfortable, Balanced, Free) set turning, vignette and speed in one go.
+- **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, console and beam buttons you poke with the right ray.
+- **Room consoles**: a small panel on the wall of each room shows power, damage, oxygen and crew, with buttons to add or remove power, send help and open or close doors.
+- **Smart orders**: point at a burning, breached or damaged room with nobody selected and the nearest free crew member goes to deal with it.
+- Planned next: hover outlines on crew and doors, door panels, extinguisher and repair hand actions, and weapon targeting from the room console.
+
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
 - Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
@@ -266,6 +275,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
+| `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

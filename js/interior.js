@@ -17,7 +17,8 @@
      and beam over to the enemy ship with your away team from the teleporter.
    - Settings > Graphics > Ship: "Full 3D ship" or "Classic cockpit".
    ========================================================================= */
-const CS = 1.5, WH = 2.5, CORR = 1.8;
+/* VR-friendly proportions (research: ~1.3x real scale, 3 m ceilings, wide doors, big windows) */
+const CS = 2.0, WH = 3.4, CORR = 2.6, DW = 1.5, DH = 2.55, WIN0 = 1.0, WIN1 = 2.65, CW = 1.8, CH = 2.95, PSC = 1.3;
 let IN = { own:null, foe:null, aboard:null, beamT:0, beamTo:null, saved:null, buttons:[], lastHurt:{} };
 function shipMode(){ return SET.shipMode || 'full'; }
 
@@ -25,15 +26,15 @@ function shipMode(){ return SET.shipMode || 'full'; }
 let IM = null;
 function interiorMats(){
   if(IM) return IM;
-  const floorT = plateTex('#2b3246', 21, 2); floorT.repeat.set(1, 1);
-  const wallT = plateTex('#3a4256', 33, 2); wallT.repeat.set(1, 1);
+  const floorT = plateTex('#566383', 21, 2); floorT.repeat.set(1, 1);
+  const wallT = plateTex('#8a97b6', 33, 2); wallT.repeat.set(1, 1);
   const hazard = (() => { const c = mkCanvas(128, 32), g = c.getContext('2d'); for(let i=-2;i<10;i++){ g.fillStyle = i%2 ? '#151515' : '#e8b62c'; g.beginPath(); g.moveTo(i*16,0); g.lineTo(i*16+16,0); g.lineTo(i*16,32); g.lineTo(i*16-16,32); g.fill(); } const t = texFrom(c); t.wrapS = THREE.RepeatWrapping; return t; })();
   IM = {
-    floor: stdMat({ map:floorT, metalness:.6, roughness:.55 }), wall: stdMat({ map:wallT, metalness:.55, roughness:.5 }), hull: stdMat({ map:wallT, color:0xc8d0e8, metalness:.7, roughness:.4 }),
-    trim: stdMat({ color:0x1d2338, metalness:.85, roughness:.3 }), ceil: stdMat({ color:0x1a2034, metalness:.6, roughness:.6 }),
-    light: new THREE.MeshBasicMaterial({ color:0xffffff }), dark: stdMat({ color:0x10141f, metalness:.8, roughness:.4 }), metal: stdMat({ color:0x8a95b8, metalness:.9, roughness:.25 }),
+    floor: stdMat({ map:floorT, metalness:.35, roughness:.5 }), wall: stdMat({ map:wallT, metalness:.3, roughness:.55 }), hull: stdMat({ map:wallT, color:0xe4ecff, metalness:.4, roughness:.45 }),
+    trim: stdMat({ color:0x2c3550, metalness:.7, roughness:.35 }), ceil: stdMat({ color:0x6a7898, metalness:.3, roughness:.65 }),
+    light: new THREE.MeshBasicMaterial({ color:0xffffff }), dark: stdMat({ color:0x2e3857, metalness:.5, roughness:.45 }), metal: stdMat({ color:0x8a95b8, metalness:.9, roughness:.25 }),
     door: stdMat({ color:0x4a536e, metalness:.8, roughness:.35 }), doorStripe: new THREE.MeshBasicMaterial({ color:0xffb547 }), hazard: new THREE.MeshStandardMaterial({ map:hazard, metalness:.4, roughness:.6 }),
-    glow: (c) => new THREE.MeshBasicMaterial({ color:new THREE.Color(c) }), glass: stdMat({ color:0x5fb8d0, metalness:.95, roughness:.05, transparent:true, opacity:.35 }),
+    glow: (c) => new THREE.MeshBasicMaterial({ color:new THREE.Color(c) }), glass: stdMat({ color:0x9fd8f0, metalness:.9, roughness:.05, transparent:true, opacity:.22 }),
     box: new THREE.BoxGeometry(1,1,1), cyl: new THREE.CylinderGeometry(1,1,1,16), sph: new THREE.SphereGeometry(1, 16, 12), torus: new THREE.TorusGeometry(1, .06, 8, 32), plane: new THREE.PlaneGeometry(1,1)
   };
   return IM;
@@ -42,7 +43,7 @@ const DOOR_MATS = {};
 function doorLeafMat(airlock, side){ const k = (airlock ? 'a' : 'd') + side; if(DOOR_MATS[k]) return DOOR_MATS[k];
   const c = mkCanvas(128, 512), g = c.getContext('2d');
   if(airlock){ for(let i=-8;i<40;i++){ g.fillStyle = i%2 ? '#1a1a1a' : '#d8a628'; g.beginPath(); g.moveTo(0, i*24); g.lineTo(128, i*24 - 60); g.lineTo(128, i*24 - 36); g.lineTo(0, i*24 + 24); g.fill(); } }
-  else { const gr = g.createLinearGradient(0,0,128,0); gr.addColorStop(0,'#58627e'); gr.addColorStop(1,'#3c4560'); g.fillStyle = gr; g.fillRect(0,0,128,512);
+  else { const gr = g.createLinearGradient(0,0,128,0); gr.addColorStop(0,'#8b96b4'); gr.addColorStop(1,'#667290'); g.fillStyle = gr; g.fillRect(0,0,128,512);
     g.fillStyle = 'rgba(0,0,0,.35)'; for(const y of [120, 380]) g.fillRect(8, y, 112, 4); g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(8, 0, 2, 512); }
   g.fillStyle = '#0c1a2c'; g.fillRect(36, 70, 56, 110); g.fillStyle = 'rgba(95,211,230,.35)'; g.fillRect(40, 74, 48, 102);
   const sx = side < 0 ? 116 : 0; g.fillStyle = '#ffb547'; g.fillRect(sx, 0, 12, 512);
@@ -63,11 +64,13 @@ function buildInterior(sh, own){
   const floorGeo = new THREE.PlaneGeometry(CS*.995, CS*.995); floorGeo.rotateX(-Math.PI/2);
   const floors = new THREE.InstancedMesh(floorGeo, M.floor, cells.length); const ceilGeo = floorGeo.clone(); ceilGeo.rotateX(Math.PI);
   const ceils = new THREE.InstancedMesh(ceilGeo, M.ceil, cells.length);
-  const lightGeo = new THREE.PlaneGeometry(CS*.5, CS*.18); lightGeo.rotateX(Math.PI/2);
+  const lightGeo = new THREE.PlaneGeometry(CS*.55, CS*.16); lightGeo.rotateX(Math.PI/2);
   const lights = new THREE.InstancedMesh(lightGeo, M.light, cells.length);
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   cells.forEach(([x,y], i) => { const p = cellLocal(I, x, y); m4.makeTranslation(p.x, 0, p.z); floors.setMatrixAt(i, m4); floors.setColorAt(i, col.set(0xffffff));
-    m4.makeTranslation(p.x, WH, p.z); ceils.setMatrixAt(i, m4); m4.makeTranslation(p.x, WH - .01, p.z); lights.setMatrixAt(i, m4); lights.setColorAt(i, col.set(0xdfe8ff));
+    const sky = (x*2 + y) % 3 === 0 && I.sh.cellRoom[x+','+y] != null && sh.rooms[I.sh.cellRoom[x+','+y]].w*sh.rooms[I.sh.cellRoom[x+','+y]].h >= 2;
+    if(sky){ I.skylights = I.skylights || []; I.skylights.push(p.clone()); m4.makeScale(0,0,0); ceils.setMatrixAt(i, m4); } else { m4.makeTranslation(p.x, WH, p.z); ceils.setMatrixAt(i, m4); }
+    m4.makeTranslation(p.x + (sky ? CS*.34 : 0), WH - .01, p.z + (sky ? 0 : 0)); lights.setMatrixAt(i, m4); lights.setColorAt(i, col.set(0xdfe8ff));
     I.cellIdx[x+','+y] = i; I.floorCells.push([x,y]); });
   floors.userData.interior = I; g.add(floors, ceils, lights); I.floor = floors; I.lights = lights;
   // walls: every cell edge that isn't inside a room becomes a wall, a doorway or a hull window
@@ -88,15 +91,18 @@ function buildInterior(sh, own){
       if(hull && own && ri===sh.rooms.indexOf(nose) && dx===1){ addSeg(segs.hull, cx, cz, alongX, CS, 0, WH); continue; }
       if(di!=null){ // doorway: side pieces + lintel, door leaves built separately
         const L = segs[hull ? 'hull' : 'wall'];
-        addSeg(L, cx + (alongX ? -.52*CS/1.5 - (CS-1.04)/4 : 0), cz + (alongX ? 0 : -.52 - (CS-1.04)/4), alongX, (CS-1.04)/2, 0, WH);
-        addSeg(L, cx + (alongX ? .52 + (CS-1.04)/4 : 0), cz + (alongX ? 0 : .52 + (CS-1.04)/4), alongX, (CS-1.04)/2, 0, WH);
-        addSeg(L, cx, cz, alongX, 1.04, 2.15, WH);
-        addSeg(segs.trim, cx, cz, alongX, 1.1, 2.12, 2.2);
+        const sw = (CS - DW)/2, so = DW/2 + sw/2;
+        addSeg(L, cx + (alongX ? -so : 0), cz + (alongX ? 0 : -so), alongX, sw, 0, WH);
+        addSeg(L, cx + (alongX ? so : 0), cz + (alongX ? 0 : so), alongX, sw, 0, WH);
+        addSeg(L, cx, cz, alongX, DW, DH + .05, WH);
+        addSeg(segs.trim, cx, cz, alongX, DW + .1, DH, DH + .1);
+        for(const sd of [-1,1]) addSeg(segs.trim, cx + (alongX ? sd*(DW/2 + .02) : 0), cz + (alongX ? 0 : sd*(DW/2 + .02)), alongX, .06, 0, DH);
         I.doors.push(buildDoor(I, sh.doors[di], di, cx, cz, alongX, hull)); continue; }
-      if(hull && (x + y) % 2 === 0){ // hull window: wall below and above, frame, open to space
-        addSeg(segs.hull, cx, cz, alongX, CS, 0, .95); addSeg(segs.hull, cx, cz, alongX, CS, 1.95, WH);
-        addSeg(segs.trim, cx, cz, alongX, CS, .93, 1.0); addSeg(segs.trim, cx, cz, alongX, CS, 1.9, 1.97);
-        for(const s of [-1,1]) addSeg(segs.trim, cx + (alongX ? s*CS*.47 : 0), cz + (alongX ? 0 : s*CS*.47), alongX, .08, .95, 1.95);
+      if(hull && (x + y) % 3 !== 0){ // big hull window: low sill, tall pane open to space
+        addSeg(segs.hull, cx, cz, alongX, CS, 0, WIN0); addSeg(segs.hull, cx, cz, alongX, CS, WIN1, WH);
+        addSeg(segs.trim, cx, cz, alongX, CS, WIN0 - .02, WIN0 + .05); addSeg(segs.trim, cx, cz, alongX, CS, WIN1 - .05, WIN1 + .02);
+        for(const s of [-1,1]) addSeg(segs.trim, cx + (alongX ? s*CS*.48 : 0), cz + (alongX ? 0 : s*CS*.48), alongX, .1, WIN0, WIN1);
+        I.windows = I.windows || []; I.windows.push({ cx, cz, alongX });
         continue; }
       addSeg(segs[hull ? 'hull' : 'wall'], cx, cz, alongX, CS, 0, WH);
     }
@@ -106,15 +112,24 @@ function buildInterior(sh, own){
     I.hatch = { x:nl.x, z:front };
     const hw = nose.h*CS/2; // replace the front hull with two pieces and a doorway
     segs.hull = segs.hull.filter(s => !(Math.abs(s.cz - front) < .01 && s.alongX && Math.abs(s.cx - nl.x) < hw));
-    addSeg(segs.hull, nl.x - (hw + .55)/2, front, true, hw - .55, 0, WH); addSeg(segs.hull, nl.x + (hw + .55)/2, front, true, hw - .55, 0, WH); addSeg(segs.hull, nl.x, front, true, 1.1, 2.2, WH);
+    addSeg(segs.hull, nl.x - (hw + CW/2)/2, front, true, hw - CW/2, 0, WH); addSeg(segs.hull, nl.x + (hw + CW/2)/2, front, true, hw - CW/2, 0, WH); addSeg(segs.hull, nl.x, front, true, CW, DH + .1, WH);
     // corridor to the bridge
-    const cw = 1.3, ch = 2.3, cz0 = front - CORR/2;
+    const cw = CW, ch = CH, cz0 = front - CORR/2;
     addSeg(segs.hull, nl.x - cw/2, cz0, false, CORR, 0, ch); addSeg(segs.hull, nl.x + cw/2, cz0, false, CORR, 0, ch);
     const cf = new THREE.Mesh(M.box, M.floor); cf.scale.set(cw, .02, CORR); cf.position.set(nl.x, -.01, cz0); g.add(cf);
     const cc = new THREE.Mesh(M.box, M.ceil); cc.scale.set(cw, .05, CORR); cc.position.set(nl.x, ch, cz0); g.add(cc);
-    for(const s of [-1,1]){ const ls = new THREE.Mesh(M.box, M.glow('#5fd3e6')); ls.scale.set(.03, .03, CORR); ls.position.set(nl.x + s*(cw/2 - .03), .05, cz0); g.add(ls); I.corrLights = I.corrLights || []; I.corrLights.push(ls); }
+    for(const s of [-1,1]){ const ls = new THREE.Mesh(M.box, M.glow('#5fd3e6')); ls.scale.set(.05, .05, CORR); ls.position.set(nl.x + s*(cw/2 - .05), .08, cz0); g.add(ls); I.corrLights = I.corrLights || []; I.corrLights.push(ls); }
     I.corridor = { x:nl.x, z0:front - CORR, z1:front, w:cw };
   }
+  // skylight frames (instanced with the trim) and wall light strips
+  const strips = [];
+  for(const p of (I.skylights||[])){ const h = CS*.4; addSeg(segs.trim, p.x, p.z - h, true, CS*.84, WH-.1, WH); addSeg(segs.trim, p.x, p.z + h, true, CS*.84, WH-.1, WH); addSeg(segs.trim, p.x - h, p.z, false, CS*.8, WH-.1, WH); addSeg(segs.trim, p.x + h, p.z, false, CS*.8, WH-.1, WH); }
+  for(const sg of segs.wall) if(sg.y0===0 && sg.y1===WH && sg.len >= CS*.9) strips.push({ cx:sg.cx, cz:sg.cz, alongX:sg.alongX, len:sg.len*.9, y:.12 }, { cx:sg.cx, cz:sg.cz, alongX:sg.alongX, len:sg.len*.9, y:WH - .4 });
+  if(strips.length){ const sm = new THREE.InstancedMesh(M.box, new THREE.MeshBasicMaterial({ color:0x6fe0ff }), strips.length);
+    strips.forEach((st, i) => { m4.compose(new THREE.Vector3(st.cx, st.y, st.cz), new THREE.Quaternion(), new THREE.Vector3(st.alongX ? st.len : .15, .04, st.alongX ? .15 : st.len)); sm.setMatrixAt(i, m4); }); g.add(sm); I.wallStrips = sm; }
+  // glass: skylights and hull windows (two instanced meshes)
+  if(I.skylights && I.skylights.length){ const gm = new THREE.InstancedMesh(M.plane, M.glass, I.skylights.length); I.skylights.forEach((p, i) => { m4.compose(new THREE.Vector3(p.x, WH-.04, p.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2, 0, 0)), new THREE.Vector3(CS*.78, CS*.78, 1)); gm.setMatrixAt(i, m4); }); g.add(gm); }
+  if(I.windows && I.windows.length){ const wm = new THREE.InstancedMesh(M.plane, M.glass, I.windows.length); I.windows.forEach((w, i) => { m4.compose(new THREE.Vector3(w.cx, (WIN0+WIN1)/2, w.cz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, w.alongX ? 0 : Math.PI/2, 0)), new THREE.Vector3(CS*.9, WIN1-WIN0, 1)); wm.setMatrixAt(i, m4); }); g.add(wm); }
   for(const [k, mat] of [['wall', M.wall], ['hull', M.hull], ['trim', M.trim]]){
     const list = segs[k]; if(!list.length) continue; const im = new THREE.InstancedMesh(M.box, mat, list.length);
     list.forEach((sg, i) => { const thick = k==='trim' ? .16 : k==='hull' ? .2 : .12; const h = sg.y1 - sg.y0;
@@ -126,8 +141,11 @@ function buildInterior(sh, own){
     // low-oxygen haze
     const fog = new THREE.Mesh(M.box, new THREE.MeshBasicMaterial({ color:0xff2040, transparent:true, opacity:0, depthWrite:false, side:THREE.BackSide }));
     fog.scale.set(r.h*CS - .1, WH - .05, r.w*CS - .1); fog.position.set(c.x, WH/2, c.z); fog.visible = false; g.add(fog); R.fog = fog;
+    if(r.sys){ const acc = new THREE.Group(), ac = (typeof SYSC!=='undefined' && SYSC[r.sys]) || '#6fe0ff', gm = new THREE.MeshBasicMaterial({ color:new THREE.Color(ac) }), hw = r.h*CS/2 - .22, hd = r.w*CS/2 - .22;
+      for(const sx of [-1,1]){ const a = new THREE.Mesh(M.box, gm); a.scale.set(.05, .012, hd*2); a.position.set(c.x + sx*hw, .006, c.z); acc.add(a); const b = new THREE.Mesh(M.box, gm); b.scale.set(hw*2, .012, .05); b.position.set(c.x, .006, c.z + sx*hd); acc.add(b); }
+      g.add(acc); bakeGroup(acc); }
     if(r.sys){ R.prop = buildProp(I, r.sys, c, r); if(R.prop) g.add(R.prop.g);
-      const lc = mkCanvas(384, 96); const lt = texFrom(lc); const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map:lt, transparent:true, depthWrite:false })); lab.scale.set(1.2, .3, 1); lab.position.set(c.x, WH - .35, c.z); g.add(lab); R.label = { s:lab, c:lc, t:lt, key:'' }; }
+      const lc = mkCanvas(384, 96); const lt = texFrom(lc); const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map:lt, transparent:true, depthWrite:false })); lab.scale.set(1.7, .42, 1); lab.position.set(c.x, WH - .5, c.z); g.add(lab); R.label = { s:lab, c:lc, t:lt, key:'' }; }
     I.rooms.push(R);
   });
   I.sparks = makeParticles(500, true); I.smoke = makeParticles(260, false); g.add(I.sparks.pts, I.smoke.pts);
@@ -137,9 +155,9 @@ function buildInterior(sh, own){
 function buildDoor(I, d, di, cx, cz, alongX, hull){
   const M = interiorMats(); const g = new THREE.Group(); g.position.set(cx, 0, cz); if(!alongX) g.rotation.y = Math.PI/2;
   const airlock = d.b < 0; const leaves = [];
-  for(const s of [-1,1]){ const lf = new THREE.Group(); const pane = new THREE.Mesh(M.box, doorLeafMat(airlock, s)); pane.scale.set(.52, 2.12, .08); lf.add(pane);
-    lf.position.set(s*.26, 1.06, 0); g.add(lf); leaves.push({ g:lf, s, pane }); }
-  const lamp = new THREE.Mesh(M.box, new THREE.MeshBasicMaterial({ color:0x7be0a0 })); lamp.scale.set(.12, .05, .2); lamp.position.set(0, 2.25, 0); g.add(lamp);
+  for(const s of [-1,1]){ const lf = new THREE.Group(); const pane = new THREE.Mesh(M.box, doorLeafMat(airlock, s)); pane.scale.set(DW/2 - .02, DH, .08); lf.add(pane);
+    lf.position.set(s*(DW/4 - .01), DH/2, 0); g.add(lf); leaves.push({ g:lf, s, pane }); }
+  const lamp = new THREE.Mesh(M.box, new THREE.MeshBasicMaterial({ color:0x7be0a0 })); lamp.scale.set(.16, .06, .24); lamp.position.set(0, DH + .2, 0); g.add(lamp);
   I.group.add(g);
   return { d, di, g, leaves, lamp, open:0, airlock, hull, pos:new THREE.Vector3(cx, 1, cz) };
 }
@@ -174,7 +192,7 @@ function fxPuff(I, pos, v, col, size){ emit(I, /#[0-4]/.test(col) ? 'smoke' : 's
 
 /* ---------------- system machines ---------------- */
 function buildProp(I, sys, c, r){
-  const M = interiorMats(); const g = new THREE.Group(); g.position.set(c.x, 0, c.z); const P = { g, sys, anim:[], glow:[], spin:[] };
+  const M = interiorMats(); const g = new THREE.Group(); g.position.set(c.x, 0, c.z); g.scale.setScalar(PSC); const P = { g, sys, anim:[], glow:[], spin:[] };
   const add = (geo, mat, x, y, z, sx, sy, sz, parent=g) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy ?? sx, sz ?? sx); parent.add(m); return m; };
   const glowM = (c) => { const m = new THREE.MeshBasicMaterial({ color:new THREE.Color(c) }); m.userData.base = c; P.glow.push(m); return m; };
   const console_ = (x, z, rot, col) => { const k = new THREE.Group(); k.position.set(x, 0, z); k.rotation.y = rot; g.add(k);
@@ -185,7 +203,7 @@ function buildProp(I, sys, c, r){
     case 'shields': { add(M.cyl, M.dark, 0, .15, 0, .7, .3, .7); const core = add(M.sph, glowM('#5fd3e6'), 0, 1.15, 0, .32); P.core = core;
       for(let i=0;i<3;i++){ const ring = add(M.torus, M.metal, 0, 1.15, 0, .42 + i*.08); ring.rotation.x = i*1.1; P.spin.push([ring, .6 + i*.4, i%2 ? 'y' : 'x']); }
       add(M.cyl, M.metal, 0, 2.2, 0, .2, .6, .2); const halo = glowSpriteMesh('#5fd3e6', 1.6); halo.position.y = 1.15; g.add(halo); P.halo = halo; break; }
-    case 'engines': for(const s of [-1,1]){ const bx = s*(r.h*CS)*.25; add(M.cyl, M.metal, bx, .9, 0, .34, 1.6, .34).rotation.x = Math.PI/2; add(M.box, M.dark, bx, .3, 0, .5, .6, 1.4);
+    case 'engines': for(const s of [-1,1]){ const bx = s*(r.h*CS)*.25/PSC; add(M.cyl, M.metal, bx, .9, 0, .34, 1.6, .34).rotation.x = Math.PI/2; add(M.box, M.dark, bx, .3, 0, .5, .6, 1.4);
         for(let k=0;k<3;k++){ const coil = add(M.torus, glowM('#ffb547'), bx, .9, -.5 + k*.5, .38); P.anim.push([coil, k]); }
         const exh = glowSpriteMesh('#ffb547', 1.0); exh.position.set(bx, .9, .85); g.add(exh); P.glowSprites = (P.glowSprites||[]).concat(exh); } P.engine = true; break;
     case 'weapons': { const n = Math.max(1, Math.min(4, I.sh.weapons.length)); P.bars = [];
@@ -212,7 +230,7 @@ function buildProp(I, sys, c, r){
     default: console_(0, 0, 0, '#c8ccd8');
   }
   // damage effects anchor
-  P.top = new THREE.Vector3(c.x, 1.4, c.z);
+  P.top = new THREE.Vector3(c.x, 1.8, c.z);
   // bake the static parts of the machine into one or two meshes (animated parts stay separate)
   const keep = new Set(); for(const [m] of P.spin) keep.add(m); for(const [m] of P.anim) keep.add(m); (P.bars||[]).forEach(m => keep.add(m)); [P.core, P.cross, P.fan, P.ind].forEach(m => m && keep.add(m));
   keep.forEach(m => m.userData.noBake = true);
@@ -245,10 +263,10 @@ function updateInterior(I, dt, t, here){
   I.lights.instanceColor.needsUpdate = true;
   // doors
   const head = headWorld(); const hl = I.group.worldToLocal(head.clone());
-  for(const D of I.doors){ const d = D.d; const near = here===I && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 1.4 && !D.airlock;
+  for(const D of I.doors){ const d = D.d; const near = here===I && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 2.0 && !D.airlock;
     const want = (doorOpen(d) || near) ? 1 : 0; const was = D.open; D.open += (want - D.open)*Math.min(1, dt*7);
     if(here===I && Math.abs(want - was) > .5 && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 8 && Math.abs(D.open - want) > .45) sfx('door', { vol:.5 });
-    for(const L of D.leaves) L.g.position.x = L.s*(.26 + D.open*.5);
+    for(const L of D.leaves) L.g.position.x = L.s*(DW/4 - .01 + D.open*(DW/2 - .06));
     D.lamp.material.color.set(d.broken>0 ? (Math.sin(t*12)>0 ? 0xff3050 : 0x300810) : doorOpen(d) ? 0x7be0a0 : 0xffb547);
     if(d.broken>0 && Math.random() < dt*3) interiorSpark(I, D.pos.clone().setY(2.1));
     if(D.airlock && doorOpen(d) && Math.random() < dt*12) fxPuff(I, D.pos.clone().setY(rand(.3,2)), new THREE.Vector3(rand(-.3,.3), rand(-.1,.1), rand(-.3,.3)).multiplyScalar(2), '#cfe6ff', .5);
@@ -373,10 +391,10 @@ function updateInteriors(dt){
     IN.own.group.visible = true;
   } else if(IN.own){ IN.own.group.visible = false; }
   // bridge door opens when you walk up to it
-  const bl = toBridge(headWorld()); const nearDoor = full && Math.abs(bl.x) < 1.1 && bl.z > 2.6 && bl.z < 5.5;
+  const bl = toBridge(headWorld()); const nearDoor = full && Math.abs(bl.x) < 1.6 && bl.z > 2.6 && bl.z < 5.5;
   bridge.doorOpen += ((nearDoor ? 1 : 0) - bridge.doorOpen)*Math.min(1, dt*6);
   if(nearDoor && !bridge._doorWas) sfx('door', { vol:.6 }); bridge._doorWas = nearDoor;
-  bridge.doorLeaves.forEach(L => { L.g.position.x = L.sx*(.28 + bridge.doorOpen*.56); });
+  bridge.doorLeaves.forEach(L => { L.g.position.x = L.sx*(.45 + bridge.doorOpen*.9); });
   bridge.doorSign.visible = shipMode()==='full';
   // enemy ship interior, far from yours: you only see it if you beam over
   const foeLive = full && G.enemy && !G.enemy.dead && G.enemy.cellRoom;
@@ -431,14 +449,14 @@ function updateBeamButtons(t){
 /* walking: is this world point somewhere you can stand inside a ship? */
 function interiorWalk(I, L){
   if(!I) return false;
-  if(I.corridor && Math.abs(L.x - I.corridor.x) < (L.z < I.corridor.z0 ? .4 : I.corridor.w/2 - .15) && L.z > I.corridor.z0 - 1.2 && L.z < I.corridor.z1 + .3) return true;
+  if(I.corridor && Math.abs(L.x - I.corridor.x) < (L.z < I.corridor.z0 ? .5 : I.corridor.w/2 - .15) && L.z > I.corridor.z0 - 1.2 && L.z < I.corridor.z1 + .3) return true;
   const cx = I.gw - L.z/CS, cy = L.x/CS + I.gh/2; const x = Math.floor(cx), y = Math.floor(cy); const ri = I.sh.cellRoom[x+','+y]; if(ri==null) return false;
-  const fx = cx - x, fy = cy - y, m = .2;
+  const fx = cx - x, fy = cy - y, m = .14;
   const blocked = (nx, ny, lateral) => { const nri = I.sh.cellRoom[nx+','+ny]; if(nri===ri) return false;
     // hatch to the corridor
-    if(nri==null && I.corridor && nx===x+1 && Math.abs(L.x - I.corridor.x) < .5) return false;
+    if(nri==null && I.corridor && nx===x+1 && Math.abs(L.x - I.corridor.x) < DW/2 - .1) return false;
     const di = I.sh.doors.findIndex(d => (d.ca[0]===x && d.ca[1]===y && d.cb[0]===nx && d.cb[1]===ny) || (d.cb[0]===x && d.cb[1]===y && d.ca[0]===nx && d.ca[1]===ny));
-    if(di >= 0 && I.sh.doors[di].b >= 0 && Math.abs(lateral - .5) < .3) return false; return true; };
+    if(di >= 0 && I.sh.doors[di].b >= 0 && Math.abs(lateral - .5) < .33) return false; return true; };
   if(fx > 1-m && blocked(x+1, y, fy)) return false; if(fx < m && blocked(x-1, y, fy)) return false;
   if(fy > 1-m && blocked(x, y+1, fx)) return false; if(fy < m && blocked(x, y-1, fx)) return false;
   return true;
@@ -455,13 +473,24 @@ function interiorPick(origin, dir){
   const I = IN.aboard ? IN.foe : IN.own;
   for(const D of I.doors) if(D.leaves.some(L => L.pane===o)) return { kind:'door', D, hit };
   for(const [id, P] of I.crew){ let f = false; P.g.traverse(m => { if(m===o) f = true; }); if(f){ const c = P.c; const p = cellXY(I.sh, c.x, c.y); return { kind:'crew', x:p.x, y:p.y, c, hit }; } }
-  if(o===I.floor){ const L = I.group.worldToLocal(hit.point.clone()); const c = localCell(I, L.x, L.z); const x = Math.round(c.x), y = Math.round(c.y); if(I.sh.cellRoom[x+','+y]==null) return null; const p = cellXY(I.sh, x, y); return { kind:'floor', x:p.x, y:p.y, point:hit.point, hit, I }; }
+  if(o===I.floor){ const L = I.group.worldToLocal(hit.point.clone()); const c = localCell(I, L.x, L.z); const x = Math.round(c.x), y = Math.round(c.y); if(I.sh.cellRoom[x+','+y]==null) return null; const p = cellXY(I.sh, x, y); return { kind:'floor', x:p.x, y:p.y, point:hit.point, hit, I, ri:I.sh.cellRoom[x+','+y] }; }
   return null;
 }
 function interiorAct(pk){
   if(!pk) return false;
   if(pk.kind==='beam'){ beamCaptain(pk.go); return true; }
   if(pk.kind==='door'){ const d = pk.D.d; if(pk.D.airlock || (IN.aboard)) { toast(IN.aboard ? 'You can only work doors on your own ship.' : 'Use the console to vent airlocks.'); return true; } d.open = !d.open; d.broken = 0; sfx('door'); return true; }
+  if(pk.kind==='floor' && !IN.aboard && roomNeedsHelp(pk.ri) && !UI.selCrew && !(UI.selCrews||[]).length && UI.selWeapon==null){ return dispatchHelp(pk.ri); }
   if(pk.kind==='crew' || pk.kind==='floor'){ click(pk.x, pk.y); return true; }
   return false;
+}
+
+/* point at a burning, breached or damaged room with nobody selected: the nearest free crew member goes to deal with it */
+function roomNeedsHelp(ri){ const sh = G && G.ship; const r = sh && sh.rooms[ri]; if(!r) return false; const s = r.sys ? sh.systems[r.sys] : null; return r.fire>0 || r.breach>0 || !!(s && s.dmg>0) || sh.crew.some(c => c.owner==='e' && c.room===ri); }
+function dispatchHelp(ri){
+  const sh = G.ship; let best = null, bd = 1e9;
+  for(const c of sh.crew){ if(!controlled(c) || c.dead) continue; const d = roomDist(sh, c.room, ri) + (c.room===ri ? -99 : 0) + (c.manualT>0 ? 3 : 0); if(d < bd){ bd = d; best = c; } }
+  if(!best){ toast('No free crew to send.'); return true; }
+  if(best.room!==ri && orderMove(sh, best, ri)){ best.manualT = 10; toast(`${best.name} is on the way.`); } else if(best.room!==ri) toast('That room is full.'); else toast(`${best.name} is already there.`);
+  return true;
 }

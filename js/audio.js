@@ -77,6 +77,7 @@ function sfx(n, o={}){
     case 'klaxon': for(let i=0;i<2;i++) osc('sawtooth', 300, t+i*.5, .4, .035*v, { to:520, lp:1500, a:.05 }); break;
     case 'intruder': for(let i=0;i<3;i++) osc('square', 880, t+i*.16, .09, .03*v, { lp:2500 }); break;
     case 'zap': osc('square', 1800*p, t, .08, .03*v, { to:500 }); nz(t, .06, .02*v, { hp:5000 }); break;
+    case 'step': nz(t, .09, .09*v, { hp:200, lp:900, a:.005 }); osc('sine', 90 + Math.random()*20, t, .1, .06*v, { to:60 }); break;
     case 'tele': osc('sine', 300, t, .8, .05*v, { to:1600, rev:.6, a:.1 }); osc('triangle', 600, t+.1, .7, .02*v, { to:2400 }); nz(t, .7, .02*v, { hp:3000, a:.2 }); break;
     case 'cloak': osc('sine', 1100, t, .7, .04*v, { to:200, rev:.7 }); nz(t, .6, .02*v, { bp:2000, q:5, sweep:300 }); break;
     case 'punch': nz(t, .07, .07*v, { bp:900*p, q:1 }); osc('sine', 120*p, t, .08, .05*v, { to:60 }); break;

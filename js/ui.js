@@ -223,6 +223,15 @@ function drawSettings(){
     if(desc) tip(X-10, y, 440, 50, name, desc); y += 50; };
   const onoff = (name, key, def, desc, after) => choice(name, key, [[true,'On'],[false,'Off']], def, desc, after);
   const slider = (name, val, txt, dec, inc, desc) => { T(name, X, y+30, { s:20 }); btn(VX, y+4, 60, 42, '−', dec, { s:22 }); T(txt, VX+140, y+32, { s:20, f:FD, w:700, a:'center', c:C.amber }); btn(VX+220, y+4, 60, 42, '+', inc, { s:22 }); if(desc) tip(X-10, y, 440, 50, name, desc); y += 50; };
+  // a draggable-feeling bar: click anywhere on the track (mouse, touch or VR ray) to set the value; the buttons nudge it by one step
+  const bar_ = (name, key, min, max, step, def, fmt, desc, after) => { const v = SET[key] ?? def, fr = (v - min)/(max - min), tx = VX + 60, tw = 330;
+    T(name, X, y+30, { s:20 }); btn(VX, y+4, 52, 42, '−', () => { SET[key] = clamp(+(v - step).toFixed(3), min, max); saveProfile(); after && after(SET[key]); }, { s:22 });
+    ctx.fillStyle = 'rgba(255,255,255,.12)'; rr(tx, y+22, tw, 8, 4); ctx.fill(); ctx.fillStyle = C.amber; rr(tx, y+22, tw*fr, 8, 4); ctx.fill();
+    ctx.beginPath(); ctx.arc(tx + tw*fr, y+26, 12, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
+    region(tx - 8, y+2, tw + 16, 48, (cx) => { const f = clamp((cx - tx)/tw, 0, 1); SET[key] = clamp(Math.round((min + f*(max - min))/step)*step, min, max); SET[key] = +SET[key].toFixed(3); saveProfile(); after && after(SET[key]); });
+    btn(tx + tw + 10, y+4, 52, 42, '+', () => { SET[key] = clamp(+(v + step).toFixed(3), min, max); saveProfile(); after && after(SET[key]); }, { s:22 });
+    T(fmt(v), tx + tw + 80, y+32, { s:20, f:FD, w:700, c:C.amber });
+    if(desc) tip(X-10, y, 440, 50, name, desc); y += 50; };
   const vol = (k) => [() => { SET[k] = clamp(+((SET[k]??.5)-.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }, () => { SET[k] = clamp(+((SET[k]??.5)+.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }];
   switch(tab){
     case 'audio':
@@ -263,11 +272,15 @@ function drawSettings(){
     case 'vr':
       head('Body');
       choice('Play position', 'vrPose', [['standing','Standing'],['seated','Seated'],['lying','Lying down']], 'standing', 'Seated sets the bridge to chair height. Lying down tilts the world so looking up shows the console ahead.', v => setPlayPose(v));
-      slider('Height adjustment', 0, `${(SET.vrHeight||0)>0?'+':''}${SET.vrHeight||0} cm`, () => { SET.vrHeight = clamp((SET.vrHeight||0) - 5, -60, 60); saveProfile(); if(inXR()) applyPlayMode(); }, () => { SET.vrHeight = clamp((SET.vrHeight||0) + 5, -60, 60); saveProfile(); if(inXR()) applyPlayMode(); }, 'Raise or lower your view on the bridge, for example if your floor height is off or you want a taller captain.');
+      bar_('Player height', 'vrHeight', -60, 60, 1, 0, v => `${v>0?'+':''}${Math.round(v)} cm`, 'Raises or lowers your view, a centimetre at a time. Click the bar to jump, or use the buttons. Changes apply instantly in the headset.', v => setVrHeight(v));
       head('Movement');
       choice('Turning', 'vrTurn', [['30','Snap 30°'],['45','Snap 45°'],['smooth','Smooth']], '30', 'Right stick left/right.');
       choice('Walking', 'vrMove', [['smooth','Stick + teleport'],['teleport','Teleport only']], 'smooth', 'Left stick walks; aiming at the floor with the trigger teleports.');
       onoff('Comfort vignette', 'vrVignette', true, 'Darkens the edge of your view while moving to reduce motion sickness.');
+      choice('Comfort preset', 'vrPreset', [['recommended','Recommended'],['comfortable','Comfortable'],['advanced','Advanced']], 'recommended', 'Recommended: smooth walking, snap turn, vignette. Comfortable: teleport only, wider vignette. Advanced: smooth turning, no vignette, fast running.', v => applyComfortPreset(v));
+      bar_('Walking speed', 'vrWalk', .8, 2.4, .1, 1.4, v => `${v.toFixed(1)} m/s`, 'How fast the left stick walks you.');
+      choice('Running', 'vrRunMode', [['push','Push stick fully'],['off','Off']], 'push', 'Push the left stick all the way forward to run. Speed ramps up and down gently to stay comfortable.');
+      bar_('Running speed', 'vrRun', 2, 5, .2, 3.4, v => `${v.toFixed(1)} m/s`, 'Top running speed.');
       head('Console & clarity');
       onoff('Magnifier', 'vrLoupe', true, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');
@@ -972,7 +985,7 @@ function drawShipModal(){
 /* ---------------- input ---------------- */
 function click(x,y){
   ensureAudio();
-  for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h){ r.cb(); sfx('click'); return; } }
+  for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h){ r.cb(x, y); sfx('click'); return; } }
   if(UI.screen==='game'){ UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
 }
 function canvasXY(e){ const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left)/r.width*W, y:(e.clientY - r.top)/r.height*H }; }
