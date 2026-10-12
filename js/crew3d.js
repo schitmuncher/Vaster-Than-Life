@@ -230,3 +230,38 @@ function bakeGroup(root, filter){
   for(const o of remove) o.parent?.remove(o);
   return out;
 }
+
+/* ---------------- crew chatter: speech bubbles and noticing the captain ---------------- */
+const BARKS = {
+  hello:  ['Captain on deck!', 'All quiet here, Captain.', 'Systems nominal.', 'Good to see you, Captain.', 'Anything you need, Captain?', 'Steady as she goes.'],
+  fire:   ['Fire! On it, Captain!', 'Not on my watch!', 'Grab the extinguisher!'],
+  breach: ['Patching the hull!', 'Hold your breath!', 'Breach! Sealing it!'],
+  repair: ['Almost fixed, Captain.', 'Just a loose coil.', 'Give me a moment.'],
+  fight:  ['Hold the line!', 'Boarders!', 'For the ship!'],
+  hurt:   ['I need the medbay...', 'Ow. That stung.', 'Still standing, Captain.'],
+  thanks: ['Nice work, Captain!', 'Thanks, Captain!', 'Good hands, Captain.', 'Needed that, thank you.'],
+  cover:  ['Thanks for covering, Captain.', 'You have the station, Captain.', 'Good to have you at the helm.'],
+  sabo:   ['Their systems are dying!', 'Nice sabotage!', 'Go go go!']
+};
+function crewBark(P, kind, dur=3){
+  if(!P || !P.g || (P.barkCool||0) > performance.now()) return false; const list = BARKS[kind] || [kind]; const txt = list[Math.floor(Math.random()*list.length)];
+  if(!P.bubble){ const c = mkCanvas(512, 112); P.bubble = { c, tex:texFrom(c), sprite:null }; P.bubble.tex.minFilter = THREE.LinearFilter;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:P.bubble.tex, transparent:true, depthWrite:false, toneMapped:false })); sp.scale.set(1.7, .37, 1); sp.position.y = 2.75; sp.renderOrder = 4; sp.visible = false; P.g.add(sp); P.bubble.sprite = sp; }
+  const g = P.bubble.c.getContext('2d'); g.clearRect(0, 0, 512, 112); g.fillStyle = 'rgba(244,247,255,.95)'; g.beginPath(); if(g.roundRect) g.roundRect(6, 6, 500, 76, 30); else g.rect(6, 6, 500, 76); g.fill();
+  g.beginPath(); g.moveTo(236, 80); g.lineTo(256, 108); g.lineTo(276, 80); g.fill();
+  g.font = "600 34px 'Chakra Petch', sans-serif"; g.fillStyle = '#10141f'; g.textAlign = 'center'; g.textBaseline = 'middle'; let t = txt; while(g.measureText(t).width > 470 && t.length > 6) t = t.slice(0, -2);
+  g.fillText(t === txt ? t : t + '…', 256, 46); P.bubble.tex.needsUpdate = true; P.bubble.sprite.visible = true; P.bubble.t = dur; P.barkCool = performance.now() + 1500; return true;
+}
+/* the nearest friendly crew member within reach says something */
+function crewBarkNear(I, pos, kind, maxD=6){ if(!I) return false; let best = null, bd = maxD; for(const [id, P] of I.crew){ if(P.c.owner !== 'p' || P.c.drone || !P.g.visible) continue; const d = Math.hypot(P.g.position.x - pos.x, P.g.position.z - pos.z); if(d < bd){ bd = d; best = P; } } return crewBark(best, kind); }
+function crewChatter(I, P, c, job, dist, dt, here, hl, target){
+  // heads follow the captain when you are close, and nod when they speak
+  if(P.head && P.kind !== 'insect' && c.owner === 'p' && !c.drone && here === I && hl && target){ const want = dist < 4 && job.k !== 'fight' ? Math.atan2(hl.x - target.x, hl.z - target.z) - P.yaw : 0; let d = want; while(d > Math.PI) d -= Math.PI*2; while(d < -Math.PI) d += Math.PI*2;
+    P.look = (P.look || 0) + (clamp(d, -.9, .9) - (P.look || 0))*Math.min(1, dt*5); const nod = P.bubble && P.bubble.t > 0 && P.bubble.t > 2.4 ? Math.sin((3 - P.bubble.t)*14)*.12 : 0;
+    P.head.rotation.y = P.look; if(P.head.isGroup || P.head.isMesh) P.head.rotation.x = nod; }
+  if(P.bubble){ P.bubble.t -= dt; if(P.bubble.t <= 0) P.bubble.sprite.visible = false; }
+  if(c.owner !== 'p' || c.drone || here !== I) return;
+  P.chatT = (P.chatT == null ? 12 + Math.random()*20 : P.chatT) - dt; if(P.chatT > 0 || dist > 3.2) return;
+  const kind = job.k === 'fire' ? 'fire' : job.k === 'breach' ? 'breach' : job.k === 'repair' ? 'repair' : job.k === 'fight' ? 'fight' : c.hp < c.maxHp*.35 ? 'hurt' : (job.k === 'idle' || job.k === 'man') ? 'hello' : null;
+  if(kind && crewBark(P, kind)) P.chatT = 30 + Math.random()*40; else P.chatT = 6;
+}

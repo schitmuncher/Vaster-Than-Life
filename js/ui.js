@@ -213,7 +213,7 @@ function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);
   T('Settings', 60, 122, { s:50, f:FD, w:700 });
   const tab = UI.setTab || 'audio';
-  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR & comfort'],['gameplay','Gameplay'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 236);
+  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 200);
   panel(60, 204, 1480, 640, 12);
   const X = 100, VX = 560; let y = 236;
   const head = (t) => { label(t, X, y+18, C.cyan, 'left', 15); y += 34; };
@@ -281,6 +281,8 @@ function drawSettings(){
       bar_('Walking speed', 'vrWalk', .8, 2.4, .1, 1.4, v => `${v.toFixed(1)} m/s`, 'How fast the left stick walks you.');
       choice('Running', 'vrRunMode', [['push','Push stick fully'],['off','Off']], 'push', 'Push the left stick all the way forward to run. Speed ramps up and down gently to stay comfortable.');
       bar_('Running speed', 'vrRun', 2, 5, .2, 3.4, v => `${v.toFixed(1)} m/s`, 'Top running speed.');
+      break;
+    case 'vr2':
       head('Console & clarity');
       onoff('Magnifier', 'vrLoupe', true, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');

@@ -33,7 +33,7 @@ function vuiRedraw(W_){ W_.draw(W_); W_.t.needsUpdate = true; W_.dirty = false; 
 
 /* ---------------- wrist menu ---------------- */
 function vuiInitWrist(){
-  const W_ = vuiMake(.3, .19, 640, 400, (Wd) => {
+  const W_ = vuiMake(.3, .234, 640, 500, (Wd) => {
     vuiFrame(Wd, 'CAPTAIN', VCOL.amber); const g = Wd.g; const paused = !!(G && G.paused);
     const bw = 192, bh = 92, gx = 20, gy = 70, gap = 12;
     const cell = (i) => ({ x: gx + (i%3)*(bw+gap), y: gy + Math.floor(i/3)*(bh+gap) });
@@ -49,6 +49,10 @@ function vuiInitWrist(){
     c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrLoupe===false ? 'ZOOM: OFF' : 'ZOOM: ON', () => { SET.vrLoupe = SET.vrLoupe===false; saveProfile(); if(!SET.vrLoupe && loupe) loupe.visible = false; }, { s:26, fill:SET.vrLoupe!==false, col:VCOL.cyan });
     const aboard = typeof IN!=='undefined' && IN.aboard, canGo = typeof IN!=='undefined' && IN.foe && G && G.enemy && !G.enemy.dead;
     c = cell(8); vuiBtn(Wd, c.x, c.y, bw, bh, aboard ? 'BEAM BACK' : 'BEAM OVER', () => { if(aboard) beamCaptain(false); else if(canGo) beamCaptain(true); else toast('No ship to board right now.'); }, { s:24, col:'#b48cff', disabled:!aboard && !canGo });
+    const nAl = typeof alertRooms==='function' ? alertRooms().length : 0, inShip = typeof IN!=='undefined' && IN.own && IN.own.group.visible;
+    c = cell(9); vuiBtn(Wd, c.x, c.y, bw, bh, nAl ? `ALERT ×${nAl}` : 'NO ALERTS', () => goToAlert(), { s:24, col:VCOL.bad, fill:nAl>0 && (Math.floor(VUI.t*2)%2===0), disabled:!nAl || !!aboard });
+    c = cell(10); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO BRIDGE', () => goToBridge(), { s:24, col:VCOL.amber, disabled:!!aboard });
+    c = cell(11); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO TELEPORT', () => goToRoomSys('teleporter'), { s:22, col:'#b48cff', disabled:!inShip || !!aboard });
     g.font = "500 22px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText(`height ${h>0?'+':''}${h} cm`, 618, 46);
   });
   W_.mesh.visible = false; VUI.wrist = W_;
@@ -63,6 +67,19 @@ function vuiUpdateWrist(){
   const want = dist < .8 && to.dot(camD) > .82 || VUI.hover.some(hv => hv && hv.W === W_);
   W_.mesh.visible = want; W_.shown = want;
 }
+
+/* ---------------- quick travel: jump to the next emergency, the bridge or a system's room ---------------- */
+function alertRooms(){ const I = IN && IN.own, sh = G && G.ship; if(!I || !sh || !I.rooms || !I.rooms.length) return []; const out = [];
+  sh.rooms.forEach((r, ri) => { const st = typeof hoState==='function' ? hoState(sh, r) : null; if(st && I.rooms[ri]) out.push({ ri, st, sev:st==='fire' ? 3 : st==='breach' ? 2 : 1 }); }); return out; }
+function standNear(I, p){ // a spot beside p that you can stand on, on the side you are coming from
+  const h = headLocal(I); const d = new THREE.Vector3(h.x - p.x, 0, h.z - p.z); if(d.lengthSq() < .01) d.set(1, 0, 0); d.normalize();
+  for(const dist of [1.1, .8, 1.5, .5, 0]){ const q = new THREE.Vector3(p.x + d.x*dist, 1.6, p.z + d.z*dist); const w = I.group.localToWorld(q.clone()); if(canStand(w)) return w; } return null; }
+function goToAlert(){ const I = IN.own, al = alertRooms(); if(!al.length){ toast('No emergencies right now.'); return; }
+  const h = headLocal(I); al.sort((a, b) => (b.sev - a.sev) || (Math.hypot(I.rooms[a.ri].c.x - h.x, I.rooms[a.ri].c.z - h.z) - Math.hypot(I.rooms[b.ri].c.x - h.x, I.rooms[b.ri].c.z - h.z)));
+  const a = al[0], spot = typeof hoSpot==='function' ? hoSpot(I, a.ri, a.st) : I.rooms[a.ri].c; const w = standNear(I, spot); if(w){ teleportTo(w); toast(`To the ${a.st==='fire' ? 'fire' : a.st==='breach' ? 'breach' : 'damaged system'} in ${G.ship.rooms[a.ri].sys ? (SYSN[G.ship.rooms[a.ri].sys]||'the room') : 'the room'}.`); } }
+function goToBridge(){ if(playPose()!=='standing'){ applyPlayMode(); return; } if(!anchor.pos) return; teleportTo(new THREE.Vector3(anchor.pos.x, 1.6, anchor.pos.z)); }
+function goToRoomSys(k){ const I = IN.own, sh = G && G.ship; if(!I || !sh) return; const ri = sh.rooms.findIndex(r => r.sys === k); if(ri < 0 || !I.rooms[ri]){ toast('No such room on this ship.'); return; }
+  const w = standNear(I, I.rooms[ri].c); if(w) teleportTo(w); }
 
 /* ---------------- room consoles ---------------- */
 const VUI_SYS = { shields:'SHIELDS', engines:'ENGINES', oxygen:'LIFE SUPPORT', weapons:'WEAPONS', drones:'DRONES', medbay:'MEDBAY', piloting:'HELM', sensors:'SENSORS', doors:'DOORS', teleporter:'TELEPORTER', cloaking:'CLOAKING', hacking:'HACKING', mindcontrol:'MIND CONTROL', battery:'BATTERY', clonebay:'CLONE BAY' };

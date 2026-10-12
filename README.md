@@ -149,19 +149,23 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, console and beam buttons you poke with the right ray.
 - **Room consoles**: a small panel on the wall of each room shows power, damage, oxygen and crew, with buttons to add or remove power, send help and open or close doors.
 - **Smart orders**: point at a burning, breached or damaged room with nobody selected and the nearest free crew member goes to deal with it.
-- **Hands-on bonuses** (Settings > Gameplay, on by default; everything can still be done from the console):
-  - **Fix it yourself**: a burning, breached or damaged room shows a glowing marker. Hold a hand near it and the trigger to put out the fire, patch the breach or repair the machine, about 25% faster than a crew member.
+- **Hands-on play** (Settings > Gameplay, on by default; everything can still be done from the console):
+  - **Fix it yourself**: a burning, breached or damaged room shows a glowing marker. Hold a hand near it and the trigger to put out the fire, patch the breach or repair the machine, at the same speed as a crew member. The edge is being there at once (the wrist menu's ALERT button jumps you to the nearest emergency), not working faster.
   - **Captain's station**: rooms with piloting, engines, weapons, shields, sensors, doors, oxygen or medbay have a floor pad. Stand on it for a second to man that system when no crew member does. Step off to stand down.
   - **Sabotage**: when you beam over to an enemy ship, red markers appear at its power systems. Hold a hand near one with the trigger to lock that system down for 10 seconds. You can't be hurt aboard, so it is safe.
   - **Salvage**: destroy an enemy and a crate appears in a room of your ship. Hold the trigger near it for a little bonus scrap.
-- Planned next: hover outlines on crew and doors, door panels, and weapon targeting from the room console.
+- **Quick travel and alerts**: the wrist menu has ALERT (jump to the nearest fire, breach or damaged system), TO BRIDGE and TO TELEPORT. You get a small buzz when a new emergency starts. Pointing at a crew member, floor spot or door shows a highlight.
+- **Living crew**: idle crew turn to look at you and follow you with their heads, say hello, shout when they fight fires or boarders, and thank you when you fix something or cover a post, in speech bubbles.
+- **Better metal**: panelled, weathered hull plating with vents, machines with panel seams, rivets and caution stripes, brushed trim, and enemy ships with a panel-and-rivet hull, a pointed nose and a faction look (spiked pirates, blade-winged rebels, crested aliens).
+- **Medal wall**: the achievements you've earned light up on the bridge wall.
+- Planned next: door panels and weapon targeting from the room console.
 
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
 - Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
 - Battles have bolt-shaped laser fire, muzzle flashes, smoking missiles, impact shockwaves, shield flares and multi-stage ship explosions.
 
-**Settings** are organised into Audio, Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), VR & comfort (play position, height adjustment, turning, walking, vignette, magnifier, text size, controller help, size resets), Gameplay and Profile.
+**Settings** are organised into Audio, Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), VR movement (play position, height, turning, walking, running, vignette, comfort presets) and VR console (magnifier, text size, controller help, size resets), Gameplay and Profile.
 
 **Captain's tips**
 - Short, contextual tips appear the first time each mechanic matters: targeting shields, volley fire, missiles and beams, spare power, fire, breaches, boarders, low oxygen, mind control, the medbay, fleeing, upgrading, stores, fuel, the fleet, being outgunned, and a Flagship briefing before the last sector.

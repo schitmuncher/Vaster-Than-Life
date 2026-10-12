@@ -30,9 +30,9 @@ function interiorMats(){
   const wallT = plateTex('#8a97b6', 33, 2); wallT.repeat.set(1, 1);
   const hazard = (() => { const c = mkCanvas(128, 32), g = c.getContext('2d'); for(let i=-2;i<10;i++){ g.fillStyle = i%2 ? '#151515' : '#e8b62c'; g.beginPath(); g.moveTo(i*16,0); g.lineTo(i*16+16,0); g.lineTo(i*16,32); g.lineTo(i*16-16,32); g.fill(); } const t = texFrom(c); t.wrapS = THREE.RepeatWrapping; return t; })();
   IM = {
-    floor: stdMat({ map:floorT, metalness:.35, roughness:.5 }), wall: stdMat({ map:wallT, metalness:.3, roughness:.55 }), hull: stdMat({ map:wallT, color:0xe4ecff, metalness:.4, roughness:.45 }),
-    trim: stdMat({ color:0x2c3550, metalness:.7, roughness:.35 }), ceil: stdMat({ color:0x6a7898, metalness:.3, roughness:.65 }),
-    light: new THREE.MeshBasicMaterial({ color:0xffffff }), dark: stdMat({ color:0x2e3857, metalness:.5, roughness:.45 }), metal: stdMat({ color:0x8a95b8, metalness:.9, roughness:.25 }),
+    floor: stdMat({ map:floorT, bumpMap:floorT, bumpScale:.2, metalness:.35, roughness:.5 }), wall: stdMat({ map:wallT, bumpMap:wallT, bumpScale:.22, metalness:.3, roughness:.55 }), hull: stdMat({ map:wallT, color:0xe4ecff, metalness:.4, roughness:.45 }),
+    trim: stdMat({ map:brushedTex('#38425e', 5), metalness:.7, roughness:.35 }), ceil: stdMat({ color:0x6a7898, metalness:.3, roughness:.65 }),
+    light: new THREE.MeshBasicMaterial({ color:0xffffff }), dark: stdMat({ map:machineTex('#4a5578', 11), bumpMap:machineTex("#4a5578", 11), bumpScale:.3, metalness:.5, roughness:.5 }), metal: stdMat({ map:brushedTex('#a4aecb', 3), metalness:.9, roughness:.28 }),
     door: stdMat({ color:0x4a536e, metalness:.8, roughness:.35 }), doorStripe: new THREE.MeshBasicMaterial({ color:0xffb547 }), hazard: new THREE.MeshStandardMaterial({ map:hazard, metalness:.4, roughness:.6 }),
     glow: (c) => new THREE.MeshBasicMaterial({ color:new THREE.Color(c) }), glass: stdMat({ color:0x9fd8f0, metalness:.9, roughness:.05, transparent:true, opacity:.22 }),
     box: new THREE.BoxGeometry(1,1,1), cyl: new THREE.CylinderGeometry(1,1,1,16), sph: new THREE.SphereGeometry(1, 16, 12), torus: new THREE.TorusGeometry(1, .06, 8, 32), plane: new THREE.PlaneGeometry(1,1)
@@ -263,7 +263,7 @@ function updateInterior(I, dt, t, here){
   I.lights.instanceColor.needsUpdate = true;
   // doors
   const head = headWorld(); const hl = I.group.worldToLocal(head.clone());
-  for(const D of I.doors){ const d = D.d; const near = here===I && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 2.0 && !D.airlock;
+  for(const D of I.doors){ const d = D.d; D.g.visible = Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 15; const near = here===I && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 2.0 && !D.airlock;
     const want = (doorOpen(d) || near) ? 1 : 0; const was = D.open; D.open += (want - D.open)*Math.min(1, dt*7);
     if(here===I && Math.abs(want - was) > .5 && Math.hypot(hl.x - D.pos.x, hl.z - D.pos.z) < 8 && Math.abs(D.open - want) > .45) sfx('door', { vol:.5 });
     for(const L of D.leaves) L.g.position.x = L.s*(DW/4 - .01 + D.open*(DW/2 - .06));
@@ -344,6 +344,8 @@ function syncCrew3D(I, t, dt, here){
     else if(job.k==='fight'){ const foe = sh.crew.find(o => o.room===c.room && crewSide(o)!==crewSide(c)); if(foe) faceTo = crewLocal(I, foe).sub(target); }
     else if(job.k==='fire'){ const R = I.rooms[c.room]; const f = R?.fire?.[0]; if(f) faceTo = f.p.clone().sub(target); }
     else if((job.k==='repair' || job.k==='man') && I.rooms[c.room]?.prop){ faceTo = I.rooms[c.room].c.clone().sub(target); }
+    // idle crew turn to look at the captain when you walk up to them
+    if(!faceTo && c.owner==='p' && !c.drone && job.k==='idle' && here===I && Math.hypot(hl.x - target.x, hl.z - target.z) < 3){ faceTo = hl.clone().sub(target).setY(0); }
     if(faceTo && faceTo.lengthSq() > 1e-4){ const want = Math.atan2(faceTo.x, faceTo.z); let d_ = want - P.yaw; while(d_ > Math.PI) d_ -= Math.PI*2; while(d_ < -Math.PI) d_ += Math.PI*2; P.yaw += d_*Math.min(1, dt*10); }
     P.g.rotation.y = P.yaw; P.g.position.x = target.x; P.g.position.z = target.z;
     const dist = Math.hypot(hl.x - target.x, hl.z - target.z); const q = fxq(); const vis = (here===I && dist < 10 + 8*q) || dist < 8 + 8*q; P.g.visible = vis;
@@ -358,6 +360,7 @@ function syncCrew3D(I, t, dt, here){
     P.ring.visible = c.owner==='p' && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id));
     const plateD = 4 + 5*q; if(dist < plateD) drawPlate(P, c, c.owner==='p' ? job : null, c.owner==='e');
     P.plate.sprite.visible = dist < plateD;
+    if(typeof crewChatter==='function') crewChatter(I, P, c, job, dist, dt, here, hl, target);
   }
   // crew that left: died (fall and fade) or teleported (beam out)
   for(const [id, P] of I.crew){ if(seen.has(id)) continue; I.crew.delete(id);

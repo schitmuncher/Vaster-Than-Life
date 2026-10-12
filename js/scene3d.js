@@ -29,7 +29,30 @@ function plateTex(base='#3a4256', seed=5, n=4){
     g.fillStyle = 'rgba(0,0,0,.4)'; for(const [a,b] of [[8,8],[s-10,8],[8,s-10],[s-10,s-10]]){ g.beginPath(); g.arc(x+a, y+b, 2.2, 0, 7); g.fill(); }
     if(r()<.3){ g.fillStyle = 'rgba(0,0,0,.25)'; for(let k=0;k<5;k++) g.fillRect(x + s*.3 + k*8, y + s*.35, 4, s*.3); }
   }
+  // weathering: soft grime blotches, scuffs, and the odd vent grille or stencilled bay mark
+  for(let i=0;i<10;i++){ const x = r()*512, y = r()*512, rad = 40 + r()*90, gr = g.createRadialGradient(x, y, 2, x, y, rad); gr.addColorStop(0, `rgba(10,12,20,${.05 + r()*.07})`); gr.addColorStop(1, 'rgba(10,12,20,0)'); g.fillStyle = gr; g.fillRect(x-rad, y-rad, rad*2, rad*2); }
   for(let i=0;i<300;i++){ g.fillStyle = `rgba(0,0,0,${r()*.12})`; g.fillRect(r()*512, r()*512, 1 + r()*30, 1); }
+  for(let i=0;i<120;i++){ g.fillStyle = `rgba(255,255,255,${r()*.07})`; g.fillRect(r()*512, r()*512, 1 + r()*14, 1); }
+  for(let i=0;i<n*n;i++) if(r() < .16){ const x = (i%n)*s + s*.2, y = Math.floor(i/n)*s + s*.62, w = s*.6; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(x, y, w, s*.2); g.fillStyle = 'rgba(255,255,255,.07)'; for(let k=0;k<5;k++) g.fillRect(x + 3, y + 3 + k*(s*.2-6)/5, w - 6, 1); g.fillStyle = 'rgba(0,0,0,.35)'; for(let k=0;k<5;k++) g.fillRect(x + 3, y + 4 + k*(s*.2-6)/5, w - 6, 1.5); }
+  const t = texFrom(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+/* a plated machine casing: panels, vents, rivets, a caution strip and an LED line. Used for system machines and consoles. */
+function machineTex(base='#46506e', seed=11){
+  const c = mkCanvas(256, 256), g = c.getContext('2d'), r = srng(seed);
+  g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+  for(let i=0;i<2;i++) for(let j=0;j<2;j++){ const x = i*128, y = j*128; const gr = g.createLinearGradient(x, y, x, y + 128); gr.addColorStop(0, 'rgba(255,255,255,.10)'); gr.addColorStop(1, 'rgba(0,0,0,.18)'); g.fillStyle = gr; g.fillRect(x + 3, y + 3, 122, 122);
+    g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x, y, 128, 3); g.fillRect(x, y, 3, 128); g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x + 3, y + 3, 122, 1);
+    g.fillStyle = 'rgba(0,0,0,.5)'; for(const [a, b] of [[10,10],[118,10],[10,118],[118,118]]){ g.beginPath(); g.arc(x + a, y + b, 3, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.2)'; g.beginPath(); g.arc(x + a - .8, y + b - .8, 1.2, 0, 7); g.fill(); g.fillStyle = 'rgba(0,0,0,.5)'; }
+    if(r() < .7){ g.fillStyle = 'rgba(0,0,0,.55)'; for(let k=0;k<6;k++) g.fillRect(x + 30, y + 40 + k*9, 68, 4); g.fillStyle = 'rgba(255,255,255,.08)'; for(let k=0;k<6;k++) g.fillRect(x + 30, y + 44 + k*9, 68, 1); } }
+  g.fillStyle = '#e0b02c'; g.fillRect(0, 236, 256, 20); g.fillStyle = '#151515'; for(let i=-2;i<14;i++){ g.beginPath(); g.moveTo(i*24, 236); g.lineTo(i*24 + 12, 236); g.lineTo(i*24, 256); g.lineTo(i*24 - 12, 256); g.fill(); }
+  g.fillStyle = '#5fd3e6'; g.fillRect(14, 126, 100, 3); g.fillStyle = 'rgba(95,211,230,.3)'; g.fillRect(14, 124, 100, 7);
+  for(let i=0;i<160;i++){ g.fillStyle = `rgba(0,0,0,${r()*.14})`; g.fillRect(r()*256, r()*230, 1 + r()*18, 1); }
+  const t = texFrom(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+function brushedTex(base='#98a2c2', seed=3){
+  const c = mkCanvas(256, 256), g = c.getContext('2d'), r = srng(seed); g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+  for(let i=0;i<900;i++){ const x = r()*256, tone = r() < .5 ? 0 : 255; g.fillStyle = `rgba(${tone},${tone},${tone},${r()*.07})`; g.fillRect(x, r()*256, 1 + r()*1.5, 20 + r()*120); }
+  g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, 256, 3); g.fillRect(0, 253, 256, 3);
   const t = texFrom(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 function gratingTex(){
@@ -73,6 +96,46 @@ function stdMat(o){ return new THREE.MeshStandardMaterial(Object.assign({ metaln
 
 /* ---------------- ship models ---------------- */
 /* Built in canvas-pixel units around the ship centre; callers scale the group. */
+/* panel seams, rivets and weathering over the whole hull, used as bump and roughness so ships catch the light like plated metal */
+function hullDetailTex(a, key){
+  const k = 'hd' + key + a.c.width + 'x' + a.c.height; if(GLOW[k]) return GLOW[k];
+  const sc = 1024 / Math.max(a.c.width, a.c.height), w = Math.max(64, Math.round(a.c.width*sc)), h = Math.max(64, Math.round(a.c.height*sc));
+  const c = mkCanvas(w, h), g = c.getContext('2d'), r = srng([...String(key)].reduce((n, ch) => n*31 + ch.charCodeAt(0) | 0, 7));
+  g.fillStyle = '#9a9a9a'; g.fillRect(0, 0, w, h);
+  const step = 56;
+  for(let x = 0; x < w; x += step) for(let y = 0; y < h; y += step){ const sw = step*(.7 + r()*.6), sh_ = step*(.7 + r()*.6), tone = 130 + r()*70|0;
+    g.fillStyle = `rgb(${tone},${tone},${tone})`; g.fillRect(x + 1, y + 1, sw - 2, sh_ - 2);
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(x, y, sw, 2); g.fillRect(x, y, 2, sh_);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + 2, y + 2, sw - 4, 1);
+    g.fillStyle = 'rgba(255,255,255,.5)'; for(const [dx, dy] of [[6,6],[sw-8,6],[6,sh_-8],[sw-8,sh_-8]]){ g.beginPath(); g.arc(x + dx, y + dy, 1.6, 0, 7); g.fill(); } }
+  for(let i = 0; i < 260; i++){ g.fillStyle = `rgba(0,0,0,${r()*.18})`; g.fillRect(r()*w, r()*h, 2 + r()*40, 1 + r()*2); }
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return GLOW[k] = t;
+}
+/* extra silhouette for hostile ships so each faction reads at a glance: pirates bristle with spikes, rebels get blade wings, aliens grow a crest */
+function addHostileDetail(group, sh, o){
+  const { b, mx, my, X, L, Hh, f, depth, bev, darkMat, greyMat, trimMat, mats } = o;
+  const h = [...String(sh.id || 'x')].reduce((n, ch) => n*31 + ch.charCodeAt(0) | 0, 3), kind = ['spike','blade','crest'][Math.abs(h) % 3];
+  const hot = new THREE.MeshBasicMaterial({ color:0xff5a7a }); mats.push(hot);
+  { const nose = new THREE.Mesh(new THREE.ConeGeometry(Hh*.36, L*.2, 4), darkMat); nose.rotation.set(0, Math.PI/4, -f*Math.PI/2); nose.scale.set(1, 1, .45); nose.position.set(X(b.x1) - mx + f*L*.08, 0, 0); group.add(nose);
+    const lance = new THREE.Mesh(new THREE.CylinderGeometry(Hh*.015, Hh*.025, L*.12, 6), hot); lance.rotation.z = -f*Math.PI/2; lance.position.set(X(b.x1) - mx + f*L*.2, 0, 0); group.add(lance); }
+  const topY = depth/2 + bev;
+  if(kind === 'spike'){
+    for(let i = 0; i < 7; i++){ const top = i%2===0, x = X(b.x0 + L*(.16 + .1*i)), z = (top ? b.y0 - 3 : b.y1 + 3) - my;
+      const sp = new THREE.Mesh(new THREE.ConeGeometry(Hh*.045 + (i%3)*3, Hh*.26 + (i%3)*Hh*.08, 5), darkMat); sp.rotation.x = top ? -Math.PI/2 : Math.PI/2; sp.position.set(x - mx, 0, z + (top ? -1 : 1)*Hh*.13); group.add(sp);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(Hh*.014, 6, 4), hot); tip.position.set(x - mx, 0, z + (top ? -1 : 1)*Hh*.3); group.add(tip); }
+    const ram = new THREE.Mesh(new THREE.ConeGeometry(Hh*.12, L*.14, 6), greyMat); ram.rotation.z = -f*Math.PI/2; ram.position.set(X(b.x1 + b.nose*.2) - mx + f*L*.03, 0, 0); group.add(ram);
+  } else if(kind === 'blade'){
+    for(const top of [true, false]){ const d = top ? -1 : 1, y = top ? b.y0 : b.y1; const s = new THREE.Shape();
+      s.moveTo(X(b.x0 + L*.3) - mx, -(y - my)); s.lineTo(X(b.x0 + L*.12) - mx, -(y + d*Hh*.42 - my)); s.lineTo(X(b.x0 + L*.5) - mx, -(y + d*Hh*.12 - my)); s.closePath();
+      const g_ = new THREE.ExtrudeGeometry(s, { depth:4, bevelEnabled:false }); g_.rotateX(-Math.PI/2); g_.translate(0, -2, 0); group.add(new THREE.Mesh(g_, darkMat));
+      const edge = glowSpriteMesh('#ff5a7a', 16); edge.position.set(X(b.x0 + L*.12) - mx, 0, y + d*Hh*.42 - my); group.add(edge); }
+  } else {
+    for(let i = 0; i < 5; i++){ const x = X(b.x0 + L*(.25 + .1*i)); const fin = new THREE.Mesh(new THREE.ConeGeometry(4, 30 - Math.abs(i-2)*6, 4), trimMat); fin.position.set(x - mx, topY + 12, 0); group.add(fin); }
+    const orb = glowSpriteMesh('#ff5a7a', 34); orb.position.set(X(b.x0 + L*.45) - mx, topY + 8, 0); group.add(orb);
+  }
+  // running lights down the hull, always the enemy's red
+  for(let i = 0; i < 6; i++){ const l = glowSpriteMesh('#ff5a7a', 9); l.position.set(X(b.x0 + L*(.12 + .14*i)) - mx, topY + 1, (i%2 ? 1 : -1)*Hh*.36); group.add(l); }
+}
 function buildShipModel(sh, opts={}){
   const b = sh._b, a = sh._art; if(!b || !a) return null;
   const col = new THREE.Color(sh.color || C.amber);
@@ -89,7 +152,8 @@ function buildShipModel(sh, opts={}){
   for(let i=0;i<pos.count;i++){ const x = pos.getX(i) + mx, z = pos.getZ(i) + my; uv.setXY(i, (x - ax)/aw, 1 - (z - ay)/ah); }
   geo.computeVertexNormals();
   const artTex = texFrom(a.c); artTex.anisotropy = 4;
-  const hullMat = stdMat({ map:artTex, metalness:.45, roughness:.5, emissive:new THREE.Color(0xffffff), emissiveMap:artTex, emissiveIntensity:opts.glowArt ?? .35 });
+  const detail = hullDetailTex(a, sh.id || 'x');
+  const hullMat = stdMat({ map:artTex, bumpMap:detail, bumpScale:1.6, roughnessMap:detail, metalness:.45, roughness:.5, emissive:new THREE.Color(0xffffff), emissiveMap:artTex, emissiveIntensity:opts.glowArt ?? .35 });
   mats.push(hullMat); const hull = new THREE.Mesh(geo, hullMat); group.add(hull);
   const trimMat = stdMat({ color:col.clone().multiplyScalar(.6), metalness:.8, roughness:.3, emissive:col.clone(), emissiveIntensity:.35 }); mats.push(trimMat);
   const darkMat = stdMat({ color:0x2a3150, metalness:.85, roughness:.35 }); mats.push(darkMat);
@@ -143,6 +207,7 @@ function buildShipModel(sh, opts={}){
     const tip = glowSpriteMesh('#ffd27a', 10); tip.position.set(f*23, 9, 0); tip.material.opacity = 0; t.add(tip);
     group.add(t); turrets.push({ t, tip, flash:0 });
   }
+  if(opts.hostile) addHostileDetail(group, sh, { b, mx, my, X, L, Hh, f, depth, bev, darkMat, greyMat, trimMat, mats });
   // room alert overlays (fire, damage, breaches, low air)
   const rooms = [];
   const topY = depth/2 + bev + .6;
@@ -435,7 +500,7 @@ function updateSpace(dt){
   const key = e && e._art && e._b ? e.id + ':' + e._artKey : '';
   if(!space3d.enemy || space3d.enemy.key!==key){
     if(space3d.enemy){ disposeModel(space3d.enemy); space3d.enemy = null; }
-    if(key){ const M = buildShipModel(e, { hostile:true, rooms:false, glowArt:.7 }); if(M){ M.group.scale.setScalar(.042); space3d.group.add(M.group); space3d.enemy = M; space3d.lastHull = e.hull; space3d.lastShield = e.shield; space3d.deadT = 0; M.arrive = 1; } }
+    if(key){ const M = buildShipModel(e, { hostile:true, rooms:false, glowArt:.45 }); if(M){ M.group.scale.setScalar(.042); space3d.group.add(M.group); space3d.enemy = M; space3d.lastHull = e.hull; space3d.lastShield = e.shield; space3d.deadT = 0; M.arrive = 1; } }
   }
   const M = space3d.enemy, t = G ? G.time : 0;
   if(M && e){
