@@ -64,7 +64,7 @@ function evasion(sh){
     base = eng*5;
     if(sh.auto) base += 5;
     else { const pc = mannedCrew(sh,'piloting');
-      if(pc) base += [5,7,10][skillLvl(pc,'pilot')];
+      if(pc) base += [5,7,10][skillLvl(pc,'pilot')] + (traitOf(pc).evade||0);
       else if(pil>=2) base *= pil>=3 ? .8 : .5; else base = 0;
       const ec = mannedCrew(sh,'engines'); if(ec && base>0) base += [5,7,10][skillLvl(ec,'engines')]; }
   }
@@ -390,13 +390,13 @@ function moveCrewStep(sh, c, dt){
       } else d.passT = Math.max(d.passT, .5);
     }
   }
-  const sp = 1.7 * (raceOf(c).speed||1) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * dt;
+  const sp = 1.7 * (raceOf(c).speed||1) * (traitOf(c).speed||1) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * dt;
   const dx = nx - c.x, dy = ny - c.y, dist = Math.hypot(dx, dy);
   if(dist <= sp){ c.x = nx; c.y = ny; c.path.shift(); }
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]; }
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1); }
 function killCrew(sh, c){
   const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
   const race = DATA.races[c.race];
@@ -459,7 +459,7 @@ function tickShip(sh, dt, foe){
   if(sh.shield > layers) sh.shield = layers;
   if(sh.shield < layers){
     const sc = mannedCrew(sh,'shields');
-    const mult = (sc ? [1.1,1.2,1.3][skillLvl(sc,'shields')] : 1) * (hasAug(sh,'booster') ? 1.15 : 1);
+    const mult = (sc ? [1.1,1.2,1.3][skillLvl(sc,'shields')] * (traitOf(sc).shield||1) : 1) * (hasAug(sh,'booster') ? 1.15 : 1);
     sh.shieldT += dt*mult; if(sh.shieldT >= R.shieldRegen){ sh.shield++; sh.shieldT = 0; if(sc && foe) gainXP(sc,'shields',1); }
   } else sh.shieldT = 0;
   if(sh.superRegen && sh.super < sh.superMax){ sh.superT += dt*(sh.boss ? (curDiff().bossPace ?? 1) : 1); if(sh.superT >= sh.superRegen){ sh.super++; sh.superT = 0; } }
@@ -507,6 +507,7 @@ function tickShip(sh, dt, foe){
     if(c.owner===sh.side && crewSide(c)===sh.side && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
     if(medHack && c.room===medR && crewSide(c)===sh.side) c.hp -= 8*dt;
     if(c.owner==='p' && hasAug(G.ship,'gel') && !c.drone) c.hp = Math.min(c.maxHp, c.hp + .6*dt);
+    if(!c.drone && c.hp < c.maxHp && c.hp > 0){ let h = 0; for(const m of sh.crew) if(m.trait && m.room===c.room && !m.path.length && m.stunT<=0 && crewSide(m)===crewSide(c)) h = Math.max(h, traitOf(m).heal||0); if(h) c.hp = Math.min(c.maxHp, c.hp + h*dt); }
   }
   // per-room: fights, repairs, sabotage
   const byRoom = sh.rooms.map(()=>[]);
@@ -527,7 +528,7 @@ function tickShip(sh, dt, foe){
     } else if(friends.length){
       const workers = friends.filter(c => c.stunT<=0 && raceOf(c).repair>0 && !(c.drone && DATA.drones[c.drone]?.role!=='repair'));
       if(!workers.length) return;
-      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')], 0) * R.repairRate * dt;
+      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1), 0) * R.repairRate * dt;
       if(r.fire>0){ r.fireP += rate*2.6*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
       else if(r.breach>0){ r.breachP += rate; if(r.breachP>=1){ r.breachP = 0; r.breach--; workers.forEach(c=>gainXP(c,'repair',1)); } }
       else if(r.sys && sh.systems[r.sys] && sh.systems[r.sys].dmg>0){ const s = sh.systems[r.sys]; s.rep += rate;
@@ -560,7 +561,7 @@ function tickShip(sh, dt, foe){
     const d = DATA.weapons[w.id]; if(!d) continue;
     if(!foe || foe.dead || !w.on){ w.charge = Math.max(0, w.charge - dt*3); continue; }
     if(foe.cloak.t>0 && !d.heal) continue;
-    let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')]; else if(sh.auto) mult *= 1.05;
+    let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')] * (traitOf(wc).charge||1); else if(sh.auto) mult *= 1.05;
     if(hasAug(sh,'reloader')) mult *= 1.1;
     if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .025*(G.sector-1));
     if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;   // the Flaggship fires slower on Easy and Normal

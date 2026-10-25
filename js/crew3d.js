@@ -250,7 +250,7 @@ function crewBark(P, kind, dur=3){
   const g = P.bubble.c.getContext('2d'); g.clearRect(0, 0, 512, 112); g.fillStyle = 'rgba(244,247,255,.95)'; g.beginPath(); if(g.roundRect) g.roundRect(6, 6, 500, 76, 30); else g.rect(6, 6, 500, 76); g.fill();
   g.beginPath(); g.moveTo(236, 80); g.lineTo(256, 108); g.lineTo(276, 80); g.fill();
   g.font = "600 34px 'Chakra Petch', sans-serif"; g.fillStyle = '#10141f'; g.textAlign = 'center'; g.textBaseline = 'middle'; let t = txt; while(g.measureText(t).width > 470 && t.length > 6) t = t.slice(0, -2);
-  g.fillText(t === txt ? t : t + '…', 256, 46); P.bubble.tex.needsUpdate = true; P.bubble.sprite.visible = true; P.bubble.t = dur; P.barkCool = performance.now() + 1500; return true;
+  g.fillText(t === txt ? t : t + '…', 256, 46); P.bubble.tex.needsUpdate = true; P.bubble.sprite.visible = true; P.bubble.t = dur; P.barkCool = performance.now() + 1500; if(typeof voiceOf==='function') sfx('voice', voiceOf(P.c?.race)); return true;
 }
 /* the nearest friendly crew member within reach says something */
 function crewBarkNear(I, pos, kind, maxD=6){ if(!I) return false; let best = null, bd = maxD; for(const [id, P] of I.crew){ if(P.c.owner !== 'p' || P.c.drone || !P.g.visible) continue; const d = Math.hypot(P.g.position.x - pos.x, P.g.position.z - pos.z); if(d < bd){ bd = d; best = P; } } return crewBark(best, kind); }

@@ -136,7 +136,7 @@ function hoSabotage(dt){
     let hand = null; if(!down) for(const h of hands) if(Math.hypot(h.local.x - P.pos.x, h.local.z - P.pos.z) < HAND_REACH && Math.abs(h.local.y - .9) < .9) hand = h;
     if(hand){ hand.c.userData.ho = true; P.beam.material.opacity = .32; }
     if(hand && hand.trig && active){ P.p += dt/2.2; if(Math.random() < dt*10) pulse(hand.c.userData.src, .25, 20); if(Math.random() < dt*6) sfx('hack'); if(Math.random() < dt*10) interiorSpark(I, new THREE.Vector3(P.pos.x, .8, P.pos.z));
-      if(P.p >= 1){ P.p = 0; ionize(sh, r.sys, 2); sfx('zap'); pulse(hand.c.userData.src, .8, 80); toast('Sabotaged the enemy ' + (SYSN[r.sys] || r.sys) + ' for 10 seconds.'); if(IN.own && typeof crewBarkNear==='function') for(const [, P_] of I.crew){ if(P_.c.owner==='p' && !P_.c.drone){ crewBark(P_, 'sabo'); break; } } } }
+      if(P.p >= 1){ P.p = 0; ionize(sh, r.sys, 2); PROFILE.sabotages = (PROFILE.sabotages||0) + 1; if(PROFILE.sabotages >= 5) grant('saboteur'); saveProfile(); sfx('zap'); pulse(hand.c.userData.src, .8, 80); toast('Sabotaged the enemy ' + (SYSN[r.sys] || r.sys) + ' for 10 seconds.'); if(IN.own && typeof crewBarkNear==='function') for(const [, P_] of I.crew){ if(P_.c.owner==='p' && !P_.c.drone){ crewBark(P_, 'sabo'); break; } } } }
     else P.p = Math.max(0, P.p - dt*2);
     P.fill.scale.setScalar(Math.max(.001, P.p));
   });
@@ -194,7 +194,7 @@ function handsOnUpdate(dt){
     if(Math.random() < dt*10){ pulse(work.h.c.userData.src, .25, 20); }
     if(Math.random() < dt*5){ sfx('repair'); }
     if(typeof interiorSpark === 'function' && Math.random() < dt*10) interiorSpark(I, new THREE.Vector3(work.m.g.position.x, .7, work.m.g.position.z));
-    if(done){ sfx('levelup', { vol:.5 }); pulse(work.h.c.userData.src, .7, 60); toast(work.st === 'fire' ? 'Fire out.' : work.st === 'breach' ? 'Breach patched.' : 'System repaired.'); if(typeof crewBarkNear==='function') crewBarkNear(I, new THREE.Vector3(work.m.g.position.x, 0, work.m.g.position.z), 'thanks'); work.m.fill.scale.setScalar(.001); }
+    if(done){ PROFILE.handFix = (PROFILE.handFix||0) + 1; if(PROFILE.handFix >= 10) grant('handson'); saveProfile(); sfx('levelup', { vol:.5 }); pulse(work.h.c.userData.src, .7, 60); toast(work.st === 'fire' ? 'Fire out.' : work.st === 'breach' ? 'Breach patched.' : 'System repaired.'); if(typeof crewBarkNear==='function') crewBarkNear(I, new THREE.Vector3(work.m.g.position.x, 0, work.m.g.position.z), 'thanks'); work.m.fill.scale.setScalar(.001); }
     HO.work = work.ri;
   } else {
     if(HO.work != null){ const m = I.ho.marks[HO.work]; if(m) m.fill.scale.setScalar(.001); HO.work = null; }

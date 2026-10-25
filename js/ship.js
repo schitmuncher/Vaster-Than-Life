@@ -94,7 +94,8 @@ function roomDist(sh, a, b){ const ra = sh.rooms[a], rb = sh.rooms[b]; return Ma
 function crewSide(c){ return c.mcT>0 ? (c.owner==='p' ? 'e' : 'p') : c.owner; }
 function newCrew(race, owner, name){
   const rid = DATA.races[race] ? race : 'human', r = DATA.races[rid];
-  return { id:uid(), name:name||pick(NAMES), race:rid, hp:r.hp, maxHp:r.hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0,
+  const tk = owner==='p' && DATA.traits ? Object.keys(DATA.traits) : [], trait = tk.length ? pick(tk) : null, hp = r.hp + (trait ? (DATA.traits[trait].hp||0) : 0);
+  return { id:uid(), name:name||pick(NAMES), race:rid, hp, maxHp:hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0, trait,
     station:null, sk:{ pilot:0, engines:0, shields:0, weapons:0, repair:0, combat:0 }, kills:0, drone:null, aiT:Math.random() };
 }
 function newDroneUnit(bpId, owner){

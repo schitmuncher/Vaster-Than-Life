@@ -52,7 +52,9 @@ function unlockText(u){
 /* ---------------- mods ---------------- */
 let MODS = LS.get(MOD_KEY, []);
 let DATA = null, R = null;
-const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors'];
+const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits'];
+const NOTRAIT = {};
+function traitOf(c){ return (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; }
 let HOOKS = {};
 function on(evt, fn){ (HOOKS[evt] = HOOKS[evt] || []).push(fn); }
 function emit(evt, arg){ const list = HOOKS[evt]; if(!list) return; for(const fn of list){ try{ fn(arg); }catch(e){ if(typeof toast==='function') toast('Mod script error: ' + e.message); } } }

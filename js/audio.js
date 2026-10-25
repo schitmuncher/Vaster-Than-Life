@@ -99,6 +99,8 @@ function sfx(n, o={}){
     case 'drone': osc('sawtooth', 180, t, .5, .025*v, { to:420, lp:1200 }); nz(t, .3, .02*v, { hp:2500 }); break;
     case 'hack': for(let i=0;i<6;i++) osc('square', 400 + Math.random()*1600, t+i*.05, .04, .015*v, { lp:3000 }); break;
     case 'mind': osc('sine', 200, t, 1, .04*v, { to:800, rev:.8 }); osc('sine', 203, t, 1, .04*v, { to:790 }); break;
+    case 'voice': { if(SET.voices === false) break; const base = 250*(o.base||1), n = 3 + Math.floor(Math.random()*3), type = o.wave || 'triangle';   // gibberish crew chatter, pitched per race
+      for(let i=0;i<n;i++){ const f = base*(.85 + Math.random()*.45); osc(type, f, t+i*.078, .055, .026*v, { to:f*(.88 + Math.random()*.3), bp:f*2.1, q:1.6, a:.008 }); if(o.click) nz(t+i*.078, .018, .02*v, { hp:3500 }); } break; }
     case 'shoot_star': nz(t, .9, .012*v, { hp:4000, sweep:9000, a:.2, rev:.8 }); break;
     default: osc('square', 880, t, .04, .02*v);
   }
@@ -181,4 +183,6 @@ function playStep(s, t, M, step){
     if(s % 4 === 3) osc('sine', 120, t, .18, .08*b, { to:40, dest:MUSG });
   }
 }
+const VOICE = { human:{ base:1 }, pebblekin:{ base:.55, wave:'sawtooth' }, enjinn:{ base:1.35 }, voltan:{ base:1.6, wave:'square' }, sloog:{ base:.8, wave:'sine' }, mantlis:{ base:1.12, click:true }, glassborn:{ base:1.9, wave:'sine' } };
+function voiceOf(race){ return Object.assign({ vol:.8 }, VOICE[race] || { base:1 }); }
 function stinger(kind){ if(!AC) return; sfx(kind); }

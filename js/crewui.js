@@ -71,8 +71,10 @@ function drawCrewCard(){
   rr(x, y, w, h, 12); ctx.fillStyle = 'rgba(9,14,28,.95)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.amber; ctx.stroke();
   region(x, y, w, h, () => {});   // swallow clicks on the card itself
   drawPortrait(x+44, y+48, 30, c, false);
-  T(c.name, x+86, y+36, { s:22, f:FD, w:700, max:w-140 });
-  T(`${race.name||c.race} · ${pronouns(c)} · ${c.kills} kill${c.kills===1?'':'s'}`, x+86, y+58, { s:13, c:C.muted });
+  T(c.name, x+86, y+36, { s:22, f:FD, w:700, max:200 });
+  const tr = c.trait && DATA.traits?.[c.trait];
+  if(tr){ const nx = x+86 + Math.min(200, ctx.measureText(c.name).width) + 12; T(tr.name, nx, y+36, { s:14, f:FD, w:600, c:C.amber, max:x+w-56-nx }); tip(x+86, y+18, w-150, 24, tr.name, tr.desc); }
+  T(`${race.name||c.race} · ${pronouns(c)} · ${c.kills} kill${c.kills===1?'':'s'}`, x+86, y+58, { s:13, c:C.muted, max:w-200 });
   btn(x+w-46, y+10, 34, 30, '×', () => { UI.selCrew = null; }, { s:16 });
   const fr = clamp(c.hp/c.maxHp, 0, 1); bar(x+86, y+68, w-110, 10, fr, fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile); T(`${Math.ceil(c.hp)}/${c.maxHp} HP`, x+w-24, y+64, { s:12, a:'right', c:C.muted });
   drawJobIcon(x+24, y+100, job, 9); T(job.text, x+42, y+105, { s:15, c:JOB_COL[job.k] || C.ink, max:w-60 });

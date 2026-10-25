@@ -30,6 +30,18 @@ const BASE = {
   rules: { sectors:8, startScrap:20, fleetSpeed:0.11, shieldRegen:2, repairRate:0.16, enemyPace:0.7, bossId:'flaggship',
     maxCrew:8, weaponSlots:4, droneSlots:3, augmentSlots:3, baseHP:4, startParts:2 },
 
+  /* every crew member you recruit has one trait: a small personal edge. Fields: repair, dps, speed, charge (weapons, when manning), shield (recharge, when manning) multiply; hp, evade (when piloting) and heal (hp per second to the whole room) add */
+  traits: {
+    quick:      { name:'Quick hands', repair:1.25, desc:'Repairs and fights fires 25% faster.' },
+    tough:      { name:'Tough',       hp:25,       desc:'25 extra health.' },
+    ace:        { name:'Ace pilot',   evade:5,     desc:'+5% evasion while flying the ship.' },
+    gunner:     { name:'Gunner',      charge:1.08, desc:'Weapons charge 8% faster while they man the guns.' },
+    brawler:    { name:'Brawler',     dps:1.25,    desc:'Hits 25% harder in a fight.' },
+    medic:      { name:'Medic',       heal:2.5,    desc:'Slowly heals everyone in the same room, themselves too.' },
+    shieldtech: { name:'Shield tech', shield:1.15, desc:'Shields recharge 15% faster while they man them.' },
+    swift:      { name:'Swift',       speed:1.2,   desc:'Moves 20% faster.' }
+  },
+
   races: {
     human:     { name:'Human',     color:'#e8c49a', hp:100, repair:1,   combat:1,   speed:1,    learn:1.1, desc:'Perfectly average. Learns skills a bit faster. Proud of it.' },
     pebblekin: { name:'Pebblekin', color:'#9aa7b8', hp:150, repair:0.5, combat:1,   speed:0.5,  fireproof:true, desc:'Huge health and fireproof. Slow on their feet and slower with a wrench.' },
@@ -342,7 +354,12 @@ const ACHIEVEMENTS = [
   { id:'hullbreadth', name:"By a Hull's Breadth",   desc:'Win a fight with 3 hull or less.' },
   { id:'surrender',   name:'White Flag Waver',      desc:'Accept an enemy surrender.' },
   { id:'shieldwall',  name:'Shield Wall',           desc:'Reach 4 shield layers.' },
-  { id:'rebuffed',    name:'Rebuffed',              desc:'Lose a run. It happens to everyone.' }
+  { id:'rebuffed',    name:'Rebuffed',              desc:'Lose a run. It happens to everyone.' },
+  { id:'veteran',     name:'Old Soldiers',          desc:'Beat a veteran crew.' },
+  { id:'daily',       name:'Daily Driver',          desc:'Finish a daily run, win or lose.' },
+  { id:'streak3',     name:'Creature of Habit',     desc:'Fly the daily run three days in a row.' },
+  { id:'handson',     name:'Hands-On Captain',      desc:'In VR, fix 10 fires, breaches or machines with your own hands.' },
+  { id:'saboteur',    name:'Saboteur',              desc:'In VR, sabotage 5 enemy systems while aboard their ship.' }
 ];
 
 const DIFFICULTY = {

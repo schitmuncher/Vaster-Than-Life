@@ -281,6 +281,7 @@ function drawSettings(){
       slider('Music', 0, `${Math.round(SET.music*100)}%`, ...vol('music'), 'Adaptive soundtrack: calm themes per sector, a combat layer in fights and a heavier boss arrangement.');
       slider('Sound effects', 0, `${Math.round(SET.sfx*100)}%`, ...vol('sfx'), 'Weapons, impacts, doors, alarms, UI.');
       slider('Ship ambience', 0, `${Math.round((SET.amb ?? .5)*100)}%`, ...vol('amb'), 'Engine hum, fire crackle, breach hiss, low-hull warnings.');
+      onoff('Crew voices', 'voices', true, 'Crew and enemy captains babble a few syllables when they talk, pitched for each race.');
       choice('Music source', 'musicSrc', [['ftl','Soundtrack'],['synth','Generated']], 'ftl', 'Soundtrack plays the licensed FTL tracks by Ben Prunty: title theme, exploration and three battle themes. Generated is the adaptive synth music made in the game.');
       btn(X, y+10, 220, 46, 'Test sounds', () => { ensureAudio(); ['laser','ion','missile','shield','hit','explode'].forEach((n,i) => setTimeout(() => sfx(n), i*260)); });
       break;
@@ -363,9 +364,12 @@ function drawSettings(){
 function drawAchievements(){
   label('Your record', 60, 70, C.cyan, 'left', 18);
   T('Achievements', 60, 122, { s:50, f:FD, w:700 });
-  ACHIEVEMENTS.forEach((a,i) => { const x = 60 + (i%2)*750, y = 160 + Math.floor(i/2)*78, got = !!PROFILE.ach[a.id];
-    panel(x, y, 720, 66, 8); ctx.beginPath(); ctx.arc(x+34, y+33, 14, 0, 7); ctx.fillStyle = got ? C.amber : C.panel2; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 2; ctx.stroke();
-    T(a.name, x+64, y+30, { s:20, f:FD, w:700, c: got ? C.ink : C.muted }); T(a.desc, x+64, y+54, { s:15, c:C.muted }); });
+  T(`${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length} of ${ACHIEVEMENTS.length} earned`, 1540, 122, { s:20, a:'right', c:C.amber });
+  ACHIEVEMENTS.forEach((a,i) => { const x = 60 + (i%3)*496, y = 150 + Math.floor(i/3)*80, got = !!PROFILE.ach[a.id];
+    panel(x, y, 480, 72, 8); ctx.beginPath(); ctx.arc(x+32, y+36, 14, 0, 7); ctx.fillStyle = got ? C.amber : C.panel2; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 2; ctx.stroke();
+    if(got) T('✓', x+32, y+37, { s:15, f:FD, w:700, a:'center', b:'middle', c:C.void });
+    T(a.name, x+60, y+28, { s:18, f:FD, w:700, c: got ? C.ink : C.muted, max:405 }); para(a.desc, x+60, y+50, 405, { s:13, lh:16, c:C.muted, max:2 });
+    if(got && typeof PROFILE.ach[a.id]==='number') tip(x, y, 480, 72, a.name, `${a.desc} Earned on ${new Date(PROFILE.ach[a.id]).toLocaleDateString('en-GB')}.`); });
   btn(60, 880, 200, 64, 'Back', () => { UI.screen = 'title'; });
 }
 const HELP_PAGES = [
@@ -712,13 +716,14 @@ function drawRoster(){
     const jb = crewJob(c, s); const short = { fight:'Fighting', repair:'Repairing', fire:'Firefighting', breach:'Patching', heal:'Healing', man:'Manning', move:'Moving', idle:'Standing by', mind:'Controlled!', board:'Aboard enemy', stun:'Stunned' }[jb.k];
     T(short + (jb.k==='man' ? ' ' + (STATION_NAME[jb.sys]||'') : ''), x+43, y0+42, { s:11, c: JOB_COL[jb.k] || C.muted, max:cw-50 });
     bar(x+43, y0+50, cw-53, 7, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
-    tip(x, y0, cw, 66, `${c.name} · ${race.name||''}`, `${crewJob(c, s).text}. ${raceTraits(race)}. Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}. Click for details.`);
+    tip(x, y0, cw, 66, `${c.name} · ${race.name||''}${c.trait && DATA.traits?.[c.trait] ? ' · ' + DATA.traits[c.trait].name : ''}`, `${crewJob(c, s).text}. ${c.trait && DATA.traits?.[c.trait] ? DATA.traits[c.trait].name + ': ' + DATA.traits[c.trait].desc + ' ' : ''}${raceTraits(race)}. Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}. Click for details.`);
     if(c.mcT<=0) region(x,y0,cw,66, () => { UI.selCrew = sel ? null : c.id; UI.selWeapon = null; UI.mode = null; }); });
 }
 function drawEnemyStrip(){
   const e = G.enemy, x = 816, y = 572, sens = sensorLevel();
   panel(x, y, 760, 66, 8);
-  T(e.name, x+16, y+28, { s:19, f:FD, w:700, c:C.hostile });
+  T(e.name, x+16, y+28, { s:19, f:FD, w:700, c: e.elite ? C.warn : C.hostile, max:560 });
+  if(e.elite) tip(x, y, 600, 34, 'Veteran crew', 'A seasoned crew: more hull, faster engines and weapons. Beat them for half again the scrap and a guaranteed weapon or augment.');
   label(`Hull ${e.hull}/${e.maxHull}`, x+16, y+54, C.muted, 'left', 12);
   bar(x+150, y+44, 200, 12, e.hull/e.maxHull, C.hostile);
   label(`Shields ${e.shield}${e.super>0?' +'+e.super:''}`, x+370, y+54, C.cyan, 'left', 12);
@@ -1066,16 +1071,16 @@ function drawStoreModal(m){
       item(i, `${SYSN[k]} system`, clash ? 'You can only have a Medbay or a Clone Bay, not both.' : sysDesc(k), c, () => buy(c, () => { installSystem(s, k); toast(`${SYSN[k]} installed.`); }), have || clash, have ? 'Installed' : clash ? 'Unavailable' : null); });
       if(!st.systems.length) T('No new systems for sale here.', cx, y0+40, { s:18, c:C.muted }); break;
     case 'supplies': {
-      const rows = [ ['Fuel cell', 'One jump\'s worth.', 3, () => G.fuel++], ['Missile', 'Ammo for missiles and bombs.', 6, () => G.missiles++], ['Drone part', 'Each drone deployment and hacking drone uses one.', 8, () => G.parts++],
+      const rows = [ ['Fuel cell', 'One jump\'s worth.', 3, () => G.fuel++], ['Missile', 'Ammo for missiles and bombs.', 6, () => G.missiles++], ['Drone part', 'Used by drones and hacking.', 8, () => G.parts++],
         ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, 2 + Math.floor((G.sector-1)/3), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull], ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, 5*(2 + Math.floor((G.sector-1)/3)) - 1, () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull] ];
-      rows.forEach((r,i) => { const c = price(r[2], st); const y = y0 + i*82; panel(cx, y, 640, 72, 8); T(r[0], cx+20, y+32, { s:20, f:FD, w:700 }); T(r[1], cx+20, y+56, { s:14, c:C.muted });
+      rows.forEach((r,i) => { const c = price(r[2], st); const y = y0 + i*82; panel(cx, y, 640, 72, 8); T(r[0], cx+20, y+32, { s:20, f:FD, w:700, max:380 }); T(r[1], cx+20, y+56, { s:14, c:C.muted, max:380 });
         btn(cx+420, y+12, 200, 48, `Buy · ${c}`, () => buy(c, r[3]), { disabled: r[4] || G.scrap < c, col:C.good }); });
       const race = DATA.races[st.crewRace]; const rx = cx+680; panel(rx, y0, 680, 300, 8); label('Crew for hire', rx+20, y0+34, C.muted);
       const crewN = s.crew.filter(c=>c.owner==='p'&&!c.drone).length; const cc = price(50, st);
-      if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = newCrew(st.crewRace, 'p'); const cand = st._cand; ensureLook(cand);
+      if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = withSeed(`s${G.sector}n${m.node}cand`, () => newCrew(st.crewRace, 'p')); const cand = st._cand; ensureLook(cand);
         drawPortrait(rx+60, y0+120, 40, cand, false);
-        T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para(race.desc||'', rx+120, y0+148, 540, { s:15, lh:20, c:C.muted });
-        btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { const nc = addCrew(s, st.crewRace, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; st.crewSold = true; checkCrewAch(); }), { disabled: G.scrap<cc || crewN>=R.maxCrew, fill:G.scrap>=cc && crewN<R.maxCrew, col:C.good });
+        T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
+        btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { const nc = addCrew(s, st.crewRace, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; if(cand.trait){ nc.trait = cand.trait; nc.maxHp = (DATA.races[nc.race]?.hp||100) + (traitOf(cand).hp||0); nc.hp = nc.maxHp; } st.crewSold = true; checkCrewAch(); }), { disabled: G.scrap<cc || crewN>=R.maxCrew, fill:G.scrap>=cc && crewN<R.maxCrew, col:C.good });
         if(crewN>=R.maxCrew) T('Crew quarters are full.', rx+280, y0+254, { s:15, c:C.warn }); }
       else T('Nobody else is looking for work.', rx+20, y0+80, { s:18, c:C.muted });
       break; }
@@ -1114,7 +1119,8 @@ function drawShipModal(){
     const crew = []; for(const sh of [G.ship, G.enemy]) if(sh) for(const c of sh.crew) if(c.owner==='p' && !c.drone) crew.push(c);
     crew.forEach((c,i) => { const x = cx + (i%2)*690, y = y0 + Math.floor(i/2)*150, race = DATA.races[c.race]||{};
       panel(x, y, 670, 138, 8); drawPortrait(x+42, y+40, 28, c, false);
-      T(c.name, x+82, y+38, { s:22, f:FD, w:700 }); T(`${race.name} · ${c.gender==='f'?'♀':'♂'} ${pronouns(c)} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+82, y+62, { s:14, c:C.muted }); { const sh_ = [G.ship, G.enemy].find(q=>q && q.crew.includes(c)); const jb = crewJob(c, sh_); T(jb.text, x+82, y+80, { s:13, c:JOB_COL[jb.k]||C.ink, max:340 }); para(raceTraits(race), x+440, y+72, 220, { s:11, lh:14, c:C.cyan, max:1 }); }
+      T(c.name, x+82, y+38, { s:22, f:FD, w:700 }); if(c.trait && DATA.traits?.[c.trait]){ T(DATA.traits[c.trait].name, x+82 + Math.min(220, ctx.measureText(c.name).width + 14), y+38, { s:14, f:FD, w:600, c:C.amber }); tip(x+82, y+20, 340, 26, DATA.traits[c.trait].name, DATA.traits[c.trait].desc); }
+      T(`${race.name} · ${c.gender==='f'?'♀':'♂'} ${pronouns(c)} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+82, y+62, { s:14, c:C.muted }); { const sh_ = [G.ship, G.enemy].find(q=>q && q.crew.includes(c)); const jb = crewJob(c, sh_); T(jb.text, x+82, y+80, { s:13, c:JOB_COL[jb.k]||C.ink, max:340 }); para(raceTraits(race), x+440, y+72, 220, { s:11, lh:14, c:C.cyan, max:1 }); }
       SKILLS.forEach((k,j) => { const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; const sx = x+20 + j*106, sy = y+90;
         T(SKILLN[k], sx, sy+12, { s:12, c:C.muted }); bar(sx, sy+20, 96, 8, lv>=2 ? 1 : lv===1 ? .5 + .5*(v-t[0])/(t[1]-t[0]) : .5*v/t[0], lv>=2 ? C.amber : lv===1 ? C.good : C.cyan); });
       btn(x+440, y+14, 100, 40, inXR() ? 'Reroll' : 'Rename', () => { if(inXR()) c.name = pick(NAMES); else openRename('crew', c); }, { s:14 });

@@ -176,6 +176,12 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - **Captain's record** keeps your last 30 runs (ship, difficulty, result, score, seed, with a Replay button), your best per ship and your daily scores. The end of a run shows a score, the captain's log, the seed, and buttons to try again or replay the same seed.
 - **Backups**: Record > Save backup file writes your record, medals, unlocks, settings, mods and the run in progress to one file. Load it on another device (phone, PC, Quest) to carry on there.
 
+**Crew traits, veterans and voices**
+- Every crew member you recruit has a trait: Quick hands, Tough, Ace pilot, Gunner, Brawler, Medic, Shield tech or Swift. It shows on the roster, the crew card, the Ship screen and the store's crew for hire.
+- From sector 3, about one ship in eight has a veteran crew: more hull and faster engines and weapons, but half again the scrap and a guaranteed weapon or augment.
+- Crew and enemy captains babble a few gibberish syllables when they talk, pitched for each race (Settings > Audio > Crew voices).
+- Five new medals: beat a veteran crew, finish a daily, three dailies in a row, fix 10 hazards by hand in VR, and sabotage 5 enemy systems in VR.
+
 **Interface helpers**
 - The title screen shows today's daily challenge, your last run and your record at a glance.
 - The field manual has four pages: basics, map and hazards, controls (mouse, keyboard, touch, Quest, VR ship) and tactics.
@@ -205,7 +211,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
-- 20 achievements and three difficulties.
+- 25 achievements and three difficulties.
 - Autosave between jumps.
 - Procedural music, sound effects and controller haptics.
 
@@ -226,7 +232,7 @@ Example mods are in `mods/`: `space-pirates.json`, `party-laser.json` (which inc
 { "name": "My Mod", "version": "1.0", "author": "You",
   "rules": { "startScrap": 40 },
   "races": [], "weapons": [], "drones": [], "augments": [],
-  "ships": [], "enemies": [], "sectors": [], "events": [],
+  "ships": [], "enemies": [], "sectors": [], "events": [], "traits": [],
   "remove": { "events": ["quiet"] },
   "script": "VTL.on('arrive', function(node){ VTL.toast('Hello!'); });" }
 ```
@@ -243,6 +249,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 | `ships` | `name`, `cls` (groups A/B layouts in the hangar), `layout`, `desc`, `hull`, `reactor`, `color`, `image` (a picture to use as the hull), `systems` (name → level), `reserve` (empty rooms for later systems), `weapons`, `drones`, `crew` (race ids), `augments`, `fuel`, `missiles`, `parts`, `pattern` or `rooms`, `unlock` (`{"sector":3}`, `{"win":"shipId"}`, `{"ach":"id"}`, `{"kills":25}`) |
 | `enemies` | `name`, `tags`, `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
 | `sectors` | `name`, `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
+| `traits` | `name`, `desc`, and any of: `repair`, `dps`, `speed` (multipliers), `charge` (weapon charge while manning weapons), `shield` (shield recharge while manning shields), `hp` (extra health), `evade` (extra evasion while piloting), `heal` (health per second for everyone in the same room). Every recruit gets one trait at random. |
 | `events` | `text`, `weight`, `minSector`, `maxSector`, `tags`, `nebula`, `distress`, `questOnly`, `once`, `flag`, `noFlag`, `hail` (a faction tag, used before fights), `art`, `choices` |
 
 **Event choices**

@@ -306,6 +306,9 @@ function startCombat_(id, o={}){
   G.enemy = makeShip(def, 'e', { sector:n, phase:o.phase||0 }); G.enemy.fleet = !!o.harder;
   const tags = def.tags || []; G.enemy.faction = tags.find(t => TAUNTS.start[t]) || (def.auto ? 'auto' : 'generic');
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
+  // now and then a veteran crew: tougher and faster, but they carry better salvage
+  if(!def.boss && !o.harder && G.sector >= 3 && Math.random() < .12){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
+    for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
   G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
@@ -343,10 +346,11 @@ function finishCombat(kind, offer){
   else {
     if(e.fleet){ L.push(...applyEffect({ scrap: ri(3,8) })); L.unshift('Fleet warships are stripped for war: there is almost nothing worth salvaging. Get ahead of the fleet!'); }
     else { withSeed(`s${G.sector}n${G.map?.cur}loot${G.fightsHere||0}`, () => {
-    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1)) };
+    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1) * (e.elite ? 1.5 : 1)) };
+    if(e.elite){ if(Math.random() < .5) reward.weapon = 'random'; else reward.augment = 'random'; grant('veteran'); }
     if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
-    if(Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
-    if(Math.random() < .05) reward.augment = 'random';
+    if(!reward.weapon && Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
+    if(!reward.augment && Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
     L.push(...applyEffect(reward)); }); }
   }
@@ -371,6 +375,7 @@ function recordRun(win, reason){
   if(G.daily){ const d = (PROFILE.daily = PROFILE.daily || {})[G.daily]; if(!d || entry.score > d.score) PROFILE.daily[G.daily] = { score:entry.score, sector:G.sector, win:!!win, kills:st.kills, ship:G.shipDef };
     const keys = Object.keys(PROFILE.daily).sort(); while(keys.length > 60) delete PROFILE.daily[keys.shift()]; }
   UI.lastRun = entry;
+  if(G.daily){ grant('daily'); if(typeof dailyStreak==='function' && dailyStreak() >= 3) grant('streak3'); }
 }
 function endRun(win, reason){
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason);
@@ -386,10 +391,10 @@ function say(trigger, o={}){
   let c = o.crew; if(!c){ const list = G.ship.crew.filter(x => x.owner==='p' && !x.drone && x.mcT<=0); if(!list.length) return; c = pick(list); }
   if(!c || c.drone) return;
   const rc = RACE_CHATTER[c.race]; const pool = rc && rc[trigger] && Math.random()<.6 ? rc[trigger] : CHATTER[trigger]; if(!pool) return;
-  G.chat = (G.chat||[]).filter(b => b.t>0).slice(-3); G.chat.push({ text:pick(pool), id:c.id, t:3 }); G.lastSay = G.time;
+  G.chat = (G.chat||[]).filter(b => b.t>0).slice(-3); G.chat.push({ text:pick(pool), id:c.id, t:3 }); G.lastSay = G.time; if(typeof voiceOf==='function') sfx('voice', voiceOf(c.race));
 }
 function taunt(kind){ if(!G || !G.enemy || G.enemy.dead) return; const set = TAUNTS[kind]||{}; const pool = set[G.enemy.faction] || set.generic; if(!pool) return;
-  G.chat = (G.chat||[]).filter(b => b.t>0 && !b.enemy); G.chat.push({ text:pick(pool), enemy:true, t:3.2 }); }
+  G.chat = (G.chat||[]).filter(b => b.t>0 && !b.enemy); G.chat.push({ text:pick(pool), enemy:true, t:3.2 }); if(typeof voiceOf==='function') sfx('voice', Object.assign(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race), { base:(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race).base||1)*.85, vol:.7 })); }
 
 /* ---------------- stores & upgrades ---------------- */
 function makeStore(){ return withSeed(`s${G.sector}n${G.map?.cur}store`, makeStore_); }
