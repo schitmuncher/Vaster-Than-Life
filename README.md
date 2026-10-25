@@ -17,7 +17,7 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 | Left stick | Walk around the bridge (with a comfort vignette) |
 | Right stick left / right | Turn (snap 30°, 45° or smooth) |
 | Right stick up / down | Move the console closer or further |
-| Left stick click | Magnifier on / off (a zoomed loupe over whatever you point at) |
+| Left stick click | Magnifier on / off (a zoomed loupe over whatever you point at; off by default) |
 | Right stick click | Back to the captain's spot |
 | A / X | Pause or resume |
 | B / Y | Open or close the map |
@@ -195,6 +195,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Every crew member you recruit has a trait: Quick hands, Tough, Ace pilot, Gunner, Brawler, Medic, Shield tech or Swift. It shows on the roster, the crew card, the Ship screen, the store's crew for hire and, in VR, on their nameplate.
 - From sector 3, about one ship in eight has a veteran crew: more hull and faster engines and weapons, but half again the scrap and a guaranteed weapon or augment.
 - Crew and enemy captains babble a few gibberish syllables when they talk, pitched for each race (Settings > Audio > Crew voices).
+- When every bunk is full, a recruit from an event or a store can swap places with one of your crew, and stores take crew in trade for 20 scrap (Store > Sell).
 - Five new medals: beat a veteran crew, finish a daily, three dailies in a row, fix 10 hazards by hand in VR, and sabotage 5 enemy systems in VR.
 
 **Sector map and routes**
@@ -205,6 +206,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - At each exit beacon, the route cards show a short description of the sector, a danger rating, fights and events, who you will mostly meet and its hazards.
 
 **Accessibility**
+- The pause menu can be shrunk to a small tab (the ▴ button) so both ships stay in view; it remembers your choice.
 - Settings > Accessibility: a red-green safe palette (green becomes blue and the reds deepen, for protanopia and deuteranopia), high contrast text, text size, fewer flashes, game speed and smart pause in one place.
 - Play with a game controller or the keyboard alone: the d-pad or arrow keys jump between buttons and rooms with a clear focus ring, and A or Enter selects. See the tables above.
 

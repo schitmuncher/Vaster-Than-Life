@@ -101,7 +101,7 @@ function xrButtons(dt){
       if(edge(5)){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
     }
     // grip is handled by vrgrab.js (grab, move, resize, or bring the console to you)
-    if(edge(3)){ if(src.handedness==='left'){ SET.vrLoupe = SET.vrLoupe===false; saveProfile(); toast(SET.vrLoupe ? 'Magnifier on' : 'Magnifier off'); if(!SET.vrLoupe) loupe.visible = false; } else goHome(); }
+    if(edge(3)){ if(src.handedness==='left'){ SET.vrLoupe = SET.vrLoupe!==true; saveProfile(); toast(SET.vrLoupe ? 'Magnifier on' : 'Magnifier off'); if(!SET.vrLoupe) loupe.visible = false; } else goHome(); }
     btnPrev[key] = pressed;
   }
 }

@@ -114,10 +114,15 @@ function leaveCombat(){
   for(const d of G.ship.drones){ const bp = DATA.drones[d.id]; if(bp && bp.kind!=='internal') d.unit = null; }
   G.ship.hackLaunched = false; G.ship.hacked = null; G.ship.super = 0; G.ship.cloak.t = 0;
 }
+function flagNext(){ const f = G.flag; if(!f) return null; const nodes = G.map.nodes, base = nodes.findIndex(n=>n.type==='base'); if(f.node===base) return base;
+  const prev = { [f.node]:null }, q = [f.node]; while(q.length){ const k = q.shift(); if(k===base) break; for(const n of nodes[k].links) if(!(n in prev)){ prev[n] = k; q.push(n); } }
+  let k = base; if(!(k in prev)) return f.node; while(prev[k]!==f.node && prev[k]!=null) k = prev[k]; return k; }
 function moveFlagship(){
   const f = G.flag; if(!f) return; const nodes = G.map.nodes; const base = nodes.findIndex(n=>n.type==='base');
-  if(f.node===base){ f.baseHP--; toast(`The Flaggship is attacking Fedoration command! ${Math.max(0,f.baseHP)} jumps left.`); sfx('alarm');
-    if(f.baseHP<=0){ endRun(false, 'The Flaggship destroyed Fedoration command. The war is over, and not in your favour.'); } return; }
+  if(f.node===base){ f.baseHP--; sfx('alarm');
+    if(f.baseHP<=0){ endRun(false, 'The Flaggship destroyed Fedoration command while you were elsewhere. To win the last sector, jump onto the Flaggship\'s beacon and beat it three times before it wears command down.'); return; }
+    toast(`The Flaggship is attacking Fedoration command! It holds for ${f.baseHP} more jump${f.baseHP===1?'':'s'}: jump to command to fight it.`);
+    return; }
   f.step = (f.step||0) + 1; if(f.step % 2) return;
   const prev = { [f.node]:null }, q = [f.node];
   while(q.length){ const k = q.shift(); if(k===base) break; for(const n of nodes[k].links) if(!(n in prev)){ prev[n] = k; q.push(n); } }
@@ -134,7 +139,7 @@ function arrive_(i){
   if(G.ship.systems.clonebay && eff(G.ship,'clonebay')>0) for(const c of G.ship.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + 20);
   const first = !node.visited; node.visited = true;
   emit('arrive', node);
-  if(G.flag){ moveFlagship(); if(UI.screen!=='game') return;
+  if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
   if(node.x < G.fleetX - .02 && node.type!=='base'){
     startCombat('random', { harder:true, hail:'fleet' }); return; }
@@ -229,7 +234,8 @@ function applyEffect(e){
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
   if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
   if(e.crew){ const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
-    if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); checkCrewAch(); } else L.push('No bunk free for a new crew member'); }
+    if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); checkCrewAch(); }
+    else { const cand = newCrew(race, 'p'); G.recruitOffer = cand; L.push(`${cand.name} the ${DATA.races[cand.race].name} wants to join, but every bunk is full. You can swap someone out next`); } }
   if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); } }
   if(e.weapon) L.push(giveWeapon(e.weapon));
   if(e.drone) L.push(giveDrone(e.drone));
@@ -280,8 +286,15 @@ function giveAugment(id){
   if(have.length >= R.augmentSlots){ const v = Math.floor((DATA.augments[k].cost||40)/2); G.scrap += v; return `${DATA.augments[k].name} found, but no slot free. Sold for ${v} scrap`; }
   have.push(k); checkCrewAch(); if(k==='voltanShield' && G.enemy) G.ship.super = Math.max(G.ship.super, 5); return `Augment installed: ${DATA.augments[k].name}`;
 }
+/* crew swaps: a recruit joins in place of someone who leaves (events and stores, when every bunk is full) */
+const TRADE_IN = 20;
+function joinCrew(cand){ const nc = addCrew(G.ship, cand.race, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; nc.trait = cand.trait || null; nc.maxHp = cand.maxHp || nc.maxHp; nc.hp = nc.maxHp; checkCrewAch(); return nc; }
+function crewLeaves(c){ for(const sh of [G.ship, G.enemy]) if(sh){ const k = sh.crew.indexOf(c); if(k>=0) sh.crew.splice(k,1); } if(UI.selCrew===c.id) UI.selCrew = null; UI.selCrews = (UI.selCrews||[]).filter(id => id!==c.id); }
+function openSwap(cand, cost, done){ G.modal = { type:'swapcrew', cand, cost:cost||0, done }; }
+function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); else save(); }
 function closeResult(m){
   G.modal = null; const a = m.after || {};
+  if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }
   if(a.begin){ if(G.enemy) taunt('start'); return; }
   if(a.dismiss){ leaveCombat(); save(); return; }
   if(a.fight) startCombat(a.fight, { afterWin:a.afterWin });

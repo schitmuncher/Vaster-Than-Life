@@ -336,7 +336,7 @@ function drawSettings(){
       break;
     case 'vr2':
       head('Console & clarity');
-      onoff('Magnifier', 'vrLoupe', true, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
+      onoff('Magnifier', 'vrLoupe', false, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');
       onoff('Controller help', 'vrLabels', true, 'Look at a controller to see what its buttons do.');
       choice('Controller buzz', 'vrHapticsK', [[0,'Off'],[.5,'Soft'],[1,'Normal'],[1.4,'Strong']], 1, 'How strongly the controllers vibrate on hits, hovers and actions.', v => { SET.vrHaptics = v > 0; saveProfile(); });
@@ -402,7 +402,7 @@ const HELP_PAGES = [
     ['Doors & air', 'Click doors to open or close them. Open airlocks to vent oxygen and starve fires or boarders. Breaches leak air until crew patch them.'],
     ['Special systems', 'Teleporter: gather crew in it and Send. Cloaking: dodge and freeze enemy weapons. Hacking: launch a drone, then pulse it. Mind control: turn an enemy. Battery: temporary power.'],
     ['Drones', 'Drones need Drone system power and use one drone part each time they deploy. Attack drones orbit the enemy, defense drones shoot down missiles, internal drones repair or fight.'],
-    ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, catch the Flaggship three times before it destroys Fedoration command.'] ]],
+    ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, jump onto the Flaggship\'s beacon (red tag and arrow on the map) and beat it three times before it wears down Fedoration command.'] ]],
   ['Map & hazards', [
     ['The map', 'Each sector is a web of beacons. Stores, the exit, distress calls and quests are always marked; hostile ships (crosshair) and events (?) show once known, and Long-Range Scanners reveal everything. Your route so far is traced in amber.'],
     ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
@@ -528,8 +528,14 @@ function drawGame(){
   if(hint){ panel(W/2-330, 520, 660, 40, 8); T(hint, W/2, 541, { s:17, a:'center', b:'middle', c:C.amber }); }
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0) drawWarp2D();
-  if(G.paused && !G.modal && !UI.hint){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
+  if(G.paused && !G.modal && !UI.hint && SET.pauseMin){   // collapsed: a small tab that leaves the ships in view
+    const py = 142; panel(W/2-190, py, 380, 50, 10); T('PAUSED', W/2-176, py+34, { s:24, f:FD, w:700, c:C.amber, ls:4 });
+    btn(W/2-28, py+8, 104, 34, 'Menu ▾', () => { SET.pauseMin = false; saveProfile(); }, { s:14 });
+    btn(W/2+82, py+8, 98, 34, 'Resume', () => { G.paused = false; }, { s:14, fill:true });
+    tip(W/2-190, py, 380, 50, 'Paused', 'Give orders while paused. Menu opens the full pause menu.'); UI.confirmExit = false; }
+  else if(G.paused && !G.modal && !UI.hint){ ctx.fillStyle = 'rgba(7,10,20,.3)'; ctx.fillRect(0,76,W,480);
     panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted });
+    btn(W/2+148, 258, 44, 34, '▴', () => { SET.pauseMin = true; saveProfile(); }, { s:16 }); tip(W/2+148, 258, 44, 34, 'Hide menu', 'Shrinks the pause menu to a small tab so you can see both ships. Your choice is remembered.');
     if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); }
     else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const n = fsOk ? 2 : 1, bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
       panel(x0-10, 362, n*bw + (n-1)*12 + 20, 70, 10);
@@ -566,7 +572,8 @@ function drawTopBar(){
   const sd = sectorDef();
   label(`Sector ${G.sector} of ${R.sectors}`, 872, 22, C.muted, 'left', 12);
   label(sd.name, 872, 42, sd.color||C.cyan, 'left', 12);
-  if(G.flag) label(`Base ${G.flag.baseHP} · Boss ${G.flag.phase+1}/3`, 872, 64, C.hostile, 'left', 11);
+  if(G.flag){ const fd = mapDist(G.map.cur, (n,k) => k===G.flag.node); label(`Flaggship ${G.flag.phase+1}/3 · ${fd===0 ? 'here' : fd + ' jump' + (fd===1?'':'s')} · Command ${G.flag.baseHP}`, 872, 64, C.hostile, 'left', 11);
+    tip(866, 8, 230, 66, 'How to win', `Jump onto the Flaggship's beacon (red FLAGGSHIP tag on the map) and beat it. It retreats twice, so catch and beat it three times. It moves one beacon toward Fedoration command every other jump; once there, command holds for ${G.flag.baseHP} more jump${G.flag.baseHP===1?'':'s'}.`); }
   else if(G.hazard) label(HAZARDS[G.hazard], 872, 64, G.hazard==='nebula'?C.violet:C.warn, 'left', 11);
   label('VTL drive', 1108, 28, C.muted, 'left', 12);
   const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber); if(charge>=1) glow(1258, 44, 16, C.good, .4);
@@ -955,6 +962,7 @@ function drawModal(){
       if(sh_.length===(m.text||'').length){ (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+146 + hgt + i*32, { s:19, c: /^-|lost|damaged|fire|injured|closer/i.test(l) ? C.hostile : C.good }));
         btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Continue', () => closeResult(m), { fill:true }); } else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'map': drawMapModal(); break;
+    case 'swapcrew': drawSwapCrew(m); break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
     case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 600, 'Exit beacon', C.good);
@@ -1089,6 +1097,10 @@ function drawMapModal(){
     ctx.strokeStyle = hot ? C.amber : live ? hexA(C.cyan,.9) : hexA(C.muted,.26); ctx.lineWidth = hot ? 4 : live ? 3 : 2;
     if(live && !hot){ ctx.setLineDash([10,6]); ctx.lineDashOffset = (i===G.map.cur ? -1 : 1)*t*20; }
     ctx.beginPath(); ctx.moveTo(mx(a), my(a)); ctx.lineTo(mx(b), my(b)); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }));
+  // where the Flaggship heads next
+  if(G.flag){ const nx = flagNext(), a = nodes[G.flag.node], b = nodes[nx]; if(a && b && nx!==G.flag.node){ const x1 = mx(a), y1 = my(a), x2 = mx(b), y2 = my(b), an = Math.atan2(y2-y1, x2-x1), ex = x2 - Math.cos(an)*30, ey = y2 - Math.sin(an)*30;
+    ctx.setLineDash([6,6]); ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1 + Math.cos(an)*30, y1 + Math.sin(an)*30); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.hostile; ctx.beginPath(); ctx.moveTo(ex + Math.cos(an)*4, ey + Math.sin(an)*4); ctx.lineTo(ex - Math.cos(an-.5)*14, ey - Math.sin(an-.5)*14); ctx.lineTo(ex - Math.cos(an+.5)*14, ey - Math.sin(an+.5)*14); ctx.closePath(); ctx.fill(); } }
   // the route you have flown this sector
   const trail = G.map.trail || []; if(trail.length > 1){ ctx.strokeStyle = hexA(C.amber,.7); ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); trail.forEach((k,i) => { const n = nodes[k]; if(n) i ? ctx.lineTo(mx(n), my(n)) : ctx.moveTo(mx(n), my(n)); }); ctx.stroke(); }
   nodes.forEach((n,i) => {
@@ -1115,7 +1127,7 @@ function drawMapModal(){
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
     { const name = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
       const ahead = (n.x - G.fleetX)/step; const bits = [];
-      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
+      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
       if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
       bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
@@ -1129,15 +1141,33 @@ function drawMapModal(){
       T(name, lx, f.y+45, { s:14, c:C.muted, a:'right' }); const tw = ctx.measureText(name).width; mapIcon(k, lx - tw - 16, f.y+40, 16, c); lx -= tw + 50; } }
   // footer: where the exit is, how far behind the fleet is, fuel
   ctx.fillStyle = hexA(C.cyan,.35); ctx.fillRect(f.x, ay+ah, f.w, 1.5);
-  const exitD = mapDist(G.map.cur, n => n.type==='exit' || n.type==='base'), margin = (cur.x - G.fleetX)/step, bits = [];
-  if(exitD===0) bits.push(sd.final ? 'You are at Fedoration command' : 'You are at the exit beacon');
-  else if(exitD>0) bits.push(`${sd.final ? 'Fedoration command' : 'Exit'} ${exitD} jump${exitD===1?'':'s'} away`);
+  const exitD = G.flag ? mapDist(G.map.cur, (n,k) => k===G.flag.node) : mapDist(G.map.cur, n => n.type==='exit' || n.type==='base'), margin = (cur.x - G.fleetX)/step, bits = [];
+  if(G.flag) bits.push(exitD===0 ? 'The Flaggship is here' : `Flaggship ${exitD} jump${exitD===1?'':'s'} away: jump onto it to fight (${G.flag.phase+1} of 3)`);
+  else if(exitD===0) bits.push('You are at the exit beacon');
+  else if(exitD>0) bits.push(`Exit ${exitD} jump${exitD===1?'':'s'} away`);
   bits.push(margin <= 0 ? 'The fleet has caught you' : margin < 1.6 ? 'The fleet reaches you next jump' : `Fleet about ${Math.floor(margin)} jumps behind`);
   if(exitD > 0 && G.fuel < exitD) bits.push(`only ${G.fuel} fuel`);
   T(bits.join('  ·  '), f.x+32, f.y+f.h-58, { s:19, f:FD, w:600, c: margin < 1.6 || (exitD > 0 && G.fuel < exitD) ? C.warn : C.ink, max:f.w - 470 });
   label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+32, f.y+f.h-26, jumpable ? C.muted : C.warn, 'left', 13);
   T(`Fuel ${G.fuel}`, f.x+f.w-330, f.y+f.h-44, { s:22, f:FD, w:700, c: G.fuel<=3?C.hostile:C.ink });
   btn(f.x+f.w-196, f.y+f.h-82, 160, 58, 'Close', () => { G.modal = null; });
+}
+/* every bunk is full: pick who leaves so a recruit can join, or turn them away */
+function drawSwapCrew(m){
+  const f = mframe(1240, 800, 'Bunks are full', C.amber), cand = m.cand, race = DATA.races[cand.race] || {}, tr = cand.trait && DATA.traits?.[cand.trait];
+  ensureLook(cand); drawPortrait(f.x+76, f.y+130, 40, cand, false);
+  T(cand.name, f.x+136, f.y+116, { s:28, f:FD, w:700 }); T(`${race.name||cand.race}${tr ? ' · ' + tr.name : ''} · ${cand.maxHp} hp`, f.x+136, f.y+144, { s:16, c:race.color||C.ink });
+  para(`${tr ? tr.desc + ' ' : ''}${race.desc||''}`, f.x+136, f.y+170, 700, { s:14, lh:19, c:C.muted, max:2 });
+  T(m.cost ? `Swap fee: ${m.cost} scrap` : 'No fee: they just need a bunk.', f.x+f.w-32, f.y+116, { s:18, f:FD, w:700, a:'right', c: m.cost && G.scrap < m.cost ? C.hostile : C.amber });
+  label('Who leaves the ship?', f.x+32, f.y+232, C.muted, 'left', 14);
+  const mine = G.ship.crew.filter(c => c.owner==='p' && !c.drone), cw = (f.w-64-20)/2;
+  mine.slice(0,8).forEach((c, k) => { const x = f.x+32 + (k%2)*(cw+20), y = f.y+248 + Math.floor(k/2)*96, ctr = c.trait && DATA.traits?.[c.trait];
+    panel(x, y, cw, 84, 8); drawPortrait(x+42, y+42, 26, c, false);
+    T(c.name, x+80, y+32, { s:19, f:FD, w:700, max:180 }); if(ctr) T(ctr.name, x+80 + Math.min(180, ctx.measureText(c.name).width) + 12, y+32, { s:14, f:FD, w:600, c:C.amber });
+    const best = SKILLS.map(k_ => [k_, skillLvl(c,k_)]).filter(q => q[1]>0).map(q => SKILLN[q[0]] + ' ' + ['','I','II'][q[1]]).join(', ');
+    T(`${DATA.races[c.race]?.name||c.race} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills${best ? ' · ' + best : ''}`, x+80, y+58, { s:13, c:C.muted, max:cw-260 });
+    btn(x+cw-164, y+20, 148, 44, 'Swap out', () => { if(m.cost && G.scrap < m.cost){ toast('Not enough scrap.'); return; } G.scrap -= m.cost||0; crewLeaves(c); joinCrew(cand); toast(`${c.name} leaves. ${cand.name} takes their bunk.`); sfx('buy'); finishSwap(m, true); }, { s:15, col:C.good, disabled: !!m.cost && G.scrap < m.cost }); });
+  btn(f.x+f.w-292, f.y+f.h-82, 260, 56, 'Turn them away', () => finishSwap(m, false));
 }
 /* store advisor: how well the current guns get through the shields expected around here */
 function shieldsAhead(sec){ sec = sec || G.sector; return sec>=8 ? 3 : sec>=5 ? 2 : 1; }
@@ -1184,16 +1214,27 @@ function drawStoreModal(m){
       if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = withSeed(`s${G.sector}n${m.node}cand`, () => newCrew(st.crewRace, 'p')); const cand = st._cand; ensureLook(cand);
         drawPortrait(rx+60, y0+120, 40, cand, false);
         T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
-        btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { const nc = addCrew(s, st.crewRace, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; if(cand.trait){ nc.trait = cand.trait; nc.maxHp = (DATA.races[nc.race]?.hp||100) + (traitOf(cand).hp||0); nc.hp = nc.maxHp; } st.crewSold = true; checkCrewAch(); }), { disabled: G.scrap<cc || crewN>=R.maxCrew, fill:G.scrap>=cc && crewN<R.maxCrew, col:C.good });
-        if(crewN>=R.maxCrew) T('Crew quarters are full.', rx+280, y0+254, { s:15, c:C.warn }); }
+        if(crewN < R.maxCrew) btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { joinCrew(cand); st.crewSold = true; }), { disabled: G.scrap<cc, fill:G.scrap>=cc, col:C.good });
+        else { const sc = Math.max(0, cc - TRADE_IN), node = m.node;
+          btn(rx+20, y0+220, 300, 54, `Swap someone · ${sc}`, () => openSwap(cand, sc, (ok) => { if(ok) st.crewSold = true; G.modal = { type:'store', node }; UI.storeTab = 'supplies'; }), { disabled: G.scrap<sc, fill:G.scrap>=sc, col:C.good });
+          para(`Bunks are full. Swap one of your crew for ${cand.name}; the store takes ${TRADE_IN} off for the one who leaves.`, rx+340, y0+238, 320, { s:14, lh:18, c:C.warn, max:3 }); } }
       else T('Nobody else is looking for work.', rx+20, y0+80, { s:18, c:C.muted });
       break; }
     case 'sell': {
       const items = [...(s.cargo||[]).map((c,i)=>({ ...c, src:'cargo', i })), ...s.augments.map((a,i)=>({ kind:'augment', id:a, src:'aug', i }))];
-      if(!items.length) T('Nothing to sell. Move weapons or drones to cargo from the Ship screen first.', cx, y0+40, { s:18, c:C.muted });
+      const half = (f.w-64-20)/2;
+      label('Gear', cx, y0+8, C.muted, 'left', 14);
+      if(!items.length) para('Nothing to sell. Move weapons or drones to cargo from the Ship screen first.', cx, y0+44, half, { s:17, lh:24, c:C.muted });
       items.slice(0,6).forEach((it, k) => { const d = it.kind==='weapon' ? DATA.weapons[it.id] : it.kind==='drone' ? DATA.drones[it.id] : DATA.augments[it.id]; const v = sellValue(it.kind, it.id);
-        const y = y0 + k*96; panel(cx, y, f.w-64, 84, 8); T(d?.name || it.id, cx+20, y+36, { s:20, f:FD, w:700 }); T(it.kind, cx+20, y+62, { s:14, c:C.muted });
-        btn(cx+f.w-300, y+16, 220, 52, `Sell · ${v}`, () => { if(it.src==='cargo') s.cargo.splice(it.i,1); else s.augments.splice(it.i,1); G.scrap += v; sfx('buy'); save(); }, { col:C.amber }); });
+        const y = y0 + 22 + k*88; panel(cx, y, half, 78, 8); T(d?.name || it.id, cx+20, y+34, { s:20, f:FD, w:700, max:half-260 }); T(it.kind, cx+20, y+58, { s:14, c:C.muted });
+        btn(cx+half-220, y+14, 200, 50, `Sell · ${v}`, () => { if(it.src==='cargo') s.cargo.splice(it.i,1); else s.augments.splice(it.i,1); G.scrap += v; sfx('buy'); save(); }, { col:C.amber }); });
+      // crew trade-in: someone leaves to work for the store, and you get a little scrap
+      const qx = cx + half + 20, mine = s.crew.filter(c => c.owner==='p' && !c.drone), fighting = G.enemy && !G.enemy.dead;
+      label(`Trade in crew · ${TRADE_IN} scrap each`, qx, y0+8, C.muted, 'left', 14);
+      mine.slice(0,8).forEach((c, k) => { const y = y0 + 22 + k*66, tr = c.trait && DATA.traits?.[c.trait]; panel(qx, y, half, 58, 8); drawPortrait(qx+30, y+29, 20, c, false);
+        T(c.name, qx+60, y+26, { s:17, f:FD, w:700, max:150 }); T(`${DATA.races[c.race]?.name||c.race}${tr ? ' · ' + tr.name : ''} · ${Math.ceil(c.hp)} hp`, qx+60, y+47, { s:13, c:C.muted, max:half-260 });
+        const conf = UI.confirmTrade===c.id;
+        btn(qx+half-190, y+10, 176, 38, conf ? 'Really trade?' : `Trade in · ${TRADE_IN}`, () => { if(mine.length<=1){ toast('You need at least one crew member.'); return; } if(fighting){ toast('Not while fighting.'); return; } if(!conf){ UI.confirmTrade = c.id; return; } UI.confirmTrade = null; crewLeaves(c); G.scrap += TRADE_IN; sfx('buy'); toast(`${c.name} signs on with the store crew.`); save(); }, { s:14, col:C.hostile, fill:conf, disabled:mine.length<=1 }); });
       break; }
   }
   btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; save(); });

@@ -46,7 +46,7 @@ function vuiInitWrist(){
     c = cell(4); vuiBtn(Wd, c.x, c.y, bw, bh, 'HEIGHT +', () => setVrHeight((SET.vrHeight||0) + 3), { col:VCOL.cyan, s:26 });
     c = cell(5); vuiBtn(Wd, c.x, c.y, bw, bh, 'POSE: ' + ({ standing:'STAND', seated:'SEAT', lying:'LIE' }[SET.vrPose||'standing']), () => { const o = ['standing','seated','lying']; setPlayPose(o[(o.indexOf(SET.vrPose||'standing')+1)%3]); }, { s:24 });
     c = cell(6); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrRunMode==='off' ? 'RUN: OFF' : 'RUN: ON', () => { SET.vrRunMode = SET.vrRunMode==='off' ? 'push' : 'off'; saveProfile(); }, { s:26, fill:SET.vrRunMode!=='off', col:VCOL.good });
-    c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrLoupe===false ? 'ZOOM: OFF' : 'ZOOM: ON', () => { SET.vrLoupe = SET.vrLoupe===false; saveProfile(); if(!SET.vrLoupe && loupe) loupe.visible = false; }, { s:26, fill:SET.vrLoupe!==false, col:VCOL.cyan });
+    c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrLoupe!==true ? 'ZOOM: OFF' : 'ZOOM: ON', () => { SET.vrLoupe = SET.vrLoupe!==true; saveProfile(); if(!SET.vrLoupe && loupe) loupe.visible = false; }, { s:26, fill:SET.vrLoupe===true, col:VCOL.cyan });
     const aboard = typeof IN!=='undefined' && IN.aboard, canGo = typeof IN!=='undefined' && IN.foe && G && G.enemy && !G.enemy.dead;
     c = cell(8); vuiBtn(Wd, c.x, c.y, bw, bh, aboard ? 'BEAM BACK' : 'BEAM OVER', () => { if(aboard) beamCaptain(false); else if(canGo) beamCaptain(true); else toast('No ship to board right now.'); }, { s:24, col:'#b48cff', disabled:!aboard && !canGo });
     const nAl = typeof alertRooms==='function' ? alertRooms().length : 0, inShip = typeof IN!=='undefined' && IN.own && IN.own.group.visible;

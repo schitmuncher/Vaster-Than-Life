@@ -127,7 +127,7 @@ function updateTeleportMarker(aims){
 }
 function updateLoupe(c, hit){
   if(!loupe) return;
-  if(SET.vrLoupe === false || !hit){ if(c.userData.idx===nav.lastActive) loupe.visible = false; return; }
+  if(SET.vrLoupe !== true || !hit){ if(c.userData.idx===nav.lastActive) loupe.visible = false; return; }
   nav.lastActive = c.userData.idx;
   const zoom = 2.3, pw = 2.4, ph = 1.5, lw = .62, lh = .38;
   const uw = lw/zoom/pw, uh = lh/zoom/ph; const u = clamp(hit.uv.x, uw/2, 1-uw/2), v = clamp(hit.uv.y, uh/2, 1-uh/2);
