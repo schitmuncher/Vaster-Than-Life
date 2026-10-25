@@ -25,6 +25,14 @@ const PROFILE = Object.assign({ ach:{}, maxSector:1, kills:0, wins:{}, runs:0 },
 PROFILE.settings = Object.assign({ music:.5, sfx:.7, difficulty:(PROFILE.runs||0)===0 ? 'easy' : 'normal', hints:true, unlockAll:false, allowScripts:false, holotable:true, smartPause:true }, PROFILE.settings||{});
 const SET = PROFILE.settings;
 function saveProfile(){ LS.set(PROFILE_KEY, PROFILE); }
+/* colour vision and contrast: remap the status colours used by the 2D interface and the VR consoles.
+   Red-green safe swaps green for blue and deepens the red, so friend, foe and health stay apart
+   for protanopia and deuteranopia (the commonest kinds). */
+const C_BASE = Object.assign({}, C);
+const PALETTES = { redgreen:{ good:'#4b9dff', hostile:'#ff4545', warn:'#ffe066' } };
+const CONTRAST = { muted:'#b8c3dc', line:'#3c4c76', ink:'#ffffff' };
+function applyPalette(){ for(const k in C_BASE) C[k] = C_BASE[k]; Object.assign(C, PALETTES[SET.palette] || {}); if(SET.contrast) Object.assign(C, CONTRAST); }
+applyPalette();
 function grant(id){
   if(PROFILE.ach[id]) return; const a = ACHIEVEMENTS.find(x=>x.id===id); if(!a) return;
   PROFILE.ach[id] = Date.now(); saveProfile(); if(typeof sfx==='function') sfx('achieve');

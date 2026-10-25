@@ -115,6 +115,7 @@ function draw(){
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
+  if(typeof drawPadCursor==='function') drawPadCursor();
 }
 
 /* ---------------- title & menus ---------------- */
@@ -141,7 +142,8 @@ function drawTitle(){
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
-function openHangar(){ applyMods(); UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
+function hangarThumb(id){ UI._thumbs = UI._thumbs || {}; if(id in UI._thumbs) return UI._thumbs[id]; let sh = null; try{ sh = makeShip(DATA.ships[id], 'p', {}); sh.crew = []; }catch(e){ sh = null; } return UI._thumbs[id] = sh; }
+function openHangar(){ applyMods(); UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
 function dailyStreak(){ let n = 0; const d = new Date(); for(let i=0;i<60;i++){ const k = todayKey(d); if(PROFILE.daily?.[k]) n++; else if(i>0) break; d.setDate(d.getDate()-1); } return n; }
 function fmtNum(n){ return Math.round(n).toLocaleString('en-GB'); }
 /* the right-hand column of the title: today's daily challenge, your last run and your record */
@@ -191,8 +193,15 @@ function drawHangar(){
     const anyOpen = ids.some(id => shipUnlocked(DATA.ships[id]));
     rr(x,y,w,h,10); ctx.fillStyle = cur ? hexA(C.amber,.1) : hexA(C.panel,.9); ctx.fill(); ctx.lineWidth = cur?3:1.5; ctx.strokeStyle = cur ? C.amber : hovered(x,y,w,h) ? C.muted : C.line; ctx.stroke();
     region(x,y,w,h,() => { const open = ids.find(id => shipUnlocked(DATA.ships[id])); UI.selShip = open || ids[0]; UI.shipName = null; });
-    T(cls, x+18, y+38, { s:22, f:FD, w:700, c: anyOpen ? (DATA.ships[ids[0]].color||C.amber) : C.muted });
-    T(ids.map(id => `${DATA.ships[id].layout||'A'}${shipUnlocked(DATA.ships[id])?'':' (locked)'}`).join('  ·  '), x+18, y+72, { s:16, c:C.muted });
+    // a small model of the ship, dimmed while locked
+    const th = hangarThumb(ids.find(id => shipUnlocked(DATA.ships[id])) || ids[0]);
+    if(th){ drawShip(th, { x:x+w-184, y:y+40, w:176, h:58 }, 1, false, true); ctx.globalAlpha = 1; if(!anyOpen){ rr(x+w-200, y+40, 192, 56, 8); ctx.fillStyle = 'rgba(9,14,28,.62)'; ctx.fill(); } }
+    T(cls.replace(/ Cruiser$/, ''), x+18, y+36, { s:22, f:FD, w:700, c: anyOpen ? (DATA.ships[ids[0]].color||C.amber) : C.muted, max:150 });
+    tip(x, y, w, h, cls, anyOpen ? `${ids.length} layout${ids.length>1?'s':''}. Click to see ${ids.length>1?'them':'it'} below.` : `Locked. ${unlockText(DATA.ships[ids[0]].unlock)}`);
+    let lx = x+18; ids.forEach((id,k) => { const op = shipUnlocked(DATA.ships[id]), t_ = (k ? '·  ' : '') + (DATA.ships[id].layout||'A'); T(t_, lx, y+66, { s:16, c: op ? C.ink : hexA(C.muted,.45) }); lx += ctx.measureText(t_).width + 10; });
+    if(!anyOpen) T('Locked', lx + 4, y+66, { s:13, c:C.muted });
+    const bests = ids.map(id => PROFILE.best?.[id]).filter(Boolean), wins = bests.reduce((a,b) => a + (b.wins||0), 0), far = bests.reduce((a,b) => Math.max(a, b.sector||0), 0);
+    if(bests.length) T(wins ? `Won ×${wins}` : `Best: sector ${far}`, x+18, y+88, { s:13, c: wins ? C.amber : C.good });
   });
   if(pages>1){ btn(1300, 70, 110, 44, '‹', ()=>UI.page--, { disabled:UI.page<=0 }); btn(1420, 70, 110, 44, '›', ()=>UI.page++, { disabled:UI.page>=pages-1 }); }
   // detail
@@ -254,7 +263,7 @@ function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);
   T('Settings', 60, 122, { s:50, f:FD, w:700 });
   const tab = UI.setTab || 'audio';
-  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 200);
+  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['access','Accessibility'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 175);
   panel(60, 204, 1480, 640, 12);
   const X = 100, VX = 560; let y = 236;
   const head = (t) => { label(t, X, y+18, C.cyan, 'left', 15); y += 34; };
@@ -350,6 +359,18 @@ function drawSettings(){
       onoff('Unlock all ships', 'unlockAll', false, 'Skip the unlock conditions and pick any ship.');
       onoff('Allow mod scripts', 'allowScripts', false, 'Lets mods run their own JavaScript. Only turn this on for mods you trust.', () => applyMods());
       break;
+    case 'access':
+      head('Seeing');
+      choice('Colour vision', 'palette', [['standard','Standard'],['redgreen','Red-green safe']], 'standard', 'Red-green safe turns green to blue and deepens the reds, so friends, foes and health bars stay easy to tell apart with protanopia or deuteranopia.', () => applyPalette());
+      onoff('High contrast', 'contrast', false, 'Brighter secondary text and panel lines.', () => applyPalette());
+      choice('Text size', 'textSize', [['normal','Normal'],['large','Large'],['huge','Huge']], MOB.touch ? 'large' : 'normal', 'Raises the smallest text everywhere. Large is the default on phones and tablets.');
+      onoff('Reduce flashes', 'reduceFlashes', false, 'Softer jump white-outs, lightning and pulsar flashes.');
+      head('Pace');
+      choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down for more time to think and aim.');
+      onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
+      head('Controls'); y += 12;
+      note('Game controller: the d-pad jumps between buttons and rooms, the left stick moves a cursor, A selects, B goes back, Start pauses. X holds fire, Y opens the map, LB and RB pick weapons, LT sends crew to stations, RT toggles autofire, View opens the ship. Keyboard: the arrow keys move the same way and Enter selects.');
+      break;
     case 'profile':
       head('Your record');
       T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)} · Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, X, y+24, { s:20 }); y += 70;
@@ -383,8 +404,8 @@ const HELP_PAGES = [
     ['Drones', 'Drones need Drone system power and use one drone part each time they deploy. Attack drones orbit the enemy, defense drones shoot down missiles, internal drones repair or fight.'],
     ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, catch the Flaggship three times before it destroys Fedoration command.'] ]],
   ['Map & hazards', [
-    ['The map', 'Each sector is a web of beacons. Fights (!), events (?) and stores are marked once you know them; Long-Range Scanners reveal everything. Distress and quest beacons glow amber.'],
-    ['The Rebuff Fleet', 'The red band on the map is the fleet. Every jump moves it on (more slowly in a nebula). Beacons it reaches are taken: fights there are tough and pay almost nothing. Keep ahead of it.'],
+    ['The map', 'Each sector is a web of beacons. Stores, the exit, distress calls and quests are always marked; hostile ships (crosshair) and events (?) show once known, and Long-Range Scanners reveal everything. Your route so far is traced in amber.'],
+    ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
     ['Stores', 'Two or three per sector. Buy weapons, drones, augments, new systems, fuel, missiles, drone parts, hull repairs and crew. Sell spare gear you stowed in cargo from the Ship screen.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
@@ -395,7 +416,8 @@ const HELP_PAGES = [
     ['Meta Quest', 'Trigger selects. Left stick walks (push fully to run), right stick turns. A or X pauses, B or Y opens the map, grip brings the console to you or grabs it. Glance at your left wrist for the wrist menu.'],
     ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger with a hand near a fire, breach or broken machine to fix it. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
     ['Comfort', 'Settings has snap or smooth turning, teleport-only movement, a comfort vignette, seated and lying-down play, player height, game speed and bigger text.'],
-    ['Saving', 'The run saves itself between fights. Settings > Record can save a backup file of everything to load on another device.'] ]],
+    ['Saving', 'The run saves itself between fights. Record, on the title screen, can save a backup file of everything to load on another device.'],
+    ['Game controller', 'D-pad jumps between buttons and rooms, left stick moves a cursor, A selects, B backs out, Start pauses. X hold fire · Y map · LB/RB weapons · LT stations · RT autofire · View ship. Arrow keys and Enter work the same way.'] ]],
   ['Tactics', [
     ['Break the shields', 'Shots that arrive together count: fire a volley so the first shots strip layers and the rest hit. Missiles and bombs ignore shields, so aim them at the enemy shield room first.'],
     ['Pick targets', 'Shields first, then weapons. Hitting the helm or engines stops them dodging and escaping. Ion shots lock a system for a few seconds per hit.'],
@@ -796,7 +818,7 @@ function drawArmory(){
   panel(x,y,w,h);
   label('Weapons', x+16, y+28, C.hostile, 'left', 16);
   T(`${weaponPowerUsed(s)}/${eff(s,'weapons')} pwr · ${G.missiles} msl`, x+120, y+28, { s:14, c:C.muted });
-  if(G.enemy && !G.enemy.dead){ const ready = s.weapons.filter(w => w.on && w.charge >= (DATA.weapons[w.id]?.charge||1) && ['laser','flak','ion'].includes(DATA.weapons[w.id]?.type)).reduce((t,w)=>t+(DATA.weapons[w.id].shots||1),0); if(G.hold || ready) T(`${ready} shot${ready===1?'':'s'} ready vs ${G.enemy.shield} shield${G.enemy.shield===1?'':'s'}`, x+120, y+212, { s:13, c: ready > G.enemy.shield ? C.good : C.warn }); }
+  if(G.enemy && !G.enemy.dead){ const ready = s.weapons.filter(w => w.on && w.charge >= (DATA.weapons[w.id]?.charge||1) && ['laser','flak','ion'].includes(DATA.weapons[w.id]?.type)).reduce((t,w)=>t+(DATA.weapons[w.id].shots||1),0); if(G.hold || ready) T(`Volley: ${ready} shot${ready===1?'':'s'} ready vs ${G.enemy.shield} shield${G.enemy.shield===1?'':'s'}`, x+w-16, y+214, { s:13, a:'right', c: ready > G.enemy.shield ? C.good : C.warn }); }
   btn(x+w-150, y+8, 136, 30, G.autofire ? 'Autofire on' : 'Autofire off', () => { G.autofire = !G.autofire; }, { s:13, fill:G.autofire, col:C.hostile });
   btn(x+w-296, y+8, 136, 30, G.hold ? 'Fire volley' : 'Hold fire', () => { G.hold = !G.hold; }, { s:13, fill:!!G.hold, col:C.warn });
   const slots = R.weaponSlots, gap = 8, cw = (w - 28 - gap*(slots-1))/slots, ch = 152;
@@ -823,16 +845,16 @@ function drawArmory(){
       else if(!G.enemy && !d.heal) toast('No enemy to target.');
       else { UI.selWeapon = sel ? null : i; UI.mode = null; UI.selCrew = null; } }, { s:12, col:C.hostile, fill: sel });
   }
-  const dy = y+222;
+  const dy = y+236;
   label('Drones', x+16, dy, '#f0a6ff', 'left', 15);
   if(!s.systems.drones){ T('No drone system installed.', x+120, dy, { s:14, c:C.muted }); if(!s.drones.length) return; }
   else T(`${dronePowerUsed(s)}/${eff(s,'drones')} power · ${G.parts} parts`, x+120, dy, { s:14, c:C.muted });
   const ds = R.droneSlots, dw = (w - 28 - 8*(ds-1))/ds;
   for(let i=0;i<ds;i++){
     const cx = x+14 + i*(dw+8), cy = dy+10, dr = s.drones[i];
-    if(!dr){ rr(cx,cy,dw,86,8); ctx.setLineDash([6,6]); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); continue; }
+    if(!dr){ rr(cx,cy,dw,80,8); ctx.setLineDash([6,6]); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); continue; }
     const bp = DATA.drones[dr.id]; if(!bp) continue;
-    rr(cx,cy,dw,86,8); ctx.fillStyle = C.panel2; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = dr.on ? '#f0a6ff' : C.line; ctx.stroke();
+    rr(cx,cy,dw,80,8); ctx.fillStyle = C.panel2; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = dr.on ? '#f0a6ff' : C.line; ctx.stroke();
     T(bp.name, cx+8, cy+20, { s:13, f:FD, w:700, c: dr.on ? C.ink : C.muted });
     tip(cx, cy, dw, 44, bp.name, `${bp.kind} drone, ${bp.power} power. ${{attack:'Orbits the enemy and fires on its rooms.',defense:'Shoots down incoming missiles and drones.',anti:'Hunts enemy drones.',internal:bp.role==='repair'?'Walks your ship repairing systems.':'Walks your ship fighting intruders.',boarding:'Rams the enemy and fights inside it.',hull:'Repairs hull out of combat.'}[bp.kind]||''} ${bp.desc||''}`);
     for(let p=0;p<bp.power;p++){ rr(cx+8+p*14, cy+28, 11, 8, 2); ctx.fillStyle = dr.on ? '#f0a6ff' : C.line; ctx.fill(); }
@@ -935,16 +957,20 @@ function drawModal(){
     case 'map': drawMapModal(); break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
-    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*400+64), 520, 'Exit beacon', C.good);
+    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 600, 'Exit beacon', C.good);
       para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
-      const cw = (f.w-64-(opts.length-1)*20)/opts.length;
-      opts.forEach((t,i) => { const sd = DATA.sectors[t]; const bx = f.x+32 + i*(cw+20), by = f.y+160;
+      const cw = (f.w-64-(opts.length-1)*20)/opts.length, ch = 330;
+      opts.forEach((t,i) => { const sd = DATA.sectors[t]; if(!sd) return; const bx = f.x+32 + i*(cw+20), by = f.y+150, col = sd.color||C.cyan;
         const art = eventArt(sd.secret ? 'glass' : sd.nebula>.3 ? 'nebula' : sd.final ? 'fleet' : 'planet', t, Math.floor(cw), 90);
-        rr(bx, by, cw, 240, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.save(); rr(bx, by, cw, 90, 10); ctx.clip(); ctx.drawImage(art, bx, by); ctx.restore(); ctx.strokeStyle = sd.color||C.cyan; ctx.lineWidth = 2; rr(bx, by, cw, 240, 10); ctx.stroke();
-        T(sd.name, bx+18, by+124, { s:21, f:FD, w:700, c:sd.color||C.cyan });
-        const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · Stores ${mix.store||0}%`, bx+18, by+152, { s:13, c:C.muted });
-        T(sd.secret ? 'Uncharted. Unknown.' : sd.nebula>.3 ? 'Nebula: no sensors, slower fleet' : sd.final ? 'The Flaggship and Fedoration command' : `Expect: ${(sd.enemyTags||[]).join(', ') || 'anyone'}`, bx+18, by+174, { s:13, c:C.muted });
-        btn(bx+16, by+184, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col:sd.color||C.good, s:17 }); });
+        rr(bx, by, cw, ch, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.save(); rr(bx, by, cw, 90, 10); ctx.clip(); ctx.drawImage(art, bx, by); ctx.restore(); ctx.strokeStyle = col; ctx.lineWidth = 2; rr(bx, by, cw, ch, 10); ctx.stroke();
+        const d = sectorDanger(sd); rr(bx+cw-128, by+12, 114, 28, 14); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = d[1]; ctx.lineWidth = 1.5; ctx.stroke(); T(d[0], bx+cw-71, by+31, { s:13, f:FD, w:700, a:'center', c:d[1] });
+        T(sd.name, bx+18, by+122, { s:21, f:FD, w:700, c:col, max:cw-36 });
+        para(sd.blurb || (sd.secret ? 'Uncharted. Unknown.' : 'Who knows what is out there.'), bx+18, by+148, cw-36, { s:14, lh:18, c:C.ink, max:2 });
+        const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · ${sd.final ? 'No stores past command' : '2–3 stores'}`, bx+18, by+196, { s:13, c:C.muted, max:cw-36 });
+        T(sd.secret ? 'Meet: the Glassborn' : sd.final ? 'Meet: the Flaggship and its escorts' : `Meet: ${sectorFoes(sd)}`, bx+18, by+218, { s:13, c:C.muted, max:cw-36 });
+        T(sd.nebula>.3 ? 'Nebula: no sensors, the fleet is slower' : `Hazards: ${sectorHazards(sd)}`, bx+18, by+240, { s:13, c: sd.nebula>.3 ? C.violet : C.muted, max:cw-36 });
+        btn(bx+16, by+ch-62, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col, s:17 });
+        tip(bx, by, cw, ch-70, sd.name, `${sd.blurb||''} ${sd.fleetMult && sd.fleetMult<1 ? 'The Rebuff Fleet moves slower here. ' : ''}Fights ${mix.combat||0}%, events ${mix.event||0}%, quiet beacons ${mix.empty||0}%.`); });
       btn(f.x+f.w-232, f.y+f.h-82, 200, 56, 'Stay here', () => { G.modal = null; }); break; }
     case 'stranded': { const f = mframe(940, 420, 'Out of fuel', C.hostile);
       para('The tanks are dry. You can broadcast a distress call for fuel, but the Rebuff Fleet will hear it too and close in.', f.x+32, f.y+104, f.w-64, { s:21 });
@@ -995,43 +1021,121 @@ function drawEventModal(m){
   });
 }
 
+/* ---------------- sector map ---------------- */
+const HZCOL = { sun:'#ff8a3d', asteroid:'#c9a27e', ionstorm:'#5fd3e6', pulsar:'#9fd8ff', nebula:'#8b6fd6' };
+const MAPBG = { key:null, c:null };
+function mapBackdrop(w, h){   // a starfield in the sector's colours with a faint navigation grid, painted once per sector
+  const sd = sectorDef(), key = [G.seed||'', G.sector, G.sectorType, w, h].join('|');
+  if(MAPBG.key===key) return MAPBG.c;
+  const c = mkCanvas(w, h), g = c.getContext('2d'), rnd = srng(hashStr('map|' + key));
+  paintSpace(g, w, h, rnd, sd.color || C.cyan, { nebula:(sd.nebula||0) > .3 });
+  g.fillStyle = 'rgba(5,8,18,.42)'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(140,170,230,.055)'; g.lineWidth = 1;
+  for(let x=0; x<=w; x+=75){ g.beginPath(); g.moveTo(x+.5, 0); g.lineTo(x+.5, h); g.stroke(); }
+  for(let y=0; y<=h; y+=75){ g.beginPath(); g.moveTo(0, y+.5); g.lineTo(w, y+.5); g.stroke(); }
+  MAPBG.key = key; MAPBG.c = c; return c;
+}
+/* small vector icons for the map, its legend and the VR console */
+function mapIcon(kind, x, y, s, col){
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = Math.max(1.6, s*.13); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const u = s/2, dot = (px, py, r) => { ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); };
+  ctx.beginPath();
+  switch(kind){
+    case 'store': ctx.moveTo(-u*1.05, -u*.75); ctx.lineTo(-u*.7, -u*.75); ctx.lineTo(-u*.45, u*.35); ctx.lineTo(u*.8, u*.35); ctx.lineTo(u*1.0, -u*.45); ctx.lineTo(-u*.6, -u*.45); ctx.stroke(); dot(-u*.25, u*.78, u*.18); dot(u*.6, u*.78, u*.18); break;
+    case 'hostile': ctx.arc(0, 0, u*.68, 0, 7); ctx.stroke(); ctx.beginPath(); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ ctx.moveTo(dx*u*.32, dy*u*.32); ctx.lineTo(dx*u*1.02, dy*u*1.02); } ctx.stroke(); break;
+    case 'distress': dot(0, 0, u*.22); for(const r of [.55, .92]){ ctx.beginPath(); ctx.arc(0, 0, u*r, -.75, .75); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, u*r, Math.PI-.75, Math.PI+.75); ctx.stroke(); } break;
+    case 'quest': for(let i=0;i<10;i++){ const a = -Math.PI/2 + i*Math.PI/5, r = i%2 ? u*.45 : u*1.05; i ? ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r) : ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); ctx.fill(); break;
+    case 'exit': for(const dx of [-u*.42, u*.28]){ ctx.moveTo(dx - u*.3, -u*.7); ctx.lineTo(dx + u*.35, 0); ctx.lineTo(dx - u*.3, u*.7); } ctx.stroke(); break;
+    case 'base': ctx.moveTo(0, -u); ctx.lineTo(u*.85, -u*.6); ctx.lineTo(u*.7, u*.3); ctx.lineTo(0, u); ctx.lineTo(-u*.7, u*.3); ctx.lineTo(-u*.85, -u*.6); ctx.closePath(); ctx.stroke(); dot(0, 0, u*.25); break;
+    case 'flag': case 'ship': ctx.moveTo(u*1.1, 0); ctx.lineTo(-u*.75, -u*.7); ctx.lineTo(-u*.35, 0); ctx.lineTo(-u*.75, u*.7); ctx.closePath(); ctx.fill(); break;
+    case 'empty': ctx.arc(0, 0, u*.3, 0, 7); ctx.stroke(); break;
+    case 'sun': dot(0, 0, u*.4); ctx.beginPath(); for(let i=0;i<8;i++){ const a = i*Math.PI/4; ctx.moveTo(Math.cos(a)*u*.62, Math.sin(a)*u*.62); ctx.lineTo(Math.cos(a)*u*.98, Math.sin(a)*u*.98); } ctx.stroke(); break;
+    case 'asteroid': ctx.moveTo(-u*.8, -u*.1); ctx.lineTo(-u*.35, -u*.75); ctx.lineTo(u*.4, -u*.6); ctx.lineTo(u*.85, 0); ctx.lineTo(u*.3, u*.75); ctx.lineTo(-u*.5, u*.55); ctx.closePath(); ctx.fill(); break;
+    case 'ionstorm': ctx.moveTo(u*.25, -u); ctx.lineTo(-u*.45, u*.1); ctx.lineTo(u*.05, u*.1); ctx.lineTo(-u*.25, u); ctx.lineTo(u*.5, -u*.15); ctx.lineTo(0, -u*.15); ctx.closePath(); ctx.fill(); break;
+    case 'pulsar': dot(0, 0, u*.24); ctx.beginPath(); ctx.ellipse(0, 0, u, u*.36, -.5, 0, 7); ctx.stroke(); break;
+    case 'nebula': dot(-u*.38, u*.12, u*.42); dot(u*.12, -u*.18, u*.52); dot(u*.55, u*.2, u*.36); break;
+  }
+  ctx.restore();
+}
+/* fewest jumps from a beacon to the first one matching pred (-1 if unreachable) */
+function mapDist(from, pred){ const nodes = G.map.nodes, seen = { [from]:0 }, q = [from];
+  while(q.length){ const k = q.shift(); if(pred(nodes[k], k)) return seen[k]; for(const n of nodes[k].links) if(!(n in seen)){ seen[n] = seen[k] + 1; q.push(n); } } return -1; }
+/* what the exit beacon tells you about each route */
+const FOE_NAMES = { rebuff:'Rebuff warships', pyrate:'pyrates', sloog:'Sloog ships', pebblekin:'Pebblekin ships', enjinn:'Enjinn', auto:'automated ships', voltan:'Voltan ships', mantlis:'Mantlis raiders', glass:'the Glassborn' };
+const HZ_NAMES = { asteroid:'asteroids', sun:'solar flares', ionstorm:'ion storms', pulsar:'pulsars' };
+function sectorFoes(sd){ const t = (sd.enemyTags||[]).map(k => FOE_NAMES[k] || k); return t.length ? `mostly ${t.join(' and ')}` : 'a bit of everyone'; }
+function sectorHazards(sd){ const h = Object.entries(sd.hazards||{}).filter(([,p]) => p > 0).sort((a,b) => b[1]-a[1]).map(([k]) => HZ_NAMES[k] || k); return h.length ? h.slice(0,3).join(', ') : 'none to speak of'; }
+function sectorDanger(sd){ const c = (sd.mix||{}).combat||0; return sd.final ? ['Final battle', C.hostile] : c >= 54 ? ['High danger', C.hostile] : c >= 44 ? ['Risky', C.warn] : ['Calmer', C.good]; }
 function drawMapModal(){
-  const f = mframe(1500, 920, `Sector ${G.sector} · ${sectorDef().name}`, C.cyan), nodes = G.map.nodes, cur = nodes[G.map.cur];
-  const mx = n => f.x + 80 + n.x*(f.w-160), my = n => f.y + 130 + n.y*(f.h-270);
-  const fleetPx = f.x + 80 + G.fleetX*(f.w-160);
-  if(fleetPx > f.x){ ctx.fillStyle = hexA(C.hostile,.14); ctx.fillRect(f.x+2, f.y+90, Math.min(fleetPx-f.x, f.w-4), f.h-210);
-    ctx.strokeStyle = C.hostile; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fleetPx, f.y+90); ctx.lineTo(fleetPx, f.y+f.h-120); ctx.stroke();
-    label('Rebuff Fleet', Math.max(f.x+20, fleetPx-150), f.y+f.h-128, C.hostile, 'left', 14); }
-  const nextPx = f.x + 80 + (G.fleetX + fleetStep())*(f.w-160);
-  ctx.setLineDash([8,8]); ctx.strokeStyle = hexA(C.hostile,.5); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(nextPx, f.y+90); ctx.lineTo(nextPx, f.y+f.h-120); ctx.stroke(); ctx.setLineDash([]);
-  nodes.forEach((n,i) => { if(n.nebula){ ctx.beginPath(); ctx.arc(mx(n), my(n), 46, 0, 7); ctx.fillStyle = hexA(C.nebula,.22); ctx.fill(); } });
-  nodes.forEach((a,i) => a.links.forEach(j => { if(j<i) return; const b = nodes[j]; const live = (i===G.map.cur || j===G.map.cur);
-    ctx.strokeStyle = live ? C.cyan : hexA(C.muted,.3); ctx.lineWidth = live?3:2; ctx.beginPath(); ctx.moveTo(mx(a),my(a)); ctx.lineTo(mx(b),my(b)); ctx.stroke(); }));
-  const jumpable = canJump() && G.warp<=0, scan = hasAug(G.ship,'scanners');
+  const sd = sectorDef(), f = mframe(1500, 920, `Sector ${G.sector} · ${sd.name}`, C.cyan), nodes = G.map.nodes, cur = nodes[G.map.cur], t = performance.now()/1000;
+  const ax = f.x + 2, ay = f.y + 70, aw = f.w - 4, ah = f.h - 176;   // the chart, between the header and the footer
+  const px = v => f.x + 90 + v*(f.w-180), mx = n => px(n.x), my = n => f.y + 150 + n.y*(f.h-330);
+  const step = fleetStep(), reachSet = new Set(cur.links), jumpable = canJump() && G.warp<=0, scan = hasAug(G.ship,'scanners');
+  ctx.save(); ctx.beginPath(); ctx.rect(ax, ay, aw, ah); ctx.clip();
+  ctx.drawImage(mapBackdrop(aw, ah), ax, ay);
+  // the Rebuff Fleet: occupied space, its advancing front and where it will be after your next jump
+  const fleetPx = px(G.fleetX), nextPx = px(G.fleetX + step);
+  if(fleetPx > ax){ const w_ = Math.min(fleetPx - ax, aw);
+    const fg = ctx.createLinearGradient(ax, 0, ax + w_, 0); fg.addColorStop(0, hexA(C.hostile,.34)); fg.addColorStop(1, hexA(C.hostile,.11)); ctx.fillStyle = fg; ctx.fillRect(ax, ay, w_, ah);
+    ctx.strokeStyle = hexA(C.hostile,.07); ctx.lineWidth = 2; for(let y = ay + (t*24)%18; y < ay+ah; y += 18){ ctx.beginPath(); ctx.moveTo(ax, y); ctx.lineTo(ax+w_, y); ctx.stroke(); }
+    if(fleetPx < ax + aw){ ctx.save(); ctx.globalCompositeOperation = 'lighter'; for(const [lw, a] of [[12,.07],[5,.16],[2,.9]]){ ctx.strokeStyle = hexA(C.hostile, a); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(fleetPx, ay); ctx.lineTo(fleetPx, ay+ah); ctx.stroke(); } ctx.restore();
+      ctx.strokeStyle = hexA(C.hostile,.75); ctx.lineWidth = 2.5; for(let k=0;k<7;k++){ const yy = ay + (k+.5)*ah/7, off = (t*14 + k*5) % 14; ctx.beginPath(); ctx.moveTo(fleetPx - 24 + off, yy - 7); ctx.lineTo(fleetPx - 16 + off, yy); ctx.lineTo(fleetPx - 24 + off, yy + 7); ctx.stroke(); } } }
+  if(nextPx > ax && nextPx < ax + aw){ ctx.setLineDash([8,8]); ctx.lineDashOffset = -t*12; ctx.strokeStyle = hexA(C.hostile,.45); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(nextPx, ay); ctx.lineTo(nextPx, ay+ah); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }
+  // nebula clouds
+  for(const n of nodes) if(n.nebula){ const x = mx(n), y = my(n), gr = ctx.createRadialGradient(x, y, 0, x, y, 72); gr.addColorStop(0, hexA(C.nebula,.38)); gr.addColorStop(1, hexA(C.nebula,0)); ctx.fillStyle = gr; ctx.fillRect(x-72, y-72, 144, 144); }
+  // routes: dim lanes, live lanes from here flowing outward, the one under the pointer in amber
+  let hovI = -1; nodes.forEach((n,i) => { if(reachSet.has(i) && hovered(mx(n)-30, my(n)-30, 60, 60)) hovI = i; });
+  nodes.forEach((a,i) => a.links.forEach(j => { if(j<i) return; const b = nodes[j], live = i===G.map.cur || j===G.map.cur, hot = live && (i===hovI || j===hovI);
+    ctx.strokeStyle = hot ? C.amber : live ? hexA(C.cyan,.9) : hexA(C.muted,.26); ctx.lineWidth = hot ? 4 : live ? 3 : 2;
+    if(live && !hot){ ctx.setLineDash([10,6]); ctx.lineDashOffset = (i===G.map.cur ? -1 : 1)*t*20; }
+    ctx.beginPath(); ctx.moveTo(mx(a), my(a)); ctx.lineTo(mx(b), my(b)); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }));
+  // the route you have flown this sector
+  const trail = G.map.trail || []; if(trail.length > 1){ ctx.strokeStyle = hexA(C.amber,.7); ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); trail.forEach((k,i) => { const n = nodes[k]; if(n) i ? ctx.lineTo(mx(n), my(n)) : ctx.moveTo(mx(n), my(n)); }); ctx.stroke(); }
   nodes.forEach((n,i) => {
-    const x = mx(n), y = my(n), reach = cur.links.includes(i), isCur = i===G.map.cur, hov = reach && hovered(x-30,y-30,60,60);
-    const flagHere = G.flag && G.flag.node===i;
-    const col = flagHere ? C.hostile : n.type==='store' ? C.good : n.type==='exit'||n.type==='base' ? C.good : n.quest ? C.warn : n.distress ? C.warn : n.visited ? C.muted : C.ink;
-    ctx.beginPath(); ctx.arc(x,y, hov?26:20, 0, 7); ctx.fillStyle = n.visited ? C.panel2 : C.room; ctx.fill(); ctx.lineWidth = reach ? 3 : 2; ctx.strokeStyle = col; ctx.stroke();
-    if(isCur){ ctx.beginPath(); ctx.arc(x,y,32,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.stroke(); }
+    const x = mx(n), y = my(n), reach = reachSet.has(i), isCur = i===G.map.cur, hov = i===hovI;
+    const flagHere = G.flag && G.flag.node===i, known = scan || n.revealed, taken = n.x < G.fleetX && !isCur, soon = !taken && !isCur && n.x < G.fleetX + step;
+    const kind = flagHere ? 'flag' : n.type==='store' ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
+    const col = { flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
+    const r = hov ? 25 : 20;
+    if(hov) glow(x, y, 48, col, .45); else if(reach && jumpable) glow(x, y, 34, col, .16 + .08*Math.sin(t*3 + i));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = n.visited ? '#10172c' : C.room; ctx.fill(); ctx.lineWidth = reach ? 3 : 2; ctx.strokeStyle = kind==='visited' ? hexA(col,.6) : col; ctx.stroke();
+    if(soon){ ctx.setLineDash([4,4]); ctx.strokeStyle = hexA(C.hostile,.85); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r+7, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+    if(isCur){ const p = (t*1.1) % 1; ctx.beginPath(); ctx.arc(x, y, 30 + p*18, 0, 7); ctx.strokeStyle = hexA(C.amber, .6*(1-p)); ctx.lineWidth = 3; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 30, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.stroke(); glow(x - 12, y, 16, C.amber, .55); mapIcon('ship', x + 2, y, 24, C.amber); }
+    else if(kind==='unknown' || kind==='event') T('?', x, y+1, { s:20, f:FD, w:700, a:'center', b:'middle', c: kind==='event' ? C.ink : C.muted });
+    else if(kind==='visited' || kind==='start') mapIcon('empty', x, y, 12, hexA(C.muted,.8));
+    else mapIcon(kind, x, y, kind==='quest' ? 18 : 20, col);
+    const showHz = n.hazard && (scan || n.revealed || n.visited || reach);
+    if(showHz){ const hc = HZCOL[n.hazard] || C.warn, hx = x + 19, hy = y - 19; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fillStyle = '#0b1122'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = hc; ctx.stroke(); mapIcon(n.hazard, hx, hy, 13, hc);
+      if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
     let tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : '';
     if(flagHere) tag = 'FLAGGSHIP';
-    const known = scan || n.revealed; const inner = !n.visited && !['store','exit','base','start'].includes(n.type) ? (known ? (n.type==='combat' ? '!' : n.type==='event' ? '?' : '·') : '?') : '';
-    if(inner) T(inner, x, y+1, { s:20, f:FD, w:700, a:'center', b:'middle', c: inner==='!' ? C.hostile : C.muted });
     if(tag) label(tag, x, y+48, col, 'center', 13);
-    if(n.hazard && (scan || n.revealed || n.visited || reach)) label(HAZARDS[n.hazard].split(' ')[0], x, y-30, C.warn, 'center', 11);
-    if(flagHere){ ctx.beginPath(); ctx.moveTo(x+26, y-8); ctx.lineTo(x+46, y); ctx.lineTo(x+26, y+8); ctx.closePath(); ctx.fillStyle = C.hostile; ctx.fill(); }
-    if(n.x < G.fleetX && !isCur) { ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
+    if(taken){ ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
-    { const kind = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
-      const fs = fleetStep(), ahead = (n.x - G.fleetX)/fs; const bits = [];
-      if(flagHere) bits.push('The Flaggship is here.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
-      if(n.hazard && (scan || n.revealed || n.visited || reach)) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
+    { const name = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
+      const ahead = (n.x - G.fleetX)/step; const bits = [];
+      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
+      if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
       bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
-      tip(x-26, y-26, 52, 52, kind, bits.join(' ')); }
+      tip(x-26, y-26, 52, 52, name, bits.join(' ')); }
   });
-  label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+32, f.y+f.h-46, jumpable ? C.muted : C.warn, 'left', 15);
+  if(fleetPx > ax + 4) label('Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
+  if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
+  ctx.restore();
+  // legend in the header
+  { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good]]){
+      T(name, lx, f.y+45, { s:14, c:C.muted, a:'right' }); const tw = ctx.measureText(name).width; mapIcon(k, lx - tw - 16, f.y+40, 16, c); lx -= tw + 50; } }
+  // footer: where the exit is, how far behind the fleet is, fuel
+  ctx.fillStyle = hexA(C.cyan,.35); ctx.fillRect(f.x, ay+ah, f.w, 1.5);
+  const exitD = mapDist(G.map.cur, n => n.type==='exit' || n.type==='base'), margin = (cur.x - G.fleetX)/step, bits = [];
+  if(exitD===0) bits.push(sd.final ? 'You are at Fedoration command' : 'You are at the exit beacon');
+  else if(exitD>0) bits.push(`${sd.final ? 'Fedoration command' : 'Exit'} ${exitD} jump${exitD===1?'':'s'} away`);
+  bits.push(margin <= 0 ? 'The fleet has caught you' : margin < 1.6 ? 'The fleet reaches you next jump' : `Fleet about ${Math.floor(margin)} jumps behind`);
+  if(exitD > 0 && G.fuel < exitD) bits.push(`only ${G.fuel} fuel`);
+  T(bits.join('  ·  '), f.x+32, f.y+f.h-58, { s:19, f:FD, w:600, c: margin < 1.6 || (exitD > 0 && G.fuel < exitD) ? C.warn : C.ink, max:f.w - 470 });
+  label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+32, f.y+f.h-26, jumpable ? C.muted : C.warn, 'left', 13);
   T(`Fuel ${G.fuel}`, f.x+f.w-330, f.y+f.h-44, { s:22, f:FD, w:700, c: G.fuel<=3?C.hostile:C.ink });
   btn(f.x+f.w-196, f.y+f.h-82, 160, 58, 'Close', () => { G.modal = null; });
 }

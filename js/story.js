@@ -333,7 +333,7 @@ const STORY_ENEMIES = {
   glass_sentinel:{ name:'Glass Sentinel', tags:['glass'], onlyTagged:true, hull:12, sectors:[1,9], systems:{ shields:4, engines:2, weapons:4, oxygen:1, piloting:1, doors:2 }, weapons:['halbird','heavy1'], crew:['glassborn','glassborn','glassborn'], color:'#bff4ff' }
 };
 const STORY_SECTORS = {
-  glass:{ name:'The Glasswork Expanse', secret:true, color:'#bff4ff', mix:{ event:52, combat:36, empty:12 }, tags:['glass'], enemyTags:['glass'], hazards:{ pulsar:.06 }, nebula:.25,
+  glass:{ name:'The Glasswork Expanse', blurb:'A route that should not exist, to a people nobody has met.', secret:true, color:'#bff4ff', mix:{ event:52, combat:36, empty:12 }, tags:['glass'], enemyTags:['glass'], hazards:{ pulsar:.06 }, nebula:.25,
     intro:['Light bends strangely here. Every surface seems to hum. The Glassborn have been waiting a very long time for visitors.'] }
 };
 const SECTOR_INTROS = {

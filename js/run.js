@@ -82,7 +82,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0;
   const mids = nodes.filter(nd => nd.col>=2 && nd.col<=cols-2);
   const storeN = Math.random() < .25 ? 3 : 2; const placed = [];
   for(const nd of shuffle(mids.slice())){ if(placed.length>=storeN) break; if(placed.some(p => Math.abs(p.col - nd.col) < 2)) continue; nd.type = 'store'; nd.distress = false; placed.push(nd); }
-  G.map = { nodes, cur:0 }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
+  G.map = { nodes, cur:0, trail:[0] }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
   G.flag = null;
   if(sd.secret){ G.flags.glassDone = true; grant('glasswork'); placeQuest('glass_welcome'); }
@@ -127,7 +127,7 @@ function moveFlagship(){
 }
 function arrive(i){ G.fightsHere = 0; return withSeed(`s${G.sector}n${i}arrive`, () => arrive_(i)); }
 function arrive_(i){
-  const node = G.map.nodes[i]; G.map.cur = i;
+  const node = G.map.nodes[i]; G.map.cur = i; (G.map.trail || (G.map.trail = [])).push(i);
   const sd = sectorDef();
   G.fleetX += fleetStep() * (node.nebula ? .7 : 1); G.stats.jumps++; grant('first_jump');
   G.hazard = node.hazard || (node.nebula ? 'nebula' : null); G.nebula = !!node.nebula; G.hzT = rand(5,9); G.hzWarn = false;
@@ -414,6 +414,7 @@ function sellValue(kind, id){ const d = kind==='weapon' ? DATA.weapons[id] : kin
 
 /* ---------------- main update ---------------- */
 function update(dt){
+  if(typeof pollPad==='function') pollPad(dt);
   updateStars(dt);
   if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
   if(typeof checkHints==='function') checkHints(dt);

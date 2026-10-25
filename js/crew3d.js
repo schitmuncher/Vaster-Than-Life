@@ -150,7 +150,7 @@ function buildCrew3D(c){
   const ext = new THREE.Group(); const can = new THREE.Mesh(G_.ext, c3Mat('ext', () => sm('#c8202a', { metalness:.4 }))); ext.add(can); const nz_ = new THREE.Mesh(G_.nozzle, boots); nz_.position.set(0, .18, .04); nz_.rotation.x = 1.2; ext.add(nz_);
   ext.visible = false; if(parts.arms[1]){ ext.position.set(0, (parts.handY ?? -.42) + .02, .08); parts.arms[1].add(ext); } parts.ext = ext;
   // nameplate
-  const pc = mkCanvas(256, 72); const pt = texFrom(pc); const plate = new THREE.Sprite(new THREE.SpriteMaterial({ map:pt, transparent:true, depthWrite:false, depthTest:true })); plate.scale.set(.62, .175, 1); plate.position.y = 2.0; g.add(plate);
+  const pc = mkCanvas(256, 90); const pt = texFrom(pc); const plate = new THREE.Sprite(new THREE.SpriteMaterial({ map:pt, transparent:true, depthWrite:false, depthTest:true })); plate.scale.set(.62, .218, 1); plate.position.y = 2.0; g.add(plate);
   parts.plate = { sprite:plate, c:pc, tex:pt, key:'' };
   parts.height = race==='sloog' ? 1.6 : race==='pebblekin' ? 1.8 : 1.85;
   // bake rigid parts to cut draw calls: the body, then each limb on its own pivot
@@ -162,16 +162,18 @@ function buildCrew3D(c){
 }
 function drawPlate(P, c, job, hostile){
   const an = typeof avatarName==='function' ? avatarName(c) : null, av = an ? getImg(`assets/avatars/${an}.png`) : null;
-  const key = c.name + '|' + Math.ceil(c.hp) + '|' + (job?.k||'') + '|' + (c.mcT>0) + (av ? 'a' : '');
+  const tr = !hostile && c.trait && DATA.traits?.[c.trait], sub = tr ? tr.name : (DATA.races[c.race]?.name || '');
+  const key = c.name + '|' + Math.ceil(c.hp) + '|' + (job?.k||'') + '|' + (c.mcT>0) + (av ? 'a' : '') + '|' + sub + '|' + C.good;
   if(P.plate.key===key) return; P.plate.key = key;
-  const g = P.plate.c.getContext('2d'); g.clearRect(0,0,256,72);
-  g.fillStyle = 'rgba(8,12,24,.78)'; if(g.roundRect){ g.beginPath(); g.roundRect(2,2,252,68,12); g.fill(); } else g.fillRect(2,2,252,68);
+  const g = P.plate.c.getContext('2d'); g.clearRect(0,0,256,90);
+  g.fillStyle = 'rgba(8,12,24,.78)'; if(g.roundRect){ g.beginPath(); g.roundRect(2,2,252,86,12); g.fill(); } else g.fillRect(2,2,252,86);
   g.font = "700 24px 'Chakra Petch', sans-serif"; g.textAlign = 'center';
   const ox = av ? 34 : 0, bx = av ? 70 : 28, bw = av ? 178 : 200;
-  if(av){ g.fillStyle = hostile ? 'rgba(80,20,30,.9)' : 'rgba(30,44,84,.9)'; g.fillRect(6,6,58,60); g.imageSmoothingEnabled = false; g.drawImage(av, 4, 5, 62, 62); g.strokeStyle = hostile ? '#ff5a7a' : '#f2b441'; g.lineWidth = 2; g.strokeRect(6,6,58,60); }
+  if(av){ g.fillStyle = hostile ? 'rgba(80,20,30,.9)' : 'rgba(30,44,84,.9)'; g.fillRect(6,12,58,60); g.imageSmoothingEnabled = false; g.drawImage(av, 4, 11, 62, 62); g.strokeStyle = hostile ? C.hostile : '#f2b441'; g.lineWidth = 2; g.strokeRect(6,12,58,60); }
   g.fillStyle = hostile ? '#ff9aa8' : c.mcT>0 ? '#b48cff' : '#ffffff'; g.fillText(c.name.slice(0, av ? 10 : 14), 128 + ox, 28);
-  if(job){ g.font = "500 15px 'IBM Plex Mono', monospace"; g.fillStyle = JOB_COL?.[job.k] || '#c8ccd8'; g.fillText(job.text.slice(0, av ? 22 : 28), 128 + ox, 48); }
-  const fr = clamp(c.hp/c.maxHp, 0, 1); g.fillStyle = '#1a2440'; g.fillRect(bx, 56, bw, 8); g.fillStyle = fr>.5 ? '#7be0a0' : fr>.25 ? '#ffd166' : '#ff5a7a'; g.fillRect(bx, 56, bw*fr, 8);
+  if(sub){ g.font = "600 14px 'Chakra Petch', sans-serif"; g.fillStyle = tr ? '#ffb547' : '#c8ccd8'; g.fillText(sub.slice(0, av ? 20 : 26), 128 + ox, 46); }
+  if(job){ g.font = "500 15px 'IBM Plex Mono', monospace"; g.fillStyle = JOB_COL?.[job.k] || '#c8ccd8'; g.fillText(job.text.slice(0, av ? 22 : 28), 128 + ox, 65); }
+  const fr = clamp(c.hp/c.maxHp, 0, 1); g.fillStyle = '#1a2440'; g.fillRect(bx, 73, bw, 8); g.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; g.fillRect(bx, 73, bw*fr, 8);
   P.plate.tex.needsUpdate = true;
 }
 /* pose a crew figure for this frame. ctx: { moving, dir(Vector3), job, foeDir, t, dt } */

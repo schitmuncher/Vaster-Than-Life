@@ -25,7 +25,7 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 
 **Play position.** Choose **Standing**, **Seated** or **Lying down** in Settings, or from the pause screen while in VR. Seated puts you in the captain's chair at chair height. Lying down tilts the whole bridge so that looking at the ceiling shows the console in front of you: lie back, look up, and click the right stick to re-aim if needed. The right stick click always resets your position for the chosen mode.
 
-Look at either controller to see a label of what its buttons do. Turning style, teleport-only movement, the vignette, the magnifier, bigger VR text and the controller labels are all in **Settings → VR comfort & clarity**. Hovering over buttons gives a small haptic tick, the console texture is mipmapped so small text stays sharp, and small fonts are enlarged in VR.
+Look at either controller to see a label of what its buttons do. Turning style, teleport-only movement, the vignette, the magnifier, bigger VR text and the controller labels are in **Settings → VR movement** and **Settings → VR console**. Hovering over buttons gives a small haptic tick, the console texture is mipmapped so small text stays sharp, and small fonts are enlarged in VR.
 
 In VR you stand on the bridge of your ship. A **holotable** under the console shows 3D models of both ships, with fires, damage, crew, drones and shots in flight, and the enemy ship is out there beyond the canopy. You can turn the holotable off in Settings.
 
@@ -46,10 +46,25 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 | --- | --- |
 | Space | Pause |
 | M | Map |
+| S | Ship screen |
 | 1–4 | Select a weapon to target |
-| C | Cloak |
 | V | Hold fire / fire volley |
+| F | Autofire on / off |
+| C | Cloak |
+| H | Crew back to stations |
+| + / − | Game speed |
+| Arrow keys, Enter | Move between buttons and rooms, and select |
 | Esc | Close or cancel |
+
+| Game controller | Action |
+| --- | --- |
+| D-pad | Jump between buttons and rooms |
+| Left stick | Move a free cursor |
+| A / B | Select / back out |
+| X / Y | Hold fire / map |
+| LB / RB | Previous / next weapon (the cursor jumps to the enemy ship) |
+| LT / RT | Crew back to stations / autofire |
+| Start / View | Pause / ship screen |
 
 ## What's in the game
 
@@ -177,17 +192,28 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - **Backups**: Record > Save backup file writes your record, medals, unlocks, settings, mods and the run in progress to one file. Load it on another device (phone, PC, Quest) to carry on there.
 
 **Crew traits, veterans and voices**
-- Every crew member you recruit has a trait: Quick hands, Tough, Ace pilot, Gunner, Brawler, Medic, Shield tech or Swift. It shows on the roster, the crew card, the Ship screen and the store's crew for hire.
+- Every crew member you recruit has a trait: Quick hands, Tough, Ace pilot, Gunner, Brawler, Medic, Shield tech or Swift. It shows on the roster, the crew card, the Ship screen, the store's crew for hire and, in VR, on their nameplate.
 - From sector 3, about one ship in eight has a veteran crew: more hull and faster engines and weapons, but half again the scrap and a guaranteed weapon or augment.
 - Crew and enemy captains babble a few gibberish syllables when they talk, pitched for each race (Settings > Audio > Crew voices).
 - Five new medals: beat a veteran crew, finish a daily, three dailies in a row, fix 10 hazards by hand in VR, and sabotage 5 enemy systems in VR.
+
+**Sector map and routes**
+- The sector map is a star chart in the sector's colours. Beacons carry icons (store, hostile ship, distress call, quest, exit, Fedoration command), hazards show as small badges, and nebulas glow.
+- Your route through the sector is traced in amber and your ship sits on the beacon you are at. Live routes flow outward from you and light up amber under the pointer.
+- The Rebuff Fleet is a red front that sweeps across the chart; a dashed line shows where it will be after your next jump, and beacons it will reach next are ringed in red.
+- The footer says how many jumps the exit is, how far behind the fleet is, and warns when fuel is short.
+- At each exit beacon, the route cards show a short description of the sector, a danger rating, fights and events, who you will mostly meet and its hazards.
+
+**Accessibility**
+- Settings > Accessibility: a red-green safe palette (green becomes blue and the reds deepen, for protanopia and deuteranopia), high contrast text, text size, fewer flashes, game speed and smart pause in one place.
+- Play with a game controller or the keyboard alone: the d-pad or arrow keys jump between buttons and rooms with a clear focus ring, and A or Enter selects. See the tables above.
 
 **Interface helpers**
 - The title screen shows today's daily challenge, your last run and your record at a glance.
 - The field manual has four pages: basics, map and hazards, controls (mouse, keyboard, touch, Quest, VR ship) and tactics.
 - Hover any room on either ship for its system, power, damage, air, fires, breaches and who is inside.
 - Stores give advice: whether your volley can beat the shields carried by ships in this sector, and how each weapon fares against them. The Ship screen tells you when the next shield level adds a layer.
-- Keyboard: Space pause, M map, S ship screen, 1-4 weapons, V hold fire, F autofire, C cloak, H crew back to stations, + and − game speed, Esc cancel.
+- Keyboard: Space pause, M map, S ship screen, 1-4 weapons, V hold fire, F autofire, C cloak, H crew back to stations, + and − game speed, arrows and Enter to move and select, Esc cancel.
 - Phones: a quick two-finger tap pauses or resumes; on Android the back button closes windows, pauses, or steps back to the title.
 
 **Captain's tips**
@@ -319,6 +345,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |
 | `js/handson.js` | VR hands-on bonuses: fixing hazards, captain's station pads, enemy sabotage, salvage crates |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
+| `js/pad.js` | Game controller and keyboard focus: d-pad and arrow-key navigation between buttons and rooms, cursor, button actions |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |
 

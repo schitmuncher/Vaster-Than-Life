@@ -184,16 +184,16 @@ const BASE = {
   },
 
   sectors: {
-    civilian:  { name:'Civilian Sector',      color:'#7be0a0', mix:{ event:46, combat:40, empty:14 }, tags:[],          enemyTags:[],            hazards:{ asteroid:.06, sun:.05, ionstorm:.04, pulsar:.02 }, nebula:0 },
-    rebuff:    { name:'Rebuff Stronghold',    color:'#ff5a7a', mix:{ event:32, combat:56, empty:12 }, tags:['rebuff'],  enemyTags:['rebuff'],    hazards:{ asteroid:.06, sun:.06, ionstorm:.05, pulsar:.03 }, nebula:.05 },
-    pyrate:    { name:'Pyrate Haven',         color:'#ffd166', mix:{ event:42, combat:48, empty:10 },  tags:['pyrate'],  enemyTags:['pyrate'],    hazards:{ asteroid:.1,  sun:.05 }, nebula:0 },
-    nebula:    { name:'Uncharted Nebula',     color:'#8b6fd6', mix:{ event:48, combat:36, empty:16 }, tags:['nebula'],  enemyTags:[],            hazards:{ ionstorm:.08 }, nebula:.85, fleetMult:.6 },
-    sloog:     { name:'Sloog Nebula',         color:'#9fdc7a', mix:{ event:46, combat:42, empty:12 }, tags:['sloog','nebula'], enemyTags:['sloog'], hazards:{ ionstorm:.06 }, nebula:.7, fleetMult:.6 },
-    pebblekin: { name:'Pebblekin Homeworlds', color:'#c9a27e', mix:{ event:46, combat:44, empty:10 }, tags:['pebblekin'], enemyTags:['pebblekin'], hazards:{ asteroid:.16, sun:.04 }, nebula:0 },
-    enjinn:    { name:'Enjinn Controlled',    color:'#5fd3e6', mix:{ event:46, combat:44, empty:10 }, tags:['enjinn'],  enemyTags:['enjinn','auto'], hazards:{ asteroid:.06, pulsar:.04 }, nebula:0 },
-    voltan:    { name:'Voltan Homeworlds',    color:'#ffe27a', mix:{ event:48, combat:42, empty:10 }, tags:['voltan'],  enemyTags:['voltan'],    hazards:{ pulsar:.08, sun:.05 }, nebula:0 },
-    mantlis:   { name:'Mantlis Hives',        color:'#c6e05a', mix:{ event:36, combat:54, empty:10 }, tags:['mantlis'], enemyTags:['mantlis'],   hazards:{ asteroid:.06, sun:.06 }, nebula:0 },
-    laststand: { name:'The Last Stand',       color:'#ff5a7a', final:true, mix:{ event:30, combat:58, empty:12 }, tags:['rebuff'], enemyTags:['rebuff'], hazards:{ asteroid:.05, sun:.05 }, nebula:0, fleetMult:.5 }
+    civilian:  { name:'Civilian Sector', blurb:'Traders, travellers and the odd pyrate. A gentle place to find your feet.',      color:'#7be0a0', mix:{ event:46, combat:40, empty:14 }, tags:[],          enemyTags:[],            hazards:{ asteroid:.06, sun:.05, ionstorm:.04, pulsar:.02 }, nebula:0 },
+    rebuff:    { name:'Rebuff Stronghold', blurb:'Rebuff territory. More warships, tougher fights, better salvage.',    color:'#ff5a7a', mix:{ event:32, combat:56, empty:12 }, tags:['rebuff'],  enemyTags:['rebuff'],    hazards:{ asteroid:.06, sun:.06, ionstorm:.05, pulsar:.03 }, nebula:.05 },
+    pyrate:    { name:'Pyrate Haven', blurb:'Pyrate gangs, black markets and deals too good to be true.',         color:'#ffd166', mix:{ event:42, combat:48, empty:10 },  tags:['pyrate'],  enemyTags:['pyrate'],    hazards:{ asteroid:.1,  sun:.05 }, nebula:0 },
+    nebula:    { name:'Uncharted Nebula', blurb:'Thick gas hides you from the fleet, and hides everything from you.',     color:'#8b6fd6', mix:{ event:48, combat:36, empty:16 }, tags:['nebula'],  enemyTags:[],            hazards:{ ionstorm:.08 }, nebula:.85, fleetMult:.6 },
+    sloog:     { name:'Sloog Nebula', blurb:'A slow, damp nebula. The Sloog are friendlier than they smell.',         color:'#9fdc7a', mix:{ event:46, combat:42, empty:12 }, tags:['sloog','nebula'], enemyTags:['sloog'], hazards:{ ionstorm:.06 }, nebula:.7, fleetMult:.6 },
+    pebblekin: { name:'Pebblekin Homeworlds', blurb:'Rocky homeworlds ringed by asteroid fields.', color:'#c9a27e', mix:{ event:46, combat:44, empty:10 }, tags:['pebblekin'], enemyTags:['pebblekin'], hazards:{ asteroid:.16, sun:.04 }, nebula:0 },
+    enjinn:    { name:'Enjinn Controlled', blurb:'Enjinn traders and the automated ships that guard them.',    color:'#5fd3e6', mix:{ event:46, combat:44, empty:10 }, tags:['enjinn'],  enemyTags:['enjinn','auto'], hazards:{ asteroid:.06, pulsar:.04 }, nebula:0 },
+    voltan:    { name:'Voltan Homeworlds', blurb:'Voltan worlds crackling with pulsars and strange machines.',    color:'#ffe27a', mix:{ event:48, combat:42, empty:10 }, tags:['voltan'],  enemyTags:['voltan'],    hazards:{ pulsar:.08, sun:.05 }, nebula:0 },
+    mantlis:   { name:'Mantlis Hives', blurb:'Hive space. Mantlis raiders board first and ask never.',        color:'#c6e05a', mix:{ event:36, combat:54, empty:10 }, tags:['mantlis'], enemyTags:['mantlis'],   hazards:{ asteroid:.06, sun:.06 }, nebula:0 },
+    laststand: { name:'The Last Stand', blurb:"The Flaggship's final push on Fedoration command.",       color:'#ff5a7a', final:true, mix:{ event:30, combat:58, empty:12 }, tags:['rebuff'], enemyTags:['rebuff'], hazards:{ asteroid:.05, sun:.05 }, nebula:0, fleetMult:.5 }
   },
 
   events: {
