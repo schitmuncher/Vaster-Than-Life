@@ -33,7 +33,7 @@ function vuiRedraw(W_){ W_.draw(W_); W_.t.needsUpdate = true; W_.dirty = false; 
 
 /* ---------------- wrist menu ---------------- */
 function vuiInitWrist(){
-  const W_ = vuiMake(.3, .234, 640, 500, (Wd) => {
+  const W_ = vuiMake(.3, .281, 640, 600, (Wd) => {
     vuiFrame(Wd, 'CAPTAIN', VCOL.amber); const g = Wd.g; const paused = !!(G && G.paused);
     const bw = 192, bh = 92, gx = 20, gy = 70, gap = 12;
     const cell = (i) => ({ x: gx + (i%3)*(bw+gap), y: gy + Math.floor(i/3)*(bh+gap) });
@@ -53,6 +53,10 @@ function vuiInitWrist(){
     c = cell(9); vuiBtn(Wd, c.x, c.y, bw, bh, nAl ? `ALERT ×${nAl}` : 'NO ALERTS', () => goToAlert(), { s:24, col:VCOL.bad, fill:nAl>0 && (Math.floor(VUI.t*2)%2===0), disabled:!nAl || !!aboard });
     c = cell(10); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO BRIDGE', () => goToBridge(), { s:24, col:VCOL.amber, disabled:!!aboard });
     c = cell(11); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO TELEPORT', () => goToRoomSys('teleporter'), { s:22, col:'#b48cff', disabled:!inShip || !!aboard });
+    const sp = SET.speed || 1;
+    c = cell(12); vuiBtn(Wd, c.x, c.y, bw, bh, `SPEED ${Math.round(sp*100)}%`, () => { const L = [.5,.75,1,1.25]; SET.speed = L[(L.indexOf(sp)+1) % L.length]; saveProfile(); }, { s:22, col:VCOL.cyan, fill:sp!==1 });
+    c = cell(13); vuiBtn(Wd, c.x, c.y, bw, bh, G && G.autofire ? 'AUTOFIRE' : 'FIRE: HOLD', () => { if(G) G.autofire = !G.autofire; }, { s:22, col:VCOL.bad, fill:!!(G && G.autofire), disabled:!G });
+    c = cell(14); vuiBtn(Wd, c.x, c.y, bw, bh, 'STATIONS', () => { if(G){ returnToStations(G.ship); toast('Crew back to stations.'); } }, { s:22, col:VCOL.good, disabled:!G });
     g.font = "500 22px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText(`height ${h>0?'+':''}${h} cm`, 618, 46);
   });
   W_.mesh.visible = false; VUI.wrist = W_;
@@ -61,7 +65,7 @@ function vuiUpdateWrist(){
   const W_ = VUI.wrist; if(!W_) return;
   const left = controllers.find(c => c.userData.src && c.userData.src.handedness==='left');
   if(!left || SET.vrWrist === false){ W_.mesh.visible = false; return; }
-  if(W_.mesh.parent !== left){ left.add(W_.mesh); W_.mesh.position.set(.0, .12, -.04); W_.mesh.rotation.set(-.9, 0, 0); }
+  if(W_.mesh.parent !== left){ left.add(W_.mesh); W_.mesh.position.set(.0, .145, -.04); W_.mesh.rotation.set(-.9, 0, 0); }
   const camP = headWorld(), camD = new THREE.Vector3(); camera.getWorldDirection(camD);
   const cp = new THREE.Vector3().setFromMatrixPosition(left.matrixWorld), to = cp.clone().sub(camP), dist = to.length(); to.normalize();
   const want = dist < .8 && to.dot(camD) > .82 || VUI.hover.some(hv => hv && hv.W === W_);
@@ -104,9 +108,23 @@ function vuiRoomConsole(I, R){
     else if(k==='piloting'){ vuiBtn(Wd, ax, by, aw, bh, G.crewAuto ? 'AUTO CREW ON' : 'AUTO CREW OFF', () => { G.crewAuto = !G.crewAuto; }, { s:20, fill:G.crewAuto, col:VCOL.good }); }
     else if(k==='teleporter'){ const can = IN.foe && G.enemy && !G.enemy.dead; vuiBtn(Wd, ax, by, aw, bh, 'BEAM OVER', () => beamCaptain(true), { s:24, col:'#b48cff', disabled:!can }); }
     else { g.font = "500 20px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'left'; const t = { shields:`${Math.floor(s.power/2)} shield layers`, engines:`Evade ${Math.round(typeof evasion==='function' ? evasion(sh) : 0)}%`, medbay:'Heals crew in this room', sensors:'Shows enemy rooms', battery:'Backup power', drones:'Drones need parts' }[k] || 'Power it to use it'; g.fillText(t, ax, by + 42); }
-    g.font = "500 18px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'left'; g.fillText('Point at a button and pull the trigger', 24, 262);
+    if(k==='weapons'){ // aim each gun at an enemy system from here: each press picks the next target
+      const e = G.enemy && !G.enemy.dead ? G.enemy : null; const ws = sh.weapons.slice(0, 4), bw = 112;
+      ws.forEach((w,i) => { const d = DATA.weapons[w.id]; const tgt = w.target!=null && e && e.rooms[w.target] ? (SYSS[e.rooms[w.target].sys] || 'ROOM') : '—';
+        vuiBtn(Wd, 24 + i*(bw+8), 206, bw, 64, `${i+1}:${tgt}`, () => cycleWeaponTarget(i), { s:20, col: w.on ? VCOL.amber : VCOL.muted, disabled: !w.on || !e || !!(d && d.heal) }); });
+      if(!ws.length){ g.font = "500 18px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'left'; g.fillText('No weapons mounted', 24, 246); } }
+    else { g.font = "500 18px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'left'; g.fillText('Point at a button and pull the trigger', 24, 262); }
   });
   W_.mesh.userData.room = R; W_.key = ''; return W_;
+}
+
+/* weapons console: each press aims a gun at the next enemy system (shields, weapons, helm, engines, oxygen, then any other), or clears it */
+function cycleWeaponTarget(i){
+  const sh = G && G.ship, e = G && G.enemy && !G.enemy.dead ? G.enemy : null, w = sh && sh.weapons[i]; if(!w || !e || !w.on) return;
+  const order = ['shields','weapons','piloting','engines','oxygen','drones','medbay','teleporter','cloaking','hacking','mindcontrol','sensors','doors','clonebay','battery'];
+  const rooms = order.map(k => roomOf(e,k)).filter(r => r>=0 && e.systems[e.rooms[r].sys]);
+  const cur = rooms.indexOf(w.target); w.target = cur + 1 < rooms.length ? rooms[cur + 1] : null; if(w.target==null && cur<0 && rooms.length) w.target = rooms[0];
+  toast(`Weapon ${i+1}: ${w.target==null ? 'no target' : SYSN[e.rooms[w.target].sys] || 'room'}`);
 }
 
 /* ---------------- per-frame, picking, clicking ---------------- */

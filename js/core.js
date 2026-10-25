@@ -7,7 +7,8 @@ const ri = (a,b) => Math.floor(rand(a,b+1));
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const clone = o => JSON.parse(JSON.stringify(o));
-const uid = () => Math.random().toString(36).slice(2,10);
+const MR0 = Math.random.bind(Math);   // the real random source: ids must stay unique even while a seeded run swaps Math.random
+let UIDN = 0; const uid = () => (UIDN++).toString(36) + MR0().toString(36).slice(2,9);
 function hexA(hex, a){ const h = String(hex).replace('#',''); const n = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h.slice(0,6), 16);
   return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
 function wpick(items, wf){ const tot = items.reduce((s,i)=>s+Math.max(0,wf(i)),0); if(tot<=0) return items[0]; let r = Math.random()*tot; for(const i of items){ r -= Math.max(0,wf(i)); if(r<=0) return i; } return items[items.length-1]; }
@@ -29,6 +30,8 @@ function grant(id){
   PROFILE.ach[id] = Date.now(); saveProfile(); if(typeof sfx==='function') sfx('achieve');
   if(typeof toast==='function') toast(`Achievement: ${a.name}`); sfx('buy');
 }
+/* the difficulty of the run in progress (a daily challenge fixes its own), or the one picked in the hangar */
+function curDiff(){ return DIFFICULTY[(typeof G!=='undefined' && G && G.diff) || SET.difficulty] || DIFFICULTY.normal; }
 function shipUnlocked(def){
   if(SET.unlockAll || PROFILE.unlocked?.[def.id]) return true; const u = def.unlock; if(!u) return true;
   if(u.sector) return PROFILE.maxSector >= u.sector;
@@ -54,17 +57,17 @@ let HOOKS = {};
 function on(evt, fn){ (HOOKS[evt] = HOOKS[evt] || []).push(fn); }
 function emit(evt, arg){ const list = HOOKS[evt]; if(!list) return; for(const fn of list){ try{ fn(arg); }catch(e){ if(typeof toast==='function') toast('Mod script error: ' + e.message); } } }
 function toMap(x){ if(!x) return {}; if(Array.isArray(x)){ const m={}; x.forEach(o=>{ if(o && o.id!=null) m[o.id]=o; }); return m; } return typeof x==='object' ? x : {}; }
-function applyMods(){
+function applyMods(baseOnly){
   DATA = clone(BASE); HOOKS = {};
   for(const k of KINDS) for(const id in DATA[k]) DATA[k][id].id = id;
   for(const m of MODS){
-    if(!m.enabled) continue; const d = m.data || {};
+    if(!m.enabled || baseOnly) continue; const d = m.data || {};
     if(d.rules && typeof d.rules==='object') Object.assign(DATA.rules, d.rules);
     for(const k of KINDS){ const mp = toMap(d[k]); for(const id in mp) DATA[k][id] = Object.assign({}, DATA[k][id]||{}, mp[id], { id }); }
     if(d.remove && typeof d.remove==='object') for(const k in d.remove) if(DATA[k] && Array.isArray(d.remove[k])) d.remove[k].forEach(id => delete DATA[k][id]);
   }
   R = DATA.rules;
-  if(SET.allowScripts){ for(const m of MODS){ if(!m.enabled || typeof m.data?.script!=='string') continue;
+  if(SET.allowScripts && !baseOnly){ for(const m of MODS){ if(!m.enabled || typeof m.data?.script!=='string') continue;
     try{ new Function('VTL', m.data.script)(modAPI()); }catch(e){ if(typeof toast==='function') toast(`Script in ${m.name} failed: ${e.message}`); } } }
 }
 function modAPI(){

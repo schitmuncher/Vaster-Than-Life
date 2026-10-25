@@ -108,7 +108,7 @@ cv.addEventListener('pointerdown', e => {
   MOB.ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if(MOB.ptrs.size === 2){ // start pinch: cancel any tap in progress
     if(MOB.press){ clearTimeout(MOB.press.timer); MOB.press = null; } PTR[0].on = false;
-    const [a, b] = [...MOB.ptrs.values()]; MOB.pinch = { d0:Math.hypot(a.x-b.x, a.y-b.y), z0:MOB.z, px0:MOB.px, py0:MOB.py, mx0:(a.x+b.x)/2, my0:(a.y+b.y)/2 };
+    const [a, b] = [...MOB.ptrs.values()]; MOB.pinch = { d0:Math.hypot(a.x-b.x, a.y-b.y), z0:MOB.z, px0:MOB.px, py0:MOB.py, mx0:(a.x+b.x)/2, my0:(a.y+b.y)/2, t0:performance.now(), maxD:0 };
     return; }
   if(MOB.ptrs.size > 2) return;
   PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = true;   // finger down shows the pressed/hover state
@@ -118,7 +118,10 @@ cv.addEventListener('pointerdown', e => {
 function endPointer(e){
   if(e.pointerType==='mouse') return;
   MOB.ptrs.delete(e.pointerId);
-  if(MOB.pinch){ if(MOB.ptrs.size < 2){ MOB.pinch = null; MOB.pinchEnded = performance.now(); } return; }
+  if(MOB.pinch){ if(MOB.ptrs.size < 2){ const P = MOB.pinch; MOB.pinch = null; MOB.pinchEnded = performance.now();
+      // a quick two-finger tap (no pinch, no drag) pauses or resumes
+      if(performance.now() - P.t0 < 280 && P.maxD < 16 && UI.screen==='game' && G && !G.modal){ MOB.z = P.z0; MOB.px = P.px0; MOB.py = P.py0; clampPan(); applyTransform(); G.paused = !G.paused; haptic(.3, 20); toast(G.paused ? 'Paused (two-finger tap to resume)' : 'Resumed'); } }
+    return; }
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
   clearTimeout(pr.timer); MOB.press = null;
   const p = evGame(e);
@@ -138,6 +141,7 @@ cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', e => { MOB.ptrs.delete(e.pointerId); if(MOB.press && MOB.press.id===e.pointerId){ clearTimeout(MOB.press.timer); MOB.press = null; } if(MOB.ptrs.size < 2) MOB.pinch = null; PTR[0].on = false; });
 function pinchMove(){
   const [a, b] = [...MOB.ptrs.values()]; const P = MOB.pinch; const d = Math.hypot(a.x-b.x, a.y-b.y); const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+  P.maxD = Math.max(P.maxD||0, Math.abs(d - P.d0), Math.hypot(mx - P.mx0, my - P.my0));
   const z = clamp(P.z0 * d/Math.max(20, P.d0), 1, 4);
   // keep the game point that was under the fingers' midpoint under it
   const g0 = screenToGame(P.mx0, P.my0, { z:P.z0, px:P.px0, py:P.py0 });
@@ -183,3 +187,16 @@ function mobileFrame(){
 window.addEventListener('resize', () => setTimeout(layoutGame, 30));
 window.addEventListener('orientationchange', () => setTimeout(layoutGame, 250));
 if(window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(layoutGame, 30));
+
+/* Android back button / back gesture: close the open window, pause or resume a run, or step back to the title.
+   At the title it does what the browser normally does. */
+function handleBack(){
+  if(UI.hint){ closeHint(false); return true; }
+  if(UI.screen==='game' && G){ if(G.modal && ['map','ship','store'].includes(G.modal.type)){ G.modal = null; return true; } if(!G.modal) G.paused = !G.paused; return true; }
+  if(UI.screen!=='title'){ UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; return true; }
+  return false;
+}
+if(MOB.touch && window.history && history.pushState){
+  try{ history.pushState({ vtl:1 }, ''); }catch(e){}
+  window.addEventListener('popstate', () => { if(handleBack()){ try{ history.pushState({ vtl:1 }, ''); }catch(e){} } });
+}

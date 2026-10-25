@@ -158,25 +158,50 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - **Living crew**: idle crew turn to look at you and follow you with their heads, say hello, shout when they fight fires or boarders, and thank you when you fix something or cover a post, in speech bubbles.
 - **Better metal**: panelled, weathered hull plating with vents, machines with panel seams, rivets and caution stripes, brushed trim, and enemy ships with a panel-and-rivet hull, a pointed nose and a faction look (spiked pirates, blade-winged rebels, crested aliens).
 - **Medal wall**: the achievements you've earned light up on the bridge wall.
-- Planned next: door panels and weapon targeting from the room console.
+- **Weapons console**: the panel in the weapons room has a button per gun. Each press aims that gun at the next enemy system (shields, weapons, helm, engines, oxygen and so on) or clears it.
+- **Wrist menu** extras: game speed, autofire and "crew back to stations".
+- Planned next: door panels.
 
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
 - Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
 - Battles have bolt-shaped laser fire, muzzle flashes, smoking missiles, impact shockwaves, shield flares and multi-stage ship explosions.
 
-**Settings** are organised into Audio, Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), VR movement (play position, height, turning, walking, running, vignette, comfort presets) and VR console (magnifier, text size, controller help, size resets), Gameplay and Profile.
+**Settings** are organised into Audio (master, music, effects, ambience, music source), Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), Screen & touch, VR movement (play position, height, turning, walking, running, vignette, comfort presets), VR console (magnifier, text size, controller help, controller buzz, size resets), Gameplay (difficulty, game speed, ship experience, hands-on play, tips, smart pause, unlocks, mod scripts) and Profile.
+
+**Runs, seeds and the daily challenge**
+- Every run has a **seed**. The same seed gives the same sector maps, beacon events, enemies, stores, sector choices and loot, so you can replay a run or share it. Type one in the hangar (Enter seed), or leave it on Random.
+- The **Daily run** is the same for everyone each day: a ship picked by the date, Normal difficulty, mods off. The title screen shows today's ship, your best score today and your streak.
+- **Game speed** (Settings > Gameplay, the pause screen, the VR wrist menu, or + and − on the keyboard) runs fights and crew at 50%, 75%, 100% or 125%.
+- **Captain's record** keeps your last 30 runs (ship, difficulty, result, score, seed, with a Replay button), your best per ship and your daily scores. The end of a run shows a score, the captain's log, the seed, and buttons to try again or replay the same seed.
+- **Backups**: Record > Save backup file writes your record, medals, unlocks, settings, mods and the run in progress to one file. Load it on another device (phone, PC, Quest) to carry on there.
+
+**Interface helpers**
+- The title screen shows today's daily challenge, your last run and your record at a glance.
+- The field manual has four pages: basics, map and hazards, controls (mouse, keyboard, touch, Quest, VR ship) and tactics.
+- Hover any room on either ship for its system, power, damage, air, fires, breaches and who is inside.
+- Stores give advice: whether your volley can beat the shields carried by ships in this sector, and how each weapon fares against them. The Ship screen tells you when the next shield level adds a layer.
+- Keyboard: Space pause, M map, S ship screen, 1-4 weapons, V hold fire, F autofire, C cloak, H crew back to stations, + and − game speed, Esc cancel.
+- Phones: a quick two-finger tap pauses or resumes; on Android the back button closes windows, pauses, or steps back to the title.
 
 **Captain's tips**
 - Short, contextual tips appear the first time each mechanic matters: targeting shields, volley fire, missiles and beams, spare power, fire, breaches, boarders, low oxygen, mind control, the medbay, fleeing, upgrading, stores, fuel, the fleet, being outgunned, and a Flagship briefing before the last sector.
 - Combat tips pause the game and highlight the part of the screen they talk about. Turn them off with "No more tips", or replay them from Settings.
 - First-time captains start on Easy.
 
+**Balance, tested by autoplay**
+- An autoplay bot plays hundreds of whole runs, and an "arena" pits an expected ship for each sector against every enemy, to keep fights fair. On Normal, a ship with a sensible build loses about 1-2 hull per fight in sectors 1-3 and about 5 per fight in sectors 5-7.
+- The crew autopilot fights boarders as a group: everyone who can fight goes in together when they can win, otherwise they rally in the Medbay and fight there while healing.
+- Mind control lasts a set time and then has a cooldown, so enemy Puppeteers can't keep one of your crew forever.
+- Enemy shields grow to 2 layers from sector 5 and 3 only in the last sector. Extra enemy guns come from the sector's weapon tier and must fit the ship's weapon power.
+- Weapons and drones that lose power to damage, ion or a power shuffle switch back on (and re-aim) when the power returns.
+- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. The Flaggship also fires slower on Normal.
+
 **Mechanics tuned to FTL reference numbers**
 - Oxygen refills at 1.2 / 4.8 / 8.4 % per second by level and drains at 1.2 % per second when unpowered; breaches drain 8 % per second.
 - Ion damage locks a system for 5 seconds per hit, stacking up to 25 seconds.
 - Weapons use FTL's fire and breach chances, and a hit only rolls for a breach if it didn't start a fire.
-- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase.
+- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase (18 on Easy).
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**

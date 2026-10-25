@@ -25,7 +25,7 @@ function ensureAudio(){
 }
 function makeImpulse(sec, decay){ const n = Math.floor(AC.sampleRate*sec), b = AC.createBuffer(2, n, AC.sampleRate);
   for(let ch=0; ch<2; ch++){ const d = b.getChannelData(ch); for(let i=0;i<n;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/n, decay); } return b; }
-function applyVolumes(){ if(!AC) return; SFXG.gain.value = SET.sfx; MUSG.gain.value = SET.music*.6; AMBG.gain.value = (SET.amb ?? .5); }
+function applyVolumes(){ if(!AC) return; MASTER.gain.value = SET.master ?? 1; SFXG.gain.value = SET.sfx; MUSG.gain.value = SET.music*.6; AMBG.gain.value = (SET.amb ?? .5); }
 const now = () => AC.currentTime;
 
 /* ---------------- synth building blocks ---------------- */

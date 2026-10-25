@@ -7,21 +7,35 @@ let G = null;
 const UI = { screen:'title', selCrew:null, selCrews:[], selWeapon:null, mode:null, page:0, selShip:null, toast:null, tab:'systems', storeTab:'weapons', overReason:'', modsPage:0 };
 function toast(t){ UI.toast = { text:t, t:2.6 }; }
 
-function newRun(shipId, name){
-  applyMods();
+/* ---------------- seeds ----------------
+   Every run has a seed. The same seed gives the same sector maps, beacon events,
+   enemies, stores, sector choices and loot, so a run can be replayed or shared.
+   The daily challenge is a seed made from the date, on a ship picked by the date,
+   at Normal difficulty with mods off, so everyone plays the same run that day. */
+const SEED_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function randomSeed(){ let s = ''; for(let i=0;i<8;i++){ s += SEED_ABC[Math.floor(Math.random()*SEED_ABC.length)]; if(i===3) s += '-'; } return s; }
+function cleanSeed(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,24); }
+function todayKey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dailyShip(k){ const ids = Object.keys(BASE.ships); return ids[hashStr('ship' + (k||todayKey())) % ids.length]; }
+function withSeed(key, fn){ if(!G || !G.seed) return fn(); const prev = Math.random; Math.random = srng(hashStr(G.seed + '|' + key) || 1); try{ return fn(); } finally { Math.random = prev; } }
+function startDaily(){ const k = todayKey(); newRun(dailyShip(k), null, { seed:'DAILY-' + k, daily:k }); }
+
+function newRun(shipId, name, o={}){
+  applyMods(!!o.daily);
   const def = DATA.ships[shipId] || Object.values(DATA.ships)[0];
-  const diff = DIFFICULTY[SET.difficulty] || DIFFICULTY.normal;
-  G = { shipDef:def.id, ship:makeShip(def,'p',{ name }), enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
+  const diffKey = o.daily ? 'normal' : SET.difficulty, diff = DIFFICULTY[diffKey] || DIFFICULTY.normal;
+  G = { seed:cleanSeed(o.seed) || randomSeed(), daily:o.daily || null, diff:diffKey, shipDef:def.id, ship:null, enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
     scrap:Math.max(0, R.startScrap + diff.startScrap), fuel:def.fuel ?? 16, missiles:def.missiles ?? 8, parts:def.parts ?? R.startParts,
     paused:false, modal:null, ftl:0, warp:0, warpNode:null, fleetX:-.2, boss:false, dieT:0, shake:0, flash:0, map:null,
     hazard:null, hzT:6, hzWarn:false, nebula:false, autofire:true, combatT:0, time:0, afterWin:null, flag:null, questQueue:[],
     stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true };
+  G.ship = withSeed('start', () => makeShip(def,'p',{ name }));
   genSector(1, 'civilian');
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`);
-  G.modal = { type:'msg', title:'Sector 1 · Civilian Sector', text:`You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
+  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
   save();
 }
 function saveReplacer(k, v){ if(k==='adj' || k==='modal' || (typeof k==='string' && k[0]==='_')) return undefined; return v; }
@@ -36,7 +50,8 @@ function loadSave(){
 
 /* ---------------- sectors & map ---------------- */
 function sectorDef(t){ return DATA.sectors[t || G.sectorType] || DATA.sectors.civilian || Object.values(DATA.sectors)[0]; }
-function genSector(n, type){ if(G) G.fleetFights = 0;
+function genSector(n, type){ return withSeed(`sector${n}:${type}`, () => genSector_(n, type)); }
+function genSector_(n, type){ if(G) G.fleetFights = 0;
   G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final;
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
@@ -95,7 +110,7 @@ function leaveCombat(){
   for(const r of G.ship.rooms) if(r.scorch>0) r.scorch = Math.max(0, r.scorch - 2);
   for(const c of G.ship.crew) if(c.owner==='p') c.mcT = 0;
   G.enemy = null; G.proj = []; G.units = []; G.ftl = 0; G.boss = false; UI.selWeapon = null; UI.mode = null;
-  for(const w of G.ship.weapons){ w.charge = 0; w.target = null; }
+  for(const w of G.ship.weapons){ w.charge = 0; w.target = null; w.autoTarget = null; }
   for(const d of G.ship.drones){ const bp = DATA.drones[d.id]; if(bp && bp.kind!=='internal') d.unit = null; }
   G.ship.hackLaunched = false; G.ship.hacked = null; G.ship.super = 0; G.ship.cloak.t = 0;
 }
@@ -110,10 +125,11 @@ function moveFlagship(){
   if(nodes[f.node].type==='combat' && !nodes[f.node].visited) nodes[f.node].type = 'empty';
   f.node = k;
 }
-function arrive(i){
+function arrive(i){ G.fightsHere = 0; return withSeed(`s${G.sector}n${i}arrive`, () => arrive_(i)); }
+function arrive_(i){
   const node = G.map.nodes[i]; G.map.cur = i;
   const sd = sectorDef();
-  G.fleetX += R.fleetSpeed * (sd.fleetMult||1) * (node.nebula ? .7 : 1); G.stats.jumps++; grant('first_jump');
+  G.fleetX += fleetStep() * (node.nebula ? .7 : 1); G.stats.jumps++; grant('first_jump');
   G.hazard = node.hazard || (node.nebula ? 'nebula' : null); G.nebula = !!node.nebula; G.hzT = rand(5,9); G.hzWarn = false;
   if(G.ship.systems.clonebay && eff(G.ship,'clonebay')>0) for(const c of G.ship.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + 20);
   const first = !node.visited; node.visited = true;
@@ -138,9 +154,11 @@ function arrive(i){
       G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text }; save(); }
   }
 }
+function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1); }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
   ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Rebuff Fleet is slower in here too.' }[h]; }
-function sectorOptions(){
+function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
+function sectorOptions_(){
   if(G.sector+1 >= R.sectors) return ['laststand'];
   const types = Object.keys(DATA.sectors).filter(t => !DATA.sectors[t].final && !DATA.sectors[t].secret && t!=='civilian');
   shuffle(types); const opts = types.slice(0,2);
@@ -190,9 +208,10 @@ function chooseOption(ch){
   const prev = G.modal || {}; const cx = Object.assign({}, prev.ctx||{ crew:randomCrewName() });
   cx.who = ch.req?.race ? randomCrewName(ch.req.race) : cx.crew;
   if(ch.cost){ G.scrap -= ch.cost.scrap||0; G.fuel -= ch.cost.fuel||0; G.missiles -= ch.cost.missiles||0; G.parts -= ch.cost.parts||0; }
+  const ck = `s${G.sector}n${G.map?.cur}c${hashStr(ch.text||'')}`;
   let e = ch.effect || {};
-  if(ch.chance!=null) e = Math.random() < ch.chance ? (ch.success||{}) : (ch.fail||{});
-  const lines = applyEffect(e);
+  if(ch.chance!=null) e = withSeed(ck + 'roll', () => Math.random()) < ch.chance ? (ch.success||{}) : (ch.fail||{});
+  const lines = withSeed(ck + 'fx', () => applyEffect(e));
   logEntry(`${fillText(ch.text, cx)} ${e.text ? '— ' + fillText(e.text, cx) : ''}`.trim());
   if(UI.screen!=='game') return;
   const after = { fight:e.fight, event:e.event, store:e.store, afterWin:e.afterWin, begin:e.begin, dismiss:e.dismiss };
@@ -203,7 +222,7 @@ function chooseOption(ch){
 function sign(n){ return (n>0?'+':'') + n; }
 function applyEffect(e){
   const L = [], s = G.ship; if(!e) return L;
-  const sm = (DIFFICULTY[SET.difficulty]||DIFFICULTY.normal).scrap * (hasAug(s,'scrapArm') ? 1.1 : 1);
+  const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1);
   if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
   if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
@@ -278,9 +297,10 @@ function pickEnemy(n){
   if(!pool.length) pool = Object.values(DATA.enemies).filter(e => !e.boss);
   return wpick(pool, e => (e.tags||[]).some(t=>bias.includes(t)) ? 4 : 1);
 }
-function startCombat(id, o={}){
+function startCombat(id, o={}){ G.fightsHere = (G.fightsHere||0) + 1; return withSeed(`s${G.sector}n${G.map?.cur}f${G.fightsHere}`, () => startCombat_(id, o)); }
+function startCombat_(id, o={}){
   if(o.harder) G.fleetFights = (G.fleetFights||0) + 1;
-  const n = Math.min(G.sector + (o.harder ? 1 + Math.floor(((G.fleetFights||1)-1)/3) : 0), 9);
+  const n = Math.max(1, Math.min(G.sector + (o.harder ? 1 + Math.floor(((G.fleetFights||1)-1)/3) : 0), 9) - (curDiff().ease||0));   // Easy: enemies are a sector behind
   const def = id==='flag' ? DATA.enemies[R.bossId] : (id && id!=='random' && DATA.enemies[id]) ? DATA.enemies[id] : pickEnemy(n);
   if(!def){ G.modal = { type:'msg', title:'All clear', text:'Sensors show no hostiles.' }; return; }
   G.enemy = makeShip(def, 'e', { sector:n, phase:o.phase||0 }); G.enemy.fleet = !!o.harder;
@@ -322,13 +342,13 @@ function finishCombat(kind, offer){
   if(kind==='surrender') L.push(...applyEffect(offer));
   else {
     if(e.fleet){ L.push(...applyEffect({ scrap: ri(3,8) })); L.unshift('Fleet warships are stripped for war: there is almost nothing worth salvaging. Get ahead of the fleet!'); }
-    else {
-    const reward = { scrap: Math.round((ri(18,28) + G.sector*9) * (kind==='crew' ? 1.5 : 1)) };
+    else { withSeed(`s${G.sector}n${G.map?.cur}loot${G.fightsHere||0}`, () => {
+    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1)) };
     if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
     if(Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
-    L.push(...applyEffect(reward)); }
+    L.push(...applyEffect(reward)); }); }
   }
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
@@ -342,8 +362,18 @@ function flagDefeated(){
   G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command. Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
   save();
 }
+function runScore(win){ return (win ? 10000 : 0) + G.sector*1000 + G.stats.kills*40 + Math.round(G.stats.scrap/5) + (G.flag ? G.flag.phase*500 : 0); }
+function recordRun(win, reason){
+  const st = G.stats, entry = { t:Date.now(), ship:G.shipDef, name:G.ship.name, diff:G.diff || SET.difficulty, seed:G.seed||'', daily:G.daily||null, win:!!win, sector:G.sector,
+    kills:st.kills, scrap:st.scrap, jumps:st.jumps, lost:(G.lost||[]).length, reason:win ? '' : String(reason||'').slice(0,80), time:Math.round(G.time||0), score:runScore(win) };
+  PROFILE.history = [entry, ...(PROFILE.history||[])].slice(0, 30);
+  const b = (PROFILE.best = PROFILE.best || {})[G.shipDef] || {}; PROFILE.best[G.shipDef] = { sector:Math.max(b.sector||0, G.sector), wins:(b.wins||0) + (win?1:0), score:Math.max(b.score||0, entry.score) };
+  if(G.daily){ const d = (PROFILE.daily = PROFILE.daily || {})[G.daily]; if(!d || entry.score > d.score) PROFILE.daily[G.daily] = { score:entry.score, sector:G.sector, win:!!win, kills:st.kills, ship:G.shipDef };
+    const keys = Object.keys(PROFILE.daily).sort(); while(keys.length > 60) delete PROFILE.daily[keys.shift()]; }
+  UI.lastRun = entry;
+}
 function endRun(win, reason){
-  sfx(win ? 'victory' : 'defeat');
+  sfx(win ? 'victory' : 'defeat'); recordRun(win, reason);
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
@@ -362,7 +392,8 @@ function taunt(kind){ if(!G || !G.enemy || G.enemy.dead) return; const set = TAU
   G.chat = (G.chat||[]).filter(b => b.t>0 && !b.enemy); G.chat.push({ text:pick(pool), enemy:true, t:3.2 }); }
 
 /* ---------------- stores & upgrades ---------------- */
-function makeStore(){
+function makeStore(){ return withSeed(`s${G.sector}n${G.map?.cur}store`, makeStore_); }
+function makeStore_(){
   const s = G.ship;
   const wp = Object.values(DATA.weapons).filter(w=>!w.noLoot).map(w=>w.id); shuffle(wp);
   const dp = Object.values(DATA.drones).filter(d=>!d.noLoot).map(d=>d.id); shuffle(dp);
@@ -373,7 +404,7 @@ function makeStore(){
 function price(v, st){ return Math.round(v * (st?.discount||1)); }
 function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; fn(); sfx('buy'); save(); return true; }
 function upgradeCost(k, lv){ const c = UPCOST[k] || [25,15]; return c[0] + c[1]*lv; }
-function reactorCost(){ return 15 + G.ship.reactor*3; }
+function reactorCost(){ return Math.round(12 + G.ship.reactor*2.5); }
 function sellValue(kind, id){ const d = kind==='weapon' ? DATA.weapons[id] : kind==='drone' ? DATA.drones[id] : DATA.augments[id]; return Math.floor((d?.cost||20)/2); }
 
 /* ---------------- main update ---------------- */
@@ -392,6 +423,7 @@ function update(dt){
       else arrive(n); } }
   const live = !G.paused && !G.modal && G.warp<=0;
   if(live){
+    dt *= (SET.speed || 1);   // Settings > Gameplay > Game speed: slower fights for VR or new captains
     G.time += dt;
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null;
     if(foe) G.combatT += dt;

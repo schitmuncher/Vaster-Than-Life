@@ -70,14 +70,21 @@ function evasion(sh){
   }
   if(sh.cloak.t>0) base += 60;
   if(hasAug(sh,'stealth')) base += 5;
-  if(sh.side==='p' && base>0) base += (DIFFICULTY[SET.difficulty]?.evade || 0);
+  if(sh.side==='p' && base>0) base += (curDiff().evade || 0);
   return clamp(Math.round(base), 0, 95);
 }
 function weaponPowerUsed(sh){ return sh.weapons.reduce((t,w)=>t + (w.on ? (DATA.weapons[w.id]?.power||0) : 0), 0); }
-function weaponBudget(sh){ let cap = eff(sh,'weapons'); for(const w of sh.weapons){ if(!w.on) continue; const p = DATA.weapons[w.id]?.power||0; if(p<=cap) cap -= p; else { w.on = false; w.target = null; } } }
+function weaponBudget(sh){ let cap = eff(sh,'weapons'); for(const w of sh.weapons){ if(!w.on) continue; const p = DATA.weapons[w.id]?.power||0; if(p<=cap) cap -= p; else { w.on = false; w.auto = true; w.autoTarget = w.target; w.target = null; } } }
 function autoPowerWeapons(sh){ let free = eff(sh,'weapons') - weaponPowerUsed(sh); for(const w of sh.weapons){ const p = DATA.weapons[w.id]?.power||0; if(!w.on && p<=free){ w.on = true; free -= p; } } }
 function dronePowerUsed(sh){ return sh.drones.reduce((t,d)=>t + (d.on ? (DATA.drones[d.id]?.power||0) : 0), 0); }
-function droneBudget(sh){ let cap = eff(sh,'drones'); for(const d of sh.drones){ if(!d.on) continue; const p = DATA.drones[d.id]?.power||0; if(p<=cap) cap -= p; else { d.on = false; removeDrone(sh, d); } } }
+function droneBudget(sh){ let cap = eff(sh,'drones'); for(const d of sh.drones){ if(!d.on) continue; const p = DATA.drones[d.id]?.power||0; if(p<=cap) cap -= p; else { d.on = false; d.auto = true; removeDrone(sh, d); } } }
+/* weapons and drones that lost power to damage, ion or a power shuffle come back on by themselves (and re-aim) once the power returns */
+function resumeAuto(sh){
+  if(sh.isEnemy) return; let wf = eff(sh,'weapons') - weaponPowerUsed(sh), df = eff(sh,'drones') - dronePowerUsed(sh);
+  for(const w of sh.weapons){ if(!w.auto || w.on) continue; const p = DATA.weapons[w.id]?.power||0; if(p > wf) continue; w.on = true; w.auto = false; wf -= p;
+    const foe = G.enemy && !G.enemy.dead ? G.enemy : null; if(w.autoTarget!=null && (DATA.weapons[w.id]?.heal ? sh.rooms[w.autoTarget] : foe && foe.rooms[w.autoTarget])) w.target = w.autoTarget; w.autoTarget = null; }
+  for(const d of sh.drones){ if(!d.auto || d.on) continue; const p = DATA.drones[d.id]?.power||0; if(p > df) continue; d.on = true; d.auto = false; df -= p; }
+}
 function autoPowerDrones(sh){ let free = eff(sh,'drones') - dronePowerUsed(sh); for(const d of sh.drones){ const p = DATA.drones[d.id]?.power||0; if(!d.on && p<=free && DATA.drones[d.id].kind!=='hull'){ d.on = true; free -= p; } } }
 
 /* ---------------- damage ---------------- */
@@ -259,7 +266,7 @@ function mindControl(sh, c){
   const race = DATA.races[c.race];
   if(c.drone || race?.mindImmune){ toast(`${c.drone ? 'Drones' : race.name+' crew'} cannot be mind controlled.`); return false; }
   if(crewSide(c)===sh.side) return false;
-  c.mcT = MIND_T[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = 20; sfx('mind'); if(sh.side==='p') grant('mind'); return true;
+  c.mcT = (sh.isEnemy ? [10,14,18] : MIND_T)[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = c.mcT + (sh.isEnemy ? 25 : 18); sfx('mind');   // the cooldown starts when control ends, so nobody is controlled forever if(sh.side==='p') grant('mind'); return true;
 }
 function canTele(sh, foe){ return eff(sh,'teleporter')>0 && sh.tele.cd<=0 && !!foe && !foe.dead && foe.super<=0 && foe.cloak.t<=0; }
 function teleSend(sh, foe, room, group){
@@ -345,19 +352,15 @@ function autoCrew(sh, c){
   const med = roomOf(sh,'medbay');
   const airAvg = sh.rooms.reduce((t,x)=>t+x.o2,0)/sh.rooms.length, oxBroken = sh.systems.oxygen && sh.systems.oxygen.dmg>0;
   if(c.hp < c.maxHp*(G.enemy ? .5 : .75) && med>=0 && eff(sh,'medbay')>0 && !hostilesFor(sh, med, 'p') && sh.rooms[med].fire===0 && !(oxBroken && airAvg < 30 && sh.rooms[med].o2 < 20 && race.repair>0)){ if(here!==med && !(soleOn('piloting') && G.enemy && c.hp > c.maxHp*.25)) orderMove(sh, c, med); return; }
-  const intruderRooms = sh.rooms.map((r,i)=>i).filter(i => hostilesFor(sh, i, 'p'));
-  if(intruderRooms.length && race.combat > .5){
-    const pilotStays = G.enemy && soleOn('piloting');
-    if(!pilotStays){
-      const strength = i => sh.crew.filter(o => o.room===i && crewSide(o)!=='p').reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
-      const defense = i => sh.crew.filter(o => crewSide(o)==='p' && (o.path.length ? sh.cellRoom[o.tx+','+o.ty]===i : o.room===i)).reduce((t,o)=>t + o.hp*(raceOf(o).combat||1), 0);
-      const needy = intruderRooms.filter(i => defense(i) < strength(i)*1.6 && roomCount(sh, i, 'p') < cap2(sh, i)).sort((a,b) => roomDist(sh,here,a) - roomDist(sh,here,b));
-      if(needy.length){ if(needy[0]!==here) orderMove(sh, c, needy[0]); return; } }
-  }
+  // boarders: the defence plan (worked out once a second for the whole crew) says who fights where, or where to gather first
+  const plan = sh._defPlan;
+  if(plan && plan.ids.includes(c.id) && race.combat > .5){
+    const dest = plan.room; if(dest!=null && dest!==here && !(G.enemy && soleOn('piloting') && !plan.all)){ orderMove(sh, c, dest); return; }
+    if(dest===here) return; }
   let best = null, bd = 1e9;
   sh.rooms.forEach((r,i) => {
     let w = 0, cap = 2; const host = hostilesFor(sh, i, 'p');
-    if(host){ w = 3*(race.combat>=1.5 ? 1.6 : race.combat<=.5 ? .35 : 1); cap = 5; }
+    if(host){ if(plan) return; w = 3*(race.combat>=1.5 ? 1.6 : race.combat<=.5 ? .35 : 1); cap = 5; }
     else if(r.fire>0 && r.o2>=8){ w = 2.2; }
     else if(r.breach>0){ w = 1.8; }
     else if(r.sys && sh.systems[r.sys]?.dmg>0){ w = 1.4*(race.repair>=2 ? 1.6 : race.repair<=.5 ? .6 : 1);
@@ -410,6 +413,27 @@ function killCrew(sh, c){
   if(UI.selCrews) UI.selCrews = UI.selCrews.filter(id => id!==c.id);
 }
 
+/* ---------------- crew autopilot: defence against boarders ----------------
+   Fighting boarders one crew member at a time gets everyone killed. The plan
+   gathers enough defenders to win before engaging: if the crew can beat the
+   weakest group of intruders by a clear margin they all go in together;
+   otherwise they rally in the Medbay (if it works and is safe) and fight there,
+   where they heal while they swing. */
+function crewStrength(list){ return list.reduce((t,o) => t + Math.max(0,o.hp)*(raceOf(o).combat||1)*(o.drone ? .8 : 1), 0); }
+function planDefense(sh){
+  const intr = sh.rooms.map((r,i)=>i).filter(i => hostilesFor(sh, i, 'p'));
+  if(!intr.length){ sh._defPlan = null; return; }
+  const pilot = mannedCrew(sh, 'piloting');
+  const ours = sh.crew.filter(o => controlled(o) && !(o.manualT>0) && raceOf(o).combat > .5 && o.hp > o.maxHp*.4 && o.stunT<=0);
+  const free = ours.filter(o => o !== pilot || ours.length >= 4);
+  const foeStr = i => crewStrength(sh.crew.filter(o => o.room===i && crewSide(o)!=='p'));
+  const target = intr.slice().sort((a,b) => foeStr(a) - foeStr(b))[0];
+  const ourStr = crewStrength(free);
+  const med = roomOf(sh,'medbay'), medOk = med>=0 && eff(sh,'medbay')>0 && !hostilesFor(sh, med, 'p') && sh.rooms[med].fire===0 && sh.rooms[med].o2 > 25;
+  if(ourStr >= foeStr(target)*1.25 || !medOk){ sh._defPlan = { room:target, ids:free.map(o=>o.id), all: ourStr >= foeStr(target)*2 }; }
+  else sh._defPlan = { room:med, ids:free.map(o=>o.id), rally:true };
+}
+
 /* ---------------- per-ship tick ---------------- */
 function tickShip(sh, dt, foe){
   for(const k in sh.systems){ const s = sh.systems[k]; if(s.ionT>0){ s.ionT -= dt; if(s.ionT<=0){ s.ion = 0; s.ionT = 0; } } }
@@ -420,7 +444,7 @@ function tickShip(sh, dt, foe){
     if(!hacker || hacker.dead || hacker===sh){ sh.hacked = null; }
     else if(h.pulseT>0){ h.pulseT -= dt; if(eff(hacker,'hacking')<=0 && !hackedNow(sh,'hacking')) h.pulseT = 0; if(h.pulseT<=0){ h.pulseT = 0; h.cd = 15; } }
     else if(h.cd>0) h.cd -= dt; }
-  shedPower(sh); sh.restT = (sh.restT||0) - dt; if(sh.restT<=0){ sh.restT = .5; restorePower(sh); }
+  shedPower(sh); sh.restT = (sh.restT||0) - dt; if(sh.restT<=0){ sh.restT = .5; restorePower(sh); resumeAuto(sh); }
   if(sh.side==='p' && sh.systems.oxygen){ const avg = sh.rooms.reduce((t,r)=>t+r.o2,0)/sh.rooms.length;
     if(avg < 35 && !sh.o2Warned){ sh.o2Warned = true; toast('Oxygen is running low! Power and repair the Oxygen system.'); say('breach', { force:true }); smartPause('oxygen low'); hint('o2'); }
     else if(avg > 60) sh.o2Warned = false;
@@ -438,7 +462,7 @@ function tickShip(sh, dt, foe){
     const mult = (sc ? [1.1,1.2,1.3][skillLvl(sc,'shields')] : 1) * (hasAug(sh,'booster') ? 1.15 : 1);
     sh.shieldT += dt*mult; if(sh.shieldT >= R.shieldRegen){ sh.shield++; sh.shieldT = 0; if(sc && foe) gainXP(sc,'shields',1); }
   } else sh.shieldT = 0;
-  if(sh.superRegen && sh.super < sh.superMax){ sh.superT += dt; if(sh.superT >= sh.superRegen){ sh.super++; sh.superT = 0; } }
+  if(sh.superRegen && sh.super < sh.superMax){ sh.superT += dt*(sh.boss ? (curDiff().bossPace ?? 1) : 1); if(sh.superT >= sh.superRegen){ sh.super++; sh.superT = 0; } }
   if(sh.side==='p' && layers>=4) grant('shieldwall');
   // oxygen
   const ox = eff(sh,'oxygen'), oxHack = hackedNow(sh,'oxygen') || (sh.hacked?.pulseT>0 && sh.rooms[sh.hacked.room]?.sys==='oxygen');
@@ -466,6 +490,7 @@ function tickShip(sh, dt, foe){
   });
   if(sh.isEnemy && sh.rooms.filter(r=>r.fire>0).length>=4) grant('firestarter');
   // crew: timers, AI, walking
+  if(sh===G.ship && G.crewAuto){ sh._planT = (sh._planT||0) - dt; if(sh._planT<=0){ sh._planT = 1; planDefense(sh); } }
   const medR = roomOf(sh,'medbay'), medE = eff(sh,'medbay'), medHack = sh.hacked?.pulseT>0 && sh.rooms[sh.hacked.room]?.sys==='medbay';
   for(const c of sh.crew){
     if(c.stunT>0) c.stunT -= dt;
@@ -530,14 +555,15 @@ function tickShip(sh, dt, foe){
   if(foe && sh.side==='p'){ const pc = mannedCrew(sh,'piloting'); if(pc) gainXP(pc,'pilot',dt*.5); const ec = mannedCrew(sh,'engines'); if(ec) gainXP(ec,'engines',dt*.5); }
   // weapons
   weaponBudget(sh); if(sh.isEnemy) autoPowerWeapons(sh);
-  const diff = DIFFICULTY[SET.difficulty] || DIFFICULTY.normal;
+  const diff = curDiff();
   for(const w of sh.weapons){
     const d = DATA.weapons[w.id]; if(!d) continue;
     if(!foe || foe.dead || !w.on){ w.charge = Math.max(0, w.charge - dt*3); continue; }
     if(foe.cloak.t>0 && !d.heal) continue;
     let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')]; else if(sh.auto) mult *= 1.05;
     if(hasAug(sh,'reloader')) mult *= 1.1;
-    if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .035*(G.sector-1));
+    if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .025*(G.sector-1));
+    if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;   // the Flaggship fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     w.charge = Math.min(d.charge, w.charge + dt*mult);

@@ -61,7 +61,7 @@ function init3D(){
   window.addEventListener('resize', () => { if(!inXR()){ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
 }
 
-function pulse(src, v, ms){ try{ const a = src?.gamepad?.hapticActuators?.[0]; if(a && a.pulse) a.pulse(clamp(v,0,1), ms); }catch(e){} }
+function pulse(src, v, ms){ if(SET.vrHaptics === false) return; try{ const a = src?.gamepad?.hapticActuators?.[0]; if(a && a.pulse) a.pulse(clamp(v*(SET.vrHapticsK ?? 1),0,1), ms); }catch(e){} }
 function xrPointers(){
   if(GRAB.ring) GRAB.ring.visible = false;
   for(const c of controllers){
@@ -192,15 +192,15 @@ const renameDlg = document.getElementById('renameDlg'), renameInput = document.g
 let renameTarget = null;
 function openRename(kind, crew){
   renameTarget = { kind, crew };
-  document.getElementById('renameTitle').textContent = kind==='ship' ? 'Name your ship' : `Rename ${crew.name}`;
-  renameInput.value = kind==='ship' ? (UI.shipName || DATA.ships[UI.selShip]?.name || '') : crew.name;
+  document.getElementById('renameTitle').textContent = kind==='ship' ? 'Name your ship' : kind==='seed' ? 'Enter a seed' : `Rename ${crew.name}`;
+  renameInput.value = kind==='ship' ? (UI.shipName || DATA.ships[UI.selShip]?.name || '') : kind==='seed' ? (UI.seed || '') : crew.name;
   renameDlg.hidden = false; renameInput.focus(); renameInput.select();
 }
-function applyRename(){ const v = renameInput.value.trim().slice(0, 24); if(v && renameTarget){ if(renameTarget.kind==='ship') UI.shipName = v; else renameTarget.crew.name = v; } renameDlg.hidden = true; renameTarget = null; }
+function applyRename(){ const v = renameInput.value.trim().slice(0, 24); if(v && renameTarget){ if(renameTarget.kind==='ship') UI.shipName = v; else if(renameTarget.kind==='seed') UI.seed = cleanSeed(v) || null; else renameTarget.crew.name = v; } renameDlg.hidden = true; renameTarget = null; }
 document.getElementById('renameOk').onclick = applyRename;
 document.getElementById('renameCancel').onclick = () => { renameDlg.hidden = true; };
 renameInput.addEventListener('keydown', e => { if(e.key==='Enter') applyRename(); if(e.key==='Escape') renameDlg.hidden = true; });
-document.getElementById('renameRandom').onclick = () => { renameInput.value = renameTarget?.kind==='ship' ? pick(SHIP_NAMES) : pick(NAMES); };
+document.getElementById('renameRandom').onclick = () => { renameInput.value = renameTarget?.kind==='ship' ? pick(SHIP_NAMES) : renameTarget?.kind==='seed' ? randomSeed() : pick(NAMES); };
 
 /* ---------------- boot ---------------- */
 applyMods();

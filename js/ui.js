@@ -106,6 +106,7 @@ function draw(){
     case 'gallery': drawGallery(); break;
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); break;
+    case 'record': drawRecord(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
@@ -119,27 +120,59 @@ function draw(){
 /* ---------------- title & menus ---------------- */
 function drawTitle(){
   const t = performance.now()/1000; if(typeof drawWallpaper==='function') drawWallpaper();
-  if(!UI._fly){ try{ if(!DATA) applyMods(); UI._fly = makeShip(DATA.ships.pestrel || Object.values(DATA.ships)[0], 'p', {}); UI._fly.crew = []; }catch(e){ UI._fly = null; } }
-  if(UI._fly){ const px = ((t*55 + 1150) % 2700) - 950; drawShip(UI._fly, { x:px, y:610, w:430, h:190 }, 1, false, true); }
   label('A Fedoration courier roguelike', 110, 200, C.cyan, 'left', 20);
   glow(380, 300, 260, C.amber, .12);
   T('VASTER', 104, 320, { s:132, f:FD, w:700, c:C.amber, ls:10 });
   T('THAN LIFE', 108, 428, { s:96, f:FD, w:700, c:C.ink, ls:12 });
   para('Outrun the Rebuff Fleet across eight sectors and stop the Flaggship. Built for Meta Quest, playable on any screen.', 112, 486, 780, { s:21, c:C.muted });
   const hasSave = !!LS.get(SAVE_KEY, null);
-  let y = 560; const bw = 330;
-  if(hasSave){ btn(110, y, bw, 58, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 70; }
-  btn(110, y, bw, 58, 'New run', () => { applyMods(); UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.screen = 'select'; }, { fill:!hasSave }); y += 70;
+  let y = 556; const bw = 330, hw = 160, x2 = 280;
+  if(hasSave){ btn(110, y, bw, 58, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 68; }
+  btn(110, y, hw, 58, 'New run', () => openHangar(), { fill:!hasSave, s:18 });
+  btn(x2, y, hw, 58, 'Daily run', () => startDaily(), { s:18, col:C.cyan }); y += 68;
   const on = MODS.filter(m=>m.enabled).length;
-  btn(110, y, bw, 58, on ? `Mods (${on} on)` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }); y += 70;
-  btn(110, y, 160, 58, 'Manual', () => { UI.screen = 'help'; }, { s:18 });
-  btn(280, y, 160, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 70;
-  btn(110, y, 160, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
-  btn(280, y, 160, 58, `Medals ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
+  btn(110, y, hw, 58, on ? `Mods (${on})` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }, { s:18 });
+  btn(x2, y, hw, 58, 'Manual', () => { UI.screen = 'help'; UI.helpPage = 0; }, { s:18 }); y += 68;
+  btn(110, y, hw, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 });
+  btn(x2, y, hw, 58, 'Record', () => { UI.screen = 'record'; }, { s:18 }); y += 68;
+  btn(110, y, hw, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
+  btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
+  drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
-
+function openHangar(){ applyMods(); UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
+function dailyStreak(){ let n = 0; const d = new Date(); for(let i=0;i<60;i++){ const k = todayKey(d); if(PROFILE.daily?.[k]) n++; else if(i>0) break; d.setDate(d.getDate()-1); } return n; }
+function fmtNum(n){ return Math.round(n).toLocaleString('en-GB'); }
+/* the right-hand column of the title: today's daily challenge, your last run and your record */
+function drawTitleCards(t){
+  const x = 1000, w = 540;
+  // daily challenge
+  const k = todayKey(), sid = dailyShip(k), def = BASE.ships[sid], best = PROFILE.daily?.[k];
+  panel(x, 170, w, 290, 12); label('Daily challenge', x+24, 206, C.cyan, 'left', 16); T(k, x+w-24, 206, { s:15, a:'right', c:C.muted });
+  if(!UI._dailyShip || UI._dailyShip.k!==k){ try{ applyMods(); UI._dailyShip = { k, sh:makeShip(DATA.ships[sid] || def, 'p', {}) }; UI._dailyShip.sh.crew = []; }catch(e){ UI._dailyShip = { k, sh:null }; } }
+  if(UI._dailyShip.sh) drawShip(UI._dailyShip.sh, { x:x+250, y:216 + Math.sin(t*1.3)*3, w:270, h:118 }, 1, false, true);
+  T(def?.name || sid, x+24, 252, { s:24, f:FD, w:700, c:def?.color || C.amber, max:230 }); T(def?.cls || '', x+24, 276, { s:14, c:C.muted, max:230 });
+  para('Same ship, same maps and events for everyone today. Normal difficulty, mods off.', x+24, 304, 230, { s:13, lh:18, c:C.muted, max:3 });
+  const streak = dailyStreak();
+  T(best ? `Today's best: ${best.win ? 'won' : 'sector ' + best.sector} · ${fmtNum(best.score)} pts` : 'Not flown yet today.', x+24, 384, { s:16, c: best ? C.good : C.ink });
+  if(streak>1) T(`${streak} days in a row`, x+w-24, 384, { s:14, a:'right', c:C.amber });
+  btn(x+24, 398, w-48, 48, best ? 'Fly it again' : "Fly today's run", () => startDaily(), { fill:true, col:C.cyan, s:17 });
+  // last run
+  const last = (PROFILE.history||[])[0];
+  panel(x, 480, w, 196, 12); label('Last run', x+24, 516, C.amber, 'left', 16);
+  if(last){ const sdef = DATA?.ships?.[last.ship] || BASE.ships[last.ship];
+    T(last.name || sdef?.name || last.ship, x+24, 550, { s:22, f:FD, w:700, c:sdef?.color || C.ink, max:300 }); T(`${DIFFICULTY[last.diff]?.name || ''}${last.daily ? ' · daily' : ''}`, x+w-24, 516, { s:14, a:'right', c:C.muted });
+    T(last.win ? 'Won: the Flaggship fell' : `Lost in sector ${last.sector}`, x+24, 580, { s:17, c: last.win ? C.good : C.hostile });
+    T(`${last.kills} ships defeated · ${last.jumps} jumps · ${fmtNum(last.score)} pts`, x+24, 606, { s:14, c:C.muted, max:w-48 });
+    if(last.seed && !last.daily) btn(x+24, 620, 240, 42, `Replay seed ${last.seed}`, () => { applyMods(); UI.selShip = DATA.ships[last.ship] ? last.ship : 'pestrel'; UI.seed = last.seed; UI.shipName = null; UI._prev = null; UI.screen = 'select'; }, { s:14 });
+    btn(x+w-204, 620, 180, 42, 'All runs', () => { UI.screen = 'record'; }, { s:14 }); }
+  else para('No runs yet. Your first one is waiting: New run, then pick a ship. Easy is the gentle way in.', x+24, 552, w-48, { s:16, lh:23, c:C.muted });
+  // record
+  panel(x, 696, w, 152, 12); label('Captain\'s record', x+24, 732, C.good, 'left', 16);
+  const wins = Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0);
+  [['Runs', PROFILE.runs], ['Wins', wins], ['Best sector', PROFILE.maxSector], ['Ships beaten', PROFILE.kills]].forEach((r,i) => { const cx = x+24 + i*128; label(r[0], cx, 770, C.muted, 'left', 12); T(fmtNum(r[1]||0), cx, 812, { s:30, f:FD, w:700 }); });
+}
 function classGroups(){
   const groups = {}; for(const id in DATA.ships){ const s = DATA.ships[id]; const k = s.cls || s.name; (groups[k] = groups[k] || []).push(id); }
   for(const k in groups) groups[k].sort((a,b) => (DATA.ships[a].layout||'A').localeCompare(DATA.ships[b].layout||'A'));
@@ -181,7 +214,15 @@ function drawHangar(){
   if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
-  btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName); }, { fill:true, s:26, disabled:!open });
+  tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
+  // per-ship record and the run seed
+  const bst = PROFILE.best?.[sel]; if(bst) T(`Your best with this ship: ${bst.wins ? bst.wins + ' win' + (bst.wins>1?'s':'') : 'sector ' + bst.sector} · ${fmtNum(bst.score)} pts`, 1516, y0+48, { s:15, a:'right', c:C.good });
+  label('Seed', 1240, y0+360, C.muted, 'left', 14);
+  T(UI.seed || 'Random', 1240, y0+404, { s:20, f:FD, w:700, c: UI.seed ? C.amber : C.ink });
+  btn(1240, y0+416, 132, 34, 'Random', () => { UI.seed = null; }, { s:13, disabled:!UI.seed });
+  btn(1384, y0+416, 132, 34, 'Enter seed', () => { if(inXR()) toast('Exit VR to type a seed.'); else openRename('seed'); }, { s:13 });
+  tip(1236, y0+340, 290, 110, 'Seed', 'Every run has a seed. The same seed gives the same maps, beacons, enemies and stores, so you can replay a run or share it with a friend. Leave it on Random for a fresh run.');
+  btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName, { seed:UI.seed }); }, { fill:true, s:26, disabled:!open });
   btn(1060, 890, 160, 70, 'Back', () => { UI.screen = 'title'; });
 }
 function drawModsScreen(){
@@ -232,10 +273,11 @@ function drawSettings(){
     btn(tx + tw + 10, y+4, 52, 42, '+', () => { SET[key] = clamp(+(v + step).toFixed(3), min, max); saveProfile(); after && after(SET[key]); }, { s:22 });
     T(fmt(v), tx + tw + 80, y+32, { s:20, f:FD, w:700, c:C.amber });
     if(desc) tip(X-10, y, 440, 50, name, desc); y += 50; };
-  const vol = (k) => [() => { SET[k] = clamp(+((SET[k]??.5)-.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }, () => { SET[k] = clamp(+((SET[k]??.5)+.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }];
+  const vol = (k, d=.5) => [() => { SET[k] = clamp(+((SET[k]??d)-.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }, () => { SET[k] = clamp(+((SET[k]??d)+.1).toFixed(1),0,1); applyVolumes(); saveProfile(); }];
   switch(tab){
     case 'audio':
       head('Volume');
+      slider('Master', 0, `${Math.round((SET.master ?? 1)*100)}%`, ...vol('master', 1), 'Everything at once.');
       slider('Music', 0, `${Math.round(SET.music*100)}%`, ...vol('music'), 'Adaptive soundtrack: calm themes per sector, a combat layer in fights and a heavier boss arrangement.');
       slider('Sound effects', 0, `${Math.round(SET.sfx*100)}%`, ...vol('sfx'), 'Weapons, impacts, doors, alarms, UI.');
       slider('Ship ambience', 0, `${Math.round((SET.amb ?? .5)*100)}%`, ...vol('amb'), 'Engine hum, fire crackle, breach hiss, low-hull warnings.');
@@ -287,6 +329,7 @@ function drawSettings(){
       onoff('Magnifier', 'vrLoupe', true, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');
       onoff('Controller help', 'vrLabels', true, 'Look at a controller to see what its buttons do.');
+      choice('Controller buzz', 'vrHapticsK', [[0,'Off'],[.5,'Soft'],[1,'Normal'],[1.4,'Strong']], 1, 'How strongly the controllers vibrate on hits, hovers and actions.', v => { SET.vrHaptics = v > 0; saveProfile(); });
       btn(X, y+6, 260, 44, 'Reset console size', () => { SET.vrPanelScale = 1; saveProfile(); if(typeof panelGroup!=='undefined' && panelGroup) panelGroup.scale.setScalar(1); toast('Console size reset.'); }, { s:15 });
       btn(X+280, y+6, 260, 44, 'Reset holotable size', () => { SET.vrHoloScale = 1; saveProfile(); if(typeof holo!=='undefined' && holo) holo.top.scale.setScalar(1); toast('Holotable size reset.'); }, { s:15 });
       btn(X+560, y+6, 280, 44, 'Put everything back', () => { SET.vrPanelScale = 1; SET.vrHoloScale = 1; saveProfile(); if(inXR()){ panelGroup.scale.setScalar(1); holo.top.scale.setScalar(1); applyPlayMode(); } toast('Console, holotable and position reset.'); }, { s:15 }); y += 68;
@@ -295,6 +338,7 @@ function drawSettings(){
     case 'gameplay':
       head('Challenge');
       choice('Difficulty', 'difficulty', Object.keys(DIFFICULTY).map(k => [k, DIFFICULTY[k].name]), 'normal', 'Easy: more dodge, scrap and weaker enemies. Applies to new runs.');
+      choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down to have more time to think, aim and walk in VR. Applies straight away, mid-run too.');
       choice('Ship experience', 'shipMode', [['full','Full 3D ship'],['classic','Classic cockpit']], 'full', 'Full: walk through your ship in VR and watch your crew work, fight fires and repel boarders, and beam over to enemy ships. Classic: just the cockpit, console and holotable, like before.', () => { if(inXR() && typeof applyPlayMode==='function'){ if(IN.aboard) beamCaptain(false, true); applyPlayMode(); } });
       head('Help');
       onoff('Hands-on bonuses (VR)', 'handsOn', true, 'In the full 3D ship: hold the trigger with a hand near a fire, breach or damaged machine to fix it yourself a little faster than crew, and stand on a glowing floor pad to man a system nobody else is covering. Everything can still be done from the console.');
@@ -324,32 +368,123 @@ function drawAchievements(){
     T(a.name, x+64, y+30, { s:20, f:FD, w:700, c: got ? C.ink : C.muted }); T(a.desc, x+64, y+54, { s:15, c:C.muted }); });
   btn(60, 880, 200, 64, 'Back', () => { UI.screen = 'title'; });
 }
-function drawHelpScreen(){
-  label('Field manual', 60, 70, C.cyan, 'left', 18);
-  T('How to play', 60, 122, { s:50, f:FD, w:700 });
-  const items = [
+const HELP_PAGES = [
+  ['Basics', [
     ['Power', 'Your reactor has a fixed number of bars. Use + and − under each system. Helm, Sensors, Doors and Battery are subsystems that need no reactor power.'],
     ['Weapons', 'Power a weapon, press Target, then point at an enemy room. With Autofire on it keeps firing at that room. Use Hold fire to let weapons charge, then Fire volley to hit shields all at once. Missiles and bombs use missile ammo.'],
-    ['Shields', 'Every 2 shield power is one layer. Layers block lasers, ion and flak, then recharge. Missiles ignore shields. Beams lose 1 damage per layer. Bombs teleport past them.'],
+    ['Shields', 'Every 2 shield power is one layer. Layers block lasers, ion and flak, then recharge in 2 seconds. Missiles ignore shields. Beams lose 1 damage per layer. Bombs teleport past them.'],
     ['Crew', 'Select a crew member, then any room, on either ship. Crew man stations for bonuses, repair systems, fight fires, patch breaches and fight boarders. They gain skills as they work.'],
     ['Doors & air', 'Click doors to open or close them. Open airlocks to vent oxygen and starve fires or boarders. Breaches leak air until crew patch them.'],
     ['Special systems', 'Teleporter: gather crew in it and Send. Cloaking: dodge and freeze enemy weapons. Hacking: launch a drone, then pulse it. Mind control: turn an enemy. Battery: temporary power.'],
     ['Drones', 'Drones need Drone system power and use one drone part each time they deploy. Attack drones orbit the enemy, defense drones shoot down missiles, internal drones repair or fight.'],
-    ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, catch the Flaggship three times before it destroys Fedoration command.'] ];
-  items.forEach(([h,t],i) => { const x = i%2 ? 820 : 60, y = 160 + Math.floor(i/2)*170; label(h, x, y, C.amber, 'left', 17); para(t, x, y+30, 700, { s:17, lh:25 }); });
-  btn(60, 880, 200, 64, 'Back', () => { UI.screen = 'title'; });
+    ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, catch the Flaggship three times before it destroys Fedoration command.'] ]],
+  ['Map & hazards', [
+    ['The map', 'Each sector is a web of beacons. Fights (!), events (?) and stores are marked once you know them; Long-Range Scanners reveal everything. Distress and quest beacons glow amber.'],
+    ['The Rebuff Fleet', 'The red band on the map is the fleet. Every jump moves it on (more slowly in a nebula). Beacons it reaches are taken: fights there are tough and pay almost nothing. Keep ahead of it.'],
+    ['Stores', 'Two or three per sector. Buy weapons, drones, augments, new systems, fuel, missiles, drone parts, hull repairs and crew. Sell spare gear you stowed in cargo from the Ship screen.'],
+    ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
+    ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
+    ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
+  ['Controls', [
+    ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
+    ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
+    ['Meta Quest', 'Trigger selects. Left stick walks (push fully to run), right stick turns. A or X pauses, B or Y opens the map, grip brings the console to you or grabs it. Glance at your left wrist for the wrist menu.'],
+    ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger with a hand near a fire, breach or broken machine to fix it. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
+    ['Comfort', 'Settings has snap or smooth turning, teleport-only movement, a comfort vignette, seated and lying-down play, player height, game speed and bigger text.'],
+    ['Saving', 'The run saves itself between fights. Settings > Record can save a backup file of everything to load on another device.'] ]],
+  ['Tactics', [
+    ['Break the shields', 'Shots that arrive together count: fire a volley so the first shots strip layers and the rest hit. Missiles and bombs ignore shields, so aim them at the enemy shield room first.'],
+    ['Pick targets', 'Shields first, then weapons. Hitting the helm or engines stops them dodging and escaping. Ion shots lock a system for a few seconds per hit.'],
+    ['Boarders', 'Fight in groups, never one by one. The crew autopilot gathers defenders, or rallies in the Medbay to fight while healing. Venting airlocks starves boarders of air.'],
+    ['Keep crew alive', 'Send hurt crew to the Medbay. Keep Oxygen powered. Fireproof Pebblekin and air-free drones are good firefighters and boarders.'],
+    ['Spend scrap well', 'An early second weapon and two shield layers carry you far. Then engines for dodge, a bigger reactor and better guns. Do not hoard: scrap only helps once it is spent.'],
+    ['Seeds and dailies', 'Every run has a seed: the same seed gives the same maps and events. The daily run is the same for everyone each day. Replay seeds from your record.'] ]] ];
+function drawHelpScreen(){
+  label('Field manual', 60, 70, C.cyan, 'left', 18);
+  T('How to play', 60, 122, { s:50, f:FD, w:700 });
+  const pg = clamp(UI.helpPage||0, 0, HELP_PAGES.length-1);
+  tabs(560, 80, HELP_PAGES.map((p,i) => [i, p[0]]), pg, i => { UI.helpPage = i; }, 230);
+  HELP_PAGES[pg][1].forEach(([h,t],i) => { const x = i%2 ? 820 : 60, y = 170 + Math.floor(i/2)*176; label(h, x, y, C.amber, 'left', 17); para(t, x, y+30, 700, { s:17, lh:25, max:5 }); });
+  btn(60, 880, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; });
+  if(pg < HELP_PAGES.length-1) btn(W-260, 880, 200, 64, 'Next ›', () => { UI.helpPage = pg+1; }, { fill:true });
 }
 function drawEnd(){
-  const win = UI.screen==='win';
-  label(win ? 'Mission complete' : 'Run over', W/2, 240, win ? C.good : C.hostile, 'center', 22);
-  T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 340, { s:88, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
-  para(win ? 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.' : (UI.overReason||''), W/2-420, 410, 840, { s:22, c:C.muted });
-  if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap collected', G.stats.scrap], ['Jumps', G.stats.jumps]];
-    st.forEach((s,i) => { const x = W/2 - 540 + i*270; label(s[0], x+120, 580, C.muted, 'center', 16); T(String(s[1]), x+120, 640, { s:52, f:FD, w:700, a:'center' }); });
-    if(G.lost.length) T(`In memory of ${G.lost.slice(0,6).join(', ')}${G.lost.length>6?'…':''}`, W/2, 700, { s:18, a:'center', c:C.muted }); }
-  btn(W/2-180, 760, 360, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { fill:true, s:24 });
+  const win = UI.screen==='win', last = UI.lastRun;
+  label(win ? 'Mission complete' : 'Run over', W/2, 172, win ? C.good : C.hostile, 'center', 22);
+  T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
+  { const txt = win ? 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.' : (UI.overReason||''); const ls = lines(txt, 1100, `400 21px ${FM}`); ls.slice(0,2).forEach((l,i) => T(l, W/2, 312 + i*28, { s:21, c:C.muted, a:'center' })); }
+  if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap found', G.stats.scrap], ['Jumps', G.stats.jumps], ['Score', last ? last.score : runScore(win)]];
+    panel(W/2-640, 380, 1280, 150, 12);
+    st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
+    // the journey: the last entries of the captain's log
+    panel(W/2-640, 552, 820, 300, 12); label("Captain's log", W/2-616, 588, C.amber, 'left', 15);
+    (G.log||[]).slice(-8).forEach((e,i) => { T(`S${e.s}`, W/2-616, 624 + i*28, { s:13, f:FD, w:700, c:C.amber }); T(e.t, W/2-572, 624 + i*28, { s:14, c:C.ink, max:740 }); });
+    panel(W/2+200, 552, 440, 300, 12); label('This run', W/2+224, 588, C.cyan, 'left', 15);
+    const rows = [['Ship', `${G.ship.name}`], ['Difficulty', (DIFFICULTY[G.diff]||{}).name || ''], ['Seed', G.seed || '-'], ['Crew lost', G.lost.length ? G.lost.slice(0,4).join(', ') + (G.lost.length>4 ? '…' : '') : 'nobody'], ['Time', fmtTime(G.time||0)]];
+    if(G.daily){ const best = PROFILE.daily?.[G.daily]; rows.push(['Daily best', best ? `${fmtNum(best.score)} pts` : '-']); }
+    rows.forEach((r,i) => { label(r[0], W/2+224, 626 + i*36, C.muted, 'left', 12); T(r[1], W/2+360, 626 + i*36, { s:16, max:260 }); }); }
+  btn(W/2-640, 884, 300, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { s:22 });
+  if(G && !G.daily){ const ship = G.shipDef, seed = G.seed;
+    btn(W/2-320, 884, 300, 72, 'Try again', () => { applyMods(); const sid = DATA.ships[ship] ? ship : 'pestrel'; newRun(sid, null, {}); }, { fill:true, s:22 });
+    btn(W/2, 884, 300, 72, 'Replay this seed', () => { applyMods(); const sid = DATA.ships[ship] ? ship : 'pestrel'; newRun(sid, null, { seed }); }, { s:20 }); }
+  else if(G && G.daily) btn(W/2-320, 884, 300, 72, 'Fly the daily again', () => startDaily(), { fill:true, s:20, col:C.cyan });
+  btn(W/2+340, 884, 300, 72, 'All runs', () => { UI.screen = 'record'; }, { s:20 });
 }
-
+function fmtTime(sec){ sec = Math.round(sec); const m = Math.floor(sec/60), h = Math.floor(m/60); return h ? `${h}h ${String(m%60).padStart(2,'0')}m` : `${m}m ${String(sec%60).padStart(2,'0')}s`; }
+/* captain's record: run history, best per ship, daily scores, and backups */
+function drawRecord(){
+  label('Your record', 60, 70, C.cyan, 'left', 18);
+  T("Captain's record", 60, 122, { s:50, f:FD, w:700 });
+  const hist = PROFILE.history || [];
+  panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
+  ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
+  if(!hist.length) T('No runs yet.', 84, 268, { s:18, c:C.muted });
+  hist.slice(0, 14).forEach((r,i) => { const y = 256 + i*37; const def = DATA?.ships?.[r.ship] || BASE.ships[r.ship];
+    if(i%2===0){ ctx.fillStyle = 'rgba(255,255,255,.03)'; ctx.fillRect(72, y-24, 936, 34); }
+    const d = new Date(r.t); T(`${d.getDate()} ${d.toLocaleString('en-GB',{ month:'short' })}`, 84, y, { s:15, c:C.muted });
+    T(r.name || def?.name || r.ship, 230, y, { s:15, f:FD, w:600, c:def?.color || C.ink, max:225 });
+    T((DIFFICULTY[r.diff]||{}).name + (r.daily ? ' · daily' : ''), 470, y, { s:14, c:C.muted, max:125 });
+    T(r.win ? 'Won' : `Sector ${r.sector}`, 600, y, { s:15, c: r.win ? C.good : C.ink });
+    T(String(r.kills), 760, y, { s:15 }); T(fmtNum(r.score||0), 840, y, { s:15, c:C.amber });
+    if(r.seed && !r.daily) btn(924, y-22, 84, 30, 'Replay', () => { applyMods(); UI.selShip = DATA.ships[r.ship] ? r.ship : 'pestrel'; UI.seed = r.seed; UI.shipName = null; UI._prev = null; UI.screen = 'select'; }, { s:12 });
+    tip(72, y-24, 840, 34, `${r.name || r.ship} · ${r.win ? 'won' : 'lost in sector ' + r.sector}`, `${r.kills} ships defeated, ${r.jumps} jumps, ${r.scrap} scrap found, ${r.lost} crew lost. ${r.reason || ''} Seed ${r.seed || '-'}. Played ${fmtTime(r.time||0)}.`); });
+  // bests per ship
+  panel(1040, 150, 500, 330, 12); label('Best per ship', 1064, 186, C.good, 'left', 15);
+  const ids = Object.keys(DATA?.ships || BASE.ships).filter(id => PROFILE.best?.[id]).slice(0, 7);
+  if(!ids.length) T('Finish a run to see it here.', 1064, 230, { s:16, c:C.muted });
+  ids.forEach((id,i) => { const b = PROFILE.best[id], def = (DATA?.ships||BASE.ships)[id]; const y = 226 + i*36;
+    T(def?.name || id, 1064, y, { s:16, f:FD, w:600, c:def?.color || C.ink, max:220 }); T(b.wins ? `${b.wins} win${b.wins>1?'s':''}` : `sector ${b.sector}`, 1330, y, { s:15, c: b.wins ? C.good : C.ink }); T(fmtNum(b.score), 1516, y, { s:15, a:'right', c:C.amber }); });
+  // daily scores
+  panel(1040, 500, 500, 290, 12); label('Daily challenge', 1064, 536, C.cyan, 'left', 15); { const sk = dailyStreak(); if(sk) T(`${sk} day${sk>1?'s':''} in a row`, 1516, 536, { s:14, a:'right', c:C.amber }); }
+  const days = Object.keys(PROFILE.daily||{}).sort().reverse().slice(0, 6);
+  if(!days.length) T('No dailies flown yet.', 1064, 580, { s:16, c:C.muted });
+  days.forEach((k,i) => { const d = PROFILE.daily[k], def = BASE.ships[d.ship]; const y = 576 + i*34; T(k, 1064, y, { s:15, c:C.muted }); T(def?.name || d.ship || '', 1200, y, { s:15, max:170 }); T(d.win ? 'Won' : `S${d.sector}`, 1390, y, { s:15, c: d.win ? C.good : C.ink }); T(fmtNum(d.score), 1516, y, { s:15, a:'right', c:C.amber }); });
+  // backups
+  label('Backup', 60, 830, C.muted, 'left', 14);
+  btn(60, 846, 250, 52, 'Save backup file', () => { if(inXR()) toast('Exit VR to save a backup file.'); else exportBackup(); }, { s:16 });
+  btn(320, 846, 250, 52, 'Load backup file', () => { if(inXR()) toast('Exit VR to load a backup file.'); else importBackup(); }, { s:16 });
+  para('A backup holds your record, medals, unlocks, settings, mods and the run in progress. Load it on another device to carry on there.', 590, 866, 940, { s:15, lh:21, c:C.muted, max:2 });
+  btn(60, 910, 200, 56, 'Back', () => { UI.screen = 'title'; }, { s:18 });
+}
+function exportBackup(){
+  try{ const data = { app:'vaster-than-life', v:1, t:Date.now(), profile:PROFILE, save:LS.get(SAVE_KEY, null), mods:MODS };
+    const blob = new Blob([JSON.stringify(data)], { type:'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `vaster-than-life-backup-${todayKey()}.json`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast('Backup saved to your downloads.'); }
+  catch(e){ toast('Could not save a backup on this device.'); }
+}
+function importBackup(){
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = async () => { const f = inp.files && inp.files[0]; if(!f) return; try{ restoreBackup(JSON.parse(await f.text())); }catch(e){ toast('That file is not a Vaster Than Life backup.'); } };
+  try{ inp.click(); }catch(e){ toast('Could not open the file picker here.'); }
+}
+function restoreBackup(d){
+  if(!d || d.app!=='vaster-than-life' || !d.profile){ toast('That file is not a Vaster Than Life backup.'); return false; }
+  for(const k of Object.keys(PROFILE)) delete PROFILE[k]; Object.assign(PROFILE, { ach:{}, maxSector:1, kills:0, wins:{}, runs:0 }, d.profile);
+  PROFILE.settings = Object.assign({}, SET, d.profile.settings||{}); Object.assign(SET, PROFILE.settings); PROFILE.settings = SET; saveProfile();
+  if(d.save) LS.set(SAVE_KEY, d.save); else LS.del(SAVE_KEY);
+  if(Array.isArray(d.mods)){ MODS = d.mods; saveMods(); }
+  applyMods(); UI._dailyShip = null; toast(`Backup from ${new Date(d.t||Date.now()).toLocaleDateString('en-GB')} restored.`); return true;
+}
 /* ---------------- game screen ---------------- */
 const PBOX = { x:24, y:96, w:760, h:466 }, EBOX = { x:816, y:96, w:760, h:466 };
 function drawGame(){
@@ -373,7 +508,13 @@ function drawGame(){
     else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const n = fsOk ? 2 : 1, bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
       panel(x0-10, 362, n*bw + (n-1)*12 + 20, 70, 10);
       btn(x0, 372, bw, 50, '⚙ Settings', () => { UI.setFrom = 'game'; UI.screen = 'settings'; }, { s:16 });
-      if(fsOk) btn(x0 + bw + 12, 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); } }
+      if(fsOk) btn(x0 + bw + 12, 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); }
+    // second row: speed, the manual, and leaving the run
+    panel(W/2-300, 438, 600, 66, 10); speedButton(W/2-290, 448);
+    btn(W/2-60, 448, 160, 46, 'Manual', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
+    const fighting = G.enemy && !G.enemy.dead;
+    btn(W/2+110, 448, 180, 46, UI.confirmExit ? 'Really leave?' : 'Save & exit', () => { if(fighting && !UI.confirmExit){ UI.confirmExit = true; toast('Leaving mid-fight: Continue will start from your last autosave, before this beacon.'); return; } UI.confirmExit = false; save(); UI.screen = 'title'; G = null; }, { s:15, col:C.hostile, fill:!!UI.confirmExit }); }
+  else UI.confirmExit = false;
   if(G.modal) drawModal();
 }
 function drawTopBar(){
@@ -407,6 +548,7 @@ function drawTopBar(){
   btn(1268, 12, 104, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
   btn(1380, 12, 92, 52, 'Ship', () => { G.modal = { type:'ship' }; UI.tab = UI.tab || 'systems'; });
   btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
+  if((SET.speed||1)!==1) label(`Speed ${Math.round((SET.speed||1)*100)}%`, 1108, 66, C.cyan, 'left', 11);
 }
 
 function layoutShip(sh, box, facing, mini){
@@ -464,6 +606,11 @@ function drawShip(sh, box, facing, isEnemy, mini){
         if(live && Math.random()<.12) ember(fx_, fy - cell*.25); }
       for(let k=0; k<r.breach; k++){ const bx = q.x + q.w - (k+.5)*Math.min(cell*.5, 22) - 4, by = q.y + q.h - 12; ctx.beginPath(); ctx.arc(bx, by, Math.min(9, cell*.14), 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 2; ctx.stroke(); if(live && Math.random()<.25) vent(bx, by, (Math.random()-.5), -1); }
     }
+    if(!mini && G && seen && !selW && !UI.mode && !UI.selCrew){ const parts = []; if(s){ parts.push(`Level ${s.max}${SUB.includes(r.sys) ? '' : `, power ${s.power}`}${s.dmg ? `, ${s.dmg} damaged` : ''}${s.ionT>0 ? ', ion locked' : ''}.`); }
+      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`);
+      const here = sh.crew.filter(c => c.room===i); if(here.length) parts.push(`Crew here: ${here.map(c => c.drone ? 'drone' : c.name).slice(0,4).join(', ')}.`);
+      if(isEnemy) parts.push('Select a weapon, then click here to target it.');
+      tip(q.x, q.y, q.w, q.h, r.sys ? SYSN[r.sys] + (isEnemy ? ' (enemy)' : '') : (isEnemy ? 'Enemy room' : 'Room'), parts.join(' ')); }
     const hov = !mini && hovered(q.x,q.y,q.w,q.h);
     const targeting = !mini && ((isEnemy && ((selW && !healSel) || UI.mode==='tele' || UI.mode==='hack')) || (!isEnemy && healSel));
     if(targeting && hov){ ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.strokeRect(q.x+1,q.y+1,q.w-2,q.h-2); glow(q.x+q.w/2, q.y+q.h/2, Math.max(q.w,q.h)*.6, C.hostile, .15); }
@@ -531,6 +678,8 @@ function drawShip(sh, box, facing, isEnemy, mini){
   if(!mini){ label(sh.name, box.x+8, box.y+16, hexA(col,.9), 'left', 15); if(cloaked) label(`Cloaked ${sh.cloak.t.toFixed(0)}s`, box.x+box.w-8, box.y+16, C.cyan, 'right', 14); }
 }
 
+const SPEEDS = [.5, .75, 1, 1.25];
+function speedButton(x, y){ const sp = SET.speed||1; btn(x, y, 220, 46, `Speed ${Math.round(sp*100)}%`, () => { SET.speed = SPEEDS[(SPEEDS.indexOf(sp)+1) % SPEEDS.length]; saveProfile(); }, { s:15, col:C.cyan }); tip(x, y, 220, 46, 'Game speed', 'Slows down or speeds up fights and crew. Also in Settings > Gameplay.'); }
 function moveSelected(sh, ri_){
   const ids = UI.selCrews && UI.selCrews.length ? UI.selCrews : [UI.selCrew];
   const group = sh.crew.filter(x => ids.includes(x.id) && controlled(x));
@@ -660,7 +809,7 @@ function drawArmory(){
     bar(cx+8, cy+72, cw-16, 9, wp.charge/d.charge, ready ? C.good : C.amber);
     T(!wp.on ? 'Off' : ready ? (wp.target==null ? 'Ready' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+8, cy+96, { s:12, c: ready ? C.good : C.muted });
     btn(cx+6, cy+102, cw-12, 22, wp.on ? 'Power off' : 'Power on', () => {
-      if(wp.on){ wp.on = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; }
+      if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; }
       else if(eff(s,'weapons') - weaponPowerUsed(s) >= d.power) wp.on = true;
       else toast('Not enough weapon power. Add power to Weapons.'); }, { s:12, col: wp.on ? C.muted : C.amber });
     btn(cx+6, cy+127, cw-12, 22, wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target'), () => {
@@ -685,7 +834,7 @@ function drawArmory(){
     const status = !dr.on ? (bp.kind==='hull' ? 'Use out of combat' : 'Off') : dr.unit ? 'Deployed' : (G.parts<=0 && !hasAug(s,'recovery')) ? 'No parts!' : ['attack','defense','anti','boarding'].includes(bp.kind) && !G.enemy ? 'Waits for combat' : 'Deploying';
     T(status, cx+dw-8, cy+36, { s:11, a:'right', c: dr.unit ? C.good : C.muted });
     btn(cx+6, cy+48, dw-12, 30, dr.on ? 'Power off' : (bp.kind==='hull' ? 'Use' : 'Power on'), () => {
-      if(dr.on){ dr.on = false; removeDrone(s, dr); }
+      if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); }
       else if(!s.systems.drones) toast('Install a Drone system first.');
       else if(eff(s,'drones') - dronePowerUsed(s) < bp.power) toast('Not enough drone power.');
       else dr.on = true; }, { s:13, col:'#f0a6ff' });
@@ -848,7 +997,7 @@ function drawMapModal(){
   if(fleetPx > f.x){ ctx.fillStyle = hexA(C.hostile,.14); ctx.fillRect(f.x+2, f.y+90, Math.min(fleetPx-f.x, f.w-4), f.h-210);
     ctx.strokeStyle = C.hostile; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fleetPx, f.y+90); ctx.lineTo(fleetPx, f.y+f.h-120); ctx.stroke();
     label('Rebuff Fleet', Math.max(f.x+20, fleetPx-150), f.y+f.h-128, C.hostile, 'left', 14); }
-  const nextPx = f.x + 80 + (G.fleetX + R.fleetSpeed*(sectorDef().fleetMult||1))*(f.w-160);
+  const nextPx = f.x + 80 + (G.fleetX + fleetStep())*(f.w-160);
   ctx.setLineDash([8,8]); ctx.strokeStyle = hexA(C.hostile,.5); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(nextPx, f.y+90); ctx.lineTo(nextPx, f.y+f.h-120); ctx.stroke(); ctx.setLineDash([]);
   nodes.forEach((n,i) => { if(n.nebula){ ctx.beginPath(); ctx.arc(mx(n), my(n), 46, 0, 7); ctx.fillStyle = hexA(C.nebula,.22); ctx.fill(); } });
   nodes.forEach((a,i) => a.links.forEach(j => { if(j<i) return; const b = nodes[j]; const live = (i===G.map.cur || j===G.map.cur);
@@ -869,11 +1018,28 @@ function drawMapModal(){
     if(flagHere){ ctx.beginPath(); ctx.moveTo(x+26, y-8); ctx.lineTo(x+46, y); ctx.lineTo(x+26, y+8); ctx.closePath(); ctx.fillStyle = C.hostile; ctx.fill(); }
     if(n.x < G.fleetX && !isCur) { ctx.strokeStyle = C.hostile; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
+    { const kind = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
+      const fs = fleetStep(), ahead = (n.x - G.fleetX)/fs; const bits = [];
+      if(flagHere) bits.push('The Flaggship is here.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
+      if(n.hazard && (scan || n.revealed || n.visited || reach)) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
+      bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
+      if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
+      tip(x-26, y-26, 52, 52, kind, bits.join(' ')); }
   });
   label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+32, f.y+f.h-46, jumpable ? C.muted : C.warn, 'left', 15);
   T(`Fuel ${G.fuel}`, f.x+f.w-330, f.y+f.h-44, { s:22, f:FD, w:700, c: G.fuel<=3?C.hostile:C.ink });
   btn(f.x+f.w-196, f.y+f.h-82, 160, 58, 'Close', () => { G.modal = null; });
 }
+/* store advisor: how well the current guns get through the shields expected around here */
+function shieldsAhead(sec){ sec = sec || G.sector; return sec>=8 ? 3 : sec>=5 ? 2 : 1; }
+function volleyStats(sh){ const v = { shots:0, missiles:0, beams:0, ion:0, bombs:0 }; for(const w of sh.weapons){ const d = DATA.weapons[w.id]; if(!d || d.heal) continue;
+  if(d.type==='missile') v.missiles += d.shots||1; else if(d.type==='bomb') v.bombs++; else if(d.type==='beam') v.beams += d.damage||0; else { v.shots += d.shots||1; if(d.type==='ion') v.ion++; } } return v; }
+function storeAdvice(){ const v = volleyStats(G.ship), L = shieldsAhead(), pen = v.shots + v.missiles*2 + v.ion;
+  if(G.ship.weapons.length===0) return [`You have no weapons. Buy one!`, C.hostile];
+  if(pen <= L) return [`Your guns struggle against the ${L} shield layer${L>1?'s':''} ships carry around here. Look for burst lasers, missiles, ion or a bigger volley.`, C.warn];
+  if(G.ship.systems.shields && shieldLayers(G.ship) < L) return [`Your volley gets through. Your own shields are thin for this sector: aim for ${L*2} shield power (${L} layer${L>1?'s':''}).`, C.cyan];
+  return [`Your volley (${v.shots} shot${v.shots===1?'':'s'}${v.missiles ? ' + ' + v.missiles + ' missile' + (v.missiles>1?'s':'') : ''}) beats the ${L} layer${L>1?'s':''} expected here.`, C.good]; }
+function vsShields(d){ if(d.type==='missile' || d.type==='bomb') return 'ignores shields'; if(d.type==='beam'){ const L = shieldsAhead(), pen = Math.max(0,(d.damage||0)-L); return !d.damage ? (d.crewDamage ? 'hurts crew, needs shields down' : d.fire ? 'starts fires, needs shields down' : 'needs shields down') : pen ? `${pen} per room through ${L} layer${L>1?'s':''}` : `needs shields down first (${L} layer${L>1?'s':''} here)`; } if(d.type==='ion') return 'strips a layer per hit'; return (d.shots||1) >= 3 ? 'strong vs shields' : (d.shots||1) === 2 ? 'fair vs shields' : 'weak vs shields'; }
 function drawStoreModal(m){
   const node = G.map.nodes[m.node], st = node.store; const s = G.ship;
   const f = mframe(1440, 880, 'Store', C.good);
@@ -885,8 +1051,9 @@ function drawStoreModal(m){
     T(name, cx+20, y+36, { s:22, f:FD, w:700, c: disabled && soldTxt ? C.muted : C.ink }); para(sub, cx+20, y+64, 1000, { s:15, lh:20, c:C.muted, max:2 });
     btn(cx+f.w-300, y+24, 220, 54, soldTxt || `Buy · ${cost}`, onBuy, { disabled: disabled || G.scrap < cost, fill:!disabled && G.scrap>=cost, col:C.good }); };
   switch(UI.storeTab){
-    case 'weapons': st.weapons.forEach((id,i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id); const c = price(d.cost, st);
-      item(i, d.name, `${d.type} · ${d.heal ? 'heals '+d.heal : d.type==='bomb' ? (d.sysDamage||0)+' system damage' : d.damage+' damage × '+(d.shots||1)} · ${d.power} power · ${d.charge}s${d.fire?' · fire':''}${d.breach?' · breach':''}${d.desc?' · '+d.desc:''}`, c,
+    case 'weapons': { const adv = storeAdvice(); para(adv[0], cx, y0+3*112+24, 1300, { s:16, lh:22, c:adv[1] }); }
+      st.weapons.forEach((id,i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id); const c = price(d.cost, st);
+      item(i, d.name, `${d.type} · ${d.heal ? 'heals '+d.heal : d.type==='bomb' ? (d.sysDamage||0)+' system damage' : d.damage+' damage × '+(d.shots||1)} · ${d.power} power · ${d.charge}s${d.fire?' · fire':''}${d.breach?' · breach':''}${d.heal ? '' : ' · ' + vsShields(d)}${d.desc?' · '+d.desc:''}`, c,
         () => buy(c, () => { st.sold.push('w:'+id); toast(giveWeapon(id)); }), sold, sold ? 'Sold' : null); }); break;
     case 'drones': if(!s.systems.drones) T('Your ship has no Drone system yet. Install one from the Systems tab to use these.', cx, y0+300, { s:17, c:C.warn });
       st.drones.forEach((id,i) => { const d = DATA.drones[id]; if(!d) return; const sold = st.sold.includes('d:'+id); const c = price(d.cost, st);
@@ -934,7 +1101,8 @@ function drawShipModal(){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
       T(SYSN[k], x, y+30, { s:20, f:FD, w:700, c:SYSC[k] });
       for(let b=0;b<capL;b++){ rr(x+170+b*24, y+12, 19, 24, 3); ctx.fillStyle = b<sy.max ? SYSC[k] : C.panel2; ctx.fill(); }
-      btn(x+380, y+6, 170, 44, sy.max>=capL ? 'Maxed' : `+1 · ${cost}`, () => buy(cost, () => { sy.max++; if(SUB.includes(k)) {} }), { disabled: sy.max>=capL || G.scrap<cost, s:16 }); };
+      btn(x+380, y+6, 170, 44, sy.max>=capL ? 'Maxed' : `+1 · ${cost}`, () => buy(cost, () => { sy.max++; if(SUB.includes(k)) {} }), { disabled: sy.max>=capL || G.scrap<cost, s:16 });
+      if(k==='shields' && sy.max<capL) T(sy.max%2 ? 'next level adds a layer' : `layer ${Math.floor(sy.max/2)+1} at level ${sy.max+2}`, x+560, y+32, { s:13, c: sy.max%2 ? C.good : C.muted }); };
     const main = MAIN.filter(k=>s.systems[k]), sub = SUB.filter(k=>s.systems[k]);
     label('Main systems', cx, y0+10, C.muted, 'left', 14); main.forEach((k,i) => sysRow(k, cx, y0+20 + i*58));
     const rx = f.x+740; label('Subsystems (no reactor power)', rx, y0+10, C.muted, 'left', 14); sub.forEach((k,i) => sysRow(k, rx, y0+20 + i*58));
@@ -1001,6 +1169,10 @@ window.addEventListener('keydown', e => {
   else if(e.key==='m' || e.key==='M'){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
   else if(e.key==='c' || e.key==='C'){ if(!G.modal) activateCloak(G.ship); }
   else if(e.key==='v' || e.key==='V'){ G.hold = !G.hold; }
+  else if(e.key==='s' || e.key==='S'){ if(G.modal?.type==='ship') G.modal = null; else if(!G.modal){ G.modal = { type:'ship' }; UI.tab = UI.tab || 'systems'; } }
+  else if(e.key==='f' || e.key==='F'){ G.autofire = !G.autofire; toast(G.autofire ? 'Autofire on' : 'Autofire off'); }
+  else if(e.key==='h' || e.key==='H'){ if(!G.modal){ returnToStations(G.ship); toast('Crew back to stations.'); } }
+  else if(e.key==='+' || e.key==='=' || e.key==='-' || e.key==='_'){ const i = SPEEDS.indexOf(SET.speed||1); SET.speed = SPEEDS[clamp(i + (e.key==='+'||e.key==='=' ? 1 : -1), 0, SPEEDS.length-1)]; saveProfile(); toast(`Game speed ${Math.round(SET.speed*100)}%`); }
   else if(/^[1-4]$/.test(e.key) && !G.modal){ const i = +e.key-1, w = G.ship.weapons[i]; if(w && w.on) { UI.selWeapon = UI.selWeapon===i ? null : i; UI.mode = null; } }
   else if(e.key==='Escape'){ if(G.modal && ['map','ship','store'].includes(G.modal.type)) G.modal = null; UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
 });

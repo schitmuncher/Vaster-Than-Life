@@ -98,7 +98,7 @@ function checkHints(dt){
     if(G.sector>=2 && !e) hint('sector');
     if(G.sector>=2 && (s.systems.shields?.max||0) < 4 && !e) hint('shields2');
     if(G.sector>=R.sectors && !e) hint('flagship');
-    const cur = G.map?.nodes?.[G.map.cur]; if(cur && !e && cur.x - G.fleetX < R.fleetSpeed*1.6 && cur.type!=='base' && G.sector < R.sectors) hint('fleet');
+    const cur = G.map?.nodes?.[G.map.cur]; if(cur && !e && cur.x - G.fleetX < fleetStep()*1.6 && cur.type!=='base' && G.sector < R.sectors) hint('fleet');
   }
   showNextHint();
 }

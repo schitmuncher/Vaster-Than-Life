@@ -16,7 +16,7 @@ const SYSS = { shields:'SHLD', engines:'ENG', oxygen:'O2', weapons:'WEAP', drone
 const SYSC = { shields:C.cyan, engines:C.amber, oxygen:'#9fd8ff', weapons:C.hostile, drones:'#f0a6ff', medbay:C.good, clonebay:'#7be0d0',
   teleporter:'#c6e05a', cloaking:'#a9b4d0', hacking:'#ff9de2', mindcontrol:'#d78cff', piloting:C.violet, sensors:'#8fc1ff', doors:'#c9a27e', battery:C.warn };
 const CAPS = { shields:8, engines:8, oxygen:3, weapons:8, drones:8, medbay:3, clonebay:3, teleporter:3, cloaking:3, hacking:3, mindcontrol:3, piloting:3, sensors:3, doors:3, battery:2 };
-const UPCOST = { shields:[30,15], engines:[15,10], oxygen:[25,25], weapons:[25,12], drones:[25,12], medbay:[30,25], clonebay:[30,25], teleporter:[40,30],
+const UPCOST = { shields:[25,12], engines:[15,10], oxygen:[25,25], weapons:[25,12], drones:[25,12], medbay:[30,25], clonebay:[30,25], teleporter:[40,30],
   cloaking:[50,35], hacking:[40,30], mindcontrol:[40,30], piloting:[20,20], sensors:[25,25], doors:[20,20], battery:[35,30] };
 const INSTALL = { drones:60, teleporter:75, cloaking:120, hacking:80, mindcontrol:75, medbay:60, clonebay:65, battery:35, sensors:40, doors:40 };
 const SKILLS = ['pilot','engines','shields','weapons','repair','combat'];
@@ -346,9 +346,9 @@ const ACHIEVEMENTS = [
 ];
 
 const DIFFICULTY = {
-  easy:   { name:'Easy',   scrap:1.35, pace:.5,  startScrap:20,  enemyHull:-2, evade:10 },
-  normal: { name:'Normal', scrap:1,   pace:.7,  startScrap:0,   enemyHull:0 },
-  hard:   { name:'Hard',   scrap:.8,  pace:.85, startScrap:-10, enemyHull:2, evade:-5 }
+  easy:   { name:'Easy',   scrap:1.4, pace:.5,  startScrap:20,  enemyHull:-2, evade:10, bossPace:.62, ease:1, fleet:.85, bossShields:-2 },
+  normal: { name:'Normal', scrap:1,   pace:.7,  startScrap:0,   enemyHull:0,  bossPace:.82 },
+  hard:   { name:'Hard',   scrap:.8,  pace:.85, startScrap:-10, enemyHull:2,  evade:-5, bossPace:1 }
 };
 
 const EXAMPLE_MOD = {

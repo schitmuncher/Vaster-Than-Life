@@ -139,8 +139,9 @@ function roomOf(sh, k){ return sh.rooms.findIndex(r => r.sys===k); }
 function scaledEnemySystems(def, sector){
   const s = Object.assign({}, def.systems||{});
   if(def.boss) return s;
-  if(sector>=5 && ((s.shields||0)>0 || sector>=6)) s.shields = Math.min(8, (s.shields||0) + 2);
-  if(sector>=8) s.shields = Math.min(8, (s.shields||0) + 2);
+  // shields grow with the sector, but stay within reach of a ship that has been upgrading: 1 layer early, 2 from sector 5, 3 only in the last sector
+  const base = s.shields||0, cap = sector>=8 ? 6 : sector>=3 ? 4 : 2;
+  if(base>0 || sector>=6) s.shields = Math.min(Math.max(base, cap), base + (sector>=5 ? 2 : 0) + (sector>=8 ? 2 : 0));
   s.weapons = Math.min(8, (s.weapons||1) + Math.floor((sector-1)/2));
   s.engines = Math.min(8, (s.engines||1) + Math.floor((sector-1)/3));
   if(s.drones) s.drones = Math.min(8, s.drones + Math.floor((sector-1)/3));
@@ -151,6 +152,7 @@ function makeShip(def, side, o={}){
   const sector = o.sector || 1, enemy = side==='e';
   const phase = def.phases ? def.phases[Math.min(o.phase||0, def.phases.length-1)] : null;
   const sys = enemy ? scaledEnemySystems(def, sector) : Object.assign({}, def.systems||{});
+  if(enemy && def.boss && curDiff().bossShields) sys.shields = Math.max(0, (sys.shields||0) + curDiff().bossShields);   // Easy: the Flaggship has one shield layer fewer
   sys.piloting = Math.max(1, sys.piloting||1);
   if(!sys.doors && !def.auto) sys.doors = 1;
   const installed = SYS.filter(k => (sys[k]||0) > 0);
@@ -159,7 +161,7 @@ function makeShip(def, side, o={}){
   let maxX = 0; rooms.forEach(r => maxX = Math.max(maxX, r.x + r.w));
   for(const k of installed){ if(!rooms.some(r=>r.sys===k)){ const free = rooms.find(r=>!r.sys); if(free) free.sys = k; else { rooms.push({ sys:k, x:maxX, y:1, w:2, h:2 }); maxX += 2; } } }
   rooms.forEach(r => Object.assign(r, { o2:100, fire:0, fireP:0, fireOut:0, fireDmg:0, breach:0, breachP:0, sab:0 }));
-  const diff = DIFFICULTY[SET.difficulty] || DIFFICULTY.normal;
+  const diff = curDiff();
   let hull = phase?.hull ?? def.hull;
   if(enemy && !def.boss) hull += Math.min(sector-1, 8) + diff.enemyHull;   // FTL: +1 hull per sector
   if(enemy && def.boss) hull += diff.enemyHull*2;
@@ -176,9 +178,11 @@ function makeShip(def, side, o={}){
   buildGraph(sh);
   let wl = (phase?.weapons || def.weapons || []).filter(id => DATA.weapons[id]);
   if(enemy && !def.boss){
-    const want = Math.min(4, Math.max(wl.length, 1 + Math.floor(sector/2.5)));
-    const pool = Object.values(DATA.weapons).filter(w => !w.heal && (w.tier||1) <= 1 + Math.floor(sector/3)).map(w=>w.id);
-    while(wl.length < want && pool.length) wl.push(pick(pool));
+    // extra guns come from the sector's tier and must fit the ship's weapon power, so late ships are dangerous without being one-shot machines
+    const want = Math.min(4, Math.max(wl.length, 1 + Math.floor((sector+1)/3)));
+    const cap = sys.weapons || 1; let used = wl.reduce((t,id) => t + (DATA.weapons[id]?.power||1), 0);
+    const pool = Object.values(DATA.weapons).filter(w => !w.heal && !w.noEnemy && (w.tier||1) <= 1 + Math.floor(sector/4));
+    for(let tries=0; wl.length < want && tries < 20 && pool.length; tries++){ const w = pick(pool); if(used + (w.power||1) > cap + 1) continue; wl.push(w.id); used += w.power||1; }
   }
   sh.weapons = wl.slice(0, enemy ? 4 : R.weaponSlots).map(id => ({ id, charge:0, on:false, target:null }));
   sh.drones = (phase?.drones || def.drones || []).filter(id => DATA.drones[id]).slice(0, enemy ? 4 : R.droneSlots).map(id => ({ id, on:enemy, unit:null }));
