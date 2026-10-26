@@ -93,7 +93,7 @@ function drawBubbles(){
 }
 /* ---------------- main draw ---------------- */
 function draw(){
-  HR = []; TIPS = []; TIP_MODAL = false; VRTXT = SET.vrBigText !== false && typeof inXR==='function' && inXR(); MINF = VRTXT ? 15 : ({ large:15, huge:18 }[SET.textSize] || 0);
+  HR = []; TIPS = []; TIP_MODAL = false; UI.modalRect = null; UI.hintRect = null; VRTXT = SET.vrBigText !== false && typeof inXR==='function' && inXR(); MINF = VRTXT ? 15 : ({ large:15, huge:18 }[SET.textSize] || 0);
   ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   drawBG(); drawStars();
   switch(UI.screen){
@@ -139,7 +139,7 @@ function drawTitle(){
   btn(110, y, hw, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
   btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
   drawTitleCards(t);
-  label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger selects · left stick walks · aim at floor to teleport · A/X pause · B/Y map · grip brings the console', 110, H-30, C.muted, 'left', 15);
+  label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
 function hangarThumb(id){ UI._thumbs = UI._thumbs || {}; if(id in UI._thumbs) return UI._thumbs[id]; let sh = null; try{ sh = makeShip(DATA.ships[id], 'p', {}); sh.crew = []; }catch(e){ sh = null; } return UI._thumbs[id] = sh; }
@@ -340,9 +340,13 @@ function drawSettings(){
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');
       onoff('Controller help', 'vrLabels', true, 'Look at a controller to see what its buttons do.');
       choice('Controller buzz', 'vrHapticsK', [[0,'Off'],[.5,'Soft'],[1,'Normal'],[1.4,'Strong']], 1, 'How strongly the controllers vibrate on hits, hovers and actions.', v => { SET.vrHaptics = v > 0; saveProfile(); });
+      choice('Datapad hand', 'vrPadHand', [['left','Left'],['right','Right']], 'left', 'Which hand holds the datapad (left stick click). Point at it, or tap it, with the other hand.', () => { if(typeof DECK!=='undefined' && DECK.pad && DECK.pad.parent) DECK.pad.parent.remove(DECK.pad); });
+      onoff('Pop-out windows', 'vrPopups', true, 'Events, stores, the ship screen, the map and tips open as a window in front of you wherever you stand, as well as on the main screen.');
+      onoff('Bridge stations', 'vrStations', true, 'The tactical and engineering stations either side of the holotable: weapons, drones, power, doors and crew within arm\'s reach.');
+      onoff('Main screen', 'vrMainScreen', true, 'The big screen at the front of the bridge. Turn it off for a clear view through the canopy and play with the datapad, the stations and pop-out windows.');
       btn(X, y+6, 260, 44, 'Reset console size', () => { SET.vrPanelScale = 1; saveProfile(); if(typeof panelGroup!=='undefined' && panelGroup) panelGroup.scale.setScalar(1); toast('Console size reset.'); }, { s:15 });
       btn(X+280, y+6, 260, 44, 'Reset holotable size', () => { SET.vrHoloScale = 1; saveProfile(); if(typeof holo!=='undefined' && holo) holo.top.scale.setScalar(1); toast('Holotable size reset.'); }, { s:15 });
-      btn(X+560, y+6, 280, 44, 'Put everything back', () => { SET.vrPanelScale = 1; SET.vrHoloScale = 1; saveProfile(); if(inXR()){ panelGroup.scale.setScalar(1); holo.top.scale.setScalar(1); applyPlayMode(); } toast('Console, holotable and position reset.'); }, { s:15 }); y += 68;
+      btn(X+560, y+6, 280, 44, 'Put everything back', () => { SET.vrPanelScale = 1; SET.vrHoloScale = 1; saveProfile(); if(inXR()){ panelGroup.scale.setScalar(1); holo.top.scale.setScalar(1); applyPlayMode(); } toast('Console, holotable and position reset.'); }, { s:15 }); btn(X+860, y+6, 240, 44, 'Replay VR tour', () => { if(typeof deckReplayTour==='function') deckReplayTour(); }, { s:15 }); y += 68;
       note('In VR: grip while pointing at the console to move it; grip on its edges or corner brackets to resize; two hands to move and scale. Do the same with the holotable.');
       break;
     case 'gameplay':
@@ -413,8 +417,9 @@ const HELP_PAGES = [
   ['Controls', [
     ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
     ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
-    ['Meta Quest', 'Trigger selects. Left stick walks (push fully to run), right stick turns. A or X pauses, B or Y opens the map, grip brings the console to you or grabs it. Glance at your left wrist for the wrist menu.'],
-    ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger with a hand near a fire, breach or broken machine to fix it. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
+    ['Meta Quest', 'Trigger selects, or touch buttons with the controller tip. Left stick walks (push fully to run), right stick turns, left stick click holds up your datapad. A or X pauses, B or Y opens the map. Grip grabs the screen or the extinguisher. Glance at your left wrist for the wrist menu.'],
+    ['Your bridge in VR', 'Tactical and engineering stations flank the holotable. Point at the enemy ship outside and pull the trigger to aim every gun at that room. With the map open, the holotable becomes a 3D star map: point at a beacon to jump.'],
+    ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger near a fire, breach or broken machine to fix it, or spray fires with the extinguisher by the door. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
     ['Comfort', 'Settings has snap or smooth turning, teleport-only movement, a comfort vignette, seated and lying-down play, player height, game speed and bigger text.'],
     ['Saving', 'The run saves itself between fights. Record, on the title screen, can save a backup file of everything to load on another device.'],
     ['Game controller', 'D-pad jumps between buttons and rooms, left stick moves a cursor, A selects, B backs out, Start pauses. X hold fire · Y map · LB/RB weapons · LT stations · RT autofire · View ship. Arrow keys and Enter work the same way.'] ]],
@@ -799,8 +804,8 @@ function drawSystems(){
       rr(bx, by, bw, bh, 3); if(fill){ ctx.fillStyle = fill; ctx.fill(); } ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); }
     let st = ''; if(k==='shields') st = `${shieldLayers(s)} layer${shieldLayers(s)===1?'':'s'}`; else if(manned(s,k)) st = 'manned'; else if(sy.ionT>0) st = 'ion';
     if(st) T(st, cx + cw/2, y+194, { s:11, a:'center', c: st==='ion' ? C.cyan : C.good });
-    btn(cx, y+202, cw, 40, '+', () => { const r = addPower(s,k); sfx(r==='ok' ? 'power' : 'error'); if(r==='reactor') toast('No reactor power free.'); else if(r==='damaged') toast(`${SYSN[k]} is damaged. Send crew to repair it.`); else if(r==='full') toast(`${SYSN[k]} is at full power. Upgrade it in Ship.`); }, { s:24 });
-    btn(cx, y+246, cw, 32, '−', () => { removePower(s,k); sfx('unpower'); }, { s:22, disabled: sy.power<=0 });
+    btn(cx, y+202, cw, 40, '+', () => powerUp(k), { s:24 });
+    btn(cx, y+246, cw, 32, '−', () => powerDown(k), { s:22, disabled: sy.power<=0 });
     const act = sysAction(k); if(act) btn(cx, y+284, cw, 36, act[0], act[1], { s:14, disabled:act[2], col:SYSC[k], fill: (k==='teleporter'&&UI.mode==='tele')||(k==='hacking'&&UI.mode==='hack')||(k==='mindcontrol'&&UI.mode==='mind') });
   });
   const hx = x + w - subW - 10, hy = y+40;
@@ -842,15 +847,8 @@ function drawArmory(){
     for(let p=0;p<d.power;p++){ rr(cx+8+p*16, cy+58, 13, 9, 2); ctx.fillStyle = wp.on ? C.amber : C.line; ctx.fill(); }
     bar(cx+8, cy+72, cw-16, 9, wp.charge/d.charge, ready ? C.good : C.amber);
     T(!wp.on ? 'Off' : ready ? (wp.target==null ? 'Ready' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+8, cy+96, { s:12, c: ready ? C.good : C.muted });
-    btn(cx+6, cy+102, cw-12, 22, wp.on ? 'Power off' : 'Power on', () => {
-      if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; }
-      else if(eff(s,'weapons') - weaponPowerUsed(s) >= d.power) wp.on = true;
-      else toast('Not enough weapon power. Add power to Weapons.'); }, { s:12, col: wp.on ? C.muted : C.amber });
-    btn(cx+6, cy+127, cw-12, 22, wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target'), () => {
-      if(wp.target!=null){ wp.target = null; UI.selWeapon = null; }
-      else if(!wp.on) toast('Power the weapon first.');
-      else if(!G.enemy && !d.heal) toast('No enemy to target.');
-      else { UI.selWeapon = sel ? null : i; UI.mode = null; UI.selCrew = null; } }, { s:12, col:C.hostile, fill: sel });
+    btn(cx+6, cy+102, cw-12, 22, wp.on ? 'Power off' : 'Power on', () => weaponToggle(i), { s:12, col: wp.on ? C.muted : C.amber });
+    btn(cx+6, cy+127, cw-12, 22, wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target'), () => weaponAim(i), { s:12, col:C.hostile, fill: sel });
   }
   const dy = y+236;
   label('Drones', x+16, dy, '#f0a6ff', 'left', 15);
@@ -867,11 +865,7 @@ function drawArmory(){
     for(let p=0;p<bp.power;p++){ rr(cx+8+p*14, cy+28, 11, 8, 2); ctx.fillStyle = dr.on ? '#f0a6ff' : C.line; ctx.fill(); }
     const status = !dr.on ? (bp.kind==='hull' ? 'Use out of combat' : 'Off') : dr.unit ? 'Deployed' : (G.parts<=0 && !hasAug(s,'recovery')) ? 'No parts!' : ['attack','defense','anti','boarding'].includes(bp.kind) && !G.enemy ? 'Waits for combat' : 'Deploying';
     T(status, cx+dw-8, cy+36, { s:11, a:'right', c: dr.unit ? C.good : C.muted });
-    btn(cx+6, cy+48, dw-12, 30, dr.on ? 'Power off' : (bp.kind==='hull' ? 'Use' : 'Power on'), () => {
-      if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); }
-      else if(!s.systems.drones) toast('Install a Drone system first.');
-      else if(eff(s,'drones') - dronePowerUsed(s) < bp.power) toast('Not enough drone power.');
-      else dr.on = true; }, { s:13, col:'#f0a6ff' });
+    btn(cx+6, cy+48, dw-12, 30, dr.on ? 'Power off' : (bp.kind==='hull' ? 'Use' : 'Power on'), () => droneToggle(i), { s:13, col:'#f0a6ff' });
   }
 }
 function unitPos(u){ const s = shipBySide(u.orbit); const b = s?._b; if(!b) return { x:800, y:330 };
@@ -947,7 +941,7 @@ function mframe(w,h,title,col=C.amber,m){
   ctx.save(); rr(x,y,w,h,14); ctx.clip(); const hg = ctx.createLinearGradient(x,0,x+w,0); hg.addColorStop(0,hexA(col,.25)); hg.addColorStop(1,hexA(col,0)); ctx.fillStyle = hg; ctx.fillRect(x,y,w,68); ctx.fillStyle = hexA(col,.5); ctx.fillRect(x,y+68,w,1.5); ctx.restore();
   corners(x-5,y-5,w+10,h+10,col,18);
   if(title) T(title.toUpperCase(), x+32, y+46, { s:24, f:FD, w:700, c:col, ls:3 });
-  TIP_MODAL = true;
+  TIP_MODAL = true; UI.modalRect = { x:x-8, y:y-8, w:w+16, h:h+16 };
   return { x, y, w, h };
 }
 
@@ -1044,26 +1038,26 @@ function mapBackdrop(w, h){   // a starfield in the sector's colours with a fain
   MAPBG.key = key; MAPBG.c = c; return c;
 }
 /* small vector icons for the map, its legend and the VR console */
-function mapIcon(kind, x, y, s, col){
-  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = Math.max(1.6, s*.13); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const u = s/2, dot = (px, py, r) => { ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.fill(); };
-  ctx.beginPath();
+function mapIcon(kind, x, y, s, col, g = ctx){
+  g.save(); g.translate(x, y); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = Math.max(1.6, s*.13); g.lineCap = 'round'; g.lineJoin = 'round';
+  const u = s/2, dot = (px, py, r) => { g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); };
+  g.beginPath();
   switch(kind){
-    case 'store': ctx.moveTo(-u*1.05, -u*.75); ctx.lineTo(-u*.7, -u*.75); ctx.lineTo(-u*.45, u*.35); ctx.lineTo(u*.8, u*.35); ctx.lineTo(u*1.0, -u*.45); ctx.lineTo(-u*.6, -u*.45); ctx.stroke(); dot(-u*.25, u*.78, u*.18); dot(u*.6, u*.78, u*.18); break;
-    case 'hostile': ctx.arc(0, 0, u*.68, 0, 7); ctx.stroke(); ctx.beginPath(); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ ctx.moveTo(dx*u*.32, dy*u*.32); ctx.lineTo(dx*u*1.02, dy*u*1.02); } ctx.stroke(); break;
-    case 'distress': dot(0, 0, u*.22); for(const r of [.55, .92]){ ctx.beginPath(); ctx.arc(0, 0, u*r, -.75, .75); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, u*r, Math.PI-.75, Math.PI+.75); ctx.stroke(); } break;
-    case 'quest': for(let i=0;i<10;i++){ const a = -Math.PI/2 + i*Math.PI/5, r = i%2 ? u*.45 : u*1.05; i ? ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r) : ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); ctx.fill(); break;
-    case 'exit': for(const dx of [-u*.42, u*.28]){ ctx.moveTo(dx - u*.3, -u*.7); ctx.lineTo(dx + u*.35, 0); ctx.lineTo(dx - u*.3, u*.7); } ctx.stroke(); break;
-    case 'base': ctx.moveTo(0, -u); ctx.lineTo(u*.85, -u*.6); ctx.lineTo(u*.7, u*.3); ctx.lineTo(0, u); ctx.lineTo(-u*.7, u*.3); ctx.lineTo(-u*.85, -u*.6); ctx.closePath(); ctx.stroke(); dot(0, 0, u*.25); break;
-    case 'flag': case 'ship': ctx.moveTo(u*1.1, 0); ctx.lineTo(-u*.75, -u*.7); ctx.lineTo(-u*.35, 0); ctx.lineTo(-u*.75, u*.7); ctx.closePath(); ctx.fill(); break;
-    case 'empty': ctx.arc(0, 0, u*.3, 0, 7); ctx.stroke(); break;
-    case 'sun': dot(0, 0, u*.4); ctx.beginPath(); for(let i=0;i<8;i++){ const a = i*Math.PI/4; ctx.moveTo(Math.cos(a)*u*.62, Math.sin(a)*u*.62); ctx.lineTo(Math.cos(a)*u*.98, Math.sin(a)*u*.98); } ctx.stroke(); break;
-    case 'asteroid': ctx.moveTo(-u*.8, -u*.1); ctx.lineTo(-u*.35, -u*.75); ctx.lineTo(u*.4, -u*.6); ctx.lineTo(u*.85, 0); ctx.lineTo(u*.3, u*.75); ctx.lineTo(-u*.5, u*.55); ctx.closePath(); ctx.fill(); break;
-    case 'ionstorm': ctx.moveTo(u*.25, -u); ctx.lineTo(-u*.45, u*.1); ctx.lineTo(u*.05, u*.1); ctx.lineTo(-u*.25, u); ctx.lineTo(u*.5, -u*.15); ctx.lineTo(0, -u*.15); ctx.closePath(); ctx.fill(); break;
-    case 'pulsar': dot(0, 0, u*.24); ctx.beginPath(); ctx.ellipse(0, 0, u, u*.36, -.5, 0, 7); ctx.stroke(); break;
+    case 'store': g.moveTo(-u*1.05, -u*.75); g.lineTo(-u*.7, -u*.75); g.lineTo(-u*.45, u*.35); g.lineTo(u*.8, u*.35); g.lineTo(u*1.0, -u*.45); g.lineTo(-u*.6, -u*.45); g.stroke(); dot(-u*.25, u*.78, u*.18); dot(u*.6, u*.78, u*.18); break;
+    case 'hostile': g.arc(0, 0, u*.68, 0, 7); g.stroke(); g.beginPath(); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ g.moveTo(dx*u*.32, dy*u*.32); g.lineTo(dx*u*1.02, dy*u*1.02); } g.stroke(); break;
+    case 'distress': dot(0, 0, u*.22); for(const r of [.55, .92]){ g.beginPath(); g.arc(0, 0, u*r, -.75, .75); g.stroke(); g.beginPath(); g.arc(0, 0, u*r, Math.PI-.75, Math.PI+.75); g.stroke(); } break;
+    case 'quest': for(let i=0;i<10;i++){ const a = -Math.PI/2 + i*Math.PI/5, r = i%2 ? u*.45 : u*1.05; i ? g.lineTo(Math.cos(a)*r, Math.sin(a)*r) : g.moveTo(Math.cos(a)*r, Math.sin(a)*r); } g.closePath(); g.fill(); break;
+    case 'exit': for(const dx of [-u*.42, u*.28]){ g.moveTo(dx - u*.3, -u*.7); g.lineTo(dx + u*.35, 0); g.lineTo(dx - u*.3, u*.7); } g.stroke(); break;
+    case 'base': g.moveTo(0, -u); g.lineTo(u*.85, -u*.6); g.lineTo(u*.7, u*.3); g.lineTo(0, u); g.lineTo(-u*.7, u*.3); g.lineTo(-u*.85, -u*.6); g.closePath(); g.stroke(); dot(0, 0, u*.25); break;
+    case 'flag': case 'ship': g.moveTo(u*1.1, 0); g.lineTo(-u*.75, -u*.7); g.lineTo(-u*.35, 0); g.lineTo(-u*.75, u*.7); g.closePath(); g.fill(); break;
+    case 'empty': g.arc(0, 0, u*.3, 0, 7); g.stroke(); break;
+    case 'sun': dot(0, 0, u*.4); g.beginPath(); for(let i=0;i<8;i++){ const a = i*Math.PI/4; g.moveTo(Math.cos(a)*u*.62, Math.sin(a)*u*.62); g.lineTo(Math.cos(a)*u*.98, Math.sin(a)*u*.98); } g.stroke(); break;
+    case 'asteroid': g.moveTo(-u*.8, -u*.1); g.lineTo(-u*.35, -u*.75); g.lineTo(u*.4, -u*.6); g.lineTo(u*.85, 0); g.lineTo(u*.3, u*.75); g.lineTo(-u*.5, u*.55); g.closePath(); g.fill(); break;
+    case 'ionstorm': g.moveTo(u*.25, -u); g.lineTo(-u*.45, u*.1); g.lineTo(u*.05, u*.1); g.lineTo(-u*.25, u); g.lineTo(u*.5, -u*.15); g.lineTo(0, -u*.15); g.closePath(); g.fill(); break;
+    case 'pulsar': dot(0, 0, u*.24); g.beginPath(); g.ellipse(0, 0, u, u*.36, -.5, 0, 7); g.stroke(); break;
     case 'nebula': dot(-u*.38, u*.12, u*.42); dot(u*.12, -u*.18, u*.52); dot(u*.55, u*.2, u*.36); break;
   }
-  ctx.restore();
+  g.restore();
 }
 /* fewest jumps from a beacon to the first one matching pred (-1 if unreachable) */
 function mapDist(from, pred){ const nodes = G.map.nodes, seen = { [from]:0 }, q = [from];
@@ -1303,6 +1297,24 @@ function drawShipModal(){
   }
   btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Done', () => { G.modal = null; UI.confirmDismiss = null; UI.confirmAug = null; });
 }
+
+/* ---------------- shared actions (2D panels and the VR stations use the same ones) ---------------- */
+function weaponToggle(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return;
+  if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; sfx('unpower'); }
+  else if(eff(s,'weapons') - weaponPowerUsed(s) >= d.power){ wp.on = true; sfx('power'); }
+  else toast('Not enough weapon power. Add power to Weapons.'); }
+function weaponAim(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return; const sel = UI.selWeapon===i;
+  if(wp.target!=null){ wp.target = null; UI.selWeapon = null; }
+  else if(!wp.on) toast('Power the weapon first.');
+  else if(!G.enemy && !d.heal) toast('No enemy to target.');
+  else { UI.selWeapon = sel ? null : i; UI.mode = null; UI.selCrew = null; } }
+function droneToggle(i){ const s = G.ship, dr = s.drones[i], bp = dr && DATA.drones[dr.id]; if(!bp) return;
+  if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); sfx('unpower'); }
+  else if(!s.systems.drones) toast('Install a Drone system first.');
+  else if(eff(s,'drones') - dronePowerUsed(s) < bp.power) toast('Not enough drone power.');
+  else { dr.on = true; sfx('power'); } }
+function powerUp(k){ const s = G.ship, r = addPower(s,k); sfx(r==='ok' ? 'power' : 'error'); if(r==='reactor') toast('No reactor power free.'); else if(r==='damaged') toast(`${SYSN[k]} is damaged. Send crew to repair it.`); else if(r==='full') toast(`${SYSN[k]} is at full power. Upgrade it in Ship.`); return r; }
+function powerDown(k){ removePower(G.ship, k); sfx('unpower'); }
 
 /* ---------------- input ---------------- */
 function click(x,y){

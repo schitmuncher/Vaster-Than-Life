@@ -307,6 +307,8 @@ function updateHolo(){
   const Mp = holoShip(G.ship, 'p');
   const Me = G.enemy ? holoShip(G.enemy, 'e') : null;
   if(!G.enemy && holo.ships.e){ disposeModel(holo.ships.e); holo.ships.e = null; }
+  if(typeof deckMapActive==='function' && deckMapActive()){   // the table is showing the star map instead
+    for(const M of [Mp, Me]) if(M) M.group.visible = false; for(const pool of [holo.crewPool, holo.projPool, holo.unitPool]) for(const m of pool) m.visible = false; return; }
   // crew as tiny holographic figures
   let ci = 0;
   for(const [s, M] of [[G.ship, Mp], [G.enemy, Me]]) if(s && M) for(const c of s.crew){
@@ -475,7 +477,7 @@ function spaceFrame(){ // anchor basis: position, forward, right
   const p = anchor.pos || new THREE.Vector3(0, 1.6, 0), d = anchor.dir || new THREE.Vector3(0, 0, -1);
   const r = new THREE.Vector3(-d.z, 0, d.x); return { p, d, r };
 }
-function enemySpot(){ const { p, d, r } = spaceFrame(); return new THREE.Vector3().copy(p).addScaledVector(d, 30).addScaledVector(r, 30).add(new THREE.Vector3(0, 10, 0)); }
+function enemySpot(){ const { p, d, r } = spaceFrame(); return new THREE.Vector3().copy(p).addScaledVector(d, 20.3).addScaledVector(r, 26).add(new THREE.Vector3(0, 8, 0)); }   // out of the right-hand canopy, clear of the main screen and close enough to point at its rooms
 let _bx, _by, _bz, _bm;
 function orientEnemy(M, p, r, t){
   const to = new THREE.Vector3().subVectors(p, M.group.position); to.y = 0; to.normalize();
@@ -500,7 +502,7 @@ function updateSpace(dt){
   const key = e && e._art && e._b ? e.id + ':' + e._artKey : '';
   if(!space3d.enemy || space3d.enemy.key!==key){
     if(space3d.enemy){ disposeModel(space3d.enemy); space3d.enemy = null; }
-    if(key){ const M = buildShipModel(e, { hostile:true, rooms:false, glowArt:.45 }); if(M){ M.group.scale.setScalar(.042); space3d.group.add(M.group); space3d.enemy = M; space3d.lastHull = e.hull; space3d.lastShield = e.shield; space3d.deadT = 0; M.arrive = 1; } }
+    if(key){ const M = buildShipModel(e, { hostile:true, rooms:true, glowArt:.45 }); if(M){ M.group.scale.setScalar(.042); space3d.group.add(M.group); space3d.enemy = M; space3d.lastHull = e.hull; space3d.lastShield = e.shield; space3d.deadT = 0; M.arrive = 1; } }
   }
   const M = space3d.enemy, t = G ? G.time : 0;
   if(M && e){
@@ -597,6 +599,7 @@ function placeWorld(p, d){
     holo.group.position.set(p.x + d.x*.8, hy, p.z + d.z*.8); holo.group.rotation.set(0, yaw, 0);
     holo.ped.scale.set(1, hy, 1);
   }
+  if(typeof deckPlaceStations==='function') deckPlaceStations();
 }
 function update3D(dt){ updateHolo(); updateBridge(dt); updateSpace(dt); if(typeof updateSky==='function') updateSky(dt); if(typeof updateInteriors==='function') updateInteriors(dt); if(typeof handsOnUpdate==='function') handsOnUpdate(dt); }
 function setMixedReality(ar){ if(bridge) bridge.group.visible = !ar && SET.bridge !== false; if(space3d) space3d.group.visible = !ar; }

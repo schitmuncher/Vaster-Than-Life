@@ -40,13 +40,13 @@ function vuiInitWrist(){
     let c;
     c = cell(0); vuiBtn(Wd, c.x, c.y, bw, bh, 'MAP', () => { if(G && !G.modal) openMap(); else if(G && G.modal?.type==='map') G.modal = null; });
     c = cell(1); vuiBtn(Wd, c.x, c.y, bw, bh, paused ? 'RESUME' : 'PAUSE', () => { if(G && !G.modal) G.paused = !G.paused; }, { fill:paused, col:VCOL.good });
-    c = cell(2); vuiBtn(Wd, c.x, c.y, bw, bh, 'CONSOLE', () => { bringConsole(); }, { col:VCOL.cyan, s:26 });
+    c = cell(2); vuiBtn(Wd, c.x, c.y, bw, bh, 'DATAPAD', () => { if(typeof deckTogglePad==='function') deckTogglePad(); }, { col:VCOL.cyan, s:26, fill:typeof DECK!=='undefined' && DECK.padOpen });
     const h = SET.vrHeight || 0;
     c = cell(3); vuiBtn(Wd, c.x, c.y, bw, bh, 'HEIGHT −', () => setVrHeight((SET.vrHeight||0) - 3), { col:VCOL.cyan, s:26 });
     c = cell(4); vuiBtn(Wd, c.x, c.y, bw, bh, 'HEIGHT +', () => setVrHeight((SET.vrHeight||0) + 3), { col:VCOL.cyan, s:26 });
     c = cell(5); vuiBtn(Wd, c.x, c.y, bw, bh, 'POSE: ' + ({ standing:'STAND', seated:'SEAT', lying:'LIE' }[SET.vrPose||'standing']), () => { const o = ['standing','seated','lying']; setPlayPose(o[(o.indexOf(SET.vrPose||'standing')+1)%3]); }, { s:24 });
     c = cell(6); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrRunMode==='off' ? 'RUN: OFF' : 'RUN: ON', () => { SET.vrRunMode = SET.vrRunMode==='off' ? 'push' : 'off'; saveProfile(); }, { s:26, fill:SET.vrRunMode!=='off', col:VCOL.good });
-    c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrLoupe!==true ? 'ZOOM: OFF' : 'ZOOM: ON', () => { SET.vrLoupe = SET.vrLoupe!==true; saveProfile(); if(!SET.vrLoupe && loupe) loupe.visible = false; }, { s:26, fill:SET.vrLoupe===true, col:VCOL.cyan });
+    c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, 'SCREEN HERE', () => { bringConsole(); }, { s:22, col:VCOL.cyan });
     const aboard = typeof IN!=='undefined' && IN.aboard, canGo = typeof IN!=='undefined' && IN.foe && G && G.enemy && !G.enemy.dead;
     c = cell(8); vuiBtn(Wd, c.x, c.y, bw, bh, aboard ? 'BEAM BACK' : 'BEAM OVER', () => { if(aboard) beamCaptain(false); else if(canGo) beamCaptain(true); else toast('No ship to board right now.'); }, { s:24, col:'#b48cff', disabled:!aboard && !canGo });
     const nAl = typeof alertRooms==='function' ? alertRooms().length : 0, inShip = typeof IN!=='undefined' && IN.own && IN.own.group.visible;
@@ -68,7 +68,7 @@ function vuiUpdateWrist(){
   if(W_.mesh.parent !== left){ left.add(W_.mesh); W_.mesh.position.set(.0, .145, -.04); W_.mesh.rotation.set(-.9, 0, 0); }
   const camP = headWorld(), camD = new THREE.Vector3(); camera.getWorldDirection(camD);
   const cp = new THREE.Vector3().setFromMatrixPosition(left.matrixWorld), to = cp.clone().sub(camP), dist = to.length(); to.normalize();
-  const want = dist < .8 && to.dot(camD) > .82 || VUI.hover.some(hv => hv && hv.W === W_);
+  const want = (dist < .8 && to.dot(camD) > .82 || VUI.hover.some(hv => hv && hv.W === W_)) && !(typeof DECK!=='undefined' && DECK.padOpen && DECK.pad && DECK.pad.parent === left);
   W_.mesh.visible = want; W_.shown = want;
 }
 
@@ -143,12 +143,16 @@ function vuiUpdate(dt){
         for(const [ox, oz] of [[hx,0],[-hx,0],[0,hz],[0,-hz]]){ const px = R.c.x + ox, pz = R.c.z + oz; let md = 9; for(const D of I.doors) md = Math.min(md, Math.hypot(D.pos.x - px, D.pos.z - pz)); for(const w of (I.windows||[])) md = Math.min(md, Math.hypot(w.cx - px, w.cz - pz)*.8); if(md > bd){ bd = md; best = [ox, oz]; } }
         R.vui.mesh.position.set(R.c.x + best[0], 1.55, R.c.z + best[1]); R.vui.mesh.rotation.set(-.12, Math.atan2(-best[0], -best[1]), 0); R.vui.mesh.scale.setScalar(1.15); } } }
   // redraw widgets that are visible (4 times a second, or right away after a click / hover change)
-  for(const W_ of VUI.items){ if(!W_.mesh.visible) continue; const hk = VUI.hover.map(hv => hv && hv.W === W_ ? hv.idx : -1).join(','); W_.tick = (W_.tick||0) + dt;
+  for(const W_ of VUI.items){ if(!W_.mesh.visible || (W_.cull && !vuiInView(W_.mesh))) continue; const hk = VUI.hover.map(hv => hv && hv.W === W_ ? hv.idx : -1).join(','); W_.tick = (W_.tick||0) + dt;
     if(W_.dirty || hk !== W_.hoverKey || W_.tick > .25){ W_.hoverKey = hk; W_.tick = 0; vuiRedraw(W_); } }
 }
 function headLocal(I){ return I.group.worldToLocal(headWorld()); }
+function vuiShown(m){ let p = m; while(p){ if(!p.visible) return false; p = p.parent; } return !!m.parent; }
+let _vf = null, _vfm = null, _vs = null;
+function vuiInView(m){ if(!_vf){ _vf = new THREE.Frustum(); _vfm = new THREE.Matrix4(); _vs = new THREE.Sphere(); } let p = m; while(p){ if(!p.visible) return false; p = p.parent; }
+  _vfm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); _vf.setFromProjectionMatrix(_vfm); _vs.center.setFromMatrixPosition(m.matrixWorld); _vs.radius = .4; return _vf.intersectsSphere(_vs); }
 function vuiPick(i, origin, dir){
-  const meshes = VUI.items.filter(w => w.mesh.visible).map(w => w.mesh); if(!meshes.length){ VUI.hover[i] = null; return null; }
+  const meshes = VUI.items.filter(w => vuiShown(w.mesh)).map(w => w.mesh); if(!meshes.length){ VUI.hover[i] = null; return null; }
   raycaster.set(origin, dir); const hit = raycaster.intersectObjects(meshes, false)[0];
   if(!hit || !hit.uv || hit.distance > 8){ VUI.hover[i] = null; return null; }
   const W_ = hit.object.userData.vui, x = hit.uv.x*W_.pxW, y = (1 - hit.uv.y)*W_.pxH;

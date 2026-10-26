@@ -8,7 +8,10 @@
      scale the ships up into a big tactical display. Point at a room on a 3D
      ship and pull the trigger to use it exactly like the console (target,
      move crew, select).
-   - Grip pointing at nothing still brings the console in front of you.
+   - Grip pointing at nothing does nothing, so resting a finger on the grip
+     never yanks the screen around. The wrist menu's SCREEN HERE button
+     brings it to you. While you carry the console it glides smoothly and
+     stays level (no tilting with your wrist).
    ========================================================================= */
 const GRAB = { hands:[null, null], handles:[], hoverEdge:[false,false], holoHit:[null,null], ring:null };
 const _m4 = () => new THREE.Matrix4(), _v3 = () => new THREE.Vector3(), _q = () => new THREE.Quaternion();
@@ -34,19 +37,20 @@ function initGrab(){
   });
 }
 function ctrlRay(c){ const m = _m4().extractRotation(c.matrixWorld); const o = _v3().setFromMatrixPosition(c.matrixWorld); const d = _v3().set(0,0,-1).applyMatrix4(m); return { o, d }; }
-function panelTargets(){ const t = []; panelGroup.traverse(o => { if(o.isMesh && o !== loupe?.userData?.mesh && !(loupe && loupe.children.includes(o))) t.push(o); }); return t; }
+function panelTargets(){ if(!panelGroup.visible) return []; const t = []; panelGroup.traverse(o => { if(o.isMesh && o !== loupe?.userData?.mesh && !(loupe && loupe.children.includes(o))) t.push(o); }); return t; }
 function holoTargets(){ if(!holo || !holo.top.visible) return []; const t = []; holo.top.traverse(o => { if(o.isMesh) t.push(o); }); holo.ped.traverse(o => { if(o.isMesh) t.push(o); }); return t; }
 function edgeZone(localPt){ return Math.abs(localPt.x) > 1.12 || Math.abs(localPt.y) > .66; }
 
 function grabStart(i){
   const c = controllers[i]; if(!c || !c.userData.src) return;
+  if(typeof deckExtGrab==='function' && deckExtGrab(i)) return;
   const { o, d } = ctrlRay(c); raycaster.set(o, d);
   const other = GRAB.hands[1-i];
   const pHit = raycaster.intersectObjects(panelTargets(), false)[0];
   const hHit = raycaster.intersectObjects(holoTargets(), false)[0];
   let target = null, hit = null;
   if(pHit && (!hHit || pHit.distance < hHit.distance)){ target = 'panel'; hit = pHit; } else if(hHit){ target = 'holo'; hit = hHit; }
-  if(!target){ bringConsole(); pulse(c.userData.src, .2, 30); return; }
+  if(!target) return;
   const obj = target==='panel' ? panelGroup : holo.group;
   const G_ = { target, obj, mode:'move' };
   if(target==='panel'){ const lp = panelGroup.worldToLocal(hit.point.clone()); if(edgeZone(lp)){ G_.mode = 'resize'; G_.s0 = panelGroup.scale.x; G_.d0 = hit.point.distanceTo(panelGroup.position); } }
@@ -59,6 +63,7 @@ function grabStart(i){
   GRAB.hands[i] = G_; pulse(c.userData.src, .35, 40); sfx('click');
 }
 function grabEnd(i){
+  if(typeof deckExtDrop==='function' && deckExtDrop(i)) return;
   const G_ = GRAB.hands[i]; if(!G_) return; GRAB.hands[i] = null;
   const other = GRAB.hands[1-i]; if(other && (other.mode==='lead' || other.mode==='two')){ other.mode = 'move'; other.off = _m4().copy(controllers[1-i].matrixWorld).invert().multiply(other.obj.matrixWorld); }
   if(G_.target==='panel'){ SET.vrPanelScale = +panelGroup.scale.x.toFixed(3); } else { SET.vrHoloScale = +holo.top.scale.x.toFixed(3); }
@@ -72,9 +77,11 @@ function updateGrab(dt){
     if(G_.mode==='move' || G_.mode==='lead'){
       if(Math.abs(ay) > .3){ G_.off.premultiply(_m4().makeTranslation(0, 0, ay*dt*1.5)); }   // push / pull along the ray
       const m = _m4().copy(c.matrixWorld).multiply(G_.off); const pos = _v3(), q = _q(), sc = _v3(); m.decompose(pos, q, sc);
-      G_.obj.position.copy(pos);
-      if(G_.target==='holo'){ const e = new THREE.Euler().setFromQuaternion(q, 'YXZ'); G_.obj.rotation.set(0, e.y, 0); G_.obj.position.y = clamp(pos.y, .35, 1.6); holo.ped.scale.y = G_.obj.position.y; }
-      else G_.obj.quaternion.copy(q);
+      if(G_.target==='holo'){ G_.obj.position.copy(pos); const e = new THREE.Euler().setFromQuaternion(q, 'YXZ'); G_.obj.rotation.set(0, e.y, 0); G_.obj.position.y = clamp(pos.y, .35, 1.6); holo.ped.scale.y = G_.obj.position.y; }
+      else { // the console glides after your hand and stays level: only turn and tilt, never roll
+        const k = 1 - Math.exp(-dt*14); G_.obj.position.lerp(pos, k);
+        const fwd = _v3().set(0, 0, 1).applyQuaternion(q), yaw = Math.atan2(fwd.x, fwd.z), pitch = clamp(Math.asin(clamp(-fwd.y, -1, 1)), -.7, .7);
+        G_.obj.quaternion.slerp(_q().setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ')), k); }
     } else if(G_.mode==='resize'){
       const { o, d } = ctrlRay(c); const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(_v3().set(0,0,1).applyQuaternion(panelGroup.quaternion), panelGroup.position);
       const p = _v3(); if(new THREE.Ray(o, d).intersectPlane(plane, p)){ const s = clamp(G_.s0 * p.distanceTo(panelGroup.position)/Math.max(.05, G_.d0), .35, 3); panelGroup.scale.setScalar(s); }
@@ -99,7 +106,8 @@ function holoPick(i, origin, dir){
   const hit = raycaster.intersectObjects(meshes, false)[0]; if(!hit) return null;
   const M = holo.ships.p && hit.object===holo.ships.p.hull ? holo.ships.p : holo.ships.e; const sh = M===holo.ships.p ? G?.ship : G?.enemy; if(!sh) return null;
   const lp = M.group.worldToLocal(hit.point.clone()); const x = lp.x + M.mx, y = lp.z + M.my;
-  GRAB.holoHit[i] = { x, y, point:hit.point, dist:hit.distance };
+  const ri = (sh._rects||[]).findIndex(q => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+  GRAB.holoHit[i] = { x, y, point:hit.point, dist:hit.distance, enemy: sh===G?.enemy, ri };
   GRAB.ring.visible = true; GRAB.ring.position.copy(hit.point); GRAB.ring.position.y += .004; GRAB.ring.scale.setScalar(holo.top.scale.x);
   return GRAB.holoHit[i];
 }

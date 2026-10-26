@@ -56,6 +56,8 @@ function sfx(n, o={}){
   const v = o.vol ?? 1, p = o.pitch ?? (0.94 + Math.random()*.12);
   switch(n){
     case 'click': osc('square', 1250*p, t, .035, .03*v, { lp:3000 }); osc('sine', 2500*p, t+.01, .03, .015*v); break;
+    case 'spray': nz(t, .22, .045*v, { hp:2200, a:.02 }); break;
+    case 'lock': osc('square', 1560*p, t, .05, .025*v, { lp:3500 }); osc('square', 2080*p, t+.06, .06, .025*v, { lp:3500 }); break;
     case 'hover': osc('sine', 1900*p, t, .02, .012*v); break;
     case 'error': osc('square', 220, t, .09, .04*v, { lp:900 }); osc('square', 180, t+.1, .12, .04*v, { lp:900 }); break;
     case 'laser': osc('sawtooth', 1500*p, t, .16, .04*v, { to:380*p, lp:4000, rev:.3 }); osc('square', 760*p, t, .08, .02*v, { to:200 }); nz(t, .05, .03*v, { hp:3000 }); break;

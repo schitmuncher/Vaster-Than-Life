@@ -50,7 +50,7 @@ function init3D(){
     const emit = glowSpriteMesh(i ? '#5fd3e6' : '#ffb547', .03); emit.position.set(0, .005, -.03); body.add(emit);
     c.add(body);
     c.userData = { line, idx:i, hit:null, src:null };
-    c.addEventListener('selectstart', () => { if(c.userData.ho) return; if(c.userData.vui && vuiClick(c.userData.vui)){ pulse(c.userData.src, .35, 30); return; } if(c.userData.ipick && interiorAct(c.userData.ipick)){ pulse(c.userData.src, .25, 25); return; } if(c.userData.holo){ click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
+    c.addEventListener('selectstart', () => { if(c.userData.ho) return; if(c.userData.vui && vuiClick(c.userData.vui)){ pulse(c.userData.src, .35, 30); return; } if(c.userData.ipick && interiorAct(c.userData.ipick)){ pulse(c.userData.src, .25, 25); return; } if(c.userData.map != null){ deckMapClick(c.userData.map); pulse(c.userData.src, .3, 30); return; } if(c.userData.holo){ if(G && G.enemy && c.userData.holo.enemy) deckTargetRoom(c.userData.holo); else click(c.userData.holo.x, c.userData.holo.y); pulse(c.userData.src, .25, 25); return; } if(c.userData.space){ if(deckTargetRoom(c.userData.space)) pulse(c.userData.src, .35, 35); return; } if(c.userData.hit){ click(c.userData.hit.x, c.userData.hit.y); pulse(c.userData.src, .25, 25); } else if(c.userData.aim){ teleportTo(c.userData.aim.p); pulse(c.userData.src, .2, 30); } });
     c.addEventListener('connected', e => { c.userData.src = e.data; });
     c.addEventListener('disconnected', () => { c.userData.src = null; PTR[1+i].on = false; });
     rig.add(c); controllers.push(c);
@@ -71,16 +71,20 @@ function xrPointers(){
     tmpM.identity().extractRotation(c.matrixWorld);
     raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
     raycaster.ray.direction.set(0,0,-1).applyMatrix4(tmpM);
-    const hits = raycaster.intersectObject(panelMesh);
-    c.userData.aim = null; c.userData.holo = null; c.userData.ipick = null; c.userData.vui = null; GRAB.hoverEdge[i] = false;
+    const hits = raycaster.intersectObjects(typeof deckSurfaces==='function' ? deckSurfaces(i) : [panelMesh], false);
+    c.userData.aim = null; c.userData.holo = null; c.userData.ipick = null; c.userData.vui = null; c.userData.space = null; c.userData.map = null; GRAB.hoverEdge[i] = false;
     if(hits.length && hits[0].uv){ const uv = hits[0].uv; const x = uv.x*W, y = (1-uv.y)*H; c.userData.hit = { x, y }; PTR[1+i].x = x; PTR[1+i].y = y; PTR[1+i].on = true; c.userData.line.scale.z = hits[0].distance; c.userData.line.userData.dot.visible = true;
-      c.userData.line.material.color.set(0xffb547); updateLoupe(c, hits[0]); hoverTick(i, x, y, c.userData.src); noteEdgeHover(i, hits[0]); }
+      c.userData.line.material.color.set(0xffb547); if(hits[0].object===panelMesh){ updateLoupe(c, hits[0]); noteEdgeHover(i, hits[0]); } else updateLoupe(c, null); hoverTick(i, x, y, c.userData.src); }
     else { c.userData.hit = null; PTR[1+i].on = false; updateLoupe(c, null);
       const ro = raycaster.ray.origin.clone(), rd = raycaster.ray.direction.clone();
       const vp = typeof vuiPick==='function' ? vuiPick(i, ro, rd) : null;
       if(vp){ c.userData.vui = vp; c.userData.line.scale.z = vp.hit.distance; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(vp.idx >= 0 ? 0xffd27a : 0x8592b0); if(vp.newHover) pulse(c.userData.src, .07, 8); continue; }
+      const mp = typeof deckMapPick==='function' ? deckMapPick(i, ro, rd) : null;
+      if(mp){ c.userData.map = mp.idx; c.userData.line.scale.z = mp.dist; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(0x5fd3e6); if(nav.hoverIdx[i] !== 'm' + mp.idx){ nav.hoverIdx[i] = 'm' + mp.idx; pulse(c.userData.src, .08, 10); } continue; }
       const hp = holoPick(i, ro, rd);
       if(hp){ c.userData.holo = hp; PTR[1+i].x = hp.x; PTR[1+i].y = hp.y; PTR[1+i].on = true; c.userData.line.scale.z = hp.dist; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(0xffd27a); hoverTick(i, hp.x, hp.y, c.userData.src); continue; }
+      const sp = typeof deckSpacePick==='function' ? deckSpacePick(i, ro, rd) : null;
+      if(sp){ c.userData.space = sp; PTR[1+i].x = sp.x; PTR[1+i].y = sp.y; PTR[1+i].on = true; c.userData.line.scale.z = Math.min(sp.dist, 60); c.userData.line.userData.dot.visible = false; c.userData.line.material.color.set(UI.selWeapon!=null || UI.mode ? 0xffb547 : 0xff5a7a); hoverTick(i, sp.x, sp.y, c.userData.src); continue; }
       const ip = typeof interiorPick==='function' ? interiorPick(ro, rd) : null;
       const command = ip && (ip.kind!=='floor' || UI.selCrew || (UI.selCrews||[]).length || UI.selWeapon!=null || (!IN.aboard && roomNeedsHelp(ip.ri)));
       if(command){ c.userData.ipick = ip; c.userData.line.scale.z = ip.hit.distance; c.userData.line.userData.dot.visible = true; c.userData.line.material.color.set(ip.kind==='beam' ? 0xb48cff : 0xffd27a);
@@ -101,7 +105,7 @@ function xrButtons(dt){
       if(edge(5)){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
     }
     // grip is handled by vrgrab.js (grab, move, resize, or bring the console to you)
-    if(edge(3)){ if(src.handedness==='left'){ SET.vrLoupe = SET.vrLoupe!==true; saveProfile(); toast(SET.vrLoupe ? 'Magnifier on' : 'Magnifier off'); if(!SET.vrLoupe) loupe.visible = false; } else goHome(); }
+    if(edge(3)){ if(src.handedness==='left'){ if(typeof deckTogglePad==='function') deckTogglePad(); } else goHome(); }
     btnPrev[key] = pressed;
   }
 }
@@ -134,14 +138,14 @@ let last = performance.now(), fc = 0, _fr = null, _frM = null, _bs = null;
 function loop(){
   const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
   const xr = inXR();
-  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); updateGrab(dt); }
+  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); updateGrab(dt); if(typeof deckUpdate==='function') deckUpdate(dt); }
   update(dt); draw();
   if(xr){
     if(recenterIn>0){ recenterIn--; if(recenterIn===0){ applyPlayMode(); nav.sessionT = 0; } }
     // only upload the console texture when you can actually see the console (or its magnifier)
     if((++fc & 1)===0){ panelGroup.updateMatrixWorld(); _frM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); _fr.setFromProjectionMatrix(_frM);
       const bs = _bs || (_bs = new THREE.Sphere()); bs.center.setFromMatrixPosition(panelGroup.matrixWorld); bs.radius = 2.4*panelGroup.scale.x;
-      if(_fr.intersectsSphere(bs) || (typeof loupe!=='undefined' && loupe?.visible)) tex.needsUpdate = true; }
+      if(_fr.intersectsSphere(bs) || (typeof loupe!=='undefined' && loupe?.visible) || (typeof deckNeedsTex==='function' && deckNeedsTex())) tex.needsUpdate = true; }
     update3D(dt);
     const warp = warpAmt();
     starPts.rotation.y += dt*(.004 + warp*.8); starPts.scale.z = 1 + warp*6; if(scene.userData.planet) scene.userData.planet.rotation.y += dt*.01;

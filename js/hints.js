@@ -113,6 +113,7 @@ function drawHint(){
   const bw = side ? 700 : 820; ctx.font = `400 20px ${FM}`; const L = lines(H_.text, bw-280, `400 20px ${FM}`);
   const bh = 92 + L.length*27; const bx = side<0 ? 40 : side>0 ? W - bw - 40 : W/2 - bw/2; const by = G.modal ? H - bh - 20 : 96;
   ctx.save(); ctx.globalAlpha = a;
+  UI.hintRect = { x:bx-8, y:by-8, w:bw+16, h:bh+16 };   // VR shows the tip as a pop-out window
   rr(bx, by, bw, bh, 12); ctx.fillStyle = 'rgba(10,22,40,.97)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = C.cyan; ctx.stroke();
   ctx.beginPath(); ctx.arc(bx+44, by+46, 24, 0, 7); ctx.fillStyle = hexA(C.cyan,.18); ctx.fill(); ctx.strokeStyle = C.cyan; ctx.lineWidth = 2; ctx.stroke();
   T('?', bx+44, by+47, { s:30, f:FD, w:700, a:'center', b:'middle', c:C.cyan });

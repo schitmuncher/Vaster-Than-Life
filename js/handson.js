@@ -163,7 +163,7 @@ function handsOnUpdate(dt){
     if(st && near){
       const spot = hoSpot(I, ri, st); m.g.visible = true; m.g.position.set(spot.x, 0, spot.z);
       const col = st === 'fire' ? 0xff8a3d : st === 'breach' ? 0xff5a7a : 0xffd27a; m.ring.material.color.setHex(col); m.beam.material.color.setHex(col); m.fill.material.color.setHex(col);
-      m.ring.scale.setScalar(1 + Math.sin(t*5 + ri)*.06); m.label.visible = Math.hypot(head.x - spot.x, head.z - spot.z) < 3.2;
+      m.ring.scale.setScalar(1 + Math.sin(t*5 + ri)*.06); { const sd = Math.hypot(head.x - spot.x, head.z - spot.z); m.label.visible = sd < 3.2 && sd > .7; }
       const safe = !hostilesFor(sh, ri, 'p');
       for(const h of hands){ const d = Math.hypot(h.local.x - spot.x, h.local.z - spot.z), dy = Math.abs(h.local.y - .9);
         if(safe && d < HAND_REACH && dy < .9){ m.beam.material.opacity = .32; if(!work) work = { ri, st, h, m }; } else m.beam.material.opacity = Math.max(m.beam.material.opacity, .14); }
@@ -174,7 +174,7 @@ function handsOnUpdate(dt){
       const p = hoPad(I, ri, r); p.g.visible = near;
       const mine = sh.capMan === r.sys && HO.padRoom === ri, other = !mine && mannedCrewReal(sh, r.sys);
       p.ring.material.color.setHex(mine ? 0x7be0a0 : 0x5fd3e6); p.disc.material.opacity = mine ? .35 : .16;
-      p.label.material.map = mine ? HO.geo.onTex : HO.geo.padTex; p.label.visible = near && Math.hypot(head.x - p.pos.x, head.z - p.pos.z) < 3.2 && !other;
+      const pd = Math.hypot(head.x - p.pos.x, head.z - p.pos.z); p.label.material.map = mine ? HO.geo.onTex : HO.geo.padTex; p.label.visible = near && pd < 3.2 && pd > .9 && !other;   // hidden once you are on it, so it never fills your view
       p.ring.visible = !other || mine;
       if(active && near && !other && Math.hypot(head.x - p.pos.x, head.z - p.pos.z) < PAD_R && !hostilesFor(sh, ri, 'p')) padHit = ri;
     }

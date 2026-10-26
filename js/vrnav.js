@@ -38,8 +38,8 @@ function initNav(){
 function makeCtrlLabel(i){
   const c = mkCanvas(640, 300), g = c.getContext('2d'); g.textBaseline = 'alphabetic';
   const lines_ = i===0
-    ? [['Left stick','Walk · push fully to run'],['Stick click','Magnifier on/off'],['Glance','Wrist menu appears'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Bring the console to you']]
-    : [['Trigger','Select · aim at floor: teleport'],['Stick ← →','Turn'],['Stick ↑ ↓','Console nearer / further'],['Stick click','Back to the captain\'s spot'],['A','Pause'],['B','Map'],['Grip','Bring the console to you']];
+    ? [['Left stick','Walk · push fully to run'],['Stick click','Datapad in your hand'],['Glance','Wrist menu appears'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Grab the screen or extinguisher']]
+    : [['Trigger','Select · aim at the enemy: fire'],['Stick ← →','Turn'],['Touch','Press buttons with the tip'],['Stick click','Back to the captain\'s spot'],['A','Pause'],['B','Map'],['Grip','Grab the screen or extinguisher']];
   g.fillStyle = 'rgba(8,14,30,.92)'; g.beginPath(); if(g.roundRect) g.roundRect(4,4,632,292,20); else g.rect(4,4,632,292); g.fill(); g.strokeStyle = i ? '#5fd3e6' : '#ffb547'; g.lineWidth = 4; g.stroke();
   g.font = "700 26px 'Chakra Petch', sans-serif"; g.fillStyle = i ? '#5fd3e6' : '#ffb547'; g.fillText(i ? 'RIGHT HAND' : 'LEFT HAND', 22, 40);
   lines_.forEach(([k,v],n) => { const y = 78 + n*(i ? 31 : 36); g.font = "700 22px 'IBM Plex Mono', monospace"; g.fillStyle = '#ffd27a'; g.fillText(k, 22, y); g.font = "400 21px 'IBM Plex Mono', monospace"; g.fillStyle = '#e8eef9'; g.fillText(v, 196, y); });
@@ -55,7 +55,8 @@ function inBounds(local){ const B = BRIDGE_BOUNDS; if(local.x < B.x0 || local.x 
   if(local.z > .9 && local.x*local.x + (local.z-.9)*(local.z-.9) > 2.95*2.95) return false;
   const hc = holo ? toBridge(holo.group.getWorldPosition(new THREE.Vector3())) : new THREE.Vector3(0,0,-.8); const hs = holo ? holo.top.scale.x : 1;
   const ht = Math.hypot(local.x - hc.x, local.z - hc.z) < .6*hs; const cons = Math.abs(Math.abs(local.x) - 1.35) < .45 && Math.abs(local.z + .45) < .35;
-  return !ht && !cons; }
+  const st = SET.vrStations !== false && typeof STATION_X!=='undefined' && Math.hypot(Math.abs(local.x) - STATION_X, local.z - STATION_Z) < .26;   // the tactical and engineering stands
+  return !ht && !cons && !st; }
 function canStand(world){
   if(typeof IN!=='undefined' && IN.aboard && IN.foe) return interiorWalk(IN.foe, IN.foe.group.worldToLocal(world.clone()));
   if(!bridge || !bridge.group.visible) return true;
@@ -98,7 +99,6 @@ function updateNav(dt){
     if(hand==='right'){
       if(SET.vrTurn==='smooth'){ if(Math.abs(ax) > .25) { const h = headWorld(); const a = -ax*dt*1.6; rig.position.sub(h); rig.position.applyAxisAngle(new THREE.Vector3(0,1,0), a); rig.position.add(h); rig.rotateY(a); moveMag = Math.max(moveMag, Math.abs(ax)); } }
       else { const lat = nav.turnLatch[hand]; if(Math.abs(ax) > .7 && !lat){ nav.turnLatch[hand] = true; snapTurn(-Math.sign(ax) * (SET.vrTurn==='45' ? Math.PI/4 : Math.PI/6)); } else if(Math.abs(ax) < .3) nav.turnLatch[hand] = false; }
-      if(Math.abs(ay) > .35 && Math.abs(ay) > Math.abs(ax) && anchor.pos){ panelDist = clamp(panelDist + ay*dt*1.2, .9, 3.5); bringConsole(); }
     }
   }
   // comfort vignette
