@@ -1,0 +1,39 @@
+{
+  "name": "Derelict Salvage",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "ds_magnet", "name": "Salvage Magnet", "cost": 55, "desc": "Pulls in loose debris after every fight: 20% more scrap.", "fx": { "scrap": 0.2 } },
+    { "id": "ds_cutters", "name": "Plasma Cutters", "cost": 45, "desc": "Your crew strip and repair faster: repairs 20% quicker.", "fx": { "repair": 0.2 } }
+  ],
+  "events": [
+    { "id": "ds_liner", "text": "A cruise liner, adrift for years. The ballroom lights still flicker. The lifeboats are all gone.", "tags": [""], "weight": 1,
+      "choices": [
+        { "text": "Search the cabins.", "chance": 0.65, "success": { "text": "Jewellery, credit chips and a very nice hat.", "scrap": 40 }, "fail": { "text": "The cabins are full of security drones that never got the message.", "fight": "auto_scoundrel" } },
+        { "text": "Strip the engines.", "effect": { "text": "Good parts, honestly earned.", "parts": 4, "fuel": 2 } },
+        { "text": "Play one song on the ballroom piano.", "effect": { "text": "Your crew dance for a while. Nobody mentions the ghosts.", "crewHeal": 40 } }
+      ] },
+    { "id": "ds_warship", "text": "Half of a Fedoration warship, cut clean in two. The weapons bay looks intact.", "tags": [""], "weight": 0.9, "minSector": 2,
+      "choices": [
+        { "text": "Cut into the weapons bay.", "chance": 0.55, "success": { "text": "One gun still works.", "weapon": "random" }, "fail": { "text": "The bay is rigged to blow.", "hull": -4, "scrap": 15 } },
+        { "text": "Recover the dog tags of the crew.", "effect": { "text": "Fedoration command will want to know. Your crew are quiet for a while.", "fleetPush": -0.03, "xp": { "skill": "combat", "amt": 10 } } }
+      ] },
+    { "id": "ds_drone_yard", "text": "A scrapyard of dead drones, thousands of them, drifting in a slow spiral.", "tags": [""], "weight": 0.9,
+      "choices": [
+        { "text": "Pick through them for parts.", "effect": { "text": "Plenty of parts that still work.", "parts": 6 } },
+        { "text": "Try to wake one up.", "req": { "system": "drones" }, "chance": 0.5, "success": { "text": "It wakes up loyal.", "drone": "random" }, "fail": { "text": "It wakes up angry, and so do its friends.", "fight": "auto_assault" } },
+        { "text": "Let {who} talk to them.", "req": { "race": "enjinn" }, "effect": { "text": "{who} rebuilds one from four broken ones in an afternoon.", "drone": "random", "parts": 2 } }
+      ] },
+    { "id": "ds_salvager", "text": "A salvage crew waves you off their claim. \"Ours! Find your own wreck!\" Their ship is barely holding together.", "tags": [""], "weight": 0.8,
+      "choices": [
+        { "text": "Offer to work together.", "effect": { "text": "Together you clear the wreck twice as fast. They share their best tool.", "augment": "ds_cutters", "scrap": 10 } },
+        { "text": "Buy their magnet (45 scrap).", "req": { "scrap": 45 }, "cost": { "scrap": 45 }, "effect": { "text": "\"It pulls in the good stuff. Mostly.\"", "augment": "ds_magnet" } },
+        { "text": "Take the claim by force.", "effect": { "text": "They fight harder than they look.", "fight": "pyrate_gunship", "afterWin": { "text": "The wreck is yours.", "scrap": 45 } } }
+      ] },
+    { "id": "ds_vault", "text": "A bank shuttle, its vault door bent but closed. The emergency beacon is still asking for help.", "tags": [""], "weight": 0.7, "minSector": 3,
+      "choices": [
+        { "text": "Crack the vault.", "chance": 0.5, "success": { "text": "Jackpot.", "scrap": 70 }, "fail": { "text": "The vault's last defence is a burst of knockout gas.", "crewHurt": 25, "scrap": 20 } },
+        { "text": "Answer the beacon instead.", "effect": { "text": "A trapped clerk climbs out of the vault, very grateful, and joins your crew.", "crew": "human" } }
+      ] }
+  ]
+}

@@ -103,6 +103,7 @@ function draw(){
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
     case 'ach': drawAchievements(); break;
+    case 'challenges': drawChallenges(); break;
     case 'gallery': drawGallery(); break;
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); break;
@@ -131,13 +132,14 @@ function drawTitle(){
   if(hasSave){ btn(110, y, bw, 58, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 68; }
   btn(110, y, hw, 58, 'New run', () => openHangar(), { fill:!hasSave, s:18 });
   btn(x2, y, hw, 58, 'Daily run', () => startDaily(), { s:18, col:C.cyan }); y += 68;
-  const on = MODS.filter(m=>m.enabled).length;
-  btn(110, y, hw, 58, on ? `Mods (${on})` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }, { s:18 });
-  btn(x2, y, hw, 58, 'Manual', () => { UI.screen = 'help'; UI.helpPage = 0; }, { s:18 }); y += 68;
-  btn(110, y, hw, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 });
-  btn(x2, y, hw, 58, 'Record', () => { UI.screen = 'record'; }, { s:18 }); y += 68;
+  const on = MODS.filter(m=>m.enabled).length, chDone = Object.values(PROFILE.challenges||{}).filter(r => r.done).length;
+  btn(110, y, hw, 58, chDone ? `Challenges ${chDone}` : 'Challenges', () => { applyMods(); UI.screen = 'challenges'; }, { s:17, col:C.good });
+  btn(x2, y, hw, 58, on ? `Mods (${on})` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }, { s:18 }); y += 68;
+  btn(110, y, hw, 58, 'Manual', () => { UI.screen = 'help'; UI.helpPage = 0; }, { s:18 });
+  btn(x2, y, hw, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 68;
+  btn(110, y, hw, 58, 'Record', () => { UI.screen = 'record'; }, { s:18 });
+  btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:17 }); y += 68;
   btn(110, y, hw, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
-  btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:18 });
   drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
@@ -259,8 +261,8 @@ function drawModsScreen(){
   else {
     const flt = UI.libKind || 'all', list = LIBRARY.mods.filter(m => flt==='all' || (m.kind||'content')===flt);
     T(`${list.length} mod${list.length===1?'':'s'}`, lx+460, 266, { s:14, a:'right', c:C.muted });
-    [['all','All'],['content','Content'],['ships','Ships'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
-      btn(lx+20 + i*90, 282, 84, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:13, fill:flt===k }));
+    [['all','All'],['content','Content'],['ships','Ships'],['challenges','Trials'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
+      btn(lx+20 + i*74, 282, 70, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:12, fill:flt===k }));
     const per = 6, pages = Math.max(1, Math.ceil(list.length/per)); UI.libPage = clamp(UI.libPage||0, 0, pages-1);
     list.slice(UI.libPage*per, UI.libPage*per+per).forEach((m,i) => { const y = 326 + i*82; const have = MODS.some(x=>x.name===m.name);
       T(m.name, lx+20, y+24, { s:18, f:FD, w:700, max:310 }); para(m.desc||'', lx+20, y+46, 310, { s:13, lh:17, c:C.muted, max:2 });
@@ -402,7 +404,9 @@ function drawAchievements(){
   label('Your record', 60, 70, C.cyan, 'left', 18);
   T('Achievements', 60, 122, { s:50, f:FD, w:700 });
   T(`${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length} of ${ACHIEVEMENTS.length} earned`, 1540, 122, { s:20, a:'right', c:C.amber });
-  ACHIEVEMENTS.forEach((a,i) => { const x = 60 + (i%3)*496, y = 150 + Math.floor(i/3)*80, got = !!PROFILE.ach[a.id];
+  const per = 24, pages = Math.max(1, Math.ceil(ACHIEVEMENTS.length/per)); UI.achPage = clamp(UI.achPage||0, 0, pages-1);
+  if(pages>1){ btn(300, 880, 80, 64, '‹', () => UI.achPage--, { disabled:UI.achPage<=0 }); T(`Page ${UI.achPage+1} of ${pages}`, 470, 920, { s:16, a:'center', c:C.muted }); btn(560, 880, 80, 64, '›', () => UI.achPage++, { disabled:UI.achPage>=pages-1 }); }
+  ACHIEVEMENTS.slice(UI.achPage*per, UI.achPage*per + per).forEach((a,i) => { const x = 60 + (i%3)*496, y = 150 + Math.floor(i/3)*88, got = !!PROFILE.ach[a.id];
     panel(x, y, 480, 72, 8); ctx.beginPath(); ctx.arc(x+32, y+36, 14, 0, 7); ctx.fillStyle = got ? C.amber : C.panel2; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 2; ctx.stroke();
     if(got) T('✓', x+32, y+37, { s:15, f:FD, w:700, a:'center', b:'middle', c:C.void });
     T(a.name, x+60, y+28, { s:18, f:FD, w:700, c: got ? C.ink : C.muted, max:405 }); para(a.desc, x+60, y+50, 405, { s:13, lh:16, c:C.muted, max:2 });
@@ -441,7 +445,8 @@ const HELP_PAGES = [
     ['Boarders', 'Fight in groups, never one by one. The crew autopilot gathers defenders, or rallies in the Medbay to fight while healing. Venting airlocks starves boarders of air.'],
     ['Keep crew alive', 'Send hurt crew to the Medbay. Keep Oxygen powered. Fireproof Pebblekin and air-free drones are good firefighters and boarders.'],
     ['Spend scrap well', 'An early second weapon and two shield layers carry you far. Then engines for dodge, a bigger reactor and better guns. Do not hoard: scrap only helps once it is spent.'],
-    ['Seeds and dailies', 'Every run has a seed: the same seed gives the same maps and events. The daily run is the same for everyone each day. Replay seeds from your record.'] ]] ];
+    ['Seeds and dailies', 'Every run has a seed: the same seed gives the same maps and events. The daily run is the same for everyone each day. Replay seeds from your record.'],
+    ['Challenges', 'Challenges on the title screen are hand-made runs with a twist: one crew member, no guns, a tiny hull, a faster fleet. Reach the goal and it is complete even if the run goes on. Mods can add more.'] ]] ];
 function drawHelpScreen(){
   label('Field manual', 60, 70, C.cyan, 'left', 18);
   T('How to play', 60, 122, { s:50, f:FD, w:700 });
@@ -465,9 +470,11 @@ function drawEnd(){
     panel(W/2+200, 552, 440, 300, 12); label('This run', W/2+224, 588, C.cyan, 'left', 15);
     const rows = [['Ship', `${G.ship.name}`], ['Difficulty', (DIFFICULTY[G.diff]||{}).name || ''], ['Seed', G.seed || '-'], ['Crew lost', G.lost.length ? G.lost.slice(0,4).join(', ') + (G.lost.length>4 ? '…' : '') : 'nobody'], ['Time', fmtTime(G.time||0)]];
     if(G.daily){ const best = PROFILE.daily?.[G.daily]; rows.push(['Daily best', best ? `${fmtNum(best.score)} pts` : '-']); }
+    if(G.challenge){ const ch = challengeDef(G.challenge); rows.push(['Challenge', `${ch ? ch.name : G.challenge}: ${G.chDone ? 'complete ✓' : 'not yet'}`]); }
     rows.forEach((r,i) => { label(r[0], W/2+224, 626 + i*36, C.muted, 'left', 12); T(r[1], W/2+360, 626 + i*36, { s:16, max:260 }); }); }
   btn(W/2-640, 884, 300, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { s:22 });
-  if(G && !G.daily){ const ship = G.shipDef, seed = G.seed;
+  if(G && G.challenge){ const cid = G.challenge; btn(W/2-320, 884, 300, 72, 'Retry challenge', () => startChallenge(cid), { fill:true, s:20, col:C.good }); btn(W/2, 884, 300, 72, 'All challenges', () => { UI.screen = 'challenges'; G = null; }, { s:20 }); }
+  else if(G && !G.daily){ const ship = G.shipDef, seed = G.seed;
     btn(W/2-320, 884, 300, 72, 'Try again', () => { applyMods(); const sid = DATA.ships[ship] ? ship : 'pestrel'; newRun(sid, null, {}); }, { fill:true, s:22 });
     btn(W/2, 884, 300, 72, 'Replay this seed', () => { applyMods(); const sid = DATA.ships[ship] ? ship : 'pestrel'; newRun(sid, null, { seed }); }, { s:20 }); }
   else if(G && G.daily) btn(W/2-320, 884, 300, 72, 'Fly the daily again', () => startDaily(), { fill:true, s:20, col:C.cyan });

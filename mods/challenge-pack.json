@@ -1,0 +1,23 @@
+{
+  "name": "Challenge Pack",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "challenges": [
+    { "id": "cp_stone_wall", "name": "Stone Wall", "tier": 1, "ship": "stone", "goal": { "sector": 4 },
+      "desc": "Fly the Pebblekin cruiser and let your rock-solid crew soak up the punishment. Reach sector 4." },
+    { "id": "cp_slug_life", "name": "Slug Life", "tier": 2, "ship": "slime", "start": { "weapons": ["basic"] }, "goal": { "sector": 4 },
+      "desc": "The Sloog ship with one basic laser. Hack, mind control and outthink every enemy to sector 4." },
+    { "id": "cp_glass_gun", "name": "Glass Gun", "tier": 2, "ship": "pestrel", "start": { "hull": 10, "weapons": ["pike", "heavy1", "ion"] }, "goal": { "sector": 5 },
+      "desc": "A beam, a heavy laser and an ion blaster on a ship that cracks if you look at it. Reach sector 5." },
+    { "id": "cp_crowded", "name": "Clown Car", "tier": 1, "ship": "pestrel", "start": { "crew": ["human", "mantlis", "pebblekin", "enjinn", "voltan", "sloog", "human", "mantlis"] }, "goal": { "sector": 4 },
+      "desc": "Eight crew of every race, no room to breathe. Keep them all alive to sector 4." },
+    { "id": "cp_rich_kid", "name": "Rich Kid", "tier": 1, "ship": "pestrel", "start": { "scrap": 300 }, "scrapMult": 0.3, "goal": { "sector": 5 },
+      "desc": "Start with 300 scrap, but wrecks pay almost nothing. Shop smart at the first stores and coast to sector 5." },
+    { "id": "cp_ion_storm", "name": "Eye of the Storm", "tier": 3, "ship": "zap", "rules": { "fleetSpeed": 0.14 }, "start": { "hull": 20 }, "goal": { "sector": 6 },
+      "desc": "The Voltan ship with a thin hull and a quick fleet behind you. Reach sector 6." },
+    { "id": "cp_no_shields", "name": "Naked Hull", "tier": 3, "ship": "pestrel", "start": { "systems": { "engines": 5 }, "weapons": ["bust2", "arty"] }, "rules": { "shieldRegen": 6 }, "goal": { "sector": 4 },
+      "desc": "Shield layers take three times as long to come back. Dodge with big engines and kill fast. Reach sector 4." },
+    { "id": "cp_marathon_lite", "name": "The Long Way Round", "tier": 2, "ship": "bortex", "rules": { "sectors": 9 }, "goal": { "sector": 7 },
+      "desc": "A nine-sector map flown in the Bortex. Reach sector 7." }
+  ]
+}

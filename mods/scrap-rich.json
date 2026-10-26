@@ -1,0 +1,10 @@
+{
+  "name": "Scrap Rich",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "startScrap": 150,
+    "startParts": 8,
+    "augmentSlots": 4
+  }
+}

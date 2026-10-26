@@ -1,0 +1,50 @@
+{
+  "name": "Hazard Zones",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "hz_heatsink", "name": "Heat Sink Plating", "cost": 45, "desc": "Built for solar flares: 50% fewer breaches and a 15% chance to shrug off system damage.", "fx": { "breachRes": 0.5, "sysRes": 0.15 } },
+    { "id": "hz_grounding", "name": "Storm Grounding Rods", "cost": 40, "desc": "A 35% chance to shrug off ion damage.", "fx": { "ionRes": 0.35 } }
+  ],
+  "sectors": [
+    { "id": "hz_furnace", "name": "The Furnace", "blurb": "A cluster of angry blue stars. Solar flares at almost every beacon, and rich salvage from those who burned.", "color": "#7fb8ff", "mix": { "event": 46, "combat": 42, "empty": 12 }, "tags": ["furnace"], "enemyTags": ["auto"], "hazards": { "sun": 0.45 }, "nebula": 0,
+      "intro": ["Three suns overhead. Your crew start handing out extinguishers.", "The Furnace. Keep the fire doors handy."] },
+    { "id": "hz_maze", "name": "The Shattered Belt", "blurb": "What is left of a moon. Rocks everywhere, slow going for the fleet, hard going for you.", "color": "#c2a07a", "mix": { "event": 40, "combat": 48, "empty": 12 }, "tags": ["belt"], "enemyTags": ["pyrate"], "hazards": { "asteroid": 0.5 }, "nebula": 0, "fleetMult": 0.85,
+      "intro": ["Rocks the size of cities tumble past the canopy.", "The Shattered Belt. Shields up and stay up."] },
+    { "id": "hz_pulsarfield", "name": "The Pulsar Field", "blurb": "Spinning dead stars sweep the sector with ion waves. Systems flicker on and off all day.", "color": "#d6a6ff", "mix": { "event": 44, "combat": 44, "empty": 12 }, "tags": ["pulsar"], "enemyTags": ["auto", "rebuff"], "hazards": { "pulsar": 0.4, "ionstorm": 0.1 }, "nebula": 0.1,
+      "intro": ["Your lights blink off, then on again, to the beat of a dead star.", "The Pulsar Field. Ion-proof everything you can."] }
+  ],
+  "events": [
+    { "id": "hz_salvage_sun", "text": "A wrecked freighter is falling slowly into the star. Its hold is intact, for now.", "tags": ["furnace"], "weight": 1.5,
+      "choices": [
+        { "text": "Dive in after it.", "chance": 0.6, "success": { "text": "You pull the cargo out with seconds to spare.", "scrap": 50, "fuel": 2 }, "fail": { "text": "You get the cargo, and a scorched hull.", "scrap": 30, "hull": -5, "fire": 2 } },
+        { "text": "Grab what you can from the edge.", "effect": { "text": "A few crates, safely.", "scrap": 18 } }
+      ] },
+    { "id": "hz_shade", "text": "A sunshade station hangs in the glare, its crew offering to refit ships for the flares.", "tags": ["furnace"], "weight": 1,
+      "choices": [
+        { "text": "Buy the heat sink plating (35 scrap).", "req": { "scrap": 35 }, "cost": { "scrap": 35 }, "effect": { "text": "Your hull gleams like a mirror.", "augment": "hz_heatsink" } },
+        { "text": "Rest in the shade.", "effect": { "text": "An hour out of the glare does everyone good.", "crewHeal": 35 } }
+      ] },
+    { "id": "hz_rock_rider", "text": "A pyrate is riding an asteroid like a surfboard, laughing. He waves you over to join.", "tags": ["belt"], "weight": 1.2,
+      "choices": [
+        { "text": "Have a go.", "req": { "system": "engines", "level": 3 }, "effect": { "text": "You surf the belt like a pro. The pyrate is so impressed he gives you his stash.", "scrap": 35, "xp": { "skill": "pilot", "amt": 20 } } },
+        { "text": "Have a go anyway.", "chance": 0.4, "success": { "text": "Somehow it works.", "scrap": 20 }, "fail": { "text": "It does not work.", "hull": -4 } },
+        { "text": "Mine the rocks instead.", "effect": { "text": "Steady, honest work.", "scrap": 15, "parts": 1 } }
+      ] },
+    { "id": "hz_core", "text": "Deep in the belt, a cracked asteroid shows a core of raw, glowing metal.", "tags": ["belt"], "weight": 1,
+      "choices": [
+        { "text": "Drill it out.", "chance": 0.7, "success": { "text": "Pure, valuable ore.", "scrap": 45 }, "fail": { "text": "The core shifts and pins your ship for hours.", "fleetPush": 0.05 } },
+        { "text": "Leave it.", "effect": { "text": "Someone else's lucky day." } }
+      ] },
+    { "id": "hz_pulse_lab", "text": "A research lab studies the pulsars. The scientists offer their storm gear in return for a ride.", "tags": ["pulsar"], "weight": 1.2,
+      "choices": [
+        { "text": "Give them a lift.", "effect": { "text": "They install grounding rods as a thank you, and one stays on as crew.", "augment": "hz_grounding", "crew": "human" } },
+        { "text": "Buy their data.", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "Their charts show every safe beacon.", "reveal": true } }
+      ] },
+    { "id": "hz_beat", "text": "The pulsar's beat is perfectly regular. Your engineer says you could time a jump between pulses and save fuel.", "tags": ["pulsar"], "weight": 1,
+      "choices": [
+        { "text": "Try it.", "chance": 0.6, "success": { "text": "Perfect timing. The jump costs nothing.", "fuel": 2 }, "fail": { "text": "Off by a beat. Everything goes dark for a moment.", "damageSystem": "random" } },
+        { "text": "Jump normally.", "effect": { "text": "Better safe." } }
+      ] }
+  ]
+}

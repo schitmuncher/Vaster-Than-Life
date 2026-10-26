@@ -1,0 +1,28 @@
+{
+  "name": "Rebuff Defectors",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "ships": [
+    { "id": "rd_turncoat", "name": "The Turncoat", "cls": "Rebuff Defector", "layout": "A", "desc": "A stolen Rebuff patrol cutter. Tough hull, ion cannon, and a crew with a lot to prove.", "hull": 32, "reactor": 8, "color": "#ff6a6a", "pattern": "TABAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 2 }, "reserve": ["drones", "teleporter", "hacking"],
+      "weapons": ["rd_patrolion", "heavy1"], "drones": [], "crew": ["human", "human", "pebblekin"], "fuel": 16, "missiles": 4, "parts": 2 },
+    { "id": "rd_whistle", "name": "The Whistleblower", "cls": "Rebuff Defector", "layout": "B", "desc": "A Rebuff intelligence ship. Hacking and cloaking, but only one gun.", "hull": 26, "reactor": 9, "color": "#e05a6a", "pattern": "TACAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "piloting": 1, "sensors": 2, "doors": 1, "hacking": 1, "cloaking": 1 }, "reserve": ["medbay"],
+      "weapons": ["bust1"], "drones": [], "crew": ["human", "sloog"], "fuel": 18, "missiles": 2, "parts": 6, "unlock": { "sector": 4 } }
+  ],
+  "weapons": [
+    { "id": "rd_patrolion", "name": "Patrol Ion", "type": "ion", "damage": 1, "shots": 2, "charge": 12, "power": 2, "cost": 55, "tier": 2, "desc": "Standard Rebuff patrol ion cannon. Two bolts to strip shields." }
+  ],
+  "events": [
+    { "id": "rd_recognise", "text": "A Rebuff patrol hails you, puzzled. \"Your ship is on our register, but your transponder says Fedoration.\"", "tags": ["rebuff", ""], "weight": 0.8,
+      "choices": [
+        { "text": "\"Clerical error.\"", "chance": 0.5, "success": { "text": "\"Happens all the time.\" They wave you through.", "fleetPush": -0.03 }, "fail": { "text": "\"No, it doesn't.\"", "fight": "rebuff_fighter" } },
+        { "text": "Broadcast your defection speech.", "effect": { "text": "One of their crew likes it so much she jumps ship to join you.", "crew": "human" } }
+      ] },
+    { "id": "rd_old_friend", "text": "An old Rebuff comrade of your first officer is stationed here, bored on a supply depot.", "tags": ["rebuff"], "weight": 0.9,
+      "choices": [
+        { "text": "Ask a favour.", "effect": { "text": "A crate of missiles falls off the back of the depot.", "missiles": 5 } },
+        { "text": "Ask them to defect too.", "chance": 0.5, "success": { "text": "\"I thought you'd never ask.\" They bring their tools.", "crew": "human", "parts": 3 }, "fail": { "text": "They report you, apologetically.", "fleetPush": 0.05 } }
+      ] }
+  ]
+}

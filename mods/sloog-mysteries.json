@@ -1,0 +1,32 @@
+{
+  "name": "Sloog Mysteries",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "sm_eye", "name": "Third Eye Lens", "cost": 55, "desc": "See the shot before it lands: +7% evasion.", "fx": { "evade": 7 } }
+  ],
+  "events": [
+    { "id": "sm_oracle", "text": "A very old Sloog sits alone in a bubble ship. \"Ask me one question,\" it gurgles. \"Only one.\"", "tags": ["sloog", ""], "weight": 1,
+      "choices": [
+        { "text": "\"Where is the treasure?\"", "effect": { "text": "It points. There is, in fact, treasure.", "scrap": 40 } },
+        { "text": "\"What's ahead of us?\"", "effect": { "text": "It describes the whole sector, beacon by beacon.", "reveal": true } },
+        { "text": "\"How do we win?\"", "effect": { "text": "\"Look harder.\" It hands you a strange lens.", "augment": "sm_eye" } },
+        { "text": "\"Is this your only question limit?\"", "effect": { "text": "It sighs very deeply and closes its bubble." } }
+      ] },
+    { "id": "sm_dreams", "text": "Your crew all had the same dream last night: a beacon, a ship and a door that opens inward.", "tags": ["sloog", "nebula", ""], "weight": 0.7, "minSector": 2,
+      "choices": [
+        { "text": "Follow the dream.", "effect": { "text": "The beacon is real. It is marked on your map.", "quest": "sm_door" } },
+        { "text": "Have {who} explain it.", "req": { "race": "sloog" }, "effect": { "text": "{who} says it was a Sloog prank. The pranksters send a box of supplies to apologise.", "missiles": 3, "fuel": 2 } }
+      ] },
+    { "id": "sm_door", "questOnly": true, "text": "The dream beacon. A door floats in empty space, with no ship and no station around it. It opens inward.",
+      "choices": [
+        { "text": "Send someone through.", "chance": 0.6, "success": { "text": "They come back an hour later with an armful of loot and no memory of where they went.", "scrap": 60, "augment": "random" }, "fail": { "text": "They come back an hour older and very upset. And something followed them.", "fight": "sloog_mind", "crewHurt": 10 } },
+        { "text": "Knock.", "effect": { "text": "Someone on the other side knocks back. Then the door closes, and a crate is left where it was.", "scrap": 30, "parts": 3 } }
+      ] },
+    { "id": "sm_thoughts", "text": "A Sloog thought-trader offers to buy one of your crew's memories. \"A happy one, preferably.\"", "tags": ["sloog"], "weight": 1,
+      "choices": [
+        { "text": "Sell a memory of a nice lunch.", "effect": { "text": "Nobody can remember what they had for lunch. You are richer, though.", "scrap": 30 } },
+        { "text": "Buy a memory instead (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "Your gunners now remember a lifetime of target practice.", "xp": { "skill": "weapons", "amt": 25 } } }
+      ] }
+  ]
+}

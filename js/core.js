@@ -60,7 +60,7 @@ function unlockText(u){
 /* ---------------- mods ---------------- */
 let MODS = LS.get(MOD_KEY, []);
 let DATA = null, R = null;
-const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits'];
+const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges'];
 const NOTRAIT = {};
 function traitOf(c){ return (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; }
 let HOOKS = {};
@@ -115,7 +115,8 @@ const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire b
   drones:'name kind power cost rate shot targets role heal desc', races:'name color hp repair combat speed power heal fireproof telepathic mindImmune deathBurst learn armor noAir desc',
   augments:'name cost desc fx', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
   enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases', ships:'name cls layout desc hull reactor color image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',
-  events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices' };
+  events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices',
+  challenges:'name desc tier ship difficulty rules start scrapMult goal' };
 const MOD_FX = 'evade ionRes sysRes breachRes ammo speed shield heal charge dps repair scrap superShield'.split(' ');
 const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons'.split(' ');
 let MOD_ALLOW = null;
@@ -131,7 +132,7 @@ function modWarnings(d){
   for(const [id,ev] of Object.entries(toMap(d.events))) for(const c of ev?.choices||[]){ chk(c.effect, id); chk(c.success, id); chk(c.fail, id); }
   return W;
 }
-const KIND_ONE = { races:'race', weapons:'weapon', drones:'drone', augments:'augment', ships:'ship', enemies:'enemy', sectors:'sector', events:'event', traits:'trait' };
+const KIND_ONE = { races:'race', weapons:'weapon', drones:'drone', augments:'augment', ships:'ship', enemies:'enemy', sectors:'sector', events:'event', traits:'trait', challenges:'challenge' };
 function modSummary(d){ const parts=[]; for(const k of KINDS){ const n = Object.keys(toMap(d[k])).length; if(n) parts.push(`${n} ${n===1 ? (KIND_ONE[k]||k) : k}`); }
   if(d.rules) parts.push('rules'); if(d.script) parts.push('script'); return parts.join(', ') || 'no content'; }
 function addModText(txt, label){

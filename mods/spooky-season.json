@@ -1,0 +1,52 @@
+{
+  "name": "Spooky Season",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "ss_pumpkin", "name": "Pumpkin Mortar", "type": "missile", "damage": 2, "shots": 1, "charge": 12, "power": 1, "cost": 45, "tier": 2, "fire": 0.5, "desc": "Fires a hollowed-out pumpkin full of burning wax. Very seasonal." },
+    { "id": "ss_wail", "name": "Banshee Wail", "type": "ion", "damage": 1, "shots": 1, "charge": 9, "power": 1, "cost": 35, "tier": 1, "stun": 3, "desc": "A shriek on every frequency. Locks a system and freezes the crew in the room." }
+  ],
+  "augments": [
+    { "id": "ss_charm", "name": "Lucky Black Cat", "cost": 40, "desc": "Not unlucky at all, for you: +5% evasion.", "fx": { "evade": 5 } },
+    { "id": "ss_candy", "name": "Bottomless Candy Bowl", "cost": 35, "desc": "Sugar rush: crew move 15% faster.", "fx": { "speed": 0.15 } }
+  ],
+  "races": [
+    { "id": "ss_wisp", "name": "Wisp", "color": "#b9ffe4", "hp": 70, "repair": 1.1, "combat": 0.7, "speed": 1.4, "noAir": true, "fireproof": true, "desc": "Drifting will-o'-the-wisps. Fragile, quick, need no air and cannot burn." }
+  ],
+  "enemies": [
+    { "id": "ss_haunted", "name": "Haunted Freighter", "tags": ["spooky"], "onlyTagged": true, "auto": true, "hull": 11, "sectors": [1, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "piloting": 1 }, "weapons": ["ss_wail", "basic"], "crew": [] },
+    { "id": "ss_gourd", "name": "Gourd Galleon", "tags": ["spooky"], "onlyTagged": true, "hull": 13, "sectors": [2, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ss_pumpkin", "bust1"], "crew": ["ss_wisp", "human", "ss_wisp"] }
+  ],
+  "sectors": [
+    { "id": "ss_hollow", "name": "The Hollow Nebula", "blurb": "Orange fog, flickering lights and ships nobody remembers launching. Trick or treat.", "color": "#ff9a3c", "mix": { "event": 54, "combat": 36, "empty": 10 }, "tags": ["spooky", "nebula"], "enemyTags": ["spooky"], "hazards": { "ionstorm": 0.07 }, "nebula": 0.5,
+      "intro": ["Every beacon here has a carved pumpkin floating next to it. Nobody knows who puts them there.", "The Hollow Nebula. Your crew insist they heard someone laughing in the vents."] }
+  ],
+  "events": [
+    { "id": "ss_trick", "text": "A small ship covered in paper bats pulls up. Its crew, all wearing sheets with eye holes, shout: \"Trick or treat!\"", "tags": ["spooky", ""], "weight": 1.2,
+      "choices": [
+        { "text": "Treat (15 scrap).", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "They squeal with delight and leave you a bowl of something sugary.", "augment": "ss_candy" } },
+        { "text": "Trick.", "chance": 0.5, "success": { "text": "Their trick is to wash your hull. It looks great.", "hull": 4 }, "fail": { "text": "Their trick is to egg your sensors.", "damageSystem": "sensors" } },
+        { "text": "Turn off the lights and pretend nobody's home.", "effect": { "text": "They knock for a while, then leave." } }
+      ] },
+    { "id": "ss_wisp", "text": "A pale light dances outside the canopy, bobbing as if it wants you to follow.", "tags": ["spooky", ""], "weight": 1,
+      "choices": [
+        { "text": "Follow the light.", "chance": 0.6, "success": { "text": "It leads you to a forgotten cache, then flits aboard and refuses to leave.", "scrap": 25, "crew": "ss_wisp" }, "fail": { "text": "It leads you straight into an asteroid. It seems very pleased with itself.", "hull": -3 } },
+        { "text": "Ignore it.", "effect": { "text": "It sulks off into the fog." } }
+      ] },
+    { "id": "ss_cat", "text": "A black cat is sitting on your airlock. In space. It looks at you as if you are late.", "tags": ["spooky", ""], "weight": 0.8,
+      "choices": [
+        { "text": "Let it in.", "effect": { "text": "It walks straight to the captain's chair and sits in it. Your evasion improves for no reason anyone can explain.", "augment": "ss_charm" } },
+        { "text": "Shoo it away.", "effect": { "text": "It blinks, and is gone. So is one of your fuel cells.", "fuel": -1 } }
+      ] },
+    { "id": "ss_graveyard", "text": "A graveyard of ships, each hull carved with a name. One of them is the name of your ship.", "tags": ["spooky"], "weight": 1,
+      "choices": [
+        { "text": "Investigate your own grave.", "chance": 0.5, "success": { "text": "It's a different ship with the same name, and a hold full of salvage.", "scrap": 40, "missiles": 2 }, "fail": { "text": "Something in the wreck wakes up.", "fight": "ss_haunted" } },
+        { "text": "Leave very quickly.", "effect": { "text": "Nobody talks about it again.", "fuel": -1, "fleetPush": -0.04 } }
+      ] },
+    { "id": "ss_pumpkin_patch", "text": "A drifting farm habitat grows pumpkins the size of shuttles. The farmer offers you one, \"for the fireworks\".", "tags": ["spooky"], "weight": 1,
+      "choices": [
+        { "text": "Take a pumpkin launcher instead (35 scrap).", "req": { "scrap": 35 }, "cost": { "scrap": 35 }, "effect": { "text": "The farmer's nephew built it. It mostly works.", "weapon": "ss_pumpkin" } },
+        { "text": "Help with the harvest.", "effect": { "text": "Back-breaking work, but good food and a fair wage.", "scrap": 15, "crewHeal": 30 } }
+      ] }
+  ]
+}

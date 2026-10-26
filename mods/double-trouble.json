@@ -1,0 +1,13 @@
+{
+  "name": "Double Trouble",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "enemyPace": 0.95,
+    "fleetSpeed": 0.13,
+    "startScrap": 60,
+    "weaponSlots": 5,
+    "droneSlots": 4,
+    "baseHP": 3
+  }
+}

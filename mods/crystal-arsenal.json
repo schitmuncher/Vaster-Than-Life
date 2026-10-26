@@ -1,0 +1,31 @@
+{
+  "name": "Crystal Arsenal",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "ca_shard", "name": "Shard Lance", "type": "laser", "damage": 1, "shots": 2, "charge": 12, "power": 2, "cost": 70, "tier": 2, "pierce": 1, "desc": "Crystal shards that slip through one shield layer." },
+    { "id": "ca_heavyshard", "name": "Heavy Shard", "type": "laser", "damage": 3, "shots": 1, "charge": 16, "power": 3, "cost": 95, "tier": 3, "pierce": 1, "breach": 0.3, "desc": "A crystal the size of a crew member, fired at the enemy. Slips through one shield layer." },
+    { "id": "ca_prismbeam", "name": "Prism Beam", "type": "beam", "damage": 1, "rooms": 4, "charge": 14, "power": 2, "cost": 75, "tier": 2, "pierce": 1, "desc": "A long sweep of split light that ignores one shield layer." },
+    { "id": "ca_resonator", "name": "Resonator Bomb", "type": "bomb", "damage": 0, "charge": 15, "power": 1, "cost": 55, "tier": 2, "sysDamage": 2, "stun": 4, "desc": "Shakes a room until its machinery cracks." }
+  ],
+  "drones": [
+    { "id": "ca_facet", "name": "Facet Drone", "kind": "attack", "power": 2, "cost": 70, "rate": 5, "shot": { "type": "laser", "damage": 1, "pierce": 1 }, "desc": "A spinning crystal that fires piercing light." }
+  ],
+  "augments": [
+    { "id": "ca_lattice", "name": "Crystal Lattice Hull", "cost": 70, "desc": "Living crystal laced through the hull: a 2-point super shield at the start of every fight.", "fx": { "superShield": 2 } }
+  ],
+  "events": [
+    { "id": "ca_merchant", "text": "A Glassborn trader floats beside a raft of humming crystals. \"Weapons that sing,\" it says. \"Fair prices, for friends.\"", "tags": ["glass", ""], "weight": 0.9, "minSector": 2,
+      "choices": [
+        { "text": "Buy a shard lance (55 scrap).", "req": { "scrap": 55 }, "cost": { "scrap": 55 }, "effect": { "text": "It hums softly in the weapons bay.", "weapon": "ca_shard" } },
+        { "text": "Buy a facet drone (55 scrap).", "req": { "scrap": 55 }, "cost": { "scrap": 55 }, "effect": { "text": "It spins happily in the drone bay.", "drone": "ca_facet" } },
+        { "text": "Let {who} speak to it.", "req": { "race": "glassborn" }, "effect": { "text": "They chime at each other for a minute. The trader gifts you a crystal lattice for your hull.", "augment": "ca_lattice" } },
+        { "text": "Just admire the crystals.", "effect": { "text": "They really do sing." } }
+      ] },
+    { "id": "ca_geode", "text": "A hollow asteroid lined with crystals that glow when your lights touch them.", "tags": ["glass", ""], "weight": 1,
+      "choices": [
+        { "text": "Harvest the crystals.", "chance": 0.6, "success": { "text": "Beautiful, and valuable.", "scrap": 35, "parts": 2 }, "fail": { "text": "A crystal cracks and shatters your forward plating.", "hull": -3, "scrap": 10 } },
+        { "text": "Map the geode for science.", "effect": { "text": "The data sells well.", "scrap": 15, "xp": { "skill": "weapons", "amt": 10 } } }
+      ] }
+  ]
+}

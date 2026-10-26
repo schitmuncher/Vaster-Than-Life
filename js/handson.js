@@ -219,9 +219,9 @@ function medalWall(){
     m.position.set(-2.1, 1.7, 2.3); m.rotation.y = Math.PI/2 + .45; bridge.group.add(m); HO.wall = { m, c, tex }; }
   const W_ = HO.wall, g = W_.c.getContext('2d'); g.clearRect(0, 0, 1024, 512); g.fillStyle = 'rgba(10,16,34,.9)'; g.beginPath(); if(g.roundRect) g.roundRect(4, 4, 1016, 504, 28); else g.rect(4, 4, 1016, 504); g.fill(); g.lineWidth = 6; g.strokeStyle = '#ffb547'; g.stroke();
   g.font = "700 44px 'Chakra Petch', sans-serif"; g.fillStyle = '#ffb547'; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText('MEDAL WALL', 36, 66); g.textAlign = 'right'; g.font = "600 34px 'IBM Plex Mono', monospace"; g.fillStyle = '#8592b0'; g.fillText(key, 988, 64);
-  const cols = 8, cw = 116, ch = 96;
+  const n_ = ACHIEVEMENTS.length, cols = n_ > 32 ? Math.ceil(n_/4) : 8, cw = 944/cols, ch = 84, rad = Math.min(30, cw*.36);
   ACHIEVEMENTS.forEach((a, i) => { const x = 40 + (i % cols)*cw + cw/2, y = 140 + Math.floor(i / cols)*ch + 30, got = !!PROFILE.ach[a.id];
-    g.beginPath(); g.arc(x, y, 30, 0, 7); g.fillStyle = got ? '#ffb547' : 'rgba(255,255,255,.07)'; g.fill(); g.lineWidth = 4; g.strokeStyle = got ? '#ffe2a6' : '#2a3350'; g.stroke();
-    g.font = "700 28px 'Chakra Petch', sans-serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = got ? '#10141f' : '#2f3a58'; g.fillText((a.name || '?').charAt(0), x, y + 2); });
+    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = got ? '#ffb547' : 'rgba(255,255,255,.07)'; g.fill(); g.lineWidth = 4; g.strokeStyle = got ? '#ffe2a6' : '#2a3350'; g.stroke();
+    g.font = `700 ${Math.round(rad*.9)}px 'Chakra Petch', sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = got ? '#10141f' : '#2f3a58'; g.fillText((a.name || '?').charAt(0), x, y + 2); });
   W_.key = key; W_.tex.needsUpdate = true;
 }

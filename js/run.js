@@ -22,20 +22,23 @@ function startDaily(){ const k = todayKey(); newRun(dailyShip(k), null, { seed:'
 
 function newRun(shipId, name, o={}){
   applyMods(!!o.daily);
+  const ch = o.challenge && typeof challengeDef==='function' ? challengeDef(o.challenge) : null; if(ch) challengeRules(ch);
   const def = DATA.ships[shipId] || Object.values(DATA.ships)[0];
-  const diffKey = o.daily ? 'normal' : SET.difficulty, diff = DIFFICULTY[diffKey] || DIFFICULTY.normal;
-  G = { seed:cleanSeed(o.seed) || randomSeed(), daily:o.daily || null, diff:diffKey, shipDef:def.id, ship:null, enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
+  const diffKey = o.daily ? 'normal' : ch ? (DIFFICULTY[ch.difficulty] ? ch.difficulty : 'normal') : SET.difficulty, diff = DIFFICULTY[diffKey] || DIFFICULTY.normal;
+  G = { seed:cleanSeed(o.seed) || randomSeed(), daily:o.daily || null, challenge:ch ? o.challenge : null, chDone:false, diff:diffKey, shipDef:def.id, ship:null, enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
     scrap:Math.max(0, R.startScrap + diff.startScrap), fuel:def.fuel ?? 16, missiles:def.missiles ?? 8, parts:def.parts ?? R.startParts,
     paused:false, modal:null, ftl:0, warp:0, warpNode:null, fleetX:-.2, boss:false, dieT:0, shake:0, flash:0, map:null,
     hazard:null, hzT:6, hzWarn:false, nebula:false, autofire:true, combatT:0, time:0, afterWin:null, flag:null, questQueue:[],
     stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true };
   G.ship = withSeed('start', () => makeShip(def,'p',{ name }));
+  if(ch) challengeLoadout(ch);
+  if(!o.daily && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
   genSector(1, 'civilian');
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`);
-  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
+  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : ch ? `Challenge · ${ch.name}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
   save();
 }
 function saveReplacer(k, v){ if(k==='adj' || k==='modal' || (typeof k==='string' && k[0]==='_')) return undefined; return v; }
@@ -55,6 +58,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0;
   G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final;
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
+  if(typeof challengeCheck==='function'){ challengeCheck(false); runAchCheck(); }
   const cols = final ? 8 : 7, nodes = [], mix = sd.mix || { event:50, combat:30, store:10, empty:10 };
   for(let c=0;c<cols;c++){
     const count = (c===0 || c===cols-1) ? 1 : ri(2,3);
@@ -134,7 +138,7 @@ function arrive(i){ G.fightsHere = 0; return withSeed(`s${G.sector}n${i}arrive`,
 function arrive_(i){
   const node = G.map.nodes[i]; G.map.cur = i; (G.map.trail || (G.map.trail = [])).push(i);
   const sd = sectorDef();
-  G.fleetX += fleetStep() * (node.nebula ? .7 : 1); G.stats.jumps++; grant('first_jump');
+  G.fleetX += fleetStep() * (node.nebula ? .7 : 1); G.stats.jumps++; grant('first_jump'); if(typeof runAchCheck==='function') runAchCheck();
   G.hazard = node.hazard || (node.nebula ? 'nebula' : null); G.nebula = !!node.nebula; G.hzT = rand(5,9); G.hzWarn = false;
   if(G.ship.systems.clonebay && eff(G.ship,'clonebay')>0) for(const c of G.ship.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + 20);
   const first = !node.visited; node.visited = true;
@@ -227,7 +231,7 @@ function chooseOption(ch){
 function sign(n){ return (n>0?'+':'') + n; }
 function applyEffect(e){
   const L = [], s = G.ship; if(!e) return L;
-  const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1) * (1 + augFx(s,'scrap'));
+  const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1) * (1 + augFx(s,'scrap')) * (G.chScrap || 1);
   if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
   if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
@@ -327,7 +331,7 @@ function startCombat_(id, o={}){
     for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
-  G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
+  G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
@@ -353,7 +357,9 @@ function finishCombat(kind, offer){
   for(const c of G.dna){ c.hp = c.maxHp; c.path = []; c.mcT = 0; G.ship.crew.push(c); placeCrew(G.ship, c, c.station ?? 0); } G.dna = [];
   if(kind==='fled'){ G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.` }; save(); return; }
   if(wasBoss){ flagDefeated(); return; }
-  G.stats.kills++; PROFILE.kills++; saveProfile(); if(PROFILE.kills>=25) grant('kills25');
+  G.stats.kills++; PROFILE.kills++; saveProfile(); if(PROFILE.kills>=25) grant('kills25'); if(PROFILE.kills>=100) grant('kills100');
+  if(kind!=='surrender' && (G.combatT||0) < 20) grant('quickdraw');
+  if(G.ship.hull >= (G.hull0 ?? 0)){ G.stats.flawless = (G.stats.flawless||0) + 1; if(G.stats.flawless >= 5) grant('flawless5'); }
   if(kind==='crew') grant('boardkill'); if(kind==='surrender') grant('surrender');
   if(G.ship.hull<=3) grant('hullbreadth');
   emit('combatEnd', { kind, enemy:e });
@@ -391,9 +397,12 @@ function recordRun(win, reason){
   if(G.daily){ const d = (PROFILE.daily = PROFILE.daily || {})[G.daily]; if(!d || entry.score > d.score) PROFILE.daily[G.daily] = { score:entry.score, sector:G.sector, win:!!win, kills:st.kills, ship:G.shipDef };
     const keys = Object.keys(PROFILE.daily).sort(); while(keys.length > 60) delete PROFILE.daily[keys.shift()]; }
   UI.lastRun = entry;
-  if(G.daily){ grant('daily'); if(typeof dailyStreak==='function' && dailyStreak() >= 3) grant('streak3'); }
+  if(G.daily){ grant('daily'); if(typeof dailyStreak==='function' && dailyStreak() >= 3) grant('streak3'); if(typeof dailyStreak==='function' && dailyStreak() >= 7) grant('streak7'); }
+  if(typeof challengeRecord==='function') challengeRecord();
+  if(win){ if(G.diff==='hard') grant('hardwin'); if(!(G.lost||[]).length) grant('noloss'); if((G.time||0) < 2400) grant('speedwin'); if(R.sectors >= 10) grant('marathonwin'); }
 }
 function endRun(win, reason){
+  if(typeof challengeCheck==='function') challengeCheck(win);
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason);
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }

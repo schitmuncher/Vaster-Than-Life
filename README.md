@@ -251,7 +251,13 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
-- 26 achievements and three difficulties.
+- 45 achievements and three difficulties.
+
+**Challenges**
+- 14 hand-made challenge runs on the title screen, from one to three stars: Lone Wolf (one crew member), Glass Jaw (12 hull), Shoestring Budget, Hot Pursuit, Drone Commander, Boarders Away (no guns), Short Fuse (four sectors), Paper Tiger, The Hard Way, Endurance (ten sectors) and more.
+- Each sets the ship, difficulty, rules and loadout. Reach the goal (a sector, or victory) and it's complete, even if the run goes on. Your best sector and attempts are kept.
+- Mods can add their own challenges (see the `challenges` fields below).
+- 19 new medals: challenges, 100 kills, winning on Hard, without losing crew, in under 40 minutes or over 10 sectors, five flawless fights, a 20-second kill, reaching sector 4 without a kill, five races aboard, scrap hoards, a 7-day daily streak, Mod Squad, and VR medals for the jump lever, the 3D star map and five blaster takedowns.
 - Autosave between jumps.
 - Procedural music, sound effects and controller haptics.
 
@@ -264,13 +270,14 @@ Mods are JSON files. In the game, open **Mods**:
 
 Mods are saved in the browser and apply when you start a new run. Turn them on or off from the Mods screen.
 
-31 mods come with the game in `mods/`, all installable from the Mod library (filter by Content, Ships, Rules or Scripts):
+42 mods come with the game in `mods/`, all installable from the Mod library (filter by Content, Ships, Trials, Rules or Scripts):
 
-- **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
-- **Ships**: Hangar Expansion, Frontier Classes and Exotic Hulls, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
-- **Crew**: Strange Peoples and Rim Peoples (four races each), More Crew Traits (ten traits), and the Archon builder race in Precursor Vaults.
-- **Sectors and stories**: Deep Space Tales, Bounty Hunters, The Ghost Fleet, Merchant Guild, Cosmic Wonders, Pyrate Kings, Rebuff Crackdown, Precursor Vaults, Nebula Runners, Boarding Party and Winterfest, each with its own events, enemies, hails or quests.
-- **Rule sets**: Ironman, Gentle Skies (relaxed), Knife's Edge (more guns, faster enemies), Sprint (5 sectors) and Marathon (10 sectors).
+- **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Crystal Arsenal, Voltan Lightworks, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
+- **Ships**: Hangar Expansion, Frontier Classes, Exotic Hulls and Rebuff Defectors, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
+- **Crew**: Strange Peoples and Rim Peoples (four races each), Galactic Zoo (two races and a ship's mascot), More Crew Traits (ten traits), and the Archon builder race in Precursor Vaults.
+- **Sectors and stories**: Deep Space Tales, Bounty Hunters, The Ghost Fleet, Merchant Guild, Cosmic Wonders, Pyrate Kings, Rebuff Crackdown, Precursor Vaults, Nebula Runners, Boarding Party, Winterfest, Spooky Season, Hazard Zones (three hazard sectors), Derelict Salvage and Sloog Mysteries, each with its own events, enemies, hails or quests.
+- **Challenges**: Challenge Pack adds eight more challenge runs.
+- **Rule sets**: Ironman, Gentle Skies (relaxed), Knife's Edge (more guns, faster enemies), Double Trouble, Scrap Rich, Sprint (5 sectors) and Marathon (10 sectors).
 - **Scripts**: Party Laser and Combat Bonuses (bonus scrap for quick and flawless wins). Scripts only run when you allow them in Settings.
 
 They are inspired by the kinds of content FTL mods add, but every name, number and line of text is new; nothing is copied from another mod. When you add a mod, the game warns about any field it doesn't use, so a typo like `"damge"` doesn't fail silently.
@@ -281,7 +288,7 @@ They are inspired by the kinds of content FTL mods add, but every name, number a
 { "name": "My Mod", "version": "1.0", "author": "You",
   "rules": { "startScrap": 40 },
   "races": [], "weapons": [], "drones": [], "augments": [],
-  "ships": [], "enemies": [], "sectors": [], "events": [], "traits": [],
+  "ships": [], "enemies": [], "sectors": [], "events": [], "traits": [], "challenges": [],
   "remove": { "events": ["quiet"] },
   "script": "VTL.on('arrive', function(node){ VTL.toast('Hello!'); });" }
 ```
@@ -299,6 +306,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 | `enemies` | `name`, `tags`, `onlyTagged` (only met in sectors whose `enemyTags` include one of its tags), `eventOnly` (never met at random, only through an event's `fight`), `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
 | `sectors` | `name`, `blurb` (shown on the route cards), `intro` (a list of arrival lines), `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
 | `traits` | `name`, `desc`, and any of: `repair`, `dps`, `speed` (multipliers), `charge` (weapon charge while manning weapons), `shield` (shield recharge while manning shields), `hp` (extra health), `evade` (extra evasion while piloting), `heal` (health per second for everyone in the same room). Every recruit gets one trait at random. |
+| `challenges` | `name`, `desc`, `tier` (1-3 stars), `ship`, `difficulty`, `rules` (rule changes for that run), `start` (`hull`, `crew` (race ids), `crewCount`, `weapons`, `drones`, `augments`, `systems`, `scrap`, `fuel`, `missiles`, `parts`), `scrapMult`, `goal` (`{"sector":5}` or `{"win":true}`) |
 | `events` | `text`, `weight`, `minSector`, `maxSector`, `tags` (only in sectors with one of these tags; add `""` to allow it anywhere but favour those sectors), `nebula`, `distress`, `questOnly`, `once`, `flag`, `noFlag`, `hail` (a faction or enemy tag: shown before fights with ships that carry it), `art`, `choices` |
 
 **Event choices**
@@ -363,6 +371,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/crew3d.js` | Life-size 3D crew for every race, animation and nameplates |
 | `js/skyfx.js` | Living sky, hyperspace tunnel and battle effects in VR |
 | `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
+| `js/challenges.js` | Challenge runs, their goals and screen, and the newer medals |
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |

@@ -1,0 +1,26 @@
+{
+  "name": "Voltan Lightworks",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "vl_arc", "name": "Arc Thrower", "type": "ion", "damage": 1, "shots": 3, "charge": 14, "power": 2, "cost": 70, "tier": 3, "desc": "Three crackling arcs. Strips shields and locks systems." },
+    { "id": "vl_glow", "name": "Glow Laser", "type": "laser", "damage": 1, "shots": 3, "charge": 13, "power": 3, "cost": 70, "tier": 2, "ion": 1, "desc": "Lasers charged with Voltan light: each hit also adds a little ion." }
+  ],
+  "augments": [
+    { "id": "vl_halo", "name": "Voltan Halo", "cost": 75, "desc": "A ring of living light around the hull: a 4-point super shield at the start of every fight.", "fx": { "superShield": 4 } },
+    { "id": "vl_battery", "name": "Lightwell Cells", "cost": 50, "desc": "Shield layers recharge 12% faster and weapons 5% faster.", "fx": { "shield": 0.12, "charge": 0.05 } }
+  ],
+  "events": [
+    { "id": "vl_temple", "text": "A Voltan light-temple glows at the beacon. The priests offer to bless your ship, for a donation to the lamps.", "tags": ["voltan", ""], "weight": 1,
+      "choices": [
+        { "text": "Donate generously (50 scrap).", "req": { "scrap": 50 }, "cost": { "scrap": 50 }, "effect": { "text": "A halo of light settles around your hull.", "augment": "vl_halo" } },
+        { "text": "Donate a little (15 scrap).", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "They bless your batteries.", "augment": "vl_battery" } },
+        { "text": "Let {who} lead a prayer.", "req": { "race": "voltan" }, "effect": { "text": "{who} glows so brightly the priests applaud. They insist you take a gift.", "weapon": "vl_glow" } }
+      ] },
+    { "id": "vl_storm_choir", "text": "Voltan crews are singing to an ion storm, and the storm seems to be singing back.", "tags": ["voltan", ""], "weight": 0.8,
+      "choices": [
+        { "text": "Join the song.", "effect": { "text": "The storm leaves your ship alone, and the Voltans give you a gift of light.", "crewHeal": 30, "weapon": "vl_arc" } },
+        { "text": "Steer around them.", "effect": { "text": "A long way round.", "fuel": -1 } }
+      ] }
+  ]
+}

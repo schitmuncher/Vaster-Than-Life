@@ -185,6 +185,72 @@
    "name": "Combat Bonuses",
    "desc": "Script: bonus scrap for quick kills, flawless fights and win streaks.",
    "kind": "script"
+  },
+  {
+   "file": "challenge-pack.json",
+   "name": "Challenge Pack",
+   "desc": "Eight extra challenges: Stone Wall, Slug Life, Clown Car and more.",
+   "kind": "challenges"
+  },
+  {
+   "file": "spooky-season.json",
+   "name": "Spooky Season",
+   "desc": "A haunted nebula, trick-or-treaters, wisps, a black cat and a pumpkin mortar.",
+   "kind": "content"
+  },
+  {
+   "file": "hazard-zones.json",
+   "name": "Hazard Zones",
+   "desc": "Three hazard sectors: a flare-scorched furnace, an asteroid maze and a pulsar field.",
+   "kind": "content"
+  },
+  {
+   "file": "derelict-salvage.json",
+   "name": "Derelict Salvage",
+   "desc": "Five salvage events, a salvage magnet and plasma cutters.",
+   "kind": "content"
+  },
+  {
+   "file": "crystal-arsenal.json",
+   "name": "Crystal Arsenal",
+   "desc": "Shield-piercing crystal guns, a facet drone and a lattice hull.",
+   "kind": "content"
+  },
+  {
+   "file": "rebuff-defectors.json",
+   "name": "Rebuff Defectors",
+   "desc": "Two stolen Rebuff ships to fly, and old comrades along the way.",
+   "kind": "ships"
+  },
+  {
+   "file": "galactic-zoo.json",
+   "name": "Galactic Zoo",
+   "desc": "Two new races, a ship mascot and lost space creatures.",
+   "kind": "content"
+  },
+  {
+   "file": "voltan-lightworks.json",
+   "name": "Voltan Lightworks",
+   "desc": "Voltan arc and glow guns, a light-temple and a super-shield halo.",
+   "kind": "content"
+  },
+  {
+   "file": "sloog-mysteries.json",
+   "name": "Sloog Mysteries",
+   "desc": "An oracle, shared dreams, a door in space and a memory trader.",
+   "kind": "content"
+  },
+  {
+   "file": "scrap-rich.json",
+   "name": "Scrap Rich",
+   "desc": "Rules: 150 starting scrap, extra parts and a fourth augment slot.",
+   "kind": "rules"
+  },
+  {
+   "file": "double-trouble.json",
+   "name": "Double Trouble",
+   "desc": "Rules: faster enemies and fleet, more slots, less time at command.",
+   "kind": "rules"
   }
  ]
 }

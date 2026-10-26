@@ -1,0 +1,35 @@
+{
+  "name": "Galactic Zoo",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "races": [
+    { "id": "gz_burrowkin", "name": "Burrowkin", "color": "#c9a26b", "hp": 110, "repair": 1.3, "combat": 0.9, "speed": 0.9, "learn": 1.2, "desc": "Stocky diggers who fix things by instinct and learn quickly." },
+    { "id": "gz_flitter", "name": "Flitter", "color": "#8fe3ff", "hp": 60, "repair": 0.8, "combat": 0.8, "speed": 1.6, "desc": "Tiny, fast and very nervous. Great for running errands across the ship." }
+  ],
+  "augments": [
+    { "id": "gz_mascot", "name": "Ship's Mascot", "cost": 30, "desc": "Morale is everything: crew hit 8% harder and heal a little anywhere.", "fx": { "dps": 0.08, "heal": 0.2 } }
+  ],
+  "events": [
+    { "id": "gz_escaped", "text": "A zoo transport has lost its cargo. Strange creatures float about in bubbles, and the keeper is frantic.", "tags": [""], "weight": 1,
+      "choices": [
+        { "text": "Help round them up.", "effect": { "text": "It takes hours. The keeper pays you, and one very attached creature refuses to leave.", "scrap": 25, "augment": "gz_mascot" } },
+        { "text": "Keep one of the bubbles.", "chance": 0.5, "success": { "text": "Inside is a Flitter, who is delighted to be free and joins your crew.", "crew": "gz_flitter" }, "fail": { "text": "Inside is something with a lot of teeth. It chews through a console before you get it out.", "damageSystem": "random" } },
+        { "text": "Not your problem.", "effect": { "text": "The keeper shouts something rude as you jump." } }
+      ] },
+    { "id": "gz_burrows", "text": "A small moon riddled with burrows. Burrowkin pop their heads out to stare at your ship.", "tags": [""], "weight": 0.9,
+      "choices": [
+        { "text": "Trade with them (10 scrap).", "req": { "scrap": 10 }, "cost": { "scrap": 10 }, "effect": { "text": "They trade you good parts for shiny things.", "parts": 4, "fuel": 2 } },
+        { "text": "Ask if anyone wants to see the stars.", "effect": { "text": "A young Burrowkin packs a bag and climbs aboard.", "crew": "gz_burrowkin" } }
+      ] },
+    { "id": "gz_whalecalf", "text": "A lost star-whale calf has latched onto your hull and is making sad noises.", "tags": [""], "weight": 0.8,
+      "choices": [
+        { "text": "Find its mother.", "effect": { "text": "It takes a jump's worth of fuel, but the reunion is worth it. The mother leaves a gift.", "fuel": -1, "scrap": 35, "crewHeal": 30 } },
+        { "text": "Gently pry it off.", "effect": { "text": "It floats away, sulking.", "hull": -1 } }
+      ] },
+    { "id": "gz_petshop", "text": "A floating pet shop sells \"low-maintenance space companions\". The sign is mostly crossed out.", "tags": [""], "weight": 0.8,
+      "choices": [
+        { "text": "Buy a mascot (25 scrap).", "req": { "scrap": 25 }, "cost": { "scrap": 25 }, "effect": { "text": "It immediately becomes the most important member of the crew.", "augment": "gz_mascot" } },
+        { "text": "Just pet the animals.", "effect": { "text": "Everyone feels better.", "crewHeal": 20 } }
+      ] }
+  ]
+}

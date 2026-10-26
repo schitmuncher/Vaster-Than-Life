@@ -419,7 +419,7 @@ function deckLeverPull(){
   if(!G || UI.screen!=='game' || G.warp > 0){ sfx('error'); return; }
   const m = G.modal;
   if(m && m.type==='map'){ const d = DECK.lever.dest;
-    if(d >= 0 && d !== G.map.cur){ deckMapClick(d); return; }
+    if(d >= 0 && d !== G.map.cur){ deckMapClick(d); if(G.warp > 0) grant('lever'); return; }
     toast('Point at a beacon on the star map with your other hand, then pull the lever.'); sfx('error'); return; }
   if(m){ toast('Close the open window first.'); sfx('error'); return; }
   if(!canJump()){ toast(`The VTL drive is still charging: ${Math.round((G.ftl||0)*100)}%.`); sfx('error'); return; }
@@ -498,7 +498,7 @@ function deckBlast(c, pk){
   bolt.position.lerpVectors(from, to, .5); bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize()); scene.add(bolt); DECK.bolts.push({ m:bolt, life:.14 });
   const lp = I.group.worldToLocal(to.clone()); for(let k=0;k<8;k++) interiorSpark(I, lp.clone().add(new THREE.Vector3(rand(-.1,.1), rand(-.2,.2), rand(-.1,.1))));
   sfx('laser', { vol:.6 }); pulse(c.userData.src, .55, 40);
-  if(tgt.hp <= 0 && !tgt._counted){ tgt._counted = true; PROFILE.capKills = (PROFILE.capKills||0) + 1; saveProfile(); grant('sidearm'); toast(`You took down ${tgt.name}.`); }
+  if(tgt.hp <= 0 && !tgt._counted){ tgt._counted = true; PROFILE.capKills = (PROFILE.capKills||0) + 1; saveProfile(); grant('sidearm'); if(PROFILE.capKills >= 5) grant('blaster5'); toast(`You took down ${tgt.name}.`); }
   if(!PROFILE.blastTold){ PROFILE.blastTold = 1; saveProfile(); toast('Your blaster: point at an intruder and pull the trigger. It hits about as hard as one crew member.'); }
   return true;
 }
