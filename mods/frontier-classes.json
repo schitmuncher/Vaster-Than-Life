@@ -1,0 +1,25 @@
+{
+  "name": "Frontier Classes",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "ships": [
+    { "id": "fc_courier", "name": "The Paper Kite", "cls": "Frontier Courier", "layout": "A", "desc": "Fast, light and first to the exit. Thin shields, sharp pilot.", "hull": 22, "reactor": 7, "color": "#9fe8ff", "pattern": "TABAN",
+      "systems": { "shields": 2, "engines": 3, "oxygen": 1, "weapons": 2, "piloting": 2, "sensors": 1, "doors": 1 }, "reserve": ["medbay", "drones"],
+      "weapons": ["bust1"], "drones": [], "crew": ["human", "human"], "fuel": 20, "missiles": 4, "parts": 1, "augments": ["stealth"] },
+    { "id": "fc_courierb", "name": "The Night Post", "cls": "Frontier Courier", "layout": "B", "desc": "Trades a gun for an ion blaster and a sneaky pilot.", "hull": 24, "reactor": 7, "color": "#7fc8e8", "pattern": "TACAN",
+      "systems": { "shields": 2, "engines": 3, "oxygen": 1, "weapons": 2, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["basic", "ion"], "drones": [], "crew": ["human", "enjinn"], "fuel": 20, "missiles": 2, "parts": 2, "unlock": { "sector": 3 } },
+    { "id": "fc_gunboat", "name": "The Argument", "cls": "Frontier Gunboat", "layout": "A", "desc": "Four weapon slots and the power to fill them. Hope you like repairs.", "hull": 30, "reactor": 9, "color": "#ff9a5a", "pattern": "TBBAN",
+      "systems": { "shields": 2, "engines": 1, "oxygen": 1, "weapons": 5, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["heavy1", "bust1", "basic"], "drones": [], "crew": ["human", "pebblekin", "human"], "fuel": 14, "missiles": 6, "parts": 1, "unlock": { "sector": 3 } },
+    { "id": "fc_gunboatb", "name": "The Rebuttal", "cls": "Frontier Gunboat", "layout": "B", "desc": "Missiles and flak. Shields are a suggestion.", "hull": 30, "reactor": 9, "color": "#e8784a", "pattern": "TBCAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 4, "medbay": 1, "piloting": 1, "doors": 1 },
+      "weapons": ["arty", "flak1"], "drones": [], "crew": ["human", "mantlis", "human"], "fuel": 14, "missiles": 12, "parts": 1, "unlock": { "kills": 20 } },
+    { "id": "fc_ark", "name": "The Long Haul", "cls": "Frontier Ark", "layout": "A", "desc": "A colony ship with room for everyone and a medbay the size of a ballroom.", "hull": 34, "reactor": 8, "color": "#9be07b", "pattern": "TCBAN",
+      "systems": { "shields": 2, "engines": 1, "oxygen": 2, "weapons": 2, "medbay": 2, "piloting": 1, "sensors": 1, "doors": 2 },
+      "weapons": ["basic", "basic"], "drones": [], "crew": ["human", "human", "pebblekin", "enjinn", "sloog"], "fuel": 16, "missiles": 4, "parts": 2, "unlock": { "kills": 10 } },
+    { "id": "fc_arkb", "name": "The Second Chance", "cls": "Frontier Ark", "layout": "B", "desc": "A clone bay instead of a medbay. Nobody stays dead for long.", "hull": 32, "reactor": 8, "color": "#7bc05a", "pattern": "TCBAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "clonebay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["bust1"], "drones": [], "crew": ["human", "human", "voltan", "mantlis"], "fuel": 16, "missiles": 4, "parts": 2, "unlock": { "sector": 5 } }
+  ]
+}

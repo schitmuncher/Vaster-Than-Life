@@ -1,0 +1,42 @@
+{
+  "name": "The Ghost Fleet",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "gf_wail", "name": "Wailing Beam", "type": "beam", "damage": 1, "rooms": 2, "charge": 15, "power": 2, "cost": 60, "tier": 2, "crewDamage": 15, "desc": "Taken from a ghost ship. It screams when it fires." }
+  ],
+  "augments": [
+    { "id": "gf_lantern", "name": "Spectral Lantern", "cost": 55, "desc": "The fleet loses your trail: 6% evasion and 10% more scrap.", "fx": { "evade": 6, "scrap": 0.1 } }
+  ],
+  "enemies": [
+    { "id": "gf_hulk", "name": "Ghost Hulk", "tags": ["ghost"], "onlyTagged": true, "auto": true, "hull": 12, "sectors": [1, 8], "systems": { "shields": 2, "engines": 1, "weapons": 3, "piloting": 1 }, "weapons": ["gf_wail"], "crew": [] },
+    { "id": "gf_wraith", "name": "Wraith Frigate", "tags": ["ghost"], "onlyTagged": true, "auto": true, "hull": 10, "sectors": [1, 8], "systems": { "shields": 2, "engines": 3, "weapons": 2, "cloaking": 1, "piloting": 1 }, "weapons": ["bust1"], "crew": [] },
+    { "id": "gf_banshee", "name": "Banshee Dreadnought", "tags": ["ghost"], "onlyTagged": true, "auto": true, "hull": 16, "sectors": [4, 8], "systems": { "shields": 4, "engines": 2, "weapons": 4, "drones": 2, "piloting": 1 }, "weapons": ["gf_wail", "heavy1"], "drones": ["combat1"], "crew": [] }
+  ],
+  "sectors": [
+    { "id": "gf_graveyard", "name": "The Silent Graveyard", "blurb": "A battlefield nobody won. The wrecks still fight on their own.", "color": "#9fb0d8", "mix": { "event": 46, "combat": 42, "empty": 12 }, "tags": ["ghost", "nebula"], "enemyTags": ["ghost"], "hazards": { "ionstorm": 0.06 }, "nebula": 0.45, "fleetMult": 0.8 }
+  ],
+  "events": [
+    { "id": "gf_whisper", "text": "Your comms pick up a voice reading out coordinates, over and over. The signal is three hundred years old.", "tags": ["ghost"], "weight": 2,
+      "choices": [
+        { "text": "Follow the coordinates.", "effect": { "text": "They lead to a beacon nearby.", "quest": "gf_flagship" } },
+        { "text": "Answer the voice.", "chance": 0.5, "success": { "text": "The voice stops. Then: \"Thank you.\" A cargo pod drifts out of the dark towards you.", "scrap": 30, "fuel": 3 }, "fail": { "text": "The voice gets louder. Every speaker on your ship screams at once.", "crewHurt": 15 } },
+        { "text": "Turn the comms off.", "effect": { "text": "Silence. Mostly." } }
+      ] },
+    { "id": "gf_flagship", "questOnly": true, "text": "The source of the signal: a vast dead warship, lights still blinking in a pattern. Its guns track you as you approach.", "choices": [
+        { "text": "Fight it.", "effect": { "text": "The wreck wakes up.", "fight": "gf_banshee", "afterWin": { "text": "With its guns silent, the warship's vault opens by itself.", "scrap": 60, "augment": "gf_lantern" } } },
+        { "text": "Broadcast the old Fedoration stand-down code.", "chance": 0.5, "success": { "text": "Its guns lower. The ship lets you take what you need, then goes dark for good.", "weapon": "gf_wail", "scrap": 30 }, "fail": { "text": "Wrong code. Very wrong code.", "fight": "gf_banshee" } }
+      ] },
+    { "id": "gf_derelict", "text": "A derelict fighter with its canopy open. The pilot's seat is empty, but the engine is warm.", "tags": ["ghost", ""], "weight": 1.2,
+      "choices": [
+        { "text": "Salvage the engine.", "chance": 0.6, "success": { "text": "A good engine core. Your engineers are thrilled.", "scrap": 25, "parts": 2 }, "fail": { "text": "The engine restarts on its own and flies off without you.", "scrap": 5 } },
+        { "text": "Search the cockpit.", "effect": { "text": "You find a logbook and a lucky charm.", "xp": { "skill": "pilot", "amt": 15 } } }
+      ] },
+    { "id": "gf_mist", "text": "A cold mist seeps through your vents. Your crew report footsteps in empty corridors.", "tags": ["ghost"], "weight": 1.5,
+      "choices": [
+        { "text": "Vent the ship.", "effect": { "text": "The mist goes out the airlocks, and so does a little oxygen. Quiet returns.", "hull": -1 } },
+        { "text": "Ask {who} to listen to it.", "req": { "race": "sloog" }, "effect": { "text": "{who} says the mist is only lonely. It leaves a gift as it goes.", "augment": "random" } },
+        { "text": "Ignore it.", "chance": 0.5, "success": { "text": "Nothing happens. Probably.", "scrap": 10 }, "fail": { "text": "Something knocks a fuel canister out of the hold.", "fuel": -2 } }
+      ] }
+  ]
+}

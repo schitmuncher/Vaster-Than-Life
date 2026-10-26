@@ -1,0 +1,29 @@
+{
+  "name": "Beam Masters",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "bm_scalpel", "name": "Scalpel Beam", "type": "beam", "damage": 1, "rooms": 1, "charge": 9, "power": 1, "cost": 40, "tier": 1, "desc": "A short, precise cut that recharges fast." },
+    { "id": "bm_twin", "name": "Twin Pike Beam", "type": "beam", "damage": 1, "rooms": 3, "charge": 14, "power": 3, "cost": 70, "tier": 2, "desc": "Two crossing beams that sweep three rooms." },
+    { "id": "bm_inferno", "name": "Inferno Beam", "type": "beam", "damage": 1, "rooms": 2, "charge": 18, "power": 2, "cost": 60, "tier": 2, "fire": 0.5, "desc": "Cuts and sets things alight." },
+    { "id": "bm_reaper", "name": "Reaper Beam", "type": "beam", "damage": 0, "rooms": 3, "charge": 18, "power": 2, "cost": 60, "tier": 2, "crewDamage": 60, "desc": "Leaves the ship alone and goes for the crew." },
+    { "id": "bm_lance", "name": "Dawn Lance", "type": "beam", "damage": 2, "rooms": 3, "charge": 20, "power": 3, "cost": 80, "tier": 3, "desc": "A long, brutal cut through anything without shields." }
+  ],
+  "drones": [
+    { "id": "bm_cutter", "name": "Cutter Drone", "kind": "attack", "power": 2, "cost": 55, "rate": 6, "shot": { "type": "beam", "damage": 1, "rooms": 3 } }
+  ],
+  "augments": [
+    { "id": "bm_lens", "name": "Beam Focusing Lens", "cost": 60, "desc": "Weapons charge 10% faster.", "fx": { "charge": 0.1 } }
+  ],
+  "enemies": [
+    { "id": "bm_cutterclass", "name": "Voltan Cutter", "tags": ["voltan"], "hull": 11, "sectors": [3, 8], "systems": { "shields": 2, "engines": 2, "weapons": 4, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ion", "bm_twin"], "crew": ["voltan", "voltan", "human"] }
+  ],
+  "events": [
+    { "id": "bm_prism", "text": "A crystal the size of a moon refracts starlight into a thousand coloured beams. A research team has been trying to catch one for years.", "weight": 1,
+      "choices": [
+        { "text": "Help them align the crystal.", "chance": 0.6, "success": { "text": "One beam lands perfectly in their collector. They give you a spare emitter in thanks.", "weapon": "bm_scalpel" }, "fail": { "text": "A stray beam slices across your hull.", "hull": -4 } },
+        { "text": "Feed one of your beams through the crystal.", "req": { "weaponType": "beam" }, "effect": { "text": "Your beam comes out the other side brighter and tighter. The researchers hand you a focusing lens to keep it that way.", "augment": "bm_lens" } },
+        { "text": "Admire the view and move on.", "effect": { "text": "Your crew take a lot of pictures.", "xp": { "skill": "pilot", "amt": 10 } } }
+      ] }
+  ]
+}

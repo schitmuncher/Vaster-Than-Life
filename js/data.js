@@ -359,7 +359,8 @@ const ACHIEVEMENTS = [
   { id:'daily',       name:'Daily Driver',          desc:'Finish a daily run, win or lose.' },
   { id:'streak3',     name:'Creature of Habit',     desc:'Fly the daily run three days in a row.' },
   { id:'handson',     name:'Hands-On Captain',      desc:'In VR, fix 10 fires, breaches or machines with your own hands.' },
-  { id:'saboteur',    name:'Saboteur',              desc:'In VR, sabotage 5 enemy systems while aboard their ship.' }
+  { id:'saboteur',    name:'Saboteur',              desc:'In VR, sabotage 5 enemy systems while aboard their ship.' },
+  { id:'sidearm',     name:'Captain\'s Sidearm',     desc:'In VR, take down a hostile crew member with your own blaster.' }
 ];
 
 const DIFFICULTY = {

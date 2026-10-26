@@ -243,18 +243,30 @@ function drawModsScreen(){
   MODS.slice(UI.modsPage*per, UI.modsPage*per+per).forEach((m,i) => {
     const y = 230 + i*80; panel(60, y, 960, 68, 8);
     T(m.name, 84, y+30, { s:22, f:FD, w:700, c: m.enabled ? C.ink : C.muted });
-    T(`${m.version ? 'v'+m.version+' · ' : ''}${m.author ? m.author+' · ' : ''}${modSummary(m.data)}`.slice(0,70), 84, y+54, { s:14, c:C.muted });
+    T(`${m.version ? 'v'+m.version+' · ' : ''}${m.author ? m.author+' · ' : ''}${modSummary(m.data)}`, 84, y+54, { s:14, c:C.muted, max:640 });
     btn(740, y+12, 120, 44, m.enabled ? 'On' : 'Off', () => { m.enabled = !m.enabled; saveMods(); }, { fill:m.enabled, col:m.enabled?C.good:C.muted });
     btn(872, y+12, 130, 44, 'Remove', () => { MODS.splice(MODS.indexOf(m),1); saveMods(); if(typeof renderModList==='function') renderModList(); }, { col:C.hostile, s:16 });
   });
   if(pages>1){ btn(60, 720, 100, 44, '‹', ()=>UI.modsPage--, { disabled:UI.modsPage<=0 }); btn(170, 720, 100, 44, '›', ()=>UI.modsPage++, { disabled:UI.modsPage>=pages-1 }); }
-  const lx = 1060; panel(lx, 230, 480, 560, 10);
+  if(MODS.length>1){ btn(300, 720, 130, 44, 'All on', () => { MODS.forEach(m => m.enabled = true); saveMods(); }, { s:15 }); btn(440, 720, 130, 44, 'All off', () => { MODS.forEach(m => m.enabled = false); saveMods(); }, { s:15 }); }
+  const ruled = MODS.filter(m => m.enabled && m.data?.rules);
+  if(ruled.length>1) T(`${ruled.length} rule sets are on: ${ruled.map(m=>m.name).join(', ')}. Where they disagree, the one lowest in the list wins.`, 60, 796, { s:15, c:C.warn, max:960 });
+  // the library: filter by kind and page through everything listed in mods/index.json
+  const lx = 1060; panel(lx, 230, 480, 650, 10);
   label('Mod library', lx+20, 266, C.amber, 'left', 17);
   if(LIBRARY.state==='loading') T('Loading…', lx+20, 310, { s:18, c:C.muted });
   else if(LIBRARY.state!=='ready' || !LIBRARY.mods.length) para('No library found. When the game is hosted with a mods/index.json file (as on GitHub Pages), mods listed there can be installed here, even in VR.', lx+20, 306, 440, { s:16, lh:23, c:C.muted });
-  else LIBRARY.mods.slice(0,6).forEach((m,i) => { const y = 290 + i*82; const have = MODS.some(x=>x.name===m.name);
-    T(m.name, lx+20, y+26, { s:19, f:FD, w:700 }); para(m.desc||'', lx+20, y+50, 300, { s:13, lh:17, c:C.muted, max:2 });
-    btn(lx+340, y+6, 120, 44, have ? 'Reinstall' : 'Install', () => installLibraryMod(m), { s:15, fill:!have }); });
+  else {
+    const flt = UI.libKind || 'all', list = LIBRARY.mods.filter(m => flt==='all' || (m.kind||'content')===flt);
+    T(`${list.length} mod${list.length===1?'':'s'}`, lx+460, 266, { s:14, a:'right', c:C.muted });
+    [['all','All'],['content','Content'],['ships','Ships'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
+      btn(lx+20 + i*90, 282, 84, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:13, fill:flt===k }));
+    const per = 6, pages = Math.max(1, Math.ceil(list.length/per)); UI.libPage = clamp(UI.libPage||0, 0, pages-1);
+    list.slice(UI.libPage*per, UI.libPage*per+per).forEach((m,i) => { const y = 326 + i*82; const have = MODS.some(x=>x.name===m.name);
+      T(m.name, lx+20, y+24, { s:18, f:FD, w:700, max:310 }); para(m.desc||'', lx+20, y+46, 310, { s:13, lh:17, c:C.muted, max:2 });
+      btn(lx+340, y+6, 120, 42, have ? 'Reinstall' : 'Install', () => installLibraryMod(m), { s:15, fill:!have }); });
+    if(pages>1){ btn(lx+20, 826, 80, 40, '‹', () => UI.libPage--, { disabled:UI.libPage<=0 }); T(`Page ${UI.libPage+1} of ${pages}`, lx+240, 852, { s:15, a:'center', c:C.muted }); btn(lx+380, 826, 80, 40, '›', () => UI.libPage++, { disabled:UI.libPage>=pages-1 }); }
+  }
   btn(60, 820, 300, 64, 'Add mod files', () => { if(inXR()) toast('Exit VR to pick files, then come back in.'); else openModPanel(); }, { fill:true });
   btn(380, 820, 200, 64, 'Back', () => { UI.screen = 'title'; });
   if(MODS.some(m=>m.data?.script) && !SET.allowScripts) T('Some mods include scripts. Allow them in Settings to run them.', 600, 860, { s:16, c:C.warn });
@@ -336,7 +348,7 @@ function drawSettings(){
       break;
     case 'vr2':
       head('Console & clarity');
-      onoff('Magnifier', 'vrLoupe', false, 'A zoomed loupe over whatever you point at on the console. Left stick click toggles it.');
+      onoff('Magnifier', 'vrLoupe', false, 'A zoomed loupe over whatever you point at on the main screen. The datapad in your hand (left stick click) is often easier to read.');
       onoff('Bigger text', 'vrBigText', true, 'Enlarges small labels while in VR.');
       onoff('Controller help', 'vrLabels', true, 'Look at a controller to see what its buttons do.');
       choice('Controller buzz', 'vrHapticsK', [[0,'Off'],[.5,'Soft'],[1,'Normal'],[1.4,'Strong']], 1, 'How strongly the controllers vibrate on hits, hovers and actions.', v => { SET.vrHaptics = v > 0; saveProfile(); });
@@ -418,7 +430,7 @@ const HELP_PAGES = [
     ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
     ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
     ['Meta Quest', 'Trigger selects, or touch buttons with the controller tip. Left stick walks (push fully to run), right stick turns, left stick click holds up your datapad. A or X pauses, B or Y opens the map. Grip grabs the screen or the extinguisher. Glance at your left wrist for the wrist menu.'],
-    ['Your bridge in VR', 'Tactical and engineering stations flank the holotable. Point at the enemy ship outside and pull the trigger to aim every gun at that room. With the map open, the holotable becomes a 3D star map: point at a beacon to jump.'],
+    ['Your bridge in VR', 'Tactical and engineering stations flank the holotable. Point at the enemy ship outside and pull the trigger to aim every gun at that room. Grip the jump lever by your right hand and pull it back to open the star map on the holotable; point at a beacon and pull it again (or pull the trigger) to jump.'],
     ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger near a fire, breach or broken machine to fix it, or spray fires with the extinguisher by the door. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
     ['Comfort', 'Settings has snap or smooth turning, teleport-only movement, a comfort vignette, seated and lying-down play, player height, game speed and bigger text.'],
     ['Saving', 'The run saves itself between fights. Record, on the title screen, can save a backup file of everything to load on another device.'],

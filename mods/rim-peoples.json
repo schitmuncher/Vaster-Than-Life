@@ -1,0 +1,343 @@
+{
+  "name": "Rim Peoples",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "races": [
+    {
+      "id": "rp_vesperi",
+      "name": "Vesperi",
+      "color": "#f5a6ff",
+      "hp": 75,
+      "repair": 1,
+      "combat": 0.9,
+      "speed": 1.35,
+      "learn": 1.5,
+      "desc": "Small, quick winged folk who pick up any skill twice as fast as they put it down."
+    },
+    {
+      "id": "rp_ironclad",
+      "name": "Ironclad",
+      "color": "#a9b4c8",
+      "hp": 120,
+      "repair": 1.1,
+      "combat": 1.1,
+      "speed": 0.75,
+      "armor": 0.7,
+      "desc": "Walking foundries. Shrug off 30% of weapon damage, move like it too."
+    },
+    {
+      "id": "rp_lumen",
+      "name": "Lumen",
+      "color": "#fff3a0",
+      "hp": 85,
+      "repair": 0.9,
+      "combat": 0.6,
+      "speed": 1,
+      "heal": 1.2,
+      "desc": "Beings of soft light who slowly heal everyone in the room with them."
+    },
+    {
+      "id": "rp_gloomkin",
+      "name": "Gloomkin",
+      "color": "#7a6ad6",
+      "hp": 95,
+      "repair": 1,
+      "combat": 1.2,
+      "speed": 1.1,
+      "noAir": true,
+      "mindImmune": true,
+      "desc": "Shadow-dwellers who need no air and no one inside their heads."
+    }
+  ],
+  "enemies": [
+    {
+      "id": "rp_vesper_skiff",
+      "name": "Vesperi Skimmer",
+      "tags": [
+        "vesperi"
+      ],
+      "onlyTagged": true,
+      "hull": 9,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 4,
+        "weapons": 2,
+        "oxygen": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "bust1"
+      ],
+      "crew": [
+        "rp_vesperi",
+        "rp_vesperi",
+        "rp_vesperi"
+      ]
+    },
+    {
+      "id": "rp_iron_hauler",
+      "name": "Ironclad Ore Hauler",
+      "tags": [
+        "ironclad"
+      ],
+      "onlyTagged": true,
+      "hull": 16,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 1,
+        "weapons": 3,
+        "oxygen": 1,
+        "medbay": 1,
+        "piloting": 1,
+        "doors": 2
+      },
+      "weapons": [
+        "heavy1",
+        "arty"
+      ],
+      "crew": [
+        "rp_ironclad",
+        "rp_ironclad"
+      ]
+    },
+    {
+      "id": "rp_gloom_raider",
+      "name": "Gloomkin Night Raider",
+      "tags": [
+        "ironclad",
+        "vesperi"
+      ],
+      "onlyTagged": true,
+      "hull": 12,
+      "sectors": [
+        3,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "weapons": 3,
+        "teleporter": 2,
+        "oxygen": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "basic",
+        "lego"
+      ],
+      "crew": [
+        "rp_gloomkin",
+        "rp_gloomkin",
+        "rp_gloomkin"
+      ]
+    }
+  ],
+  "sectors": [
+    {
+      "id": "rp_wingsky",
+      "name": "The Wing Sky",
+      "blurb": "Vesperi flocks on fast skimmers. Friendly, if you can keep up.",
+      "color": "#f5a6ff",
+      "mix": {
+        "event": 50,
+        "combat": 38,
+        "empty": 12
+      },
+      "tags": [
+        "vesperi"
+      ],
+      "enemyTags": [
+        "vesperi"
+      ],
+      "hazards": {
+        "ionstorm": 0.05,
+        "pulsar": 0.04
+      },
+      "nebula": 0.1
+    },
+    {
+      "id": "rp_forgebelt",
+      "name": "The Forge Belt",
+      "blurb": "Ironclad mining country: asteroids, ore haulers and very slow conversations.",
+      "color": "#a9b4c8",
+      "mix": {
+        "event": 42,
+        "combat": 48,
+        "empty": 10
+      },
+      "tags": [
+        "ironclad"
+      ],
+      "enemyTags": [
+        "ironclad"
+      ],
+      "hazards": {
+        "asteroid": 0.18,
+        "sun": 0.04
+      },
+      "nebula": 0
+    }
+  ],
+  "events": [
+    {
+      "id": "rp_flock",
+      "text": "A flock of Vesperi skimmers swoops around your ship, wingtips glittering. Their leader hails: \"Race us to the next star. Winner takes the loser's lunch.\"",
+      "tags": [
+        "vesperi"
+      ],
+      "weight": 2,
+      "choices": [
+        {
+          "text": "Accept the race.",
+          "req": {
+            "system": "engines",
+            "level": 3
+          },
+          "effect": {
+            "text": "You win by a nose. The Vesperi laugh, hand over their lunch and one of them asks to join your crew.",
+            "scrap": 25,
+            "crew": "rp_vesperi"
+          }
+        },
+        {
+          "text": "Accept the race anyway.",
+          "chance": 0.35,
+          "success": {
+            "text": "Somehow you win. The Vesperi are delighted and pay up.",
+            "scrap": 25
+          },
+          "fail": {
+            "text": "You lose badly. Lunch is a crate of your fuel.",
+            "fuel": -2
+          }
+        },
+        {
+          "text": "Politely decline.",
+          "effect": {
+            "text": "They tease you for three jumps' worth of radio chatter, then share a map of the area.",
+            "reveal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "rp_forge",
+      "text": "An Ironclad smelter the size of a city hangs over a molten moon. The foreman offers to reforge your hull plates, for a price.",
+      "tags": [
+        "ironclad"
+      ],
+      "weight": 2,
+      "choices": [
+        {
+          "text": "Pay for a full reforge (45 scrap).",
+          "req": {
+            "scrap": 45
+          },
+          "cost": {
+            "scrap": 45
+          },
+          "effect": {
+            "text": "Your hull comes back heavier, thicker and still warm.",
+            "maxHull": 4,
+            "hull": 10
+          }
+        },
+        {
+          "text": "Trade them your spare missiles for ore.",
+          "req": {
+            "missiles": 4
+          },
+          "cost": {
+            "missiles": 4
+          },
+          "effect": {
+            "text": "The foreman likes explosives. You get a good price.",
+            "scrap": 40
+          }
+        },
+        {
+          "text": "Ask if anyone needs work.",
+          "effect": {
+            "text": "An Ironclad apprentice clanks aboard with a duffel bag of tools.",
+            "crew": "rp_ironclad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rp_lantern",
+      "text": "A Lumen drifts alone in the dark, glowing faintly. It seems to be waiting for something, or someone.",
+      "weight": 0.8,
+      "choices": [
+        {
+          "text": "Offer it passage.",
+          "effect": {
+            "text": "The Lumen settles into your medbay and the whole ship feels warmer.",
+            "crew": "rp_lumen",
+            "crewHeal": 30
+          }
+        },
+        {
+          "text": "Ask what it is waiting for.",
+          "chance": 0.5,
+          "success": {
+            "text": "\"For you to ask.\" It shows you a hidden cache before it leaves.",
+            "scrap": 35,
+            "parts": 3
+          },
+          "fail": {
+            "text": "It does not answer. It just glows a little dimmer and drifts away."
+          }
+        }
+      ]
+    },
+    {
+      "id": "rp_shadow",
+      "text": "Your lights dim. Shapes move in the corners of your corridors. A Gloomkin is aboard, and it is very curious.",
+      "weight": 0.8,
+      "minSector": 2,
+      "choices": [
+        {
+          "text": "Turn the lights back up and confront it.",
+          "chance": 0.5,
+          "success": {
+            "text": "It blinks, apologises and asks for a job.",
+            "crew": "rp_gloomkin"
+          },
+          "fail": {
+            "text": "It panics and wrecks a console on the way out.",
+            "damageSystem": "oxygen"
+          }
+        },
+        {
+          "text": "Leave it a snack and wait.",
+          "effect": {
+            "text": "The snack disappears. So does the Gloomkin. In the morning you find it left you something shiny.",
+            "augment": "random"
+          }
+        },
+        {
+          "text": "Have your telepath talk it down.",
+          "req": {
+            "race": "sloog"
+          },
+          "effect": {
+            "text": "{who} has a quiet word with it. The Gloomkin stays, and so does its loot.",
+            "crew": "rp_gloomkin",
+            "scrap": 20
+          }
+        }
+      ]
+    }
+  ]
+}

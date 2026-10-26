@@ -6,6 +6,11 @@ const SKILL_FOR = { piloting:'pilot', engines:'engines', shields:'shields', weap
 function shipBySide(s){ return s==='p' ? G.ship : s==='e' ? G.enemy : null; }
 function otherSide(s){ return s==='p' ? 'e' : 'p'; }
 function hasAug(sh, id){ return !!(sh && sh.augments && sh.augments.includes(id)); }
+/* augments from mods carry their effects as data ("fx"), so they work without scripts. Values add up across augments:
+   scrap, charge, shield, speed, repair, dps (fractions: .15 = 15% more), evade (points), heal (health per second, everyone aboard),
+   sysRes, ionRes, ammo (chances: system damage shrugged off, ion ignored, missile or drone part kept), breachRes (fraction fewer breaches),
+   superShield (super shield points at the start of each fight) */
+function augFx(sh, k){ if(!sh || !sh.augments || !sh.augments.length) return 0; let v = 0; for(const id of sh.augments){ const f = DATA.augments[id]?.fx; if(f && typeof f[k]==='number') v += f[k]; } return v; }
 function hackedNow(sh, k){ const h = sh.hacked; return !!(h && h.attached && h.pulseT>0 && sh.rooms[h.room] && sh.rooms[h.room].sys===k); }
 function bonusPower(sh, k){ const i = roomOf(sh,k); if(i<0) return 0; let b = 0;
   for(const c of sh.crew){ if(c.drone || c.path.length || c.room!==i || crewSide(c)!==sh.side) continue; b += (DATA.races[c.race]?.power||0); } return b; }
@@ -69,7 +74,7 @@ function evasion(sh){
       const ec = mannedCrew(sh,'engines'); if(ec && base>0) base += [5,7,10][skillLvl(ec,'engines')]; }
   }
   if(sh.cloak.t>0) base += 60;
-  if(hasAug(sh,'stealth')) base += 5;
+  if(hasAug(sh,'stealth')) base += 5; base += augFx(sh,'evade');
   if(sh.side==='p' && base>0) base += (curDiff().evade || 0);
   return clamp(Math.round(base), 0, 95);
 }
@@ -99,7 +104,7 @@ function damageSystem(sh, k, n){
 }
 function ionize(sh, k, n){
   const s = sh.systems[k]; if(!s) return;
-  if(hasAug(sh,'ionField') && Math.random()<.2){ fxAtRoom(sh, roomOf(sh,k), 'text', 'RESISTED'); return; }
+  if((hasAug(sh,'ionField') && Math.random()<.2) || Math.random() < augFx(sh,'ionRes')){ fxAtRoom(sh, roomOf(sh,k), 'text', 'RESISTED'); return; }
   s.ion = Math.min(s.max, s.ion + n); s.ionT = Math.min(25, Math.max(0, s.ionT||0) + 5*n);   // FTL: 5s lock per ion, stacking to 25s
   if(k==='weapons') weaponBudget(sh); if(k==='drones') droneBudget(sh);
 }
@@ -115,11 +120,11 @@ function hitRoom(sh, ri_, d, o={}){
   if(G){ r.hitAt = G.time||0; r.hitN = (r.hitAt - (r._hitPrev||-9) < 3 ? (r.hitN||0) : 0) + (dmg + (d.sysDamage||0)); r._hitPrev = r.hitAt; r.hitIon = d.type==='ion'; if(dmg>0) r.scorch = Math.min(6, (r.scorch||0) + Math.max(1, dmg)); }
   if(dmg>0 && !o.noHull) sh.hull = Math.max(0, sh.hull - dmg);
   const sysd = dmg + (d.sysDamage||0);
-  if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15)) damageSystem(sh, r.sys, sysd); }
+  if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15) && !(Math.random() < augFx(sh,'sysRes'))) damageSystem(sh, r.sys, sysd); }
   const crewDmg = 15*dmg + (d.crewDamage||0);
   if(crewDmg>0) for(const c of sh.crew) if(c.room===ri_){ c.hp -= crewDmg*(raceOf(c).armor||1); c.lastBy = o.by || null; }
   const lit = d.fire && Math.random() < d.fire; if(lit){ igniteRoom(sh, ri_); if(sh.side==='p') say('fire', { force:true }); }
-  if(!lit && d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
+  if(!lit && d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)*Math.max(0, 1 - augFx(sh,'breachRes'))){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
   if(d.ion && d.type!=='ion') { if(r.sys) ionize(sh, r.sys, d.ion); }
   if(d.stun) for(const c of sh.crew) if(c.room===ri_) c.stunT = Math.max(c.stunT, d.stun);
   const c = roomCenter(sh, ri_); burst(c.x, c.y, .5 + .3*Math.max(1,dmg), '#ffb547'); if(dmg>1) debris(c.x, c.y, sh.color, 4); if(dmg>0) fx('text', c.x, c.y-34, `-${dmg}`);
@@ -137,7 +142,7 @@ function nearbyRoom(sh, ri_, rad){ const c = sh.rooms.map((r,i)=>i).filter(i => 
 function fireWeapon(sh, w, foe){
   const d = DATA.weapons[w.id]; if(!d) return false;
   const ammo = d.type==='missile' || d.type==='bomb';
-  if(ammo && sh.side==='p'){ if(G.missiles<=0) return false; if(!(hasAug(sh,'replicator') && Math.random()<.33)) G.missiles--; }
+  if(ammo && sh.side==='p'){ if(G.missiles<=0) return false; if(!(hasAug(sh,'replicator') && Math.random()<.33) && !(Math.random() < augFx(sh,'ammo'))) G.missiles--; }
   w.charge = 0;
   const mc = mannedCrew(sh,'weapons'); if(mc) gainXP(mc, 'weapons', 1);
   const to = d.heal ? sh.side : foe.side;
@@ -165,8 +170,8 @@ function resolve(p){
   }
   if(d.type==='beam'){
     if(tgt.super>0){ tgt.super = Math.max(0, tgt.super - Math.max(1, d.damage||1)); fxAtProj(p, tgt, 'super'); sfx('shield'); return; }
-    const pen = (d.damage||0) - tgt.shield;
-    if(tgt.shield>0 && pen<=0){ fxAtRoom(tgt, p.room, 'shield'); sfx('shield'); return; }
+    const sh_ = Math.max(0, tgt.shield - (d.pierce||0)), pen = (d.damage||0) - sh_;   // "pierce" ignores that many shield layers
+    if(sh_>0 && pen<=0){ fxAtRoom(tgt, p.room, 'shield'); sfx('shield'); return; }
     for(const r of (p.rooms||[p.room])) hitRoom(tgt, r, Object.assign({}, d, { damage:Math.max(0,pen) }), { by:p.from });
     return;
   }
@@ -214,7 +219,7 @@ function deployDrones(sh, foe){
       if(sh.side==='p' && sh.hull < sh.maxHull && G.parts>0){ G.parts--; sh.hull = Math.min(sh.maxHull, sh.hull + (bp.heal||4)); toast(`Hull repair drone patched ${bp.heal||4} hull.`); }
       dr.on = false; continue;
     }
-    if(sh.side==='p'){ if(G.parts<=0) continue; if(!hasAug(sh,'recovery') && !(hasAug(sh,'replicator') && Math.random()<.33)) G.parts--; }
+    if(sh.side==='p'){ if(G.parts<=0) continue; if(!hasAug(sh,'recovery') && !(hasAug(sh,'replicator') && Math.random()<.33) && !(Math.random() < augFx(sh,'ammo'))) G.parts--; }
     if(bp.kind==='internal'){ const c = newDroneUnit(dr.id, sh.side); sh.crew.push(c); placeCrew(sh, c, Math.max(0, roomOf(sh,'drones'))); dr.unit = c.id; }
     else if(bp.kind==='boarding'){ const p = launch(sh.side, foe.side, { type:'bdrone', name:bp.name }, aiTargetRoom(foe), { kind:'bdrone', bp:dr.id }); dr.unit = p.id; }
     else { const u = { id:uid(), bp:dr.id, side:sh.side, orbit: bp.kind==='attack' ? foe.side : sh.side, ang:Math.random()*6.28, cd:(bp.rate||3)*.7 }; G.units.push(u); dr.unit = u.id; }
@@ -390,13 +395,13 @@ function moveCrewStep(sh, c, dt){
       } else d.passT = Math.max(d.passT, .5);
     }
   }
-  const sp = 1.7 * (raceOf(c).speed||1) * (traitOf(c).speed||1) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * dt;
+  const sp = 1.7 * (raceOf(c).speed||1) * (traitOf(c).speed||1) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * (1 + augFx(sh.side===c.owner ? sh : shipBySide(c.owner), 'speed')) * dt;
   const dx = nx - c.x, dy = ny - c.y, dist = Math.hypot(dx, dy);
   if(dist <= sp){ c.x = nx; c.y = ny; c.path.shift(); }
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1); }
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps')); }
 function killCrew(sh, c){
   const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
   const race = DATA.races[c.race];
@@ -459,7 +464,7 @@ function tickShip(sh, dt, foe){
   if(sh.shield > layers) sh.shield = layers;
   if(sh.shield < layers){
     const sc = mannedCrew(sh,'shields');
-    const mult = (sc ? [1.1,1.2,1.3][skillLvl(sc,'shields')] * (traitOf(sc).shield||1) : 1) * (hasAug(sh,'booster') ? 1.15 : 1);
+    const mult = (sc ? [1.1,1.2,1.3][skillLvl(sc,'shields')] * (traitOf(sc).shield||1) : 1) * (hasAug(sh,'booster') ? 1.15 : 1) * (1 + augFx(sh,'shield'));
     sh.shieldT += dt*mult; if(sh.shieldT >= R.shieldRegen){ sh.shield++; sh.shieldT = 0; if(sc && foe) gainXP(sc,'shields',1); }
   } else sh.shieldT = 0;
   if(sh.superRegen && sh.super < sh.superMax){ sh.superT += dt*(sh.boss ? (curDiff().bossPace ?? 1) : 1); if(sh.superT >= sh.superRegen){ sh.super++; sh.superT = 0; } }
@@ -503,11 +508,12 @@ function tickShip(sh, dt, foe){
       if(r.fire>0 && !race.fireproof) c.hp -= Math.min(6, 2*r.fire)*dt;
       if(r.o2 < 5 && !race.noAir) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
     }
-    if(race.heal) c.hp = Math.min(c.maxHp, c.hp + race.heal*dt);
     if(c.owner===sh.side && crewSide(c)===sh.side && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
     if(medHack && c.room===medR && crewSide(c)===sh.side) c.hp -= 8*dt;
     if(c.owner==='p' && hasAug(G.ship,'gel') && !c.drone) c.hp = Math.min(c.maxHp, c.hp + .6*dt);
-    if(!c.drone && c.hp < c.maxHp && c.hp > 0){ let h = 0; for(const m of sh.crew) if(m.trait && m.room===c.room && !m.path.length && m.stunT<=0 && crewSide(m)===crewSide(c)) h = Math.max(h, traitOf(m).heal||0); if(h) c.hp = Math.min(c.maxHp, c.hp + h*dt); }
+    if(c.owner==='p' && !c.drone && c.hp > 0){ const hf = augFx(G.ship,'heal'); if(hf > 0) c.hp = Math.min(c.maxHp, c.hp + hf*dt); }
+    // healers (the Medic trait, or a race with "heal") mend everyone standing in the same room, themselves included
+    if(!c.drone && c.hp < c.maxHp && c.hp > 0){ let h = 0; for(const m of sh.crew) if(!m.drone && m.room===c.room && !m.path.length && m.stunT<=0 && crewSide(m)===crewSide(c)){ const rh = raceOf(m).heal; h = Math.max(h, m.trait ? traitOf(m).heal||0 : 0, rh===true ? 1 : +rh||0); } if(h) c.hp = Math.min(c.maxHp, c.hp + h*dt); }
   }
   // per-room: fights, repairs, sabotage
   const byRoom = sh.rooms.map(()=>[]);
@@ -528,7 +534,7 @@ function tickShip(sh, dt, foe){
     } else if(friends.length){
       const workers = friends.filter(c => c.stunT<=0 && raceOf(c).repair>0 && !(c.drone && DATA.drones[c.drone]?.role!=='repair'));
       if(!workers.length) return;
-      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1), 0) * R.repairRate * dt;
+      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1), 0) * R.repairRate * dt * (1 + augFx(shipBySide(workers[0].owner) || sh, 'repair'));
       if(r.fire>0){ r.fireP += rate*2.6*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
       else if(r.breach>0){ r.breachP += rate; if(r.breachP>=1){ r.breachP = 0; r.breach--; workers.forEach(c=>gainXP(c,'repair',1)); } }
       else if(r.sys && sh.systems[r.sys] && sh.systems[r.sys].dmg>0){ const s = sh.systems[r.sys]; s.rep += rate;
@@ -562,7 +568,7 @@ function tickShip(sh, dt, foe){
     if(!foe || foe.dead || !w.on){ w.charge = Math.max(0, w.charge - dt*3); continue; }
     if(foe.cloak.t>0 && !d.heal) continue;
     let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')] * (traitOf(wc).charge||1); else if(sh.auto) mult *= 1.05;
-    if(hasAug(sh,'reloader')) mult *= 1.1;
+    if(hasAug(sh,'reloader')) mult *= 1.1; mult *= 1 + augFx(sh,'charge');
     if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .025*(G.sector-1));
     if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;   // the Flaggship fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on

@@ -1,0 +1,19 @@
+{
+  "name": "Exotic Hulls",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "ships": [
+    { "id": "xh_lance", "name": "The Long Lance", "cls": "Beam Frigate", "layout": "A", "desc": "Two beams and a long reach. Knock the shields down and carve.", "hull": 26, "reactor": 9, "color": "#ff6a9a", "pattern": "TBAAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 4, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["halbird", "ion"], "drones": [], "crew": ["human", "voltan", "human"], "fuel": 16, "missiles": 2, "parts": 2 },
+    { "id": "xh_phantom", "name": "The Phantom", "cls": "Infiltrator", "layout": "A", "desc": "Cloak, teleport, repeat. The enemy never quite sees you coming.", "hull": 24, "reactor": 8, "color": "#b48cff", "pattern": "TABCN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "cloaking": 1, "teleporter": 1, "piloting": 1, "doors": 1 },
+      "weapons": ["bust1"], "drones": [], "crew": ["mantlis", "mantlis", "human"], "fuel": 16, "missiles": 3, "parts": 1, "unlock": { "sector": 4 } },
+    { "id": "xh_juggernaut", "name": "The Juggernaut", "cls": "Rock Dreadnought", "layout": "A", "desc": "Forty hull, a rock crew and no intention of dodging anything.", "hull": 40, "reactor": 8, "color": "#c9a27e", "pattern": "TBCCN",
+      "systems": { "shields": 2, "engines": 1, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "doors": 2 },
+      "weapons": ["heavy1", "arty"], "drones": [], "crew": ["pebblekin", "pebblekin", "pebblekin"], "fuel": 14, "missiles": 8, "parts": 1, "augments": ["rockPlating"], "unlock": { "kills": 25 } },
+    { "id": "xh_puppet", "name": "The Puppeteer's Glove", "cls": "Mind Cutter", "layout": "A", "desc": "Hack their systems, borrow their crew, win without firing much at all.", "hull": 26, "reactor": 9, "color": "#9fdc7a", "pattern": "TBACN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "hacking": 1, "mindcontrol": 1, "piloting": 1, "sensors": 2, "doors": 1 },
+      "weapons": ["ion", "basic"], "drones": [], "crew": ["sloog", "sloog", "human"], "fuel": 16, "missiles": 2, "parts": 4, "unlock": { "sector": 5 } }
+  ]
+}

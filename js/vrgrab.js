@@ -44,6 +44,7 @@ function edgeZone(localPt){ return Math.abs(localPt.x) > 1.12 || Math.abs(localP
 function grabStart(i){
   const c = controllers[i]; if(!c || !c.userData.src) return;
   if(typeof deckExtGrab==='function' && deckExtGrab(i)) return;
+  if(typeof deckLeverGrab==='function' && deckLeverGrab(i)) return;
   const { o, d } = ctrlRay(c); raycaster.set(o, d);
   const other = GRAB.hands[1-i];
   const pHit = raycaster.intersectObjects(panelTargets(), false)[0];
@@ -64,6 +65,7 @@ function grabStart(i){
 }
 function grabEnd(i){
   if(typeof deckExtDrop==='function' && deckExtDrop(i)) return;
+  if(typeof deckLeverDrop==='function' && deckLeverDrop(i)) return;
   const G_ = GRAB.hands[i]; if(!G_) return; GRAB.hands[i] = null;
   const other = GRAB.hands[1-i]; if(other && (other.mode==='lead' || other.mode==='two')){ other.mode = 'move'; other.off = _m4().copy(controllers[1-i].matrixWorld).invert().multiply(other.obj.matrixWorld); }
   if(G_.target==='panel'){ SET.vrPanelScale = +panelGroup.scale.x.toFixed(3); } else { SET.vrHoloScale = +holo.top.scale.x.toFixed(3); }

@@ -1,0 +1,27 @@
+{
+  "name": "Engineering Corps",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "ec_capacitors", "name": "Overclocked Capacitors", "cost": 70, "desc": "Weapons charge 15% faster.", "fx": { "charge": 0.15 } },
+    { "id": "ec_harmonizer", "name": "Shield Harmonizer", "cost": 60, "desc": "Shield layers recharge 20% faster.", "fx": { "shield": 0.2 } },
+    { "id": "ec_fins", "name": "Vector Thruster Fins", "cost": 55, "desc": "+6% evasion.", "fx": { "evade": 6 } },
+    { "id": "ec_mist", "name": "Med-Mist Vents", "cost": 50, "desc": "Your crew heal slowly anywhere aboard.", "fx": { "heal": 0.7 } },
+    { "id": "ec_dcbots", "name": "Damage Control Bots", "cost": 55, "desc": "Crew repair systems, fires and breaches 30% faster.", "fx": { "repair": 0.3 } },
+    { "id": "ec_ablative", "name": "Ablative Hull Layer", "cost": 60, "desc": "60% fewer hull breaches and a 10% chance to shrug off system damage.", "fx": { "breachRes": 0.6, "sysRes": 0.1 } },
+    { "id": "ec_faraday", "name": "Faraday Lining", "cost": 45, "desc": "30% chance to shrug off ion damage.", "fx": { "ionRes": 0.3 } },
+    { "id": "ec_recycler", "name": "Ammo Recycler", "cost": 50, "desc": "25% chance a missile or drone part is not used up.", "fx": { "ammo": 0.25 } },
+    { "id": "ec_salvage", "name": "Salvage Drones", "cost": 60, "desc": "Collect 15% more scrap.", "fx": { "scrap": 0.15 } },
+    { "id": "ec_adrenal", "name": "Adrenal Pumps", "cost": 50, "desc": "Crew move 20% faster and hit 10% harder.", "fx": { "speed": 0.2, "dps": 0.1 } },
+    { "id": "ec_barrier", "name": "Emergency Barrier", "cost": 80, "desc": "Start every fight with a 3-point super shield.", "fx": { "superShield": 3 } }
+  ],
+  "events": [
+    { "id": "ec_expo", "text": "A travelling engineering expo has set up shop in a hollowed asteroid. Every booth promises to make your ship better, faster and safer. Some of them might even be telling the truth.", "weight": 1, "minSector": 2,
+      "choices": [
+        { "text": "Buy the capacitor kit everyone is talking about (40 scrap).", "req": { "scrap": 40 }, "cost": { "scrap": 40 }, "effect": { "text": "It hums. Your guns feel keener already.", "augment": "ec_capacitors" } },
+        { "text": "Enter the expo's repair contest.", "chance": 0.5, "success": { "text": "Your crew fix a sabotaged reactor in record time and win the prize.", "augment": "ec_dcbots", "xp": { "skill": "repair", "amt": 15 } }, "fail": { "text": "Your crew come second. The consolation prize is a hat.", "scrap": 10 } },
+        { "text": "Let your Enjinn crew talk shop.", "req": { "race": "enjinn" }, "effect": { "text": "{who} leaves with three new friends and a box of free samples.", "augment": "random", "parts": 4 } },
+        { "text": "Window-shop and leave.", "effect": { "text": "You pick up a few free brochures and a bag of bolts.", "scrap": 6 } }
+      ] }
+  ]
+}

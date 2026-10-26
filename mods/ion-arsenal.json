@@ -1,0 +1,29 @@
+{
+  "name": "Ion Arsenal",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "ia_dart", "name": "Ion Dart", "type": "ion", "damage": 1, "shots": 1, "charge": 7, "power": 1, "cost": 35, "tier": 1, "stun": 4, "desc": "A quick sting that also stuns the crew in the room." },
+    { "id": "ia_repeater", "name": "Ion Repeater", "type": "ion", "damage": 1, "shots": 2, "charge": 11, "power": 2, "cost": 55, "tier": 2, "desc": "Two ion pulses: strips two shield layers or locks a system for longer." },
+    { "id": "ia_lance", "name": "Ion Lance", "type": "ion", "damage": 3, "shots": 1, "charge": 18, "power": 2, "cost": 70, "tier": 3, "desc": "One huge pulse that drains three shield layers at once." },
+    { "id": "ia_static", "name": "Static Bomb", "type": "bomb", "damage": 0, "charge": 14, "power": 1, "cost": 45, "tier": 2, "ion": 3, "desc": "Teleports past shields and fills a room with static." }
+  ],
+  "drones": [
+    { "id": "ia_wasp", "name": "Ion Wasp Drone", "kind": "attack", "power": 2, "cost": 50, "rate": 4.5, "shot": { "type": "ion", "damage": 1 } },
+    { "id": "ia_screen", "name": "Static Screen Drone", "kind": "defense", "power": 2, "cost": 55, "rate": 3.2, "targets": ["ion", "laser", "bdrone"] }
+  ],
+  "augments": [
+    { "id": "ia_grounding", "name": "Ion Grounding Mesh", "cost": 45, "desc": "35% chance to shrug off ion damage.", "fx": { "ionRes": 0.35 } }
+  ],
+  "enemies": [
+    { "id": "ia_stormrider", "name": "Stormrider Interceptor", "tags": ["rebuff", "ion"], "hull": 11, "sectors": [3, 8], "systems": { "shields": 2, "engines": 3, "weapons": 3, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ia_repeater", "ia_dart"], "crew": ["human", "human", "voltan"] }
+  ],
+  "events": [
+    { "id": "ia_stormfront", "text": "A derelict weapons barge drifts at the edge of an ion squall, its hold still sealed. The storm crackles closer every minute.", "weight": 1.2, "minSector": 2,
+      "choices": [
+        { "text": "Dash in and cut the hold open.", "chance": 0.6, "success": { "text": "You grab a crate of ion weaponry and pull away as the storm hits.", "weapon": "ia_repeater" }, "fail": { "text": "The storm catches you first. Systems flicker and a console bursts into flames.", "damageSystem": "shields", "fire": true } },
+        { "text": "Ride the storm front with your shields up.", "req": { "system": "shields", "level": 4 }, "effect": { "text": "Your shields drink the static. The barge's hold yields a crate of ion darts and a grounding mesh.", "weapon": "ia_dart", "augment": "ia_grounding" } },
+        { "text": "Leave it to the storm.", "effect": { "text": "Some salvage is not worth the hull." } }
+      ] }
+  ]
+}

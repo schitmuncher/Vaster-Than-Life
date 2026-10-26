@@ -1,0 +1,17 @@
+{
+  "name": "More Crew Traits",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "traits": [
+    { "id": "mt_lucky", "name": "Lucky", "evade": 3, "desc": "+3% evasion while flying the ship. Things just go their way." },
+    { "id": "mt_veteran", "name": "Veteran", "dps": 1.15, "hp": 15, "desc": "15 extra health and hits 15% harder. Has seen worse." },
+    { "id": "mt_mechanic", "name": "Mechanic", "repair": 1.4, "desc": "Repairs and fights fires 40% faster." },
+    { "id": "mt_sprinter", "name": "Sprinter", "speed": 1.35, "desc": "Moves 35% faster. Late for everything anyway." },
+    { "id": "mt_sharpshooter", "name": "Sharpshooter", "charge": 1.12, "desc": "Weapons charge 12% faster while they man the guns." },
+    { "id": "mt_fieldmedic", "name": "Field Medic", "heal": 1.5, "desc": "Patches up everyone in the same room, a little at a time." },
+    { "id": "mt_stalwart", "name": "Stalwart", "hp": 40, "desc": "40 extra health. Hard to put down." },
+    { "id": "mt_navigator", "name": "Navigator", "evade": 7, "desc": "+7% evasion while flying the ship." },
+    { "id": "mt_bulwark", "name": "Bulwark", "shield": 1.25, "desc": "Shields recharge 25% faster while they man them." },
+    { "id": "mt_tinker", "name": "Tinker", "repair": 1.2, "charge": 1.05, "desc": "Repairs 20% faster and tunes the guns while manning them." }
+  ]
+}

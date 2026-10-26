@@ -1,0 +1,7 @@
+{
+  "name": "Combat Bonuses",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "desc": "Bonus scrap for quick kills, flawless fights and every fifth win. Needs mod scripts turned on in Settings.",
+  "script": "var hull0 = 0, kills = 0;\nVTL.on('runStart', function(){ kills = 0; });\nVTL.on('combatStart', function(){ var G = VTL.G; if(G && G.ship) hull0 = G.ship.hull; });\nVTL.on('combatEnd', function(o){\n  var G = VTL.G; if(!G || !G.ship || !o) return;\n  var bonus = 0, why = [];\n  if((G.combatT || 0) < 40){ bonus += 8; why.push('quick kill'); }\n  if(G.ship.hull >= hull0){ bonus += 10; why.push('no hull damage'); }\n  kills++; if(kills % 5 === 0){ bonus += 15; why.push(kills + ' kills this run'); }\n  if(bonus){ VTL.applyEffect({ scrap: bonus }); VTL.toast('Combat bonus +' + bonus + ' scrap: ' + why.join(', ') + '.'); }\n});"
+}

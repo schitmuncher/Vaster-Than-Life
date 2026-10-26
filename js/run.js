@@ -227,7 +227,7 @@ function chooseOption(ch){
 function sign(n){ return (n>0?'+':'') + n; }
 function applyEffect(e){
   const L = [], s = G.ship; if(!e) return L;
-  const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1);
+  const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1) * (1 + augFx(s,'scrap'));
   if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
   if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
@@ -244,7 +244,7 @@ function applyEffect(e){
     const k = e.install==='random' ? pick(opts) : (opts.includes(e.install) ? e.install : null);
     if(k && installSystem(s, k)) L.push(`${SYSN[k]} system installed`); else { G.scrap += 30; L.push('+30 scrap (nothing new to install)'); } }
   if(e.upgrade && s.systems[e.upgrade]){ if(s.systems[e.upgrade].max < (CAPS[e.upgrade]||8)){ s.systems[e.upgrade].max++; L.push(`${SYSN[e.upgrade]} upgraded to level ${s.systems[e.upgrade].max}`); } else { G.scrap += 25; L.push('+25 scrap (already at max)'); } }
-  if(e.damageSystem && s.systems[e.damageSystem]){ damageSystem(s, e.damageSystem, 1); L.push(`${SYSN[e.damageSystem]} damaged`); }
+  if(e.damageSystem){ const k = e.damageSystem==='random' ? pick(Object.keys(s.systems)) : e.damageSystem; if(k && s.systems[k]){ damageSystem(s, k, 1); L.push(`${SYSN[k]} damaged`); } }
   if(e.reactor){ s.reactor = clamp(s.reactor + e.reactor, 1, 25); L.push(`${sign(e.reactor)} reactor power`); }
   if(e.fire){ igniteRoom(s, Math.floor(Math.random()*s.rooms.length)); L.push('A fire has broken out aboard'); }
   if(e.quest){ placeQuest(e.quest); L.push('Quest beacon marked on your map'); }
@@ -305,9 +305,9 @@ function closeResult(m){
 
 /* ---------------- combat lifecycle ---------------- */
 function pickEnemy(n){
-  const sd = sectorDef(); const bias = sd.enemyTags || [];
-  let pool = Object.values(DATA.enemies).filter(e => !e.boss && (!e.onlyTagged || (e.tags||[]).some(t=>bias.includes(t))) && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
-  if(!pool.length) pool = Object.values(DATA.enemies).filter(e => !e.boss);
+  const sd = sectorDef(); const bias = sd.enemyTags || []; n = Math.min(n, 8);   // longer runs (Marathon rules) keep meeting late-game ships
+  let pool = Object.values(DATA.enemies).filter(e => !e.boss && !e.eventOnly && (!e.onlyTagged || (e.tags||[]).some(t=>bias.includes(t))) && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
+  if(!pool.length) pool = Object.values(DATA.enemies).filter(e => !e.boss && !e.eventOnly);
   return wpick(pool, e => (e.tags||[]).some(t=>bias.includes(t)) ? 4 : 1);
 }
 function startCombat(id, o={}){ G.fightsHere = (G.fightsHere||0) + 1; return withSeed(`s${G.sector}n${G.map?.cur}f${G.fightsHere}`, () => startCombat_(id, o)); }
@@ -318,6 +318,9 @@ function startCombat_(id, o={}){
   if(!def){ G.modal = { type:'msg', title:'All clear', text:'Sensors show no hostiles.' }; return; }
   G.enemy = makeShip(def, 'e', { sector:n, phase:o.phase||0 }); G.enemy.fleet = !!o.harder;
   const tags = def.tags || []; G.enemy.faction = tags.find(t => TAUNTS.start[t]) || (def.auto ? 'auto' : 'generic');
+  // mods can add hails for their own tags ("bounty", "ghost"...): use one when the faction has none of its own
+  const hasHail = t => Object.values(DATA.events).some(ev => ev.hail===t);
+  G.enemy.hailTag = (tags.includes(G.enemy.faction) && hasHail(G.enemy.faction)) ? G.enemy.faction : (tags.find(hasHail) || G.enemy.faction);
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
   // now and then a veteran crew: tougher and faster, but they carry better salvage
   if(!def.boss && !o.harder && G.sector >= 3 && Math.random() < .12){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
@@ -326,11 +329,11 @@ function startCombat_(id, o={}){
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
   G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
-  if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5);
+  if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
   G.enemy.super = G.enemy.superMax;
   sfx('alarm'); haptic(.3, 200); emit('combatStart', G.enemy); logEntry(`Engaged the ${G.enemy.name}.`);
-  if(o.hail){ const hid = pickHail(o.hail===true ? G.enemy.faction : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
+  if(o.hail){ const hid = pickHail(o.hail===true ? (G.enemy.hailTag || G.enemy.faction) : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
   if(def.boss && (G.flags.intel || G.flags.sabotage)) o.text = (o.text||'') + (G.flags.intel ? ' Commander Vane\'s codes expose a flaw in its hull.' : '') + (G.flags.sabotage ? ' Your spy\'s sabotage has knocked out one of its weapons.' : '');
   G.modal = { type:'msg', title:o.title || 'Hostile contact', text:o.text || `The ${G.enemy.name} powers its weapons. Pick targets, then fire. Pause any time to think.`, btn:'Battle stations' };
 }

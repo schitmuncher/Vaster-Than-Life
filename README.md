@@ -12,16 +12,17 @@ Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch �
 
 | Quest control | Action |
 | --- | --- |
-| Point at the console + trigger (or pinch) | Click |
+| Point + trigger (or pinch) | Use whatever you point at: the main screen, your datapad, a pop-out window, a bridge station, the holotable or the enemy ship outside |
+| Touch with the controller tip | Press buttons on screens and stations directly, like a touchscreen |
 | Point at the floor + trigger | Teleport there |
-| Left stick | Walk around the bridge (with a comfort vignette) |
+| Left stick | Walk (push fully to run), with a comfort vignette |
 | Right stick left / right | Turn (snap 30°, 45° or smooth) |
-| Right stick up / down | Move the console closer or further |
-| Left stick click | Magnifier on / off (a zoomed loupe over whatever you point at; off by default) |
+| Left stick click | Hold up your datapad: the whole game screen in your hand |
 | Right stick click | Back to the captain's spot |
 | A / X | Pause or resume |
-| B / Y | Open or close the map |
-| Grip | Bring the console in front of you |
+| B / Y | Open or close the map (the holotable turns into a 3D star chart) |
+| Grip | Carry the main screen, take the fire extinguisher off its rack, or pull the jump lever |
+| Glance at your left wrist | Wrist menu |
 
 **Play position.** Choose **Standing**, **Seated** or **Lying down** in Settings, or from the pause screen while in VR. Seated puts you in the captain's chair at chair height. Lying down tilts the whole bridge so that looking at the ceiling shows the console in front of you: lie back, look up, and click the right stick to re-aim if needed. The right stick click always resets your position for the chosen mode.
 
@@ -145,15 +146,26 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Every crew member shows what they're doing: manning a station, repairing, firefighting, patching, healing, fighting, moving or standing by, with a job icon over their head and in the roster.
 - Click a crew member for a detail card: portrait, health, current job, post, race traits, all six skills with progress and what each level does, and buttons to set their post, send them to the medbay or back to their post.
 
-**VR console and holotable**
-- Grip while pointing at the console to carry it anywhere at any angle; grip on its edges or corner brackets to stretch it; use both hands to move and scale at once. Grip at nothing brings it back in front of you.
-- Grab the holotable to move and turn it, or scale it up with two hands. Point at a room on a 3D ship and pull the trigger to target it or move crew there, exactly like the console.
+**VR command deck**
+- **A main screen that stays put.** It no longer drifts or jumps towards you. Grip it to carry it (it glides and stays level), grip its edges or corner brackets to stretch it, or press SCREEN HERE on the wrist menu to call it over. You can hide it altogether (Settings > VR console > Main screen) and play from the datapad and stations.
+- **Datapad.** Click the left stick to hold the whole game screen in your hand like a tablet. Point at it or tap it with your other hand. Pick the hand in Settings.
+- **Pop-out windows.** Events, stores, hails and tips lift out of the main screen as a window in front of you, and follow you anywhere on the ship.
+- **Touch.** Press buttons on the main screen, datapad, pop-outs and stations with the tip of your controller, with a click you can feel.
+- **Bridge stations.** Two consoles stand within reach of the captain's spot. *Tactical*: a card per weapon with power and aim, autofire, volley, cloak, hacking, mind control, battery and drones. *Engineering*: the reactor, every system with − and + power, doors, venting, crew stations and auto crew.
+- **Shoot at the real ship.** Point at the enemy ship outside the canopy and pull the trigger: every powered gun locks onto the room you pointed at, with numbered crosshairs on its hull. With a weapon or crew member selected, it aims that weapon or sends the crew, just like the main screen.
+- **3D star map.** Open the map and the holotable becomes a star chart of the sector: beacons, routes, your trail, the fleet's front and the exit. Point at a beacon to read about it, and pull the trigger to jump.
+- **Jump lever.** A lever by your right hand shows the drive's charge and glows when it's ready. Grip it and pull it back: the star map opens. Point at a beacon with your other hand and pull it again to jump.
+- **Fight fires yourself.** Take the extinguisher from the rack on the rear wall and spray it at fires anywhere on the ship.
+- **Captain's sidearm.** Point at a boarder on your ship and pull the trigger to shoot it with your blaster (6 damage, short cooldown). Take one down for a medal.
+- **Hits you can feel.** Sparks shower the bridge when the hull is hit.
+- **Guided tour.** New captains get a short tour of the deck the first time they enter VR. Replay it from Settings > VR console.
+- Grab the holotable to move and turn it, or scale it up with two hands. Point at a room on a 3D ship and pull the trigger to target it or move crew there, exactly like the main screen.
 
 **Your whole ship, in 3D (VR)**
 - The bridge is your cockpit. Walk through the door at the back, down the corridor and into the ship: every room, door, airlock and window is built from your real ship layout, with a working machine for each system (spinning shield rings, glowing engine coils, weapon racks with live charge bars, oxygen tanks and fans, medbay beds, a teleporter pad, a cloaking crystal and more) and a label showing its power, damage and air.
 - Your crew walk the corridors as life-size people of every race: humans of every look, Pebblekin, Enjinn, Voltans, Sloogs, Mantlis, Glassborn and drones. They really do their jobs: manning stations, repairing with sparks flying, putting out fires with extinguishers, healing in the medbay, and brawling with boarders, who arrive in red. Nameplates show each one's name, job and health.
 - Everything you see is the simulation: fires burn and smoke, breaches suck air out of the room, low oxygen hazes red, damaged machines spark and smoke, ion hits arc blue, lights flicker when a room is hit, doors slide open for crew and for you, airlocks vent, broken doors spark.
-- You're the captain: you give orders, the crew do the work. Point at a crew member and pull the trigger to select them, point at a floor to send them there, point at a door to open or close it. Grip brings the console to you anywhere on the ship.
+- You're the captain: you give orders, the crew do the work. Point at a crew member and pull the trigger to select them, point at a floor to send them there, point at a door to open or close it. Your datapad and pop-out windows go everywhere with you, and SCREEN HERE on the wrist menu brings the main screen over.
 - In a fight, stand by your teleporter and press **Beam me over** to visit the enemy ship and watch your away team (or the enemy crew) up close; **Beam me back** returns you. You come home automatically if the fight ends.
 - Settings > Gameplay > Ship experience switches between **Full 3D ship** and **Classic cockpit** (just the bridge, console and holotable).
 
@@ -161,7 +173,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - The interior is roomier and brighter: 2 m cells, 3.4 m ceilings, 1.5 m wide and 2.55 m tall doorways, a 1.8 m wide corridor, lighter paint, lit ceiling panels, wall light strips, large hull windows with a low sill, and skylights open to space. The bridge door is wider too.
 - **Player height** slider in Settings > VR & comfort (-60 to +60 cm, with -/+ buttons) applies live, in the pause screen too. Seated and lying modes keep their own pose.
 - **Walking and running**: push the left stick to walk (speed set in Settings, 0.8 to 2.4 m/s); push it fully forward to run (up to 5 m/s, Running can be set to Off). Speed eases in and out, footsteps sound and tick the controller, and the vignette tightens while you run. **Comfort presets** (Comfortable, Balanced, Free) set turning, vignette and speed in one go.
-- **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, console and beam buttons you poke with the right ray.
+- **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, datapad, screen-here and beam buttons you poke with the right ray.
 - **Room consoles**: a small panel on the wall of each room shows power, damage, oxygen and crew, with buttons to add or remove power, send help and open or close doors.
 - **Smart orders**: point at a burning, breached or damaged room with nobody selected and the nearest free crew member goes to deal with it.
 - **Hands-on play** (Settings > Gameplay, on by default; everything can still be done from the console):
@@ -182,7 +194,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Jumps build a streaking hyperspace tunnel, white out, and drop you back into normal space through a shockwave (on flat screens too).
 - Battles have bolt-shaped laser fire, muzzle flashes, smoking missiles, impact shockwaves, shield flares and multi-stage ship explosions.
 
-**Settings** are organised into Audio (master, music, effects, ambience, music source), Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), Screen & touch, VR movement (play position, height, turning, walking, running, vignette, comfort presets), VR console (magnifier, text size, controller help, controller buzz, size resets), Gameplay (difficulty, game speed, ship experience, hands-on play, tips, smart pause, unlocks, mod scripts) and Profile.
+**Settings** are organised into Audio (master, music, effects, ambience, music source), Graphics (effects quality, VR resolution and foveation, living sky, shooting stars, bridge, holotable, screen shake, reduce flashes), Screen & touch, VR movement (play position, height, turning, walking, running, vignette, comfort presets), VR console (datapad hand, pop-out windows, bridge stations, main screen on or off, magnifier, text size, controller help, controller buzz, size resets, replay the VR tour), Gameplay (difficulty, game speed, ship experience, hands-on play, tips, smart pause, unlocks, mod scripts) and Profile.
 
 **Runs, seeds and the daily challenge**
 - Every run has a **seed**. The same seed gives the same sector maps, beacon events, enemies, stores, sector choices and loot, so you can replay a run or share it. Type one in the hangar (Enter seed), or leave it on Random.
@@ -239,7 +251,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
-- 25 achievements and three difficulties.
+- 26 achievements and three difficulties.
 - Autosave between jumps.
 - Procedural music, sound effects and controller haptics.
 
@@ -252,7 +264,16 @@ Mods are JSON files. In the game, open **Mods**:
 
 Mods are saved in the browser and apply when you start a new run. Turn them on or off from the Mods screen.
 
-Example mods are in `mods/`: `space-pirates.json`, `party-laser.json` (which includes a script) and `ironman.json`. Four larger packs of original content come with the game: `frontier-arsenal.json` (8 weapons, 4 drones), `hangar-expansion.json` (6 ships), `strange-peoples.json` (4 races, 3 enemies, 3 sectors, events) and `deep-space-tales.json` (8 events). They are inspired by the kinds of content FTL mods add, but every name, number and line of text is new; nothing is copied from another mod.
+31 mods come with the game in `mods/`, all installable from the Mod library (filter by Content, Ships, Rules or Scripts):
+
+- **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
+- **Ships**: Hangar Expansion, Frontier Classes and Exotic Hulls, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
+- **Crew**: Strange Peoples and Rim Peoples (four races each), More Crew Traits (ten traits), and the Archon builder race in Precursor Vaults.
+- **Sectors and stories**: Deep Space Tales, Bounty Hunters, The Ghost Fleet, Merchant Guild, Cosmic Wonders, Pyrate Kings, Rebuff Crackdown, Precursor Vaults, Nebula Runners, Boarding Party and Winterfest, each with its own events, enemies, hails or quests.
+- **Rule sets**: Ironman, Gentle Skies (relaxed), Knife's Edge (more guns, faster enemies), Sprint (5 sectors) and Marathon (10 sectors).
+- **Scripts**: Party Laser and Combat Bonuses (bonus scrap for quick and flawless wins). Scripts only run when you allow them in Settings.
+
+They are inspired by the kinds of content FTL mods add, but every name, number and line of text is new; nothing is copied from another mod. When you add a mod, the game warns about any field it doesn't use, so a typo like `"damge"` doesn't fail silently.
 
 ### Format
 
@@ -270,15 +291,15 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 | Kind | Fields |
 | --- | --- |
 | `rules` | `sectors`, `startScrap`, `fleetSpeed`, `shieldRegen`, `repairRate`, `enemyPace`, `bossId`, `maxCrew`, `weaponSlots`, `droneSlots`, `augmentSlots`, `baseHP`, `startParts` |
-| `races` | `name`, `color`, `hp`, `repair`, `combat`, `speed`, `power` (free power to the room's system), `heal`, `fireproof`, `telepathic`, `mindImmune`, `deathBurst`, `learn`, `desc` |
-| `weapons` | `name`, `type` (`laser`, `missile`, `ion`, `beam`, `flak`, `bomb`), `damage`, `shots`, `charge`, `power`, `cost`, `tier`, `fire`, `breach`, `sysDamage`, `crewDamage`, `ion`, `stun`, `pierce`, `rooms` (beams), `radius` (flak), `heal` (bombs), `desc` |
+| `races` | `name`, `color`, `hp`, `repair`, `combat`, `speed`, `power` (free power to the room's system), `heal` (health per second for everyone in the same room, `true` = 1), `fireproof`, `noAir` (needs no oxygen), `armor` (share of weapon damage taken, e.g. `0.7`), `telepathic`, `mindImmune`, `deathBurst`, `learn`, `desc` |
+| `weapons` | `name`, `type` (`laser`, `missile`, `ion`, `beam`, `flak`, `bomb`), `damage`, `shots`, `charge`, `power`, `cost`, `tier`, `fire`, `breach`, `sysDamage`, `crewDamage`, `ion`, `stun`, `pierce` (ignores that many shield layers), `rooms` (beams), `radius` (flak), `heal` (bombs), `desc` |
 | `drones` | `name`, `kind` (`attack`, `defense`, `anti`, `internal`, `boarding`, `hull`), `power`, `cost`, `rate`, `shot` (a weapon object for attack drones), `targets` (defense), `role` (`repair` or `fight` for internal), `heal` (hull) |
-| `augments` | `name`, `cost`, `desc`. Built-in effects use the base ids. Custom augments can do things through scripts. |
+| `augments` | `name`, `cost`, `desc`, `fx`. `fx` gives a new augment real effects, and several augments add up: `charge`, `shield`, `repair`, `speed`, `dps`, `scrap` (fractions, `0.1` = 10% more), `ionRes`, `sysRes`, `breachRes` (chance to shrug off ion, system damage, breaches), `ammo` (chance a missile or drone part isn't used), `evade` (extra evasion points), `heal` (health per second for your crew, anywhere), `superShield` (super shield points at the start of each fight). Reusing a base id keeps its built-in effect. |
 | `ships` | `name`, `cls` (groups A/B layouts in the hangar), `layout`, `desc`, `hull`, `reactor`, `color`, `image` (a picture to use as the hull), `systems` (name → level), `reserve` (empty rooms for later systems), `weapons`, `drones`, `crew` (race ids), `augments`, `fuel`, `missiles`, `parts`, `pattern` or `rooms`, `unlock` (`{"sector":3}`, `{"win":"shipId"}`, `{"ach":"id"}`, `{"kills":25}`) |
-| `enemies` | `name`, `tags`, `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
-| `sectors` | `name`, `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
+| `enemies` | `name`, `tags`, `onlyTagged` (only met in sectors whose `enemyTags` include one of its tags), `eventOnly` (never met at random, only through an event's `fight`), `hull`, `systems`, `weapons`, `drones`, `crew`, `sectors: [min, max]`, `auto` (no crew), `super`, `boss`, `phases` |
+| `sectors` | `name`, `blurb` (shown on the route cards), `intro` (a list of arrival lines), `color`, `mix` (beacon weights for `event`, `combat`, `store`, `empty`), `tags`, `enemyTags`, `hazards` (chance per hazard), `nebula`, `fleetMult` |
 | `traits` | `name`, `desc`, and any of: `repair`, `dps`, `speed` (multipliers), `charge` (weapon charge while manning weapons), `shield` (shield recharge while manning shields), `hp` (extra health), `evade` (extra evasion while piloting), `heal` (health per second for everyone in the same room). Every recruit gets one trait at random. |
-| `events` | `text`, `weight`, `minSector`, `maxSector`, `tags`, `nebula`, `distress`, `questOnly`, `once`, `flag`, `noFlag`, `hail` (a faction tag, used before fights), `art`, `choices` |
+| `events` | `text`, `weight`, `minSector`, `maxSector`, `tags` (only in sectors with one of these tags; add `""` to allow it anywhere but favour those sectors), `nebula`, `distress`, `questOnly`, `once`, `flag`, `noFlag`, `hail` (a faction or enemy tag: shown before fights with ships that carry it), `art`, `choices` |
 
 **Event choices**
 - Each choice needs `text` plus either an `effect`, or a `chance` with `success` and `fail` effects.
@@ -290,7 +311,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 - Resources: `scrap`, `fuel`, `missiles`, `parts`, `hull`
 - Crew: `crew` (a race id or `"random"`), `crewLoss`
 - Gear: `weapon`, `drone`, `augment` (an id or `"random"`)
-- Ship changes: `install` (a system or `"random"`), `upgrade`, `damageSystem`, `reactor`, `fire`
+- Ship changes: `install` (a system or `"random"`), `upgrade`, `damageSystem` (a system or `"random"`), `reactor`, `fire`
 - Story: `fight` (an enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (chains to another event), `quest` (marks a quest beacon with that event), `later` (`{"event":"id","jumps":4}` fires an event after some jumps), `store`
 - Dialogue: `choices` (continue the conversation on a new page), `setFlag` / `clearFlag` (story flags that choices and events can require), `begin` / `dismiss` (in hails: start the fight, or end the encounter)
 - More: `crewHeal`, `crewHurt`, `maxHull`, `xp` (`{"skill":"pilot","amt":20}`), `reveal` (shows the sector map), `fleetPush`, `mapPiece`
@@ -346,6 +367,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |
 | `js/handson.js` | VR hands-on bonuses: fixing hazards, captain's station pads, enemy sabotage, salvage crates |
+| `js/vrdeck.js` | VR command deck: datapad, pop-out windows, touch presses, bridge stations, aiming at the enemy ship, 3D star map, jump lever, extinguisher, sidearm, hit sparks, guided tour |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/pad.js` | Game controller and keyboard focus: d-pad and arrow-key navigation between buttons and rooms, cursor, button actions |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |

@@ -1,0 +1,12 @@
+{
+  "name": "Marathon",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "sectors": 10,
+    "baseHP": 6,
+    "fleetSpeed": 0.1,
+    "augmentSlots": 4,
+    "droneSlots": 4
+  }
+}

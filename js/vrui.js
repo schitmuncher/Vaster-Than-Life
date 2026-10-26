@@ -143,7 +143,7 @@ function vuiUpdate(dt){
         for(const [ox, oz] of [[hx,0],[-hx,0],[0,hz],[0,-hz]]){ const px = R.c.x + ox, pz = R.c.z + oz; let md = 9; for(const D of I.doors) md = Math.min(md, Math.hypot(D.pos.x - px, D.pos.z - pz)); for(const w of (I.windows||[])) md = Math.min(md, Math.hypot(w.cx - px, w.cz - pz)*.8); if(md > bd){ bd = md; best = [ox, oz]; } }
         R.vui.mesh.position.set(R.c.x + best[0], 1.55, R.c.z + best[1]); R.vui.mesh.rotation.set(-.12, Math.atan2(-best[0], -best[1]), 0); R.vui.mesh.scale.setScalar(1.15); } } }
   // redraw widgets that are visible (4 times a second, or right away after a click / hover change)
-  for(const W_ of VUI.items){ if(!W_.mesh.visible || (W_.cull && !vuiInView(W_.mesh))) continue; const hk = VUI.hover.map(hv => hv && hv.W === W_ ? hv.idx : -1).join(','); W_.tick = (W_.tick||0) + dt;
+  for(const W_ of VUI.items){ if(!W_.mesh.visible || (W_.cull && !vuiInView(W_.mesh))) continue; const hk = VUI.hover.map(hv => hv && hv.W === W_ ? hv.idx : -1).join(','); W_.tick = (W_.tick ?? Math.random()*.25) + dt;   // random start staggers the texture uploads across frames
     if(W_.dirty || hk !== W_.hoverKey || W_.tick > .25){ W_.hoverKey = hk; W_.tick = 0; vuiRedraw(W_); } }
 }
 function headLocal(I){ return I.group.worldToLocal(headWorld()); }

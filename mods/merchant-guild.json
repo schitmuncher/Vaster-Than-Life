@@ -1,0 +1,41 @@
+{
+  "name": "Merchant Guild",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "mg_card", "name": "Guild Membership Card", "cost": 40, "desc": "Members get a better cut: 12% more scrap.", "fx": { "scrap": 0.12 } },
+    { "id": "mg_insurance", "name": "Guild Hull Insurance", "cost": 45, "desc": "Covers your hull: 40% fewer breaches.", "fx": { "breachRes": 0.4 } }
+  ],
+  "events": [
+    { "id": "mg_auction", "text": "A guild auction house is selling salvage rights to a wrecked battleship. The bidding is fierce and the auctioneer talks very fast.", "weight": 1.2, "minSector": 2,
+      "choices": [
+        { "text": "Bid high (60 scrap).", "req": { "scrap": 60 }, "cost": { "scrap": 60 }, "effect": { "text": "You win. The wreck yields a weapon, missiles and spare parts.", "weapon": "random", "missiles": 4, "parts": 3 } },
+        { "text": "Bid low (25 scrap) and hope.", "req": { "scrap": 25 }, "cost": { "scrap": 25 }, "chance": 0.4, "success": { "text": "Everyone else bids on the wrong lot. You win for a song.", "weapon": "random" }, "fail": { "text": "Outbid. The guild keeps your deposit as a 'handling fee'." } },
+        { "text": "Just watch.", "effect": { "text": "You learn a lot about prices.", "scrap": 5 } }
+      ] },
+    { "id": "mg_join", "text": "A guild recruiter in a very sharp suit floats beside your airlock. \"Join the Merchant Guild. Better prices, better friends, better insurance.\"", "weight": 1,
+      "choices": [
+        { "text": "Join (35 scrap).", "req": { "scrap": 35 }, "cost": { "scrap": 35 }, "effect": { "text": "Welcome to the Guild. Here is your card.", "augment": "mg_card" } },
+        { "text": "Buy the insurance only (30 scrap).", "req": { "scrap": 30 }, "cost": { "scrap": 30 }, "effect": { "text": "Fully covered, as long as you read the small print. You do not.", "augment": "mg_insurance" } },
+        { "text": "\"No thanks.\"", "effect": { "text": "\"Your loss.\" The recruiter leaves a brochure anyway." } }
+      ] },
+    { "id": "mg_smuggle", "text": "A nervous trader asks you to carry a sealed crate through the next sector. \"No questions. Good pay.\"", "weight": 1,
+      "choices": [
+        { "text": "Take the job.", "effect": { "text": "You stow the crate. It ticks occasionally.", "setFlag": "mg_crate", "later": { "event": "mg_delivery", "jumps": 3 } } },
+        { "text": "Ask what is inside.", "effect": { "text": "\"I said no questions.\" They find another courier." } }
+      ] },
+    { "id": "mg_delivery", "questOnly": true, "text": "Your contact is waiting at the rendezvous. The crate has stopped ticking, which is either very good or very bad.",
+      "choices": [
+        { "text": "Hand it over.", "chance": 0.75, "success": { "text": "\"Perfect.\" They pay double for the speed.", "scrap": 70, "clearFlag": "mg_crate" }, "fail": { "text": "\"This is the wrong crate.\" It was not, but they are not paying.", "clearFlag": "mg_crate", "scrap": 10 } },
+        { "text": "Open it first.", "effect": { "text": "It is full of spare drone parts and a very old sandwich.", "parts": 8, "clearFlag": "mg_crate" } }
+      ] },
+    { "id": "mg_bank", "text": "A guild bank station offers to look after your scrap. \"Deposit now, withdraw with interest a few jumps later.\"", "weight": 0.8,
+      "choices": [
+        { "text": "Deposit 40 scrap.", "req": { "scrap": 40 }, "cost": { "scrap": 40 }, "effect": { "text": "Your receipt is printed on very official paper.", "later": { "event": "mg_payout", "jumps": 4 } } },
+        { "text": "Rob the bank.", "chance": 0.3, "success": { "text": "Against all odds, it works.", "scrap": 80 }, "fail": { "text": "Guild security is excellent.", "fight": "pyrate_gunship" } },
+        { "text": "Move on.", "effect": { "text": "Your scrap stays under your mattress." } }
+      ] },
+    { "id": "mg_payout", "questOnly": true, "text": "A guild courier catches up with you, holding a sealed envelope. \"Your deposit, with interest.\"",
+      "choices": [ { "text": "Thank them.", "effect": { "text": "Generous interest, as promised.", "scrap": 65 } } ] }
+  ]
+}

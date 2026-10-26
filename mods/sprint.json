@@ -1,0 +1,11 @@
+{
+  "name": "Sprint",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "sectors": 5,
+    "startScrap": 50,
+    "startParts": 4,
+    "fleetSpeed": 0.14
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Gentle Skies",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "startScrap": 60,
+    "startParts": 5,
+    "fleetSpeed": 0.08,
+    "repairRate": 0.2,
+    "enemyPace": 0.6,
+    "baseHP": 6
+  }
+}

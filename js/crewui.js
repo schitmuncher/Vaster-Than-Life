@@ -56,7 +56,7 @@ function raceTraits(r){
   const m = (v, n) => { if(v!=null && v!==1) t.push(`${n} ×${v}`); };
   m(r.repair, 'Repair'); m(r.combat, 'Combat'); m(r.speed, 'Speed');
   if(r.fireproof) t.push('Fireproof'); if(r.noAir) t.push('No air needed'); if(r.telepathic) t.push('Telepathic'); if(r.mindImmune) t.push('Mind-control immune');
-  if(r.power) t.push('+1 power to their room'); if(r.deathBurst) t.push('Explodes on death'); if(r.learn && r.learn>1) t.push('Learns fast'); if(r.armor && r.armor<1) t.push(`Takes ${Math.round(r.armor*100)}% damage`);
+  if(r.power) t.push('+1 power to their room'); if(r.heal) t.push('Heals crew in the same room'); if(r.deathBurst) t.push('Explodes on death'); if(r.learn && r.learn>1) t.push('Learns fast'); if(r.armor && r.armor<1) t.push(`Takes ${Math.round(r.armor*100)}% damage`);
   return t.length ? t.join(' · ') : 'No special traits';
 }
 function skillProgress(c, k){ const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; return lv>=2 ? 1 : lv===1 ? (v-t[0])/(t[1]-t[0]) : v/t[0]; }

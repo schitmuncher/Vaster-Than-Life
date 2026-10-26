@@ -1,0 +1,36 @@
+{
+  "name": "Drone Hive",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "drones": [
+    { "id": "dh_hornet", "name": "Hornet Drone", "kind": "attack", "power": 3, "cost": 60, "rate": 3.2, "shot": { "type": "laser", "damage": 1 } },
+    { "id": "dh_spark", "name": "Spark Drone", "kind": "attack", "power": 2, "cost": 45, "rate": 4.4, "shot": { "type": "ion", "damage": 1 } },
+    { "id": "dh_aegis", "name": "Aegis Drone", "kind": "defense", "power": 3, "cost": 65, "rate": 2.4, "targets": ["missile", "laser", "bdrone", "hack"] },
+    { "id": "dh_mender", "name": "Mender Bot", "kind": "internal", "role": "repair", "power": 1, "cost": 35 },
+    { "id": "dh_bruiser", "name": "Bruiser Bot", "kind": "internal", "role": "fight", "power": 2, "cost": 45 },
+    { "id": "dh_patcher", "name": "Hull Patcher", "kind": "hull", "power": 2, "cost": 55, "heal": 6, "desc": "Use out of combat. Repairs 6 hull per drone part." },
+    { "id": "dh_lancer", "name": "Lancer Boarding Drone", "kind": "boarding", "power": 3, "cost": 60 }
+  ],
+  "augments": [
+    { "id": "dh_swarmlink", "name": "Swarm Link", "cost": 50, "desc": "25% chance a drone part or missile is not used up.", "fx": { "ammo": 0.25 } }
+  ],
+  "ships": [
+    { "id": "dh_beehive", "name": "The Beehive", "cls": "Drone Carrier", "layout": "A", "desc": "A flying hangar. Lets its drones do the talking.", "hull": 26, "reactor": 9, "color": "#f0c64a", "pattern": "TBBCN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 1, "drones": 5, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["basic"], "drones": ["dh_hornet", "dh_mender"], "crew": ["human", "enjinn"], "fuel": 15, "missiles": 2, "parts": 18 },
+    { "id": "dh_swarm", "name": "The Swarm Queen", "cls": "Drone Carrier", "layout": "B", "desc": "Ion sparks and a defence screen. Patience wins.", "hull": 26, "reactor": 9, "color": "#d6a43a", "pattern": "TBACN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 1, "drones": 5, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "weapons": ["ion"], "drones": ["dh_spark", "dh_aegis"], "crew": ["enjinn", "enjinn"], "fuel": 15, "missiles": 2, "parts": 16, "unlock": { "sector": 4 } }
+  ],
+  "enemies": [
+    { "id": "dh_swarmer", "name": "Auto-Swarmer", "tags": ["auto"], "auto": true, "hull": 10, "sectors": [3, 8], "systems": { "shields": 2, "engines": 2, "weapons": 2, "drones": 4, "piloting": 1 }, "weapons": ["basic"], "drones": ["dh_hornet", "dh_spark"], "crew": [] }
+  ],
+  "events": [
+    { "id": "dh_nest", "text": "Hundreds of dormant drones cling to a dead station like barnacles. One of them blinks at you.", "weight": 1,
+      "choices": [
+        { "text": "Pry a few loose.", "chance": 0.5, "success": { "text": "They come away with their parts intact.", "parts": 6, "drone": "dh_mender" }, "fail": { "text": "The whole nest wakes up.", "fight": "dh_swarmer", "afterWin": { "text": "With the swarm scrapped, the nest is yours to strip.", "parts": 8, "drone": "dh_hornet" } } },
+        { "text": "Send your own drone to speak their language.", "req": { "system": "drones" }, "effect": { "text": "Your drone negotiates a peaceful transfer of property.", "parts": 5, "drone": "dh_aegis" } },
+        { "text": "Leave quietly.", "effect": { "text": "The blinking drone watches you go." } }
+      ] }
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "name": "Heavy Ordnance",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    {
+      "id": "ho_dart",
+      "name": "Needle Missile",
+      "type": "missile",
+      "damage": 1,
+      "shots": 1,
+      "charge": 7,
+      "power": 1,
+      "cost": 25,
+      "tier": 1,
+      "desc": "Cheap and quick. Good for keeping shields busy."
+    },
+    {
+      "id": "ho_cluster",
+      "name": "Cluster Missile",
+      "type": "missile",
+      "damage": 1,
+      "shots": 3,
+      "charge": 15,
+      "power": 2,
+      "cost": 60,
+      "tier": 2,
+      "breach": 0.1,
+      "desc": "Three warheads, one missile."
+    },
+    {
+      "id": "ho_shock",
+      "name": "Concussion Missile",
+      "type": "missile",
+      "damage": 2,
+      "shots": 1,
+      "charge": 14,
+      "power": 2,
+      "cost": 55,
+      "tier": 2,
+      "stun": 5,
+      "desc": "Knocks the crew in the room flat for a few seconds."
+    },
+    {
+      "id": "ho_torpedo",
+      "name": "Siege Torpedo",
+      "type": "missile",
+      "damage": 4,
+      "shots": 1,
+      "charge": 23,
+      "power": 3,
+      "cost": 75,
+      "tier": 3,
+      "breach": 0.6,
+      "fire": 0.2,
+      "desc": "Slow, heavy, and very hard to ignore."
+    },
+    {
+      "id": "ho_thermite",
+      "name": "Thermite Bomb",
+      "type": "bomb",
+      "damage": 0,
+      "charge": 14,
+      "power": 2,
+      "cost": 55,
+      "tier": 2,
+      "fire": 1,
+      "crewDamage": 20,
+      "desc": "Starts a fire and burns whoever is standing in it."
+    },
+    {
+      "id": "ho_cracker",
+      "name": "Hull Cracker Bomb",
+      "type": "bomb",
+      "damage": 0,
+      "charge": 20,
+      "power": 2,
+      "cost": 65,
+      "tier": 3,
+      "breach": 1,
+      "sysDamage": 3,
+      "desc": "Three system damage and a guaranteed breach."
+    }
+  ],
+  "augments": [
+    {
+      "id": "ho_magazine",
+      "name": "Deep Magazine",
+      "cost": 50,
+      "desc": "30% chance a missile or drone part is not used up.",
+      "fx": {
+        "ammo": 0.3
+      }
+    }
+  ],
+  "enemies": [
+    {
+      "id": "ho_siegebarge",
+      "name": "Pyrate Siege Barge",
+      "tags": [
+        "pyrate"
+      ],
+      "hull": 14,
+      "sectors": [
+        6,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 1,
+        "weapons": 4,
+        "oxygen": 1,
+        "medbay": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "ho_torpedo",
+        "ho_dart"
+      ],
+      "crew": [
+        "human",
+        "pebblekin",
+        "mantlis"
+      ]
+    },
+    {
+      "id": "ho_bomber",
+      "name": "Rebuff Firebrand",
+      "tags": [
+        "rebuff"
+      ],
+      "hull": 12,
+      "sectors": [
+        3,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "weapons": 3,
+        "oxygen": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "ho_thermite",
+        "basic"
+      ],
+      "crew": [
+        "human",
+        "human"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "ho_ammo_dump",
+      "text": "An abandoned munitions depot hangs in the dark, every rack still loaded. Its automated defences blink lazily.",
+      "weight": 1,
+      "minSector": 2,
+      "choices": [
+        {
+          "text": "Load up quietly.",
+          "chance": 0.55,
+          "success": {
+            "text": "You strip a whole rack before anything notices.",
+            "missiles": 8,
+            "weapon": "ho_cluster"
+          },
+          "fail": {
+            "text": "A turret wakes and puts a hole in your hull before you get clear.",
+            "missiles": 3,
+            "hull": -5
+          }
+        },
+        {
+          "text": "Shoot the depot from a distance and sift the debris.",
+          "req": {
+            "weaponType": "missile"
+          },
+          "effect": {
+            "text": "The depot goes up like fireworks. You scoop what survives.",
+            "missiles": 4,
+            "scrap": 30
+          }
+        },
+        {
+          "text": "Have your drones defuse the defences.",
+          "req": {
+            "system": "drones"
+          },
+          "effect": {
+            "text": "Your drones pull the turret fuses. The depot is yours.",
+            "missiles": 10,
+            "augment": "ho_magazine"
+          }
+        }
+      ]
+    }
+  ]
+}

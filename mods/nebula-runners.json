@@ -1,0 +1,52 @@
+{
+  "name": "Nebula Runners",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "nr_static", "name": "Static Caster", "type": "ion", "damage": 2, "shots": 1, "charge": 11, "power": 2, "cost": 55, "tier": 2, "desc": "Bottled nebula lightning. Two ion damage in one crackling bolt." },
+    { "id": "nr_flare", "name": "Flare Laser", "type": "laser", "damage": 1, "shots": 2, "charge": 11, "power": 2, "cost": 60, "tier": 2, "fire": 0.3, "desc": "Burns hot. Starts fires in a third of the rooms it hits." }
+  ],
+  "augments": [
+    { "id": "nr_baffles", "name": "Sensor Baffles", "cost": 55, "desc": "Makes your ship hard to read: +4% evasion and a 20% chance to shrug off ion damage.", "fx": { "evade": 4, "ionRes": 0.2 } }
+  ],
+  "enemies": [
+    { "id": "nr_lurker", "name": "Fog Lurker", "tags": ["nebula"], "onlyTagged": true, "hull": 10, "sectors": [1, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "cloaking": 1, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ion", "bust1"], "crew": ["sloog", "human"] },
+    { "id": "nr_stormcaller", "name": "Stormcaller", "tags": ["nebula"], "onlyTagged": true, "hull": 14, "sectors": [3, 8], "systems": { "shields": 3, "engines": 2, "weapons": 4, "hacking": 1, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["nr_static", "ion2"], "crew": ["sloog", "sloog", "enjinn"] },
+    { "id": "nr_veil", "name": "Veil Drone Ship", "tags": ["nebula"], "onlyTagged": true, "auto": true, "hull": 12, "sectors": [2, 8], "systems": { "shields": 2, "engines": 3, "weapons": 3, "cloaking": 2, "piloting": 1 }, "weapons": ["nr_flare"], "crew": [] }
+  ],
+  "sectors": [
+    { "id": "nr_expanse", "name": "The Veil Expanse", "blurb": "A nebula so thick the fleet crawls through it. Smugglers, storms and ships that never show up on sensors.", "color": "#b07aff", "mix": { "event": 44, "combat": 44, "empty": 12 }, "tags": ["nebula"], "enemyTags": ["nebula"], "hazards": { "ionstorm": 0.12 }, "nebula": 0.7, "fleetMult": 0.7,
+      "intro": ["Purple fog in every direction. Your sensors give up almost at once.", "The Veil Expanse. Whatever is out there can't see you either. Probably."] }
+  ],
+  "events": [
+    { "id": "nr_lost", "text": "A freighter is lost in the fog, its navigation dead, its captain begging anyone for a tow out.", "tags": ["nebula"], "weight": 1.3,
+      "choices": [
+        { "text": "Guide them out (1 fuel).", "req": { "fuel": 1 }, "cost": { "fuel": 1 }, "effect": { "text": "It takes a while, but you get them clear. They pay well, and their pilot decides to stay with you.", "scrap": 35, "crew": "human" } },
+        { "text": "Sell them a copy of your charts.", "effect": { "text": "They pay what they can.", "scrap": 18 } },
+        { "text": "Strip the freighter while it's blind.", "chance": 0.7, "success": { "text": "They never even see you.", "scrap": 40, "missiles": 2 }, "fail": { "text": "Their escort could see you just fine.", "fight": "nr_lurker" } }
+      ] },
+    { "id": "nr_glow", "text": "Shoals of glowing gas creatures swirl around the hull, flashing patterns at your ship.", "tags": ["nebula", ""], "weight": 1, "nebula": true,
+      "choices": [
+        { "text": "Flash your lights back.", "effect": { "text": "They swirl closer and coat your hull in a shimmering film that scrambles sensors, theirs and everyone else's.", "augment": "nr_baffles" } },
+        { "text": "Bottle a few.", "chance": 0.5, "success": { "text": "A collector will pay a fortune for living lights.", "scrap": 40 }, "fail": { "text": "The bottle cracks and the creatures fry a console on their way out.", "damageSystem": "sensors" } },
+        { "text": "Let them be.", "effect": { "text": "They follow you for a while, then drift away." } }
+      ] },
+    { "id": "nr_ambush", "text": "Static on every channel. Then a ship-shaped hole in the fog shimmers and starts to solidify, right beside you.", "tags": ["nebula"], "weight": 1.1,
+      "choices": [
+        { "text": "Fire on the shimmer.", "effect": { "text": "You hit it before its cloak fully drops.", "fight": "nr_veil" } },
+        { "text": "Go dark and drift.", "req": { "system": "cloaking" }, "effect": { "text": "Your own cloak hides you. The hunter drifts past, confused.", "fleetPush": -0.03 } },
+        { "text": "Run for it.", "chance": 0.5, "success": { "text": "You lose it in the fog." }, "fail": { "text": "It's faster than it looks.", "fight": "nr_lurker" } }
+      ] },
+    { "id": "nr_harvest", "text": "An ion storm rages through the nebula. Your engineer points out that the storm is pure energy, and energy is worth a lot to the right buyer.", "tags": ["nebula", ""], "weight": 0.9,
+      "choices": [
+        { "text": "Harvest the storm with your shields.", "req": { "system": "shields", "level": 2 }, "chance": 0.7, "success": { "text": "Your shields soak it up and your batteries brim. You sell the surplus at the next beacon.", "scrap": 35 }, "fail": { "text": "The storm wins that round.", "scrap": 10, "damageSystem": "shields" } },
+        { "text": "Wait it out.", "effect": { "text": "You lose some time.", "fleetPush": 0.03 } }
+      ] },
+    { "id": "nr_lighthouse", "text": "A lighthouse station blinks in the fog, guiding ships through the worst of it. The keeper is old and lonely.", "tags": ["nebula"], "weight": 1,
+      "choices": [
+        { "text": "Buy their charts (15 scrap).", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "The finest charts of the nebula you have ever seen.", "reveal": true } },
+        { "text": "Stay for tea.", "effect": { "text": "The keeper tells stories for hours and sends you off with a basket of supplies.", "crewHeal": 30, "fuel": 2 } },
+        { "text": "Offer to relieve them.", "effect": { "text": "\"Retire? At last!\" The keeper packs a bag and joins your crew. Their apprentice takes over.", "crew": "random" } }
+      ] }
+  ]
+}

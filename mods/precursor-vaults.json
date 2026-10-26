@@ -1,0 +1,394 @@
+{
+  "name": "Precursor Vaults",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "races": [
+    {
+      "id": "pv_archon",
+      "name": "Archon",
+      "color": "#9ad8ff",
+      "hp": 140,
+      "repair": 1.4,
+      "combat": 0.5,
+      "speed": 0.65,
+      "noAir": true,
+      "fireproof": true,
+      "desc": "Builder-constructs left behind by the Precursors. Slow and gentle, but tough, fireproof, need no air and fix anything."
+    }
+  ],
+  "weapons": [
+    {
+      "id": "pv_prism",
+      "name": "Prism Lance",
+      "type": "laser",
+      "damage": 1,
+      "shots": 3,
+      "charge": 13,
+      "power": 3,
+      "cost": 95,
+      "tier": 4,
+      "pierce": 1,
+      "desc": "Precursor light bent through a crystal. Every shot slips through one shield layer."
+    },
+    {
+      "id": "pv_phase",
+      "name": "Phase Beam",
+      "type": "beam",
+      "damage": 2,
+      "rooms": 3,
+      "charge": 18,
+      "power": 3,
+      "cost": 100,
+      "tier": 4,
+      "pierce": 1,
+      "desc": "A beam that is only partly in this universe. Ignores one shield layer."
+    }
+  ],
+  "drones": [
+    {
+      "id": "pv_sentinel",
+      "name": "Vault Sentinel",
+      "kind": "defense",
+      "power": 2,
+      "cost": 80,
+      "rate": 2.4,
+      "targets": [
+        "missile",
+        "hack",
+        "bdrone"
+      ],
+      "desc": "A Precursor guardian orb that shoots down missiles, drones and hacking probes."
+    }
+  ],
+  "augments": [
+    {
+      "id": "pv_core",
+      "name": "Precursor Core",
+      "cost": 100,
+      "desc": "A heart of ancient engineering. Shields recharge 15% faster, weapons charge 5% faster and repairs go 15% faster.",
+      "fx": {
+        "shield": 0.15,
+        "charge": 0.05,
+        "repair": 0.15
+      }
+    }
+  ],
+  "enemies": [
+    {
+      "id": "pv_guardian",
+      "name": "Vault Guardian",
+      "tags": [
+        "precursor"
+      ],
+      "onlyTagged": true,
+      "auto": true,
+      "hull": 11,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "weapons": 3,
+        "piloting": 1
+      },
+      "weapons": [
+        "pv_prism"
+      ],
+      "crew": []
+    },
+    {
+      "id": "pv_keeper",
+      "name": "Vault Keeper",
+      "tags": [
+        "precursor"
+      ],
+      "onlyTagged": true,
+      "auto": true,
+      "hull": 13,
+      "sectors": [
+        5,
+        8
+      ],
+      "systems": {
+        "shields": 4,
+        "engines": 1,
+        "weapons": 3,
+        "drones": 2,
+        "piloting": 1
+      },
+      "weapons": [
+        "pv_phase"
+      ],
+      "drones": [
+        "pv_sentinel"
+      ],
+      "crew": []
+    },
+    {
+      "id": "pv_heartwarden",
+      "name": "The Heart Warden",
+      "tags": [
+        "precursor"
+      ],
+      "onlyTagged": true,
+      "auto": true,
+      "hull": 16,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 4,
+        "engines": 2,
+        "weapons": 6,
+        "piloting": 1
+      },
+      "weapons": [
+        "pv_prism"
+      ],
+      "crew": [],
+      "eventOnly": true
+    }
+  ],
+  "sectors": [
+    {
+      "id": "pv_vaults",
+      "name": "The Precursor Vaults",
+      "blurb": "Sealed vaults of a vanished people, guarded by machines that never sleep. Treasure for those who can open them.",
+      "color": "#9ad8ff",
+      "mix": {
+        "event": 52,
+        "combat": 38,
+        "empty": 10
+      },
+      "tags": [
+        "precursor"
+      ],
+      "enemyTags": [
+        "precursor"
+      ],
+      "hazards": {
+        "pulsar": 0.07
+      },
+      "nebula": 0.1,
+      "intro": [
+        "Silent structures older than any star chart. Your sensors light up with signals nobody has answered in a million years.",
+        "The Precursor Vaults. Watch for the guardians."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "pv_door",
+      "text": "A vault door the size of a moon, covered in moving symbols. A power socket below it pulses, waiting.",
+      "tags": [
+        "precursor"
+      ],
+      "weight": 1.4,
+      "choices": [
+        {
+          "text": "Feed it power from your shields.",
+          "req": {
+            "system": "shields",
+            "level": 3
+          },
+          "effect": {
+            "text": "The door drinks your shield energy and slides open. Inside: a hoard of salvage and a working Precursor gun.",
+            "weapon": "pv_prism",
+            "scrap": 30
+          }
+        },
+        {
+          "text": "Cut through the door.",
+          "chance": 0.45,
+          "success": {
+            "text": "Your crew cut a hole and slip inside before the guardians wake.",
+            "scrap": 50,
+            "parts": 3
+          },
+          "fail": {
+            "text": "The door does not like being cut.",
+            "fight": "pv_guardian"
+          }
+        },
+        {
+          "text": "Copy the symbols and leave.",
+          "effect": {
+            "text": "Your nav computer uses them to plot a few shortcuts.",
+            "reveal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv_riddle",
+      "text": "A calm voice speaks from a crystal obelisk. \"I have no voice, yet I answer. I have no ship, yet I travel. What am I?\"",
+      "tags": [
+        "precursor"
+      ],
+      "weight": 1.2,
+      "choices": [
+        {
+          "text": "\"An echo.\"",
+          "effect": {
+            "text": "\"Correct.\" The obelisk opens and offers you a gift.",
+            "augment": "random"
+          }
+        },
+        {
+          "text": "\"A signal.\"",
+          "chance": 0.5,
+          "success": {
+            "text": "\"Close enough.\" The obelisk drops a cache of old parts.",
+            "parts": 4,
+            "scrap": 15
+          },
+          "fail": {
+            "text": "\"Incorrect.\" A guardian unfolds from the obelisk.",
+            "fight": "pv_guardian"
+          }
+        },
+        {
+          "text": "\"Your mum.\"",
+          "effect": {
+            "text": "The obelisk is silent for a long time. Then a guardian unfolds from it, very slowly.",
+            "fight": "pv_guardian"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv_archive",
+      "text": "A library vault: endless shelves of glowing crystals, each one holding a lifetime of knowledge. An Archon construct tends them, alone.",
+      "tags": [
+        "precursor"
+      ],
+      "weight": 1.2,
+      "choices": [
+        {
+          "text": "Download what you can.",
+          "req": {
+            "system": "sensors"
+          },
+          "effect": {
+            "text": "Your gunners learn more in an hour than in years of drills.",
+            "xp": {
+              "skill": "weapons",
+              "amt": 25
+            }
+          }
+        },
+        {
+          "text": "Invite the archivist along.",
+          "effect": {
+            "text": "The Archon considers this for a full minute. Then it picks up a toolbox and follows you.",
+            "crew": "pv_archon"
+          }
+        },
+        {
+          "text": "Take a few crystals to sell.",
+          "chance": 0.6,
+          "success": {
+            "text": "Collectors will pay a fortune.",
+            "scrap": 45
+          },
+          "fail": {
+            "text": "The archivist calls the guardians.",
+            "fight": "pv_keeper"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv_beacon",
+      "text": "A Precursor beacon wakes as you pass and paints a path on your star chart to something it calls \"the Heart\".",
+      "tags": [
+        "precursor"
+      ],
+      "weight": 1,
+      "once": true,
+      "choices": [
+        {
+          "text": "Follow the path.",
+          "effect": {
+            "text": "The Heart is marked on your map.",
+            "quest": "pv_heart"
+          }
+        },
+        {
+          "text": "Ignore it.",
+          "effect": {
+            "text": "The beacon dims, disappointed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv_heart",
+      "questOnly": true,
+      "text": "The Heart: a glowing sphere at the centre of a vast cage of machinery. Its warden turns to face you, every gun charging.",
+      "choices": [
+        {
+          "text": "Fight the warden.",
+          "effect": {
+            "text": "It has been waiting a million years for this.",
+            "fight": "pv_heartwarden",
+            "afterWin": {
+              "text": "The cage opens. The Heart's core is yours.",
+              "augment": "pv_core",
+              "scrap": 60
+            }
+          }
+        },
+        {
+          "text": "Let {who} speak to it.",
+          "req": {
+            "race": "pv_archon"
+          },
+          "effect": {
+            "text": "{who} speaks in a language nobody has heard in a million years. The warden bows and opens the cage.",
+            "augment": "pv_core"
+          }
+        },
+        {
+          "text": "Back away slowly.",
+          "effect": {
+            "text": "The warden lets you go. This time."
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv_ruin",
+      "text": "A wrecked vault, cracked open by some ancient battle. Debris drifts everywhere, some of it still humming.",
+      "tags": [
+        "precursor",
+        ""
+      ],
+      "weight": 0.8,
+      "choices": [
+        {
+          "text": "Salvage the humming pieces.",
+          "chance": 0.5,
+          "success": {
+            "text": "One of them is a working defence orb.",
+            "drone": "pv_sentinel"
+          },
+          "fail": {
+            "text": "One of them is a guardian, and it is awake.",
+            "fight": "pv_guardian"
+          }
+        },
+        {
+          "text": "Salvage the quiet pieces.",
+          "effect": {
+            "text": "Safe, if dull.",
+            "scrap": 25
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -38,8 +38,8 @@ function initNav(){
 function makeCtrlLabel(i){
   const c = mkCanvas(640, 300), g = c.getContext('2d'); g.textBaseline = 'alphabetic';
   const lines_ = i===0
-    ? [['Left stick','Walk · push fully to run'],['Stick click','Datapad in your hand'],['Glance','Wrist menu appears'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Grab the screen or extinguisher']]
-    : [['Trigger','Select · aim at the enemy: fire'],['Stick ← →','Turn'],['Touch','Press buttons with the tip'],['Stick click','Back to the captain\'s spot'],['A','Pause'],['B','Map'],['Grip','Grab the screen or extinguisher']];
+    ? [['Left stick','Walk · push fully to run'],['Stick click','Datapad in your hand'],['Glance','Wrist menu appears'],['Trigger','Select · aim at floor: teleport'],['X','Pause'],['Y','Map'],['Grip','Grab the screen, extinguisher or jump lever']]
+    : [['Trigger','Select · aim at the enemy: fire'],['Stick ← →','Turn'],['Touch','Press buttons with the tip'],['Stick click','Back to the captain\'s spot'],['A','Pause'],['B','Map'],['Grip','Grab the screen, extinguisher or jump lever']];
   g.fillStyle = 'rgba(8,14,30,.92)'; g.beginPath(); if(g.roundRect) g.roundRect(4,4,632,292,20); else g.rect(4,4,632,292); g.fill(); g.strokeStyle = i ? '#5fd3e6' : '#ffb547'; g.lineWidth = 4; g.stroke();
   g.font = "700 26px 'Chakra Petch', sans-serif"; g.fillStyle = i ? '#5fd3e6' : '#ffb547'; g.fillText(i ? 'RIGHT HAND' : 'LEFT HAND', 22, 40);
   lines_.forEach(([k,v],n) => { const y = 78 + n*(i ? 31 : 36); g.font = "700 22px 'IBM Plex Mono', monospace"; g.fillStyle = '#ffd27a'; g.fillText(k, 22, y); g.font = "400 21px 'IBM Plex Mono', monospace"; g.fillStyle = '#e8eef9'; g.fillText(v, 196, y); });
@@ -56,7 +56,8 @@ function inBounds(local){ const B = BRIDGE_BOUNDS; if(local.x < B.x0 || local.x 
   const hc = holo ? toBridge(holo.group.getWorldPosition(new THREE.Vector3())) : new THREE.Vector3(0,0,-.8); const hs = holo ? holo.top.scale.x : 1;
   const ht = Math.hypot(local.x - hc.x, local.z - hc.z) < .6*hs; const cons = Math.abs(Math.abs(local.x) - 1.35) < .45 && Math.abs(local.z + .45) < .35;
   const st = SET.vrStations !== false && typeof STATION_X!=='undefined' && Math.hypot(Math.abs(local.x) - STATION_X, local.z - STATION_Z) < .26;   // the tactical and engineering stands
-  return !ht && !cons && !st; }
+  const lv = SET.vrStations !== false && Math.hypot(local.x - .42, local.z + .14) < .16;   // the jump lever
+  return !ht && !cons && !st && !lv; }
 function canStand(world){
   if(typeof IN!=='undefined' && IN.aboard && IN.foe) return interiorWalk(IN.foe, IN.foe.group.worldToLocal(world.clone()));
   if(!bridge || !bridge.group.visible) return true;

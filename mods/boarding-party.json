@@ -1,0 +1,54 @@
+{
+  "name": "Boarding Party",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "bp_stunbomb", "name": "Stun Bomb", "type": "bomb", "damage": 0, "charge": 12, "power": 1, "cost": 45, "tier": 2, "stun": 6, "crewDamage": 10, "desc": "Drops a room's defenders to the floor right before your boarders land." },
+    { "id": "bp_gasbomb", "name": "Knockout Gas Bomb", "type": "bomb", "damage": 0, "charge": 14, "power": 1, "cost": 50, "tier": 2, "crewDamage": 30, "desc": "Fills a room with gas. Hurts everyone inside, so beam your crew out first." }
+  ],
+  "drones": [
+    { "id": "bp_raider", "name": "Raider Drone", "kind": "boarding", "power": 2, "cost": 65, "desc": "A cheaper, scrappier boarding drone." },
+    { "id": "bp_bouncer", "name": "Bouncer Drone", "kind": "internal", "role": "fight", "power": 1, "cost": 45, "desc": "A cheap anti-boarder drone that patrols your corridors." }
+  ],
+  "augments": [
+    { "id": "bp_boots", "name": "Grapnel Boots", "cost": 55, "desc": "Your crew move 15% faster and hit 10% harder.", "fx": { "speed": 0.15, "dps": 0.1 } },
+    { "id": "bp_trauma", "name": "Trauma Kits", "cost": 45, "desc": "Your crew slowly heal anywhere aboard, even in a fight.", "fx": { "heal": 0.5 } }
+  ],
+  "ships": [
+    { "id": "bp_crowbar", "name": "The Crowbar", "cls": "Boarding Cutter", "layout": "A", "desc": "Built to open other ships. A big teleporter, a big medbay and a crew of brawlers.", "hull": 26, "reactor": 8, "color": "#ff7a5a", "pattern": "TACAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "medbay": 2, "piloting": 1, "doors": 1, "teleporter": 2 }, "reserve": ["drones", "sensors"],
+      "weapons": ["bp_stunbomb", "basic"], "drones": [], "crew": ["mantlis", "mantlis", "human", "pebblekin"], "fuel": 16, "missiles": 6, "parts": 2, "augments": ["bp_boots"] },
+    { "id": "bp_crowbarb", "name": "The Can Opener", "cls": "Boarding Cutter", "layout": "B", "desc": "Sends drones over first. Your crew follow once the defenders are busy.", "hull": 26, "reactor": 8, "color": "#e86a4a", "pattern": "TABAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "medbay": 1, "piloting": 1, "doors": 1, "teleporter": 1, "drones": 3 },
+      "weapons": ["bp_gasbomb", "basic"], "drones": ["bp_raider"], "crew": ["mantlis", "human", "pebblekin"], "fuel": 16, "missiles": 4, "parts": 8, "unlock": { "sector": 3 } }
+  ],
+  "enemies": [
+    { "id": "bp_reaver", "name": "Mantlis Reaver", "tags": ["mantlis"], "hull": 12, "sectors": [2, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 1 }, "weapons": ["bust1", "bp_stunbomb"], "crew": ["mantlis", "mantlis", "mantlis", "mantlis"] },
+    { "id": "bp_brawlbarge", "name": "Pebblekin Brawl Barge", "tags": ["pebblekin"], "hull": 15, "sectors": [3, 8], "systems": { "shields": 2, "engines": 1, "weapons": 3, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 2 }, "weapons": ["heavy1", "bp_gasbomb"], "crew": ["pebblekin", "pebblekin", "pebblekin", "mantlis"] }
+  ],
+  "events": [
+    { "id": "bp_arena", "text": "A Mantlis fighting arena hangs between two moons. The champion is taking challengers: one bout, winner takes the purse.", "tags": ["mantlis", ""], "weight": 1,
+      "choices": [
+        { "text": "Send your best fighter.", "chance": 0.5, "success": { "text": "Your fighter wins to a standing ovation. The purse is generous and the training was free.", "scrap": 50, "xp": { "skill": "combat", "amt": 25 } }, "fail": { "text": "Your fighter loses, badly, but learns a lot.", "crewHurt": 30, "xp": { "skill": "combat", "amt": 15 } } },
+        { "text": "Send {who}.", "req": { "race": "mantlis" }, "chance": 0.8, "success": { "text": "{who} wins in four seconds. The crowd goes wild.", "scrap": 60, "xp": { "skill": "combat", "amt": 25 } }, "fail": { "text": "{who} loses on points and sulks for a jump.", "crewHurt": 20 } },
+        { "text": "Bet on the champion (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "chance": 0.6, "success": { "text": "The champion wins. You double your money.", "scrap": 40 }, "fail": { "text": "The champion trips. You lose your bet." } }
+      ] },
+    { "id": "bp_hostage", "text": "Pyrates have taken over a mining station and are holding its workers hostage. The workers' families are offering everything they have.", "tags": ["pyrate", ""], "weight": 1,
+      "choices": [
+        { "text": "Board the station.", "req": { "system": "teleporter" }, "effect": { "text": "Your boarders storm the station. The pyrates' ship rushes to defend them.", "fight": "pyrate_gunship", "afterWin": { "text": "The workers are safe. One of them signs on with you.", "crew": "random", "scrap": 30 } } },
+        { "text": "Pay the ransom (30 scrap).", "req": { "scrap": 30 }, "cost": { "scrap": 30 }, "effect": { "text": "The pyrates leave with the scrap. A grateful worker joins your crew.", "crew": "human" } },
+        { "text": "Leave it to the authorities.", "effect": { "text": "There are no authorities out here. You jump anyway." } }
+      ] },
+    { "id": "bp_drill", "text": "A Fedoration marine outpost offers to run your crew through a boarding drill. \"Free of charge. We need the practice too.\"", "tags": ["", "rebuff"], "weight": 0.8,
+      "choices": [
+        { "text": "Run the drill.", "effect": { "text": "Bruises all round, and everyone is better for it.", "xp": { "skill": "combat", "amt": 20 }, "crewHurt": 10 } },
+        { "text": "Ask for spare kit instead.", "effect": { "text": "The quartermaster finds you some old gear.", "augment": "bp_trauma" } }
+      ] },
+    { "id": "bp_drone_lot", "text": "A junk dealer has a pile of boarding drones \"with only minor personality issues\".", "tags": ["", "pyrate"], "weight": 0.8, "minSector": 2,
+      "choices": [
+        { "text": "Buy one (40 scrap).", "req": { "scrap": 40 }, "cost": { "scrap": 40 }, "effect": { "text": "It salutes you. Then it salutes the wall. Then it salutes you again.", "drone": "bp_raider" } },
+        { "text": "Buy a bouncer drone (25 scrap).", "req": { "scrap": 25 }, "cost": { "scrap": 25 }, "effect": { "text": "It guards the airlock with great enthusiasm.", "drone": "bp_bouncer" } },
+        { "text": "Just look.", "effect": { "text": "One of the drones follows you to the airlock, then gets bored." } }
+      ] }
+  ]
+}

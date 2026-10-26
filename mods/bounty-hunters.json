@@ -1,0 +1,315 @@
+{
+  "name": "Bounty Hunters",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    {
+      "id": "bh_tagger",
+      "name": "Tagger Laser",
+      "type": "laser",
+      "damage": 1,
+      "shots": 2,
+      "charge": 9,
+      "power": 2,
+      "cost": 60,
+      "tier": 2,
+      "desc": "A hunter's favourite: quick, accurate and cheap to run."
+    },
+    {
+      "id": "bh_netbomb",
+      "name": "Net Bomb",
+      "type": "bomb",
+      "damage": 0,
+      "charge": 13,
+      "power": 1,
+      "cost": 45,
+      "tier": 2,
+      "stun": 8,
+      "sysDamage": 1,
+      "desc": "Tangles the crew in a room and gums up its system."
+    }
+  ],
+  "enemies": [
+    {
+      "id": "bh_tracker",
+      "name": "Bounty Tracker",
+      "tags": [
+        "bounty"
+      ],
+      "onlyTagged": true,
+      "hull": 11,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 3,
+        "weapons": 3,
+        "oxygen": 1,
+        "piloting": 1,
+        "sensors": 2,
+        "doors": 1
+      },
+      "weapons": [
+        "bh_tagger",
+        "basic"
+      ],
+      "crew": [
+        "human",
+        "mantlis"
+      ]
+    },
+    {
+      "id": "bh_netter",
+      "name": "Bounty Netter",
+      "tags": [
+        "bounty"
+      ],
+      "onlyTagged": true,
+      "hull": 12,
+      "sectors": [
+        2,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 2,
+        "weapons": 3,
+        "teleporter": 1,
+        "oxygen": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "bh_netbomb",
+        "basic"
+      ],
+      "crew": [
+        "mantlis",
+        "mantlis",
+        "human"
+      ]
+    },
+    {
+      "id": "bh_warden",
+      "name": "Hunter Warden",
+      "tags": [
+        "bounty"
+      ],
+      "onlyTagged": true,
+      "hull": 15,
+      "sectors": [
+        4,
+        8
+      ],
+      "systems": {
+        "shields": 4,
+        "engines": 2,
+        "weapons": 4,
+        "oxygen": 1,
+        "medbay": 1,
+        "piloting": 1,
+        "doors": 2
+      },
+      "weapons": [
+        "bh_tagger",
+        "bh_netbomb"
+      ],
+      "crew": [
+        "human",
+        "pebblekin",
+        "mantlis",
+        "human"
+      ]
+    }
+  ],
+  "sectors": [
+    {
+      "id": "bh_reach",
+      "name": "The Hunter's Reach",
+      "blurb": "Bounty hunters' home turf. Your face is on every wanted board.",
+      "color": "#ffa04a",
+      "mix": {
+        "event": 38,
+        "combat": 52,
+        "empty": 10
+      },
+      "tags": [
+        "bounty"
+      ],
+      "enemyTags": [
+        "bounty"
+      ],
+      "hazards": {
+        "asteroid": 0.06,
+        "sun": 0.05
+      },
+      "nebula": 0
+    }
+  ],
+  "events": [
+    {
+      "id": "bh_hail1",
+      "hail": "bounty",
+      "text": "\"Fedoration courier {ship}. Your bounty is twelve thousand scrap, dead or alive. Alive is a lot less paperwork, so let's do this nicely.\"",
+      "choices": [
+        {
+          "text": "\"Come and collect it.\"",
+          "effect": {
+            "begin": true
+          }
+        },
+        {
+          "text": "Offer them a better deal (40 scrap).",
+          "req": {
+            "scrap": 40
+          },
+          "cost": {
+            "scrap": 40
+          },
+          "effect": {
+            "text": "\"Bird in the hand.\" They take the scrap and log you as 'not found'.",
+            "dismiss": true
+          }
+        },
+        {
+          "text": "{who} reminds them how Mantlis treat hunters.",
+          "req": {
+            "race": "mantlis"
+          },
+          "chance": 0.6,
+          "success": {
+            "text": "The hunter remembers an urgent appointment elsewhere.",
+            "dismiss": true
+          },
+          "fail": {
+            "text": "\"I've hunted Mantlis before.\" They charge their guns.",
+            "begin": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "bh_hail2",
+      "hail": "bounty",
+      "text": "A hunter with a lot of medals fills your screen. \"No speeches. Shields down, or I take them down.\"",
+      "choices": [
+        {
+          "text": "Raise shields and fire first.",
+          "effect": {
+            "text": "You get the first shot in.",
+            "begin": true,
+            "primeWeapons": true
+          }
+        },
+        {
+          "text": "Jam their tracker.",
+          "req": {
+            "system": "sensors",
+            "level": 2
+          },
+          "effect": {
+            "text": "Your sensors spoof a dozen copies of your ship. The hunter picks the wrong one.",
+            "dismiss": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "bh_board",
+      "text": "A notice board station flickers with wanted posters. One of them is you, with a very unflattering picture. Another is a pyrate you have never met, worth a fortune.",
+      "tags": [
+        "bounty"
+      ],
+      "weight": 2,
+      "choices": [
+        {
+          "text": "Take the pyrate contract.",
+          "effect": {
+            "text": "The contract marks a beacon on your map.",
+            "quest": "bh_contract"
+          }
+        },
+        {
+          "text": "Deface your own poster.",
+          "effect": {
+            "text": "Your crew draw a moustache on it. Morale improves.",
+            "crewHeal": 20
+          }
+        },
+        {
+          "text": "Hack the board and lower your bounty.",
+          "req": {
+            "system": "hacking"
+          },
+          "effect": {
+            "text": "Your bounty is now three scrap and a sandwich. Nobody will bother.",
+            "fleetPush": -0.06
+          }
+        }
+      ]
+    },
+    {
+      "id": "bh_contract",
+      "questOnly": true,
+      "text": "The wanted pyrate's ship is here, patching its hull and swearing at a droid.",
+      "choices": [
+        {
+          "text": "Serve the warrant.",
+          "effect": {
+            "text": "\"You'll never take me alive!\"",
+            "fight": "pyrate_gunship",
+            "afterWin": {
+              "text": "The contract pays out handsomely.",
+              "scrap": 70,
+              "weapon": "bh_tagger"
+            }
+          }
+        },
+        {
+          "text": "Offer them a head start for a cut.",
+          "effect": {
+            "text": "They pay you to look the other way.",
+            "scrap": 35
+          }
+        }
+      ]
+    },
+    {
+      "id": "bh_rival",
+      "text": "Two bounty hunters are arguing over who saw you first. Neither has noticed you are listening on an open channel.",
+      "tags": [
+        "bounty"
+      ],
+      "weight": 1.5,
+      "choices": [
+        {
+          "text": "Slip away while they argue.",
+          "chance": 0.7,
+          "success": {
+            "text": "You leave them to it.",
+            "fleetPush": -0.04
+          },
+          "fail": {
+            "text": "They stop arguing at the same moment.",
+            "fight": "bh_tracker"
+          }
+        },
+        {
+          "text": "Tell each one the other is cheating them.",
+          "chance": 0.5,
+          "success": {
+            "text": "They open fire on each other. You collect the wreckage of the loser.",
+            "scrap": 40,
+            "missiles": 3
+          },
+          "fail": {
+            "text": "They work it out and team up, briefly.",
+            "fight": "bh_netter"
+          }
+        }
+      ]
+    }
+  ]
+}

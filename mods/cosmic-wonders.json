@@ -1,0 +1,67 @@
+{
+  "name": "Cosmic Wonders",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "augments": [
+    { "id": "cw_starseed", "name": "Starseed Crystal", "cost": 65, "desc": "A seed of living starlight. Shields recharge 10% faster and your crew slowly heal anywhere.", "fx": { "shield": 0.1, "heal": 0.3 } },
+    { "id": "cw_chronoshard", "name": "Chrono Shard", "cost": 70, "desc": "A splinter of a broken time loop. Weapons charge 8% faster and crew move 10% faster.", "fx": { "charge": 0.08, "speed": 0.1 } }
+  ],
+  "sectors": [
+    { "id": "cw_reach", "name": "The Wonder Reach", "blurb": "Strange lights, singing planets and things nobody has a name for. Fewer fights, more stories.", "color": "#7ff0d0", "mix": { "event": 60, "combat": 28, "empty": 12 }, "tags": ["wonder"], "enemyTags": ["auto"], "hazards": { "pulsar": 0.08, "sun": 0.05, "ionstorm": 0.04 }, "nebula": 0.25, "fleetMult": 0.9,
+      "intro": ["Space gets strange out here. Strange and beautiful.", "The Wonder Reach. Your science officer has not stopped smiling since you arrived."] }
+  ],
+  "events": [
+    { "id": "cw_whalesong", "text": "A pod of star whales drifts past, each one longer than a station. Their song fills every speaker on the ship, low and slow and enormous.", "tags": ["wonder", ""], "weight": 1.2,
+      "choices": [
+        { "text": "Kill the engines and listen.", "effect": { "text": "Nobody speaks for a long time. When the song fades, your crew feel rested in a way they had forgotten.", "crewHeal": 45 } },
+        { "text": "Record the song and sell it later.", "effect": { "text": "A collector two systems over pays well for a clean recording.", "scrap": 30 } },
+        { "text": "Follow the pod.", "effect": { "text": "The whales know every shortcut in the sector, and they don't mind company.", "reveal": true, "fuel": 2 } }
+      ] },
+    { "id": "cw_timeloop", "text": "You arrive at the beacon. You arrive at the beacon. You arrive at the beacon. Your pilot is starting to look worried.", "tags": ["wonder", ""], "weight": 1, "minSector": 2,
+      "choices": [
+        { "text": "Punch the engines through the loop.", "req": { "system": "engines", "level": 3 }, "effect": { "text": "You burst out of the loop a few seconds younger and with a full tank of fuel you are fairly sure you used already.", "fuel": 2, "scrap": 10 } },
+        { "text": "Wait it out.", "chance": 0.5, "success": { "text": "Each loop you pocket a little more salvage from the same wreck. Eventually the loop gets bored.", "scrap": 35 }, "fail": { "text": "You lose hours. The Rebuff Fleet doesn't.", "fleetPush": 0.06 } },
+        { "text": "Ask {who} what they see.", "req": { "race": "sloog" }, "effect": { "text": "{who} reaches into the loop and pulls out a splinter of it. The loop breaks. The splinter keeps ticking.", "augment": "cw_chronoshard" } }
+      ] },
+    { "id": "cw_crystalworld", "text": "A planet of glass spires rings like a bell as your ship's shadow crosses it. A crystalline voice offers you a seed of its heart, for a fair trade.", "tags": ["wonder", ""], "weight": 1,
+      "choices": [
+        { "text": "Trade for the seed (35 scrap).", "req": { "scrap": 35 }, "cost": { "scrap": 35 }, "effect": { "text": "The seed glows softly in its cradle. The ship feels calmer with it aboard.", "augment": "cw_starseed" } },
+        { "text": "Mine the outer spires.", "chance": 0.6, "success": { "text": "The crystal sells for a fortune and the planet doesn't seem to mind.", "scrap": 45, "parts": 2 }, "fail": { "text": "A spire shatters across your hull. The planet rings angrily for an hour.", "hull": -3 } },
+        { "text": "Leave it in peace.", "effect": { "text": "The planet chimes a farewell as you go." } }
+      ] },
+    { "id": "cw_starbirth", "text": "Inside a glowing cloud, a new star is lighting up for the first time. The light is warm and full of energy.", "tags": ["wonder", ""], "weight": 1,
+      "choices": [
+        { "text": "Bathe the hull in its light.", "req": { "system": "shields", "level": 2 }, "effect": { "text": "Your shields drink the light and pour it back into the hull. Old dents smooth out.", "hull": 8 } },
+        { "text": "Scan it for the science journals.", "req": { "system": "sensors" }, "effect": { "text": "Your readings will be in textbooks. The prize money is nice too.", "scrap": 20, "xp": { "skill": "pilot", "amt": 15 } } },
+        { "text": "Just watch.", "effect": { "text": "Your crew take turns at the window. Morale is excellent.", "crewHeal": 25 } }
+      ] },
+    { "id": "cw_wormhole", "text": "A wormhole flickers open beside the beacon, wobbling like a soap bubble. Your sensors cannot tell where it goes.", "tags": ["wonder", ""], "weight": 0.9,
+      "choices": [
+        { "text": "Fly through it.", "chance": 0.55, "success": { "text": "You come out well ahead of where you went in, with the whole sector laid out on your sensors.", "fleetPush": -0.12, "reveal": true }, "fail": { "text": "A rough ride. You come out where you started, rattled and short of fuel.", "hull": -4, "fuel": -1 } },
+        { "text": "Send a drone through first (1 drone part).", "req": { "system": "drones", "parts": 1 }, "cost": { "parts": 1 }, "effect": { "text": "The drone comes back covered in readings that scientists will pay a lot for.", "scrap": 35 } },
+        { "text": "Steer well clear.", "effect": { "text": "It pops behind you. Probably for the best." } }
+      ] },
+    { "id": "cw_museum", "text": "A drifting museum of ancient starships hails you. \"Welcome, visitors! Tours every hour. Please do not touch the exhibits.\"", "tags": ["wonder", ""], "weight": 1,
+      "choices": [
+        { "text": "Take the tour.", "effect": { "text": "The weapons wing is fascinating. Your gunners take notes.", "xp": { "skill": "weapons", "amt": 18 } } },
+        { "text": "Borrow an exhibit.", "chance": 0.45, "success": { "text": "You walk out with an antique gun under a tarp. It still works.", "weapon": "random" }, "fail": { "text": "Museum security is a decommissioned warship, and it is very much commissioned now.", "fight": "auto_scoundrel" } },
+        { "text": "Donate to the museum (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "A grateful intern asks if you need a crew member who knows a lot about old ships.", "crew": "random" } }
+      ] },
+    { "id": "cw_mirror", "text": "Another ship arrives at the beacon. It is your ship, down to the scratch on the airlock. \"Hello, {ship},\" it says. \"I'm {ship}.\"", "tags": ["wonder", ""], "weight": 0.8, "minSector": 2,
+      "choices": [
+        { "text": "Talk to yourself.", "chance": 0.5, "success": { "text": "It is you from a better timeline. It gives you something it says you will need, and fades.", "augment": "random" }, "fail": { "text": "It criticises your piloting for ten minutes and fades. Rude." } },
+        { "text": "Open fire.", "effect": { "text": "The reflection shatters into an automated warship that was wearing your face.", "fight": "auto_assault", "afterWin": { "text": "Its core still holds the image of your ship. Spooky, and valuable.", "scrap": 40 } } }
+      ] },
+    { "id": "cw_garden", "text": "A garden habitat floats in orbit around a gas giant: domes of fruit trees, streams and birds. The gardener waves you in.", "tags": ["wonder", ""], "weight": 1,
+      "choices": [
+        { "text": "Rest for a while.", "effect": { "text": "Fresh air, fresh fruit and a nap under a real tree.", "crewHeal": 60 } },
+        { "text": "Trade missiles for crates of fruit (2 missiles).", "req": { "missiles": 2 }, "cost": { "missiles": 2 }, "effect": { "text": "Fruit this good is worth a lot further down the line.", "scrap": 28 } },
+        { "text": "Help the gardener fix the irrigation.", "effect": { "text": "Your crew get their hands dirty and learn a thing or two about pumps.", "xp": { "skill": "repair", "amt": 18 } } }
+      ] },
+    { "id": "cw_aurora", "text": "A huge aurora wraps the planet below in curtains of green and violet. The upper atmosphere is rich with fuel gas.", "tags": ["wonder", ""], "weight": 1.1,
+      "choices": [
+        { "text": "Skim the atmosphere for fuel.", "chance": 0.8, "success": { "text": "Your tanks fill as the lights dance around you.", "fuel": 4 }, "fail": { "text": "A charged gust fries a console on the way down.", "fuel": 2, "damageSystem": "sensors" } },
+        { "text": "Take the scenic route.", "effect": { "text": "Your crew spend the jump at the windows.", "crewHeal": 20, "fuel": 1 } }
+      ] }
+  ]
+}

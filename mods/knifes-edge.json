@@ -1,0 +1,13 @@
+{
+  "name": "Knife's Edge",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "rules": {
+    "startScrap": 80,
+    "weaponSlots": 5,
+    "fleetSpeed": 0.12,
+    "enemyPace": 0.9,
+    "repairRate": 0.11,
+    "baseHP": 3
+  }
+}

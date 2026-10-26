@@ -3,37 +3,188 @@
   {
    "file": "space-pirates.json",
    "name": "Space Pirates Ahoy",
-   "desc": "A pirate ship, a parrot race, a broadside cannon and buried treasure."
+   "desc": "A pirate ship, a parrot race, a broadside cannon and buried treasure.",
+   "kind": "content"
   },
   {
    "file": "party-laser.json",
    "name": "Party Laser",
-   "desc": "A six-shot laser, a space rave and a script-powered disco ball."
+   "desc": "A six-shot laser, a space rave and a script-powered disco ball.",
+   "kind": "script"
   },
   {
    "file": "ironman.json",
    "name": "Ironman Rules",
-   "desc": "Less scrap, a faster fleet, tougher enemies and no free repairs."
+   "desc": "Less scrap, a faster fleet, tougher enemies and no free repairs.",
+   "kind": "rules"
   },
   {
    "file": "frontier-arsenal.json",
    "name": "Frontier Arsenal",
-   "desc": "Eight new weapons, four drones and a rocket sale."
+   "desc": "Eight new weapons, four drones and a rocket sale.",
+   "kind": "content"
   },
   {
    "file": "hangar-expansion.json",
    "name": "Hangar Expansion",
-   "desc": "Six new ships in three classes: a scout, a siege hulk and an ion skirmisher."
+   "desc": "Six ships in three classes: a scout, a siege hulk and an ion skirmisher.",
+   "kind": "ships"
   },
   {
    "file": "strange-peoples.json",
    "name": "Strange Peoples",
-   "desc": "Four new races, three new enemies, three new sectors and the stories to go with them."
+   "desc": "Four races, three enemies, three sectors and their stories.",
+   "kind": "content"
   },
   {
    "file": "deep-space-tales.json",
    "name": "Deep Space Tales",
-   "desc": "Eight new events: derelicts, whales, rivals and a black market."
+   "desc": "Eight new events: derelicts, whales, rivals and a black market.",
+   "kind": "content"
+  },
+  {
+   "file": "ion-arsenal.json",
+   "name": "Ion Arsenal",
+   "desc": "Four ion guns, two ion drones, a grounding augment and a storm raider.",
+   "kind": "content"
+  },
+  {
+   "file": "heavy-ordnance.json",
+   "name": "Heavy Ordnance",
+   "desc": "Six missiles and bombs, a magazine augment, a siege barge and a bomber.",
+   "kind": "content"
+  },
+  {
+   "file": "beam-masters.json",
+   "name": "Beam Masters",
+   "desc": "Five beam weapons, a cutter drone, a focusing lens and a beam cruiser.",
+   "kind": "content"
+  },
+  {
+   "file": "drone-hive.json",
+   "name": "Drone Hive",
+   "desc": "Seven drones, a swarm link, two drone carriers and a swarm to fight.",
+   "kind": "content"
+  },
+  {
+   "file": "engineering-corps.json",
+   "name": "Engineering Corps",
+   "desc": "Eleven working augments: faster guns, shields, repairs, crew and more.",
+   "kind": "content"
+  },
+  {
+   "file": "frontier-classes.json",
+   "name": "Frontier Classes",
+   "desc": "Six new ships in three classes: a courier, a gunboat and an ark.",
+   "kind": "ships"
+  },
+  {
+   "file": "exotic-hulls.json",
+   "name": "Exotic Hulls",
+   "desc": "Four strange ships: a lance, a phantom, a juggernaut and a puppeteer.",
+   "kind": "ships"
+  },
+  {
+   "file": "more-traits.json",
+   "name": "More Crew Traits",
+   "desc": "Ten new crew traits, from Lucky and Veteran to Field Medic and Tinker.",
+   "kind": "content"
+  },
+  {
+   "file": "rim-peoples.json",
+   "name": "Rim Peoples",
+   "desc": "Four new races, their ships and two home sectors to visit.",
+   "kind": "content"
+  },
+  {
+   "file": "bounty-hunters.json",
+   "name": "Bounty Hunters",
+   "desc": "A sector of bounty hunters, new hails, a wanted board and a contract.",
+   "kind": "content"
+  },
+  {
+   "file": "ghost-fleet.json",
+   "name": "The Ghost Fleet",
+   "desc": "A graveyard sector of crewless ghost ships and a haunted quest.",
+   "kind": "content"
+  },
+  {
+   "file": "merchant-guild.json",
+   "name": "Merchant Guild",
+   "desc": "Auctions, guild cards, smuggling jobs and a bank that pays interest.",
+   "kind": "content"
+  },
+  {
+   "file": "cosmic-wonders.json",
+   "name": "Cosmic Wonders",
+   "desc": "Nine strange and beautiful events and a sector full of wonders.",
+   "kind": "content"
+  },
+  {
+   "file": "pyrate-kings.json",
+   "name": "Pyrate Kings",
+   "desc": "The Pyrate King's court: two ships, three guns, tolls and treasure.",
+   "kind": "content"
+  },
+  {
+   "file": "rebuff-crackdown.json",
+   "name": "Rebuff Crackdown",
+   "desc": "Occupied space: checkpoints, prison barges, deserters, the resistance.",
+   "kind": "content"
+  },
+  {
+   "file": "precursor-vaults.json",
+   "name": "Precursor Vaults",
+   "desc": "Ancient vaults, a builder race, Precursor guns and the Heart quest.",
+   "kind": "content"
+  },
+  {
+   "file": "nebula-runners.json",
+   "name": "Nebula Runners",
+   "desc": "A thick nebula sector of cloaked hunters, lighthouses and glowing life.",
+   "kind": "content"
+  },
+  {
+   "file": "boarding-party.json",
+   "name": "Boarding Party",
+   "desc": "Two boarding ships, stun and gas bombs, raider drones and an arena.",
+   "kind": "content"
+  },
+  {
+   "file": "winterfest.json",
+   "name": "Winterfest",
+   "desc": "A festive sector: snowball launchers, gift ships, choirs and a market.",
+   "kind": "content"
+  },
+  {
+   "file": "gentle-skies.json",
+   "name": "Gentle Skies",
+   "desc": "Relaxed: more scrap, a slower fleet, faster repairs, calmer foes.",
+   "kind": "rules"
+  },
+  {
+   "file": "knifes-edge.json",
+   "name": "Knife's Edge",
+   "desc": "Five weapon slots and lots of scrap, but faster foes and slow repairs.",
+   "kind": "rules"
+  },
+  {
+   "file": "sprint.json",
+   "name": "Sprint",
+   "desc": "Rules: a short, fast run of five sectors.",
+   "kind": "rules"
+  },
+  {
+   "file": "marathon.json",
+   "name": "Marathon",
+   "desc": "Rules: a ten-sector epic with extra augment and drone slots.",
+   "kind": "rules"
+  },
+  {
+   "file": "combat-bonuses.json",
+   "name": "Combat Bonuses",
+   "desc": "Script: bonus scrap for quick kills, flawless fights and win streaks.",
+   "kind": "script"
   }
  ]
 }

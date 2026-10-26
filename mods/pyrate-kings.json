@@ -1,0 +1,71 @@
+{
+  "name": "Pyrate Kings",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "pk_broadside", "name": "Broadside Battery", "type": "laser", "damage": 1, "shots": 4, "charge": 15, "power": 3, "cost": 75, "tier": 3, "fire": 0.1, "desc": "Four guns on one trigger. Very pyrate, very loud." },
+    { "id": "pk_chainshot", "name": "Chain Shot", "type": "missile", "damage": 2, "shots": 1, "charge": 12, "power": 1, "cost": 55, "tier": 2, "breach": 0.5, "sysDamage": 1, "desc": "Two warheads on a chain. Tears through hull and machinery alike." },
+    { "id": "pk_grapple", "name": "Grapple Bomb", "type": "bomb", "damage": 0, "charge": 11, "power": 1, "cost": 40, "tier": 1, "crewDamage": 12, "stun": 3, "desc": "Lands with a clang and knocks everyone in the room off their feet." }
+  ],
+  "augments": [
+    { "id": "pk_jolly", "name": "Jolly Roger Flag", "cost": 50, "desc": "Enemies hand over more loot: 15% more scrap, and your crew fight 5% harder.", "fx": { "scrap": 0.15, "dps": 0.05 } }
+  ],
+  "ships": [
+    { "id": "pk_corsair", "name": "The Black Gull", "cls": "Pyrate Corsair", "layout": "A", "desc": "A stolen pyrate brig. Big guns, a teleporter and a crew that asks no questions.", "hull": 28, "reactor": 8, "color": "#e0b04a", "pattern": "TABAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1, "teleporter": 1 }, "reserve": ["drones"],
+      "weapons": ["pk_broadside"], "drones": [], "crew": ["human", "mantlis", "human"], "fuel": 14, "missiles": 6, "parts": 2, "augments": ["pk_jolly"] },
+    { "id": "pk_corsairb", "name": "The Gilded Debt", "cls": "Pyrate Corsair", "layout": "B", "desc": "A smuggler's galleon. Chain shot, grapple bombs and a hold full of somebody else's scrap.", "hull": 30, "reactor": 8, "color": "#c8902a", "pattern": "TBCAN",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 }, "reserve": ["teleporter", "drones"],
+      "weapons": ["pk_chainshot", "pk_grapple", "basic"], "drones": [], "crew": ["human", "pebblekin", "sloog"], "fuel": 14, "missiles": 10, "parts": 2, "unlock": { "sector": 3 } }
+  ],
+  "enemies": [
+    { "id": "pk_brigantine", "name": "Pyrate Brigantine", "tags": ["pyrate"], "hull": 13, "sectors": [2, 8], "systems": { "shields": 2, "engines": 2, "weapons": 4, "teleporter": 1, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["pk_broadside", "pk_grapple"], "crew": ["human", "mantlis", "mantlis"] },
+    { "id": "pk_galleon", "name": "Pyrate King's Galleon", "tags": ["pyrate"], "onlyTagged": true, "hull": 20, "sectors": [4, 8], "systems": { "shields": 4, "engines": 2, "weapons": 5, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 2 }, "weapons": ["pk_broadside", "pk_chainshot"], "crew": ["mantlis", "mantlis", "human", "pebblekin", "human"] }
+  ],
+  "sectors": [
+    { "id": "pk_court", "name": "The Pyrate King's Court", "blurb": "The richest pyrates in the galaxy, and the King who taxes them all. Bring scrap, or bring guns.", "color": "#ffbf3a", "mix": { "event": 40, "combat": 50, "empty": 10 }, "tags": ["pyrate"], "enemyTags": ["pyrate"], "hazards": { "asteroid": 0.12, "sun": 0.04 }, "nebula": 0.05,
+      "intro": ["Gold-plated warships everywhere. The King's court is in session.", "The Pyrate King's Court. Keep one hand on your scrap and the other on the trigger."] }
+  ],
+  "events": [
+    { "id": "pk_hail_toll", "hail": "pyrate", "text": "\"This beacon is a toll bridge, by order of the Pyrate King. Thirty scrap, or we take it out of your hull.\"",
+      "choices": [
+        { "text": "Pay the toll (30 scrap).", "req": { "scrap": 30 }, "cost": { "scrap": 30 }, "effect": { "text": "\"Pleasure doing business.\" They wave you through.", "dismiss": true } },
+        { "text": "\"Come and collect it.\"", "effect": { "begin": true } },
+        { "text": "{who} challenges their captain to a duel.", "req": { "race": "mantlis" }, "chance": 0.6, "success": { "text": "{who} wins in under a minute. The pyrates pay YOU the toll and leave.", "scrap": 20, "dismiss": true }, "fail": { "text": "{who} loses on a technicality. The pyrates charge their guns.", "begin": true } }
+      ] },
+    { "id": "pk_hail_parley", "hail": "pyrate", "text": "The pyrate captain lowers her guns a fraction. \"Parley? You look like someone who can be reasoned with. Or robbed. One of the two.\"",
+      "choices": [
+        { "text": "Parley.", "chance": 0.5, "success": { "text": "She trades rumours for rumours and leaves you a chart of the sector.", "reveal": true, "dismiss": true }, "fail": { "text": "\"Parley\" turns out to mean \"keep you talking while we aim\".", "begin": true } },
+        { "text": "Shoot first.", "effect": { "text": "Parley denied.", "begin": true, "primeWeapons": true } }
+      ] },
+    { "id": "pk_coronation", "text": "The Pyrate King is crowning his heir today, and every ship in the sector has been \"invited\". Fireworks, music and a lot of guns are pointed at the throne room.", "tags": ["pyrate"], "weight": 1.6,
+      "choices": [
+        { "text": "Bring a gift (25 scrap).", "req": { "scrap": 25 }, "cost": { "scrap": 25 }, "effect": { "text": "The King is delighted and gives you a flag that tells every pyrate you are a friend of the crown.", "augment": "pk_jolly" } },
+        { "text": "Crash the party.", "effect": { "text": "The heir's escort comes out to meet you.", "fight": "pk_brigantine", "afterWin": { "text": "In the chaos you make off with the party's prize table.", "scrap": 55, "missiles": 3 } } },
+        { "text": "Enjoy the fireworks from a safe distance.", "effect": { "text": "Lovely display. Only two ships exploded, and one was on purpose.", "crewHeal": 15 } }
+      ] },
+    { "id": "pk_treasuremap", "text": "A one-eyed Sloog in a battered shuttle is selling a treasure map. \"Genuine. Probably. The X is real, anyway.\"", "tags": ["pyrate", ""], "weight": 1,
+      "choices": [
+        { "text": "Buy the map (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "The X marks a beacon in this sector.", "quest": "pk_treasure" } },
+        { "text": "Haggle.", "chance": 0.4, "success": { "text": "The Sloog sighs and hands it over for a sandwich.", "quest": "pk_treasure" }, "fail": { "text": "\"No sandwich is worth this map.\" He flies off in a huff." } },
+        { "text": "No thanks.", "effect": { "text": "He tries to sell you a second map on your way out." } }
+      ] },
+    { "id": "pk_treasure", "questOnly": true, "text": "The X on the map. A hollow asteroid with a door shaped like a skull, and fresh scorch marks: someone else got here first, or is still inside.",
+      "choices": [
+        { "text": "Go in with guns ready.", "effect": { "text": "A pyrate crew is halfway through the loot and very upset to see you.", "fight": "pyrate_gunship", "afterWin": { "text": "The treasure is real: piles of scrap and a fine old missile launcher.", "scrap": 80, "weapon": "pk_chainshot" } } },
+        { "text": "Send {who} in quietly.", "req": { "race": "mantlis" }, "effect": { "text": "{who} comes back with the treasure and a few new scars.", "scrap": 65, "crewHurt": 15 } }
+      ] },
+    { "id": "pk_mutiny", "text": "A pyrate ship flashes an emergency signal. Its crew are mutinying against a cruel captain, and both sides are asking for your help.", "tags": ["pyrate"], "weight": 1.2,
+      "choices": [
+        { "text": "Help the mutineers.", "effect": { "text": "The captain's loyalists turn their guns on you.", "fight": "pyrate_bomber", "afterWin": { "text": "The new captain thanks you, and one of the mutineers asks to come with you.", "crew": "mantlis", "scrap": 25 } } },
+        { "text": "Help the captain.", "effect": { "text": "The mutiny collapses when your guns come online. The captain pays well and asks no questions.", "scrap": 45 } },
+        { "text": "Stay out of it.", "effect": { "text": "The argument is still going when you jump." } }
+      ] },
+    { "id": "pk_tax", "text": "A pyrate tax collector in a tiny gold-plated ship floats up with a clipboard. \"The King's tax. Ten percent of everything. I'll need to see receipts.\"", "tags": ["pyrate"], "weight": 1,
+      "choices": [
+        { "text": "Pay the tax (15 scrap).", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "He gives you a receipt. It says you are now a friend of the King, which is worth something round here.", "fleetPush": -0.03 } },
+        { "text": "{who} eats the clipboard.", "req": { "race": "sloog" }, "effect": { "text": "No clipboard, no tax. The collector flees in tears. He dropped his purse.", "scrap": 25 } },
+        { "text": "Shoot the tax collector.", "effect": { "text": "His escort arrives fast.", "fight": "pk_brigantine" } }
+      ] }
+  ]
+}

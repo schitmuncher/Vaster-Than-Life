@@ -1,0 +1,52 @@
+{
+  "name": "Winterfest",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    { "id": "wf_snowball", "name": "Snowball Launcher", "type": "ion", "damage": 1, "shots": 2, "charge": 14, "power": 1, "cost": 40, "tier": 1, "desc": "Fires balls of frozen coolant. Locks systems up, hurts nobody's feelings." },
+    { "id": "wf_icicle", "name": "Icicle Lance", "type": "laser", "damage": 2, "shots": 1, "charge": 13, "power": 2, "cost": 65, "tier": 2, "pierce": 1, "desc": "A spike of ice fired fast enough to punch through one shield layer." }
+  ],
+  "augments": [
+    { "id": "wf_stocking", "name": "Lucky Stocking", "cost": 30, "desc": "Something nice turns up in every wreck: 10% more scrap.", "fx": { "scrap": 0.1 } },
+    { "id": "wf_cocoa", "name": "Cocoa Dispenser", "cost": 40, "desc": "Warm drinks for everyone: your crew slowly heal anywhere and move 5% faster.", "fx": { "heal": 0.4, "speed": 0.05 } }
+  ],
+  "sectors": [
+    { "id": "wf_drift", "name": "The Frostlight Drift", "blurb": "Ice comets, frozen moons and a festival season that even the pyrates respect. Mostly.", "color": "#cfefff", "mix": { "event": 55, "combat": 33, "empty": 12 }, "tags": ["winter"], "enemyTags": ["pyrate"], "hazards": { "asteroid": 0.14 }, "nebula": 0.15, "fleetMult": 0.9,
+      "intro": ["Snowflakes the size of shuttles drift past the canopy.", "The Frostlight Drift. Somebody has strung lights between the beacons."] }
+  ],
+  "events": [
+    { "id": "wf_snowman", "text": "Someone has built a snowman out of three ice asteroids. It is a hundred metres tall and wearing a cargo container as a hat.", "tags": ["winter", ""], "weight": 1,
+      "choices": [
+        { "text": "Give it a carrot.", "effect": { "text": "Your crew fire a long orange fuel tank into its face. It looks wonderful. Morale is sky high.", "crewHeal": 30, "fuel": -1 } },
+        { "text": "Mine the hat.", "effect": { "text": "The cargo container is full of festive salvage.", "scrap": 25, "parts": 1 } },
+        { "text": "Blast it.", "chance": 0.5, "success": { "text": "Snow everywhere. Inside the snow, a frozen supply pod.", "missiles": 3, "fuel": 2 }, "fail": { "text": "A block of ice the size of a building drifts into your hull.", "hull": -3 } }
+      ] },
+    { "id": "wf_giftship", "text": "A cheerful freighter hung with lights pulls alongside. \"Happy Winterfest! We're giving gifts to every ship we meet. Or you can give one, if you like.\"", "tags": ["winter", ""], "weight": 1.2,
+      "choices": [
+        { "text": "Accept a gift.", "chance": 0.5, "success": { "text": "A beautifully wrapped weapon. Their gift wrapping is better than their targeting software.", "weapon": "random" }, "fail": { "text": "Socks. Very warm socks, and a bag of scrap tucked inside.", "scrap": 20 } },
+        { "text": "Give them a gift (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "They are moved to tears and give you a stocking for luck.", "augment": "wf_stocking" } },
+        { "text": "Wave and carry on.", "effect": { "text": "They wave back with every light on the ship." } }
+      ] },
+    { "id": "wf_choir", "text": "A Sloog choir is singing to passing ships from a frozen moon. The harmonies make your hull hum.", "tags": ["winter", ""], "weight": 1,
+      "choices": [
+        { "text": "Listen.", "effect": { "text": "Even the gunners hum along.", "crewHeal": 40 } },
+        { "text": "Let {who} join in.", "req": { "race": "sloog" }, "effect": { "text": "{who} hits the high note. The choir is so impressed they give you their cocoa machine.", "augment": "wf_cocoa" } },
+        { "text": "Request an encore (10 scrap).", "req": { "scrap": 10 }, "cost": { "scrap": 10 }, "effect": { "text": "They sing your ship's name into a song. Your pilot won't stop smiling.", "xp": { "skill": "pilot", "amt": 15 } } }
+      ] },
+    { "id": "wf_fruitcake", "text": "Your sensors find an asteroid with a strange density reading. Your science officer says it is, unmistakably, a fruitcake.", "tags": ["winter", ""], "weight": 0.8,
+      "choices": [
+        { "text": "Mine it.", "chance": 0.6, "success": { "text": "It is mostly candied minerals. Valuable ones.", "scrap": 32 }, "fail": { "text": "It is denser than it looks. A drill breaks.", "hull": -2 } },
+        { "text": "Leave it alone.", "effect": { "text": "Wise. Nobody actually wants fruitcake." } }
+      ] },
+    { "id": "wf_market", "text": "A winter market fills a ring station: stalls of hot food, warm coats and, in the back, ship parts at festival prices.", "tags": ["winter"], "weight": 1,
+      "choices": [
+        { "text": "Browse the stalls.", "effect": { "text": "\"Festival prices!\" The traders open up.", "store": true } },
+        { "text": "Grab hot food for the crew (10 scrap).", "req": { "scrap": 10 }, "cost": { "scrap": 10 }, "effect": { "text": "Everyone is full, warm and happy.", "crewHeal": 50 } }
+      ] },
+    { "id": "wf_snowball_fight", "text": "A pyrate ship hails you. \"Truce for the festival? Snowball fight instead. Winner gets the loser's snowball launcher.\"", "tags": ["winter"], "weight": 0.9,
+      "choices": [
+        { "text": "Accept the snowball fight.", "chance": 0.55, "success": { "text": "You win, fair and square. They hand over the launcher.", "weapon": "wf_snowball" }, "fail": { "text": "You lose, and they keep their launcher, but they share their cocoa.", "crewHeal": 20 } },
+        { "text": "Decline, and fire real guns.", "effect": { "text": "They are not happy about that.", "fight": "pyrate_gunship" } }
+      ] }
+  ]
+}

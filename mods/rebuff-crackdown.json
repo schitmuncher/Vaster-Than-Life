@@ -1,0 +1,385 @@
+{
+  "name": "Rebuff Crackdown",
+  "version": "1.0",
+  "author": "Vaster Than Life team",
+  "weapons": [
+    {
+      "id": "rc_suppressor",
+      "name": "Suppressor Ion",
+      "type": "ion",
+      "damage": 1,
+      "shots": 2,
+      "charge": 12,
+      "power": 2,
+      "cost": 55,
+      "tier": 2,
+      "desc": "Rebuff riot gear for starships. Two ion bolts that keep shields down."
+    },
+    {
+      "id": "rc_enforcer",
+      "name": "Enforcer Laser",
+      "type": "laser",
+      "damage": 2,
+      "shots": 1,
+      "charge": 10,
+      "power": 2,
+      "cost": 60,
+      "tier": 2,
+      "breach": 0.15,
+      "desc": "A heavy patrol laser. One big hit, often."
+    }
+  ],
+  "enemies": [
+    {
+      "id": "rc_interceptor",
+      "name": "Rebuff Interceptor",
+      "tags": [
+        "rebuff"
+      ],
+      "hull": 10,
+      "sectors": [
+        1,
+        6
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 4,
+        "weapons": 3,
+        "oxygen": 1,
+        "piloting": 1,
+        "doors": 1
+      },
+      "weapons": [
+        "bust1",
+        "ion"
+      ],
+      "crew": [
+        "human",
+        "human"
+      ]
+    },
+    {
+      "id": "rc_warden",
+      "name": "Rebuff Warden",
+      "tags": [
+        "rebuff"
+      ],
+      "hull": 15,
+      "sectors": [
+        4,
+        8
+      ],
+      "systems": {
+        "shields": 4,
+        "engines": 2,
+        "weapons": 4,
+        "teleporter": 1,
+        "oxygen": 1,
+        "medbay": 1,
+        "piloting": 1,
+        "doors": 2
+      },
+      "weapons": [
+        "rc_enforcer",
+        "rc_suppressor"
+      ],
+      "crew": [
+        "human",
+        "human",
+        "mantlis",
+        "pebblekin"
+      ]
+    },
+    {
+      "id": "rc_barge",
+      "name": "Rebuff Prison Barge",
+      "tags": [
+        "rebuff"
+      ],
+      "onlyTagged": true,
+      "hull": 15,
+      "sectors": [
+        1,
+        8
+      ],
+      "systems": {
+        "shields": 2,
+        "engines": 1,
+        "weapons": 2,
+        "oxygen": 2,
+        "medbay": 1,
+        "piloting": 1,
+        "doors": 3
+      },
+      "weapons": [
+        "rc_suppressor"
+      ],
+      "crew": [
+        "human",
+        "human",
+        "pebblekin"
+      ]
+    }
+  ],
+  "sectors": [
+    {
+      "id": "rc_occupied",
+      "name": "Occupied Space",
+      "blurb": "The Rebuff hold these systems with checkpoints and patrols. The resistance holds out in the gaps.",
+      "color": "#ff6a6a",
+      "mix": {
+        "event": 36,
+        "combat": 54,
+        "empty": 10
+      },
+      "tags": [
+        "rebuff"
+      ],
+      "enemyTags": [
+        "rebuff"
+      ],
+      "hazards": {
+        "sun": 0.03,
+        "asteroid": 0.05
+      },
+      "nebula": 0.05,
+      "fleetMult": 1.1,
+      "intro": [
+        "Rebuff banners on every station. Keep your transponder quiet.",
+        "Occupied Space. The resistance is out here somewhere, and so are the patrols hunting them."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "rc_hail_inspect",
+      "hail": "rebuff",
+      "text": "\"Rebuff patrol to unidentified vessel. Cut your engines and prepare for inspection.\"",
+      "choices": [
+        {
+          "text": "Submit to the inspection.",
+          "chance": 0.5,
+          "success": {
+            "text": "A bored officer walks right past the data you are carrying and waves you on.",
+            "dismiss": true
+          },
+          "fail": {
+            "text": "\"Well, well. What's this?\" They found it.",
+            "begin": true
+          }
+        },
+        {
+          "text": "Broadcast forged papers.",
+          "req": {
+            "system": "sensors",
+            "level": 2
+          },
+          "effect": {
+            "text": "Your sensors spoof a Rebuff supply code. The patrol salutes and moves on.",
+            "dismiss": true
+          }
+        },
+        {
+          "text": "Open fire.",
+          "effect": {
+            "text": "No inspection today.",
+            "begin": true,
+            "primeWeapons": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "rc_checkpoint",
+      "text": "A Rebuff checkpoint blocks the route ahead: two gun platforms and a queue of nervous freighters.",
+      "tags": [
+        "rebuff"
+      ],
+      "weight": 1.5,
+      "choices": [
+        {
+          "text": "Queue up and hope.",
+          "chance": 0.55,
+          "success": {
+            "text": "The guards are underpaid and overworked. You slip through.",
+            "scrap": 5
+          },
+          "fail": {
+            "text": "Your face matches a poster. Sirens.",
+            "fight": "rc_interceptor"
+          }
+        },
+        {
+          "text": "Slip past under cloak.",
+          "req": {
+            "system": "cloaking"
+          },
+          "effect": {
+            "text": "You drift past the platforms like a ghost and pick up a dropped cargo pod on the way.",
+            "scrap": 20
+          }
+        },
+        {
+          "text": "Bribe the guard (25 scrap).",
+          "req": {
+            "scrap": 25
+          },
+          "cost": {
+            "scrap": 25
+          },
+          "effect": {
+            "text": "\"Never saw you.\" He even tells you where the next patrol is going.",
+            "reveal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "rc_deserter",
+      "text": "A Rebuff escape pod pings you on a private channel. \"I'm done with them. Take me with you and I'll tell you everything I know.\"",
+      "tags": [
+        "rebuff",
+        ""
+      ],
+      "weight": 1,
+      "choices": [
+        {
+          "text": "Bring them aboard.",
+          "effect": {
+            "text": "The deserter joins your crew. The Rebuff will be looking for them, though.",
+            "crew": "human",
+            "fleetPush": 0.03
+          }
+        },
+        {
+          "text": "Take the information, leave the pod.",
+          "effect": {
+            "text": "They give you patrol routes, and you give them a tow to a neutral beacon.",
+            "reveal": true
+          }
+        },
+        {
+          "text": "Hand them back to the Rebuff for the reward.",
+          "effect": {
+            "text": "The reward is generous. Your crew don't speak to you for a while.",
+            "scrap": 40,
+            "crewHurt": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "rc_prison",
+      "text": "A Rebuff prison barge drifts at the beacon, its holds full of Fedoration sympathisers on their way to a labour camp.",
+      "tags": [
+        "rebuff"
+      ],
+      "weight": 1.3,
+      "choices": [
+        {
+          "text": "Free the prisoners.",
+          "effect": {
+            "text": "The barge's guards fight to hold their cargo.",
+            "fight": "rc_barge",
+            "afterWin": {
+              "text": "The prisoners are free. Two of them insist on joining your crew.",
+              "crew": "random",
+              "scrap": 20
+            }
+          }
+        },
+        {
+          "text": "Hack the cell doors.",
+          "req": {
+            "system": "hacking"
+          },
+          "chance": 0.6,
+          "success": {
+            "text": "The doors spring open and the prisoners take the barge for themselves. They send you a share of the armoury.",
+            "missiles": 4,
+            "weapon": "rc_suppressor"
+          },
+          "fail": {
+            "text": "The hack trips an alarm.",
+            "fight": "rc_barge"
+          }
+        },
+        {
+          "text": "You can't save everyone.",
+          "effect": {
+            "text": "You jump away. It doesn't feel good."
+          }
+        }
+      ]
+    },
+    {
+      "id": "rc_propaganda",
+      "text": "Every channel is playing a Rebuff broadcast: a smiling admiral promising that resistance is pointless and the Fedoration is finished.",
+      "tags": [
+        "rebuff"
+      ],
+      "weight": 1,
+      "choices": [
+        {
+          "text": "Hijack the broadcast.",
+          "req": {
+            "system": "hacking"
+          },
+          "effect": {
+            "text": "You replace the admiral with a looping cartoon of him falling down the stairs. Rebuff morale suffers.",
+            "fleetPush": -0.07
+          }
+        },
+        {
+          "text": "Turn it off.",
+          "effect": {
+            "text": "Blessed silence."
+          }
+        }
+      ]
+    },
+    {
+      "id": "rc_resistance",
+      "text": "A battered freighter flashes a Fedoration resistance code. \"We've got supplies, and a target. Want either?\"",
+      "tags": [
+        "rebuff",
+        ""
+      ],
+      "weight": 1,
+      "choices": [
+        {
+          "text": "Take the supplies.",
+          "effect": {
+            "text": "Fuel and missiles, packed with care.",
+            "fuel": 3,
+            "missiles": 3
+          }
+        },
+        {
+          "text": "Join their raid.",
+          "effect": {
+            "text": "The target is a Rebuff patrol. It sees you coming.",
+            "fight": "rebuff_fighter",
+            "afterWin": {
+              "text": "The resistance shares the spoils, including a piece of kit they took from a Rebuff depot.",
+              "augment": "random"
+            }
+          }
+        },
+        {
+          "text": "Give them scrap for the cause (20 scrap).",
+          "req": {
+            "scrap": 20
+          },
+          "cost": {
+            "scrap": 20
+          },
+          "effect": {
+            "text": "They promise to slow the fleet down for you. They are as good as their word.",
+            "fleetPush": -0.06
+          }
+        }
+      ]
+    }
+  ]
+}

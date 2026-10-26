@@ -33,7 +33,7 @@ function camFlat(){ const d = _dv(); camera.getWorldDirection(d); d.y = 0; if(d.
 /* ---------------- setup ---------------- */
 function deckInit(){
   if(DECK.init || !bridge || typeof THREE==='undefined') return; DECK.init = true;
-  deckInitPad(); deckInitPop(); deckInitStations(); deckInitMarks(); deckMapInit(); deckExtInit();
+  deckInitPad(); deckInitPop(); deckInitStations(); deckInitMarks(); deckMapInit(); deckExtInit(); deckLeverInit();
   for(let i=0;i<2;i++){ const d = glowSpriteMesh('#ffd27a', .03); d.visible = false; d.renderOrder = 30; d.material.depthTest = false; scene.add(d); DECK.dots.push(d); }
 }
 
@@ -68,7 +68,10 @@ function deckInitPop(){
 /* what the pop-out shows: the open window, a captain's tip, or the whole screen (menus) when the main screen is far away */
 function deckPopSource(){
   if(SET.vrPopups === false) return null;
-  if(UI.screen==='game' && G){ if(G.modal && UI.modalRect) return { r:UI.modalRect, key:G.modal }; if(UI.hint && UI.hintRect) return { r:UI.hintRect, key:UI.hint }; return null; }
+  if(UI.screen==='game' && G){
+    // standing at the holotable with the 3D star map up: no need for a flat copy of the map floating in front of you
+    if(G.modal && G.modal.type==='map' && deckMapActive() && holo.group.getWorldPosition(_dv()).distanceTo(headWorld()) < 2.5) return null;
+    if(G.modal && UI.modalRect) return { r:UI.modalRect, key:G.modal }; if(UI.hint && UI.hintRect) return { r:UI.hintRect, key:UI.hint }; return null; }
   const pp = panelGroup.getWorldPosition(_dv()), h = headWorld();
   if(!panelGroup.visible || pp.distanceTo(h) > 3.4) return { r:{ x:0, y:0, w:W, h:H }, key:'menu' };
   return null;
@@ -216,6 +219,7 @@ function deckPlaceStations(){
   for(const S of DECK.st){ const x = S.side*STATION_X, z = STATION_Z; S.g.position.set(x, 0, z); S.g.rotation.y = Math.atan2(-x, -z);
     S.post.scale.y = py - .1; S.post.position.y = (py - .1)/2; S.head.position.set(0, py, 0); S.head.rotation.set(-.62, 0, 0);
     S.g.visible = SET.vrStations !== false; }
+  deckPlaceLever();
 }
 
 /* ---------------- targeting the enemy ship outside ---------------- */
@@ -275,7 +279,7 @@ function deckMapInit(){
     const bits = []; if(n.hazard && (hasAug(G.ship,'scanners') || n.revealed || n.visited || reach)) bits.push(HAZARDS[n.hazard]); if(n.nebula) bits.push('Nebula');
     bits.push(n.x < G.fleetX ? 'Held by the fleet' : ahead < 1.6 ? 'Fleet arrives next jump' : `Fleet in ~${Math.floor(ahead)} jumps`);
     vT(gg, bits.join(' · '), 24, 98, { s:24, c:VCOL.ink, max:592 });
-    vT(gg, i===G.map.cur ? 'You are here' : reach ? (canJump() && G.warp<=0 ? 'Pull the trigger to jump here' : 'The VTL drive is charging') : 'Not connected to where you are', 24, 150, { s:24, c: reach ? VCOL.amber : VCOL.muted, max:592 }); });
+    vT(gg, i===G.map.cur ? 'You are here' : reach ? (canJump() && G.warp<=0 ? 'Trigger or jump lever: jump here' : 'The VTL drive is charging') : 'Not connected to where you are', 24, 150, { s:24, c: reach ? VCOL.amber : VCOL.muted, max:592 }); });
   info.mesh.visible = false; info.mesh.renderOrder = 8; g.add(info.mesh);
   DECK.map = { g, nodes:[], key:'', hover:-1, info, geo:new THREE.SphereGeometry(.014, 14, 10) };
 }
@@ -305,7 +309,7 @@ function deckMapUpdate(t){
   if(!want){ D.hover = -1; D.info.mesh.visible = false; return; }
   const key = `${G.sector}:${G.map.nodes.length}:${G.seed||''}:${G.map.nodes.map(n => n.links.length).join('')}`; if(key !== D.key){ D.key = key; deckMapBuild(); }
   const nodes = G.map.nodes, cur = nodes[G.map.cur], jumpable = canJump() && G.warp<=0;
-  D.nodes.forEach(N => { const n = nodes[N.i], k = deckMapKind(n, N.i), reach = cur.links.includes(N.i), hov = D.hover===N.i;
+  D.nodes.forEach(N => { const n = nodes[N.i], k = deckMapKind(n, N.i), reach = cur.links.includes(N.i), hov = D.hover===N.i || (DECK.lever && DECK.lever.dest===N.i);
     if(N.k !== k.kind + k.col){ N.k = k.kind + k.col; N.icon.material.map = deckMapIcon(k.kind, k.col); N.icon.material.needsUpdate = true; N.ball.material.color.set(k.col); }
     const s = hov ? 1.9 : reach && jumpable ? 1.25 + .2*Math.sin(t*4 + N.i) : 1; N.ball.scale.setScalar(s); N.icon.scale.setScalar(hov ? .06 : .042);
     N.icon.material.opacity = n.x < G.fleetX && N.i !== G.map.cur ? .45 : 1; });
@@ -372,12 +376,80 @@ function deckExtUpdate(dt){
     if(hit){ r.fireP = (r.fireP||0) + R.repairRate*dt*6; if(r.fireP >= 1){ r.fireP = 0; r.fire = Math.max(0, r.fire - 1); sfx('repair'); pulse(c.userData.src, .5, 40); if(r.fire===0){ toast('Fire out.'); PROFILE.handFix = (PROFILE.handFix||0) + 1; if(PROFILE.handFix >= 10) grant('handson'); saveProfile(); } } } });
 }
 
+/* ---------------- the jump lever: grab it and pull it back to engage the VTL drive ----------------
+   Charging: the gauge fills and the knob glows amber. Ready: it glows green.
+   Pull it with no window open and the star map opens; with the map open, point at a beacon
+   with your other hand and pull it again to jump there. */
+const LEVER_REST = -.45, LEVER_PULL = .42;
+function deckLeverInit(){
+  const g = new THREE.Group(), dark = stdMat({ color:0x1d2338, metalness:.85, roughness:.35 }), steel = stdMat({ color:0x9aa6c4, metalness:.95, roughness:.2 });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(.028, .045, 1, 10), dark); g.add(post);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(.1, .12, .03, 20), dark); foot.position.y = .015; g.add(foot);
+  const head = new THREE.Group(); g.add(head);
+  const box = new THREE.Mesh(new THREE.BoxGeometry(.15, .06, .2), dark); head.add(box);
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(.03, .004, .16), new THREE.MeshBasicMaterial({ color:0x0a0e1a })); slot.position.y = .031; head.add(slot);
+  const gaugeBg = new THREE.Mesh(new THREE.PlaneGeometry(.12, .016), new THREE.MeshBasicMaterial({ color:0x2a3350 })); gaugeBg.position.set(0, 0, .1011); head.add(gaugeBg);
+  const gauge = new THREE.Mesh(new THREE.PlaneGeometry(.12, .016), new THREE.MeshBasicMaterial({ color:0x5fd3e6 })); gauge.position.set(0, 0, .1012); head.add(gauge);
+  const lc = mkCanvas(256, 64), lx = lc.getContext('2d'); lx.font = `700 34px ${FDF}`; lx.fillStyle = '#ffb547'; lx.textAlign = 'center'; lx.fillText('VTL JUMP', 128, 44);
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(.12, .03), new THREE.MeshBasicMaterial({ map:texFrom(lc), transparent:true })); label.rotation.x = -Math.PI/2; label.position.set(0, .0315, .07); head.add(label);
+  const pivot = new THREE.Group(); pivot.position.y = .03; head.add(pivot);
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(.01, .012, .2, 8), steel); arm.position.y = .1; pivot.add(arm);
+  const knobM = new THREE.MeshBasicMaterial({ color:0xffb547 }), knob = new THREE.Mesh(new THREE.SphereGeometry(.03, 16, 12), knobM); knob.position.y = .21; pivot.add(knob);
+  const glow = glowSpriteMesh('#ffb547', .11); glow.position.y = .21; glow.material.opacity = .5; pivot.add(glow);
+  bridge.group.add(g);
+  DECK.lever = { g, post, head, pivot, knob, knobM, glow, gauge, held:-1, ang:LEVER_REST, fired:false, tick:0, dest:-1 };
+  deckPlaceLever();
+}
+/* just right of the captain's spot, at hip height, so a right hand drops onto it */
+function deckPlaceLever(){
+  const L = DECK.lever; if(!L) return; const hy = anchor.pos ? anchor.pos.y : 1.6, py = Math.max(.5, hy - .66), x = .42, z = -.14;
+  L.g.position.set(x, 0, z); L.g.rotation.y = Math.atan2(-x, -z);   // local +z faces the captain, so pulling towards you is "back"
+  L.post.scale.y = py - .03; L.post.position.y = (py - .03)/2; L.head.position.y = py;
+}
+function deckLeverGrab(i){
+  const L = DECK.lever, c = controllers[i]; if(!L || L.held >= 0 || !L.g.visible) return false;
+  const hp = _dv().setFromMatrixPosition(c.matrixWorld), kp = L.knob.getWorldPosition(_dv()); if(hp.distanceTo(kp) > .14) return false;
+  L.held = i; pulse(c.userData.src, .35, 30); sfx('click');
+  if(!PROFILE.leverTold){ PROFILE.leverTold = 1; saveProfile(); toast('The jump lever. Pull it back towards you to engage the VTL drive.'); }
+  return true;
+}
+function deckLeverDrop(i){ const L = DECK.lever; if(!L || L.held !== i) return false; L.held = -1; return true; }
+function deckLeverPull(){
+  const c = controllers[DECK.lever.held]; pulse(c && c.userData.src, .8, 90);
+  if(!G || UI.screen!=='game' || G.warp > 0){ sfx('error'); return; }
+  const m = G.modal;
+  if(m && m.type==='map'){ const d = DECK.lever.dest;
+    if(d >= 0 && d !== G.map.cur){ deckMapClick(d); return; }
+    toast('Point at a beacon on the star map with your other hand, then pull the lever.'); sfx('error'); return; }
+  if(m){ toast('Close the open window first.'); sfx('error'); return; }
+  if(!canJump()){ toast(`The VTL drive is still charging: ${Math.round((G.ftl||0)*100)}%.`); sfx('error'); return; }
+  openMap(); toast(G.enemy && !G.enemy.dead ? 'Drive charged. Pick a beacon to escape to, then pull the lever.' : 'Pick a beacon on the star map, then pull the lever again.');
+}
+function deckLeverUpdate(dt, t){
+  const L = DECK.lever; if(!L) return;
+  L.g.visible = SET.vrStations !== false && !(typeof IN!=='undefined' && IN.deep);
+  if(DECK.map && DECK.map.hover >= 0) L.dest = DECK.map.hover; if(!(G && G.modal && G.modal.type==='map')) L.dest = -1;
+  if(L.held >= 0){ const c = controllers[L.held];
+    if(!c || !c.userData.src){ L.held = -1; }
+    else { const hp = L.head.worldToLocal(_dv().setFromMatrixPosition(c.matrixWorld)), a = clamp(Math.atan2(hp.z - L.pivot.position.z, Math.max(.02, hp.y - L.pivot.position.y)), LEVER_REST, LEVER_PULL + .08);
+      if(Math.abs(a - L.ang) > .06){ L.tick = 0; pulse(c.userData.src, .1, 12); }
+      L.ang = a; if(!L.fired && L.ang > LEVER_PULL){ L.fired = true; deckLeverPull(); } if(L.ang < LEVER_PULL - .3) L.fired = false; } }
+  if(L.held < 0){ L.ang += (LEVER_REST - L.ang)*Math.min(1, dt*9); if(L.ang < LEVER_PULL - .3) L.fired = false; }
+  L.pivot.rotation.x = L.ang;
+  // charge gauge and knob colour
+  const ready = !!(G && UI.screen==='game' && canJump() && G.warp<=0), f = !G ? 0 : ready ? 1 : (G.ftl||0);
+  L.gauge.scale.x = Math.max(.001, f); L.gauge.position.x = -.06*(1 - f); L.gauge.material.color.set(ready ? 0x7be0a0 : 0x5fd3e6);
+  const col = ready ? (G.enemy && !G.enemy.dead ? 0x7be0a0 : 0xffd27a) : 0x8592b0; L.knobM.color.set(col); L.glow.material.color.set(col);
+  L.glow.material.opacity = ready ? .45 + .25*Math.sin(t*5) : .2;
+}
+
 /* ---------------- first-time tour ---------------- */
 const TOUR = [
   { t:'Welcome aboard, Captain', b:'This is your bridge. You can play the whole game from here with your hands. NEXT shows you around, or skip it.', at:() => new THREE.Vector3(0, 1.45, -1.2) },
   { t:'Tactical station', b:'Power your guns, aim them and fire volleys. Point at the enemy ship outside the window and pull the trigger: every gun locks onto that room.', at:() => DECK.st[0] && DECK.st[0].head.getWorldPosition(_dv()), local:false },
   { t:'Engineering station', b:'Route reactor power with + and −. Open and shut doors, vent the airlocks and send crew to their stations. Touch the buttons or point and click.', at:() => DECK.st[1] && DECK.st[1].head.getWorldPosition(_dv()), local:false },
   { t:'Holotable', b:'Both ships, live. Open the map (B or Y) and it becomes a 3D star map: point at a beacon and pull the trigger to jump.', at:() => holo && holo.group.getWorldPosition(_dv()).add(new THREE.Vector3(0, .3, 0)), local:false },
+  { t:'Jump lever', b:'Grip the lever and pull it back towards you to engage the drive: the star map opens. Point at a beacon with your other hand and pull it again to jump.', at:() => DECK.lever && DECK.lever.knob.getWorldPosition(_dv()), local:false },
   { t:'Datapad and windows', b:'Click the left stick for a datapad in your hand with the full game screen. Events, stores and maps pop up in front of you wherever you are.', at:() => new THREE.Vector3(0, 1.4, -1.0) },
   { t:'Your ship', b:'Walk through the rear door into your ship. Grab the extinguisher by the door for fires, stand on pads to man stations, and beam over to enemy ships.', at:() => new THREE.Vector3(0, 1.6, 3.6) } ];
 function deckTourStart(force){
@@ -413,11 +485,31 @@ function deckHitFx(dt){
   for(let i=DECK.sparks.length-1;i>=0;i--){ const S = DECK.sparks[i]; S.life -= dt; if(S.life <= 0){ bridge.group.remove(S.m); S.m.material.dispose(); DECK.sparks.splice(i, 1); continue; } S.v.y -= 6*dt; S.m.position.addScaledVector(S.v, dt); S.m.material.opacity = Math.min(1, S.life*2); }
 }
 
+/* ---------------- the captain's blaster: shoot intruders aboard your ship, or the crew of a ship you beamed onto ---------------- */
+const BLAST = { dmg:6, cd:.7 };   // about one crew member's punch: a help, never a cheat
+function deckBlast(c, pk){
+  if(!pk || pk.kind!=='crew' || !pk.c || UI.mode || SET.handsOn === false || typeof IN==='undefined') return false;
+  const I = IN.aboard ? IN.foe : IN.own, sh = I && I.sh; if(!sh || !sh.crew.includes(pk.c) || crewSide(pk.c)==='p') return false;
+  if(!(IN.aboard || headInOwn())) return false;   // you have to be aboard that ship
+  const now = performance.now()/1000; if(now < (DECK.blastT||0)) return true; DECK.blastT = now + BLAST.cd;
+  const tgt = pk.c; tgt.hp -= BLAST.dmg; tgt.lastByCrew = 'captain'; if(sh.isEnemy) tgt.killedByBoarder = true;
+  const from = deckTip(c), P = I.crew.get(tgt.id), to = P ? P.g.getWorldPosition(_dv()).add(new THREE.Vector3(0, 1.2, 0)) : pk.hit.point.clone();
+  const len = from.distanceTo(to), bolt = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, len, 6, 1, true), new THREE.MeshBasicMaterial({ color:0xffd27a, transparent:true, opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false }));
+  bolt.position.lerpVectors(from, to, .5); bolt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize()); scene.add(bolt); DECK.bolts.push({ m:bolt, life:.14 });
+  const lp = I.group.worldToLocal(to.clone()); for(let k=0;k<8;k++) interiorSpark(I, lp.clone().add(new THREE.Vector3(rand(-.1,.1), rand(-.2,.2), rand(-.1,.1))));
+  sfx('laser', { vol:.6 }); pulse(c.userData.src, .55, 40);
+  if(tgt.hp <= 0 && !tgt._counted){ tgt._counted = true; PROFILE.capKills = (PROFILE.capKills||0) + 1; saveProfile(); grant('sidearm'); toast(`You took down ${tgt.name}.`); }
+  if(!PROFILE.blastTold){ PROFILE.blastTold = 1; saveProfile(); toast('Your blaster: point at an intruder and pull the trigger. It hits about as hard as one crew member.'); }
+  return true;
+}
+DECK.bolts = [];
+function deckBolts(dt){ for(let i=DECK.bolts.length-1;i>=0;i--){ const B = DECK.bolts[i]; B.life -= dt; if(B.life <= 0){ scene.remove(B.m); B.m.geometry.dispose(); B.m.material.dispose(); DECK.bolts.splice(i, 1); continue; } B.m.material.opacity = B.life/.14; } }
+
 /* ---------------- per frame (after the pointers) ---------------- */
 function deckUpdate(dt){
   if(!inXR()) return; deckInit(); if(!DECK.init) return;
   const t = performance.now()/1000;
-  deckUpdatePad(); deckUpdatePop(dt); deckPoke(); deckUpdateMarks(t); deckMapUpdate(t); deckExtUpdate(dt); deckHitFx(dt);
+  deckUpdatePad(); deckUpdatePop(dt); deckPoke(); deckUpdateMarks(t); deckMapUpdate(t); deckExtUpdate(dt); deckLeverUpdate(dt, t); deckHitFx(dt); deckBolts(dt);
   if(nav.sessionT > 2.5 && UI.screen) deckTourStart(); deckTourUpdate(t);
   for(const S of DECK.st) S.g.visible = SET.vrStations !== false && !(typeof IN!=='undefined' && IN.deep);
   panelGroup.visible = SET.vrMainScreen !== false;   // the big screen can be switched off for a clear canopy
