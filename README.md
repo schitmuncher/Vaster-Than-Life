@@ -101,13 +101,13 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - 10 sector types, including Civilian, Rebuff Stronghold, Pyrate Haven, Nebula, the race homeworlds and the Last Stand.
 - At each exit you choose between two next sectors.
 - Beacon hazards: asteroid fields, solar flares, ion storms, pulsars and nebulae, where sensors go blind.
-- About 40 events with race, system and equipment "blue options", distress beacons and quest chains.
+- About 185 events with race, system and equipment "blue options", distress beacons and quest chains. Events never repeat within a run until you've seen the rest, and whatever the last few beacons gave you (a free crew member, a weapon) turns up less for a while.
 - Stores with tabs for weapons, drones, augments, new systems, supplies, crew and selling.
 - The Rebuff Fleet advances every jump.
 - The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
 
 **Story and dialogue**
-- About 130 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
+- About 185 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
 - Ships hail you before most fights. Every faction has its own hails, and you can bluff, bribe, intimidate or sneak past.
 - Ten multi-beacon quest lines:
   - The Glass Shard: unlocks a secret sector, the Glasswork Expanse, with a new race (the Glassborn) and two new ships.
@@ -270,6 +270,8 @@ Mods are JSON files. In the game, open **Mods**:
 
 Mods are saved in the browser and apply when you start a new run. Turn them on or off from the Mods screen.
 
+**Make mods with an AI.** The Mods screen has an **AI mod guide** button that downloads [`mods/AI-MOD-GUIDE.md`](mods/AI-MOD-GUIDE.md). Paste the guide into any AI chat, describe the mod you want ("a haunted sector with three ghost ships and a quest"), save the reply as a `.json` file and add it with **Add mod files**, or paste it straight into the mod panel. The guide lists every field, every effect, the ids of everything in the base game and a balance guide, so the AI's mods load first time.
+
 42 mods come with the game in `mods/`, all installable from the Mod library (filter by Content, Ships, Trials, Rules or Scripts):
 
 - **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Crystal Arsenal, Voltan Lightworks, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
@@ -357,6 +359,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | --- | --- |
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
 | `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
+| `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
 | `js/gfx.js` | Procedural hulls, planets, nebulae, icons, particles, event art |
 | `js/sprites.js` | Crew looks, sprites, poses and portraits for every race |
 | `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |

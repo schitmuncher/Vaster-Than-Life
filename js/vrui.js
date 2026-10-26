@@ -11,10 +11,14 @@
 const VUI = { wrist:null, items:[], hover:[null, null], t:0, lastBuild:null };
 const VCOL = { bg:'rgba(10,16,34,.94)', line:'#26324f', amber:'#ffb547', cyan:'#5fd3e6', good:'#7be0a0', bad:'#ff5a7a', ink:'#e8eef9', muted:'#8592b0' };
 
-function vuiMake(w, h, pxW, pxH, draw){
+/* front-facing only, so text is never seen mirrored; free-standing panels get a solid housing behind them (the stations bring their own) */
+let VUI_BACK = null;
+function vuiMake(w, h, pxW, pxH, draw, o={}){
   const c = mkCanvas(pxW, pxH), g = c.getContext('2d'), t = texFrom(c);
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:t, transparent:true, side:THREE.DoubleSide, depthWrite:false, toneMapped:false }));
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:t, transparent:true, side:THREE.FrontSide, depthWrite:false, toneMapped:false }));
   mesh.renderOrder = 5;
+  if(o.back !== false){ VUI_BACK = VUI_BACK || new THREE.MeshBasicMaterial({ color:0x1a2238, toneMapped:false });
+    const back = new THREE.Mesh(new THREE.BoxGeometry(w + .016, h + .016, .012), VUI_BACK); back.position.z = -.0075; back.renderOrder = 4; mesh.add(back); }
   const W_ = { mesh, c, g, t, pxW, pxH, regions:[], draw, dirty:true, hoverKey:'' };
   mesh.userData.vui = W_; VUI.items.push(W_); return W_;
 }

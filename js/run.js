@@ -177,14 +177,33 @@ function sectorOptions_(){
 function nextSector(type){ G.modal = null; G.warp = 1; G.warpNode = 'sector:' + type; sfx('jump'); haptic(.4, 300); }
 
 /* ---------------- events ---------------- */
+/* what an event can hand out (worked out once per event), so recent rewards can make similar events rarer */
+const EV_KINDS = new Map();
+function eventKinds(e){
+  if(EV_KINDS.has(e)) return EV_KINDS.get(e); const K = new Set();
+  const walk = (x, d) => { if(!x || d > 6) return; for(const k of ['crew','weapon','augment','drone','fight']) if(x[k]!=null) K.add(k); if(x.afterWin) walk(x.afterWin, d+1); for(const c of x.choices||[]){ walk(c.effect, d+1); walk(c.success, d+1); walk(c.fail, d+1); } };
+  walk(e, 0); EV_KINDS.set(e, K); return K;
+}
 function pickEvent(node){
   const sd = sectorDef(); const tags = sd.tags || [];
   let list = Object.values(DATA.events).filter(e => !e.questOnly && !e.hail && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
     && (!e.tags || e.tags.includes('') || e.tags.some(t => tags.includes(t) || t===G.sectorType)) && (!e.nebula || node?.nebula));
+  // no reruns: events already met this run only come back once everything else has been seen
+  const fresh = list.filter(e => !G.seen[e.id]); if(fresh.length) list = fresh;
+  // distress calls draw from their own pool while it lasts, then from everything (so a run isn't a string of rescues)
   if(node?.distress){ const d = list.filter(e => e.distress); if(d.length) list = d; }
   if(!list.length) return null;
-  return wpick(list, e => (e.weight ?? 1) * (e.tags && e.tags.some(t => tags.includes(t)) ? 1.5 : 1) * (e.nebula ? 2 : 1)).id;
+  // whatever the last few beacons gave you is rarer for a while: three free crew in three jumps should not happen
+  const recent = G.gains || {}, jumps = G.stats?.jumps || 0, since = k => recent[k]==null ? 99 : jumps - recent[k];
+  const damp = e => { const K = eventKinds(e); let m = 1;
+    if(K.has('crew') && since('crew') < 4) m *= since('crew') < 2 ? .12 : .35;
+    if(K.has('augment') && since('augment') < 3) m *= .45;
+    if(K.has('weapon') && since('weapon') < 3) m *= .5;
+    if(K.has('drone') && since('drone') < 3) m *= .6;
+    return m; };
+  return wpick(list, e => (e.weight ?? 1) * (e.tags && e.tags.some(t => tags.includes(t)) ? 1.5 : 1) * (e.nebula ? 2 : 1) * damp(e)).id;
 }
+function noteGain(k){ if(!G) return; (G.gains = G.gains || {})[k] = G.stats?.jumps || 0; }
 function randomCrewName(race){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && (!race || c.race===race)); return l.length ? pick(l).name : 'Someone'; }
 function fillText(t, cx={}){ return String(t||'').replace(/\{crew\}/g, cx.crew||'Your crew').replace(/\{who\}/g, cx.who||cx.crew||'Your crew').replace(/\{ship\}/g, G?.ship?.name||'your ship')
   .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); }
@@ -237,17 +256,17 @@ function applyEffect(e){
   if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
   if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
-  if(e.crew){ const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
+  if(e.crew){ noteGain('crew'); const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
     if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); checkCrewAch(); }
     else { const cand = newCrew(race, 'p'); G.recruitOffer = cand; L.push(`${cand.name} the ${DATA.races[cand.race].name} wants to join, but every bunk is full. You can swap someone out next`); } }
   if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); } }
-  if(e.weapon) L.push(giveWeapon(e.weapon));
-  if(e.drone) L.push(giveDrone(e.drone));
-  if(e.augment) L.push(giveAugment(e.augment));
+  if(e.weapon){ L.push(giveWeapon(e.weapon)); noteGain('weapon'); }
+  if(e.drone){ L.push(giveDrone(e.drone)); noteGain('drone'); }
+  if(e.augment){ L.push(giveAugment(e.augment)); noteGain('augment'); }
   if(e.install){ const opts = Object.keys(INSTALL).filter(k => !s.systems[k] && !(k==='clonebay' && s.systems.medbay) && !(k==='medbay' && s.systems.clonebay));
     const k = e.install==='random' ? pick(opts) : (opts.includes(e.install) ? e.install : null);
     if(k && installSystem(s, k)) L.push(`${SYSN[k]} system installed`); else { G.scrap += 30; L.push('+30 scrap (nothing new to install)'); } }
-  if(e.upgrade && s.systems[e.upgrade]){ if(s.systems[e.upgrade].max < (CAPS[e.upgrade]||8)){ s.systems[e.upgrade].max++; L.push(`${SYSN[e.upgrade]} upgraded to level ${s.systems[e.upgrade].max}`); } else { G.scrap += 25; L.push('+25 scrap (already at max)'); } }
+  if(e.upgrade){ const up_ = e.upgrade==='random' ? pick(Object.keys(s.systems).filter(k => s.systems[k].max < (CAPS[k]||8))) : e.upgrade; if(up_ && s.systems[up_]){ if(s.systems[up_].max < (CAPS[up_]||8)){ s.systems[up_].max++; L.push(`${SYSN[up_]} upgraded to level ${s.systems[up_].max}`); } else { G.scrap += 25; L.push('+25 scrap (already at max)'); } } }
   if(e.damageSystem){ const k = e.damageSystem==='random' ? pick(Object.keys(s.systems)) : e.damageSystem; if(k && s.systems[k]){ damageSystem(s, k, 1); L.push(`${SYSN[k]} damaged`); } }
   if(e.reactor){ s.reactor = clamp(s.reactor + e.reactor, 1, 25); L.push(`${sign(e.reactor)} reactor power`); }
   if(e.fire){ igniteRoom(s, Math.floor(Math.random()*s.rooms.length)); L.push('A fire has broken out aboard'); }

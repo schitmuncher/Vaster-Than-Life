@@ -271,7 +271,9 @@ function mindControl(sh, c){
   const race = DATA.races[c.race];
   if(c.drone || race?.mindImmune){ toast(`${c.drone ? 'Drones' : race.name+' crew'} cannot be mind controlled.`); return false; }
   if(crewSide(c)===sh.side) return false;
-  c.mcT = (sh.isEnemy ? [10,14,18] : MIND_T)[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = c.mcT + (sh.isEnemy ? 25 : 18); sfx('mind');   // the cooldown starts when control ends, so nobody is controlled forever if(sh.side==='p') grant('mind'); return true;
+  // the cooldown starts when control ends, so nobody is controlled forever
+  c.mcT = (sh.isEnemy ? [10,14,18] : MIND_T)[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = c.mcT + (sh.isEnemy ? 25 : 18); sfx('mind');
+  if(sh.side==='p') grant('mind'); return true;
 }
 function canTele(sh, foe){ return eff(sh,'teleporter')>0 && sh.tele.cd<=0 && !!foe && !foe.dead && foe.super<=0 && foe.cloak.t<=0; }
 function teleSend(sh, foe, room, group){

@@ -270,8 +270,19 @@ function drawModsScreen(){
     if(pages>1){ btn(lx+20, 826, 80, 40, '‹', () => UI.libPage--, { disabled:UI.libPage<=0 }); T(`Page ${UI.libPage+1} of ${pages}`, lx+240, 852, { s:15, a:'center', c:C.muted }); btn(lx+380, 826, 80, 40, '›', () => UI.libPage++, { disabled:UI.libPage>=pages-1 }); }
   }
   btn(60, 820, 300, 64, 'Add mod files', () => { if(inXR()) toast('Exit VR to pick files, then come back in.'); else openModPanel(); }, { fill:true });
-  btn(380, 820, 200, 64, 'Back', () => { UI.screen = 'title'; });
-  if(MODS.some(m=>m.data?.script) && !SET.allowScripts) T('Some mods include scripts. Allow them in Settings to run them.', 600, 860, { s:16, c:C.warn });
+  btn(376, 820, 280, 64, 'AI mod guide ⤓', () => downloadModGuide(), { s:19, col:C.cyan });
+  tip(376, 820, 280, 64, 'Make mods with an AI', 'Downloads a guide that teaches any AI chat how to write mods for this game. Paste it into the chat, describe your idea, save the reply as a .json file and add it here.');
+  btn(672, 820, 200, 64, 'Back', () => { UI.screen = 'title'; });
+  if(MODS.some(m=>m.data?.script) && !SET.allowScripts) T('Some mods include scripts. Allow them in Settings to run them.', 60, 916, { s:16, c:C.warn });
+}
+/* the guide that teaches an AI chat to write mods (mods/AI-MOD-GUIDE.md), saved as a file */
+async function downloadModGuide(){
+  if(typeof inXR==='function' && inXR()){ toast('Take the headset off to download the AI mod guide.'); return; }
+  try{ const r = await fetch('mods/AI-MOD-GUIDE.md', { cache:'no-store' }); if(!r.ok) throw new Error(r.status); const t = await r.text();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type:'text/markdown' })); a.download = 'vaster-than-life-AI-mod-guide.md';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('Saved the AI mod guide. Paste it into an AI chat with your mod idea.'); }
+  catch(e){ toast('Could not load the guide. It is in the mods folder of the game on GitHub.'); }
 }
 function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);

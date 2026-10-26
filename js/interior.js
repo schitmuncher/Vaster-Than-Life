@@ -437,7 +437,7 @@ function beamCaptain(toFoe, instant){
 }
 function updateBeamButtons(t){
   if(!IN.btn){ const mk = (text, col) => { const c = mkCanvas(384, 96), g = c.getContext('2d'); g.fillStyle = 'rgba(14,10,30,.92)'; if(g.roundRect){ g.beginPath(); g.roundRect(4,4,376,88,20); g.fill(); } g.lineWidth = 5; g.strokeStyle = col; g.stroke(); g.font = "700 34px 'Chakra Petch', sans-serif"; g.textAlign = 'center'; g.fillStyle = col; g.fillText(text, 192, 60);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(.9, .225), new THREE.MeshBasicMaterial({ map:texFrom(c), transparent:true, side:THREE.DoubleSide })); m.visible = false; return m; };
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(.9, .225), new THREE.MeshBasicMaterial({ map:texFrom(c), transparent:true })); m.visible = false; return m; };
     IN.btn = { go:mk('BEAM ME OVER', '#b48cff'), back:mk('BEAM ME BACK', '#7be0a0') }; }
   const B = IN.btn;
   // "beam over" floats above your teleporter pad during a fight

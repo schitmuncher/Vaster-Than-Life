@@ -215,7 +215,8 @@ function mannedCrewReal(sh, k){ const c = mannedCrew(sh, k); return c && c !== C
 function medalWall(){
   if(!bridge) return; const n = ACHIEVEMENTS.filter(a => PROFILE.ach[a.id]).length, key = n + '/' + ACHIEVEMENTS.length;
   if(HO.wall && HO.wall.key === key) return;
-  if(!HO.wall){ const c = mkCanvas(1024, 512), tex = texFrom(c); const m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, .8), new THREE.MeshBasicMaterial({ map:tex, transparent:true, toneMapped:false, side:THREE.DoubleSide }));
+  if(!HO.wall){ const c = mkCanvas(1024, 512), tex = texFrom(c); const m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, .8), new THREE.MeshBasicMaterial({ map:tex, transparent:true, toneMapped:false }));
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.62, .82, .02), new THREE.MeshBasicMaterial({ color:0x1a2238 })); back.position.z = -.012; m.add(back);
     m.position.set(-2.1, 1.7, 2.3); m.rotation.y = Math.PI/2 + .45; bridge.group.add(m); HO.wall = { m, c, tex }; }
   const W_ = HO.wall, g = W_.c.getContext('2d'); g.clearRect(0, 0, 1024, 512); g.fillStyle = 'rgba(10,16,34,.9)'; g.beginPath(); if(g.roundRect) g.roundRect(4, 4, 1016, 504, 28); else g.rect(4, 4, 1016, 504); g.fill(); g.lineWidth = 6; g.strokeStyle = '#ffb547'; g.stroke();
   g.font = "700 44px 'Chakra Petch', sans-serif"; g.fillStyle = '#ffb547'; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText('MEDAL WALL', 36, 66); g.textAlign = 'right'; g.font = "600 34px 'IBM Plex Mono', monospace"; g.fillStyle = '#8592b0'; g.fillText(key, 988, 64);

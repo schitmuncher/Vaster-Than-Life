@@ -171,7 +171,7 @@ function deckTactical(){
     const hint = UI.selWeapon!=null ? 'Point at an enemy room and pull the trigger' : UI.mode==='tele' ? 'Point at an enemy room to beam your team over' : UI.mode==='hack' ? 'Point at an enemy room to launch the hacking drone' : UI.mode==='mind' ? 'Point at an enemy crew member to take control'
       : e ? 'Trigger on the enemy ship outside: all guns aim at that room' : `Missiles ${G.missiles} · Drone parts ${G.parts}`;
     vT(g, hint, 512, 612, { s:21, a:'center', c: UI.selWeapon!=null || UI.mode ? VCOL.amber : VCOL.muted, max:980 });
-  });
+  }, { back:false });   // the lectern is its housing
 }
 function deckEngineering(){
   return vuiMake(.52, .33, 1024, 650, (Wd) => {
@@ -196,7 +196,7 @@ function deckEngineering(){
       ['STATIONS', () => { returnToStations(s); toast('Crew back to stations.'); }, VCOL.amber, false], [G.crewAuto ? 'AUTO CREW ON' : 'AUTO CREW OFF', () => { G.crewAuto = !G.crewAuto; }, VCOL.good, !!G.crewAuto]];
     const bw = (976 - (acts.length-1)*10)/acts.length;
     acts.forEach((a, i) => vuiBtn(Wd, 24 + i*(bw + 10), 566, bw, 70, a[0], a[1], { s:19, col:a[2], fill:a[3] }));
-  });
+  }, { back:false });
 }
 function deckInitStations(){
   const mk = (side) => {
