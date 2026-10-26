@@ -92,10 +92,12 @@ function roomDist(sh, a, b){ const ra = sh.rooms[a], rb = sh.rooms[b]; return Ma
 
 /* ---------------- crew ---------------- */
 function crewSide(c){ return c.mcT>0 ? (c.owner==='p' ? 'e' : 'p') : c.owner; }
+/* a name nobody aboard already has (two Wrens on one ship gets confusing) */
+function freshName(sh){ const used = new Set(); for(const s of [sh, typeof G!=='undefined' && G ? G.ship : null]) if(s && s.crew) for(const c of s.crew) used.add(c.name); const free = NAMES.filter(n => !used.has(n)); return pick(free.length ? free : NAMES); }
 function newCrew(race, owner, name){
   const rid = DATA.races[race] ? race : 'human', r = DATA.races[rid];
   const tk = owner==='p' && DATA.traits ? Object.keys(DATA.traits) : [], trait = tk.length ? pick(tk) : null, hp = r.hp + (trait ? (DATA.traits[trait].hp||0) : 0);
-  return { id:uid(), name:name||pick(NAMES), race:rid, hp, maxHp:hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0, trait,
+  return { id:uid(), name:name||(owner==='p' ? freshName() : pick(NAMES)), race:rid, hp, maxHp:hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0, trait,
     station:null, sk:{ pilot:0, engines:0, shields:0, weapons:0, repair:0, combat:0 }, kills:0, drone:null, aiT:Math.random() };
 }
 function newDroneUnit(bpId, owner){
@@ -125,7 +127,7 @@ function stationRoom(sh){
   return 0;
 }
 function addCrew(sh, race, owner, name){
-  owner = owner || sh.side; const c = newCrew(race, owner, name);
+  owner = owner || sh.side; const c = newCrew(race, owner, name || (owner==='p' ? freshName(sh) : null));
   const st = stationRoom(sh); c.station = st; sh.crew.push(c); placeCrew(sh, c, st); return c;
 }
 function orderMove(sh, c, ri_){

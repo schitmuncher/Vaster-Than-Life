@@ -21,10 +21,12 @@ const BROWSE = new Set(['map','ship','store']);
 const SKIPK = new Set(['adj','aiT','restT','stSig','fireOut','fireDmg','lastSay','fx','modal','brk','capMan']);
 const KEYED = new Set(['crew','proj','units','dna']);
 const NOUPD = new Set(['t','ang']);   // the guest animates these itself once the thing exists
+const NOUPD_IN = new Set(['proj','units']);   // …but only on shots and drones (a cloak's or battery's t is real state)
 const QK = { o2:10, hp:10, charge:100, x:100, y:100, t:100, ang:100, shieldT:100, superT:100, ionT:10, passT:10, fleeT:10, cd:10, pulseT:10, mcT:10, stunT:10, manualT:10, combatT:10, time:100, warp:100, shake:100, flash:100, fleetX:1000 };
 const DELTA = new Set(['scrap','fuel','missiles','parts','hp','hull','fire','fireP','breach','breachP','sab','dmg','rep','power']);
 const CAP_IGN = new Set(['x','y','t','ang','time','warp','look','gender','path','tx','ty','hitAt','hitN','scorch','shake','flash']);
 const DEL = { '$-':1 };
+const GRANT_OWN = new Set(['kills25','kills100','streak3','streak7','daily','modsquad','challenge1','challenge5','challengeall','cuppost','mp_live','mp_courier','mp_hunter','seedwin']);   // the host's own record, not the shared run
 const CAPM = { ign:CAP_IGN, delta:DELTA, cap:true };
 
 /* ---------------- plain copies, differences and patches ---------------- */
@@ -49,7 +51,7 @@ function dif(a, b, k, M){
   if(Array.isArray(a)) return { '$=':san(b, k) };
   if((b.uid!==undefined && a.uid!==b.uid) || (b.mid!==undefined && a.mid!==b.mid)) return { '$=':san(b, k) };
   let p;
-  for(const key in b){ if(skipKey(key) || (M && M.ign && M.ign.has(key)) || (!M && NOUPD.has(key) && key in a)) continue;
+  for(const key in b){ if(skipKey(key) || (M && M.ign && M.ign.has(key)) || (!M && NOUPD.has(key) && key in a && NOUPD_IN.has(k))) continue;
     const c = dif(a[key], b[key], key, M); if(c!==undefined) (p = p || {})[key] = c; }
   for(const key in a){ if(!(key in b) && !(M && M.ign && M.ign.has(key))) (p = p || {})[key] = DEL; }
   return p;
@@ -171,7 +173,7 @@ function syncStop(){
   SYNC.on = SYNC.host = SYNC.guest = SYNC.spect = false; SYNC.prev = SYNC.S = SYNC.B = null; SYNC.pend = []; SYNC.cmdq = []; SYNC.overlay = null; SYNC.smodal = null; SYNC.ptrs = {}; SYNC.react = []; SYNC.says = [];
 }
 /* a new game object (new run, loaded save) while hosting */
-function syncNewG(){ if(!SYNC.host) return; SYNC.run++; SYNC.overlay = null; const m = G && G.modal; if(G){ delete G.modal; G.modal = null; syncInstallModal(G); if(m) G.modal = m; } SYNC.dirty = true; }
+function syncNewG(){ if(!SYNC.host) return; SYNC.run++; const m = G && G.modal; SYNC.overlay = null; SYNC.smodal = null; if(G){ delete G.modal; G.modal = null; syncInstallModal(G); if(m) G.modal = m; } SYNC.dirty = true; }
 function syncEvent(e){ if(SYNC.host && SYNC.relay && NET.peers.size) SYNC.out.push(e); }
 function syncHostSend(){
   const live = syncLive();
@@ -261,7 +263,7 @@ function syncPlayEvents(ev){
       case 'k': sparks(a[0], a[1], a[2], a[3]); break;
       case 'd': debris(a[0], a[1], a[2], a[3]); break;
       case 'h': haptic(a[0], a[1]); break;
-      case 'g': if(!SYNC.spect) grant(a[0]); break;
+      case 'g': if(!SYNC.spect && !GRANT_OWN.has(a[0])) grant(a[0]); break;
       case 'o': if(a[0] && BROWSE.has(a[0].type)){ SYNC.overlay = Object.assign(a[0], { ov:true }); if(a[0].type==='map') sfx('map'); } break;
       case 'x': if(typeof mpModeEvent==='function') mpModeEvent(a); break;
     } }catch(err){}
@@ -389,6 +391,7 @@ function syncFrame(dt){
   if(!SYNC.on) return;
   if(SYNC.host){ SYNC.sendT -= dt; if(SYNC.sendT <= 0 || (SYNC.dirty && SYNC.sendT < .05)){ SYNC.sendT = .1; SYNC.dirty = false; syncHostSend(); } }
   else if(syncIsGuestPlayer()){ SYNC.capT -= dt; if(SYNC.capT <= 0){ SYNC.capT = 1/15; syncCapture(); } }
+  if(SYNC.guest && SYNC.S) syncScreen();
   // where everyone is pointing
   SYNC.ptrT -= dt; if(SYNC.ptrT <= 0){ SYNC.ptrT = 1/12; const p = PTR.find(q => q.on && q.xr) || PTR[0];
     const v = UI.screen!=='game' ? UI.screen : G && G.modal ? G.modal.type : 'game', key = p.on ? `${Math.round(p.x)},${Math.round(p.y)},${v}` : 'off';

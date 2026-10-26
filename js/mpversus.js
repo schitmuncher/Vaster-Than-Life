@@ -119,14 +119,15 @@ function duelUnitKill(u){ netSend({ t:'dukill', id:u.id }); }
 netOn('dukill', (m) => { if(!G || !G.duel) return; const u = G.units.find(x => !x.pup && x.id===m.id); if(u) destroyUnit(u); });
 function duelUnitAlive(id){ const t = DUEL.landed[id]; if(t && performance.now() - t < 2500) return true; return !!(G.enemy && G.enemy.crew.some(c => c.id===id)); }
 /* boarding parties */
-function duelBoard(group, room){ const sh = G.ship; for(const c of group){ const k = sh.crew.indexOf(c); if(k>=0) sh.crew.splice(k, 1); }
+function duelBoard(group, room){ const sh = G.ship; DUEL.beamT = performance.now() + 3000;   // crew in mid-beam are on neither ship for a moment
+  for(const c of group){ const k = sh.crew.indexOf(c); if(k>=0) sh.crew.splice(k, 1); }
   netSend({ t:'dboard', room, crew:group.map(c => san(c, 'crew')) }); if(UI.selCrew && group.some(c => c.id===UI.selCrew)) UI.selCrew = null; }
 netOn('dboard', (m) => { if(!G || !G.duel) return; const room = G.ship.rooms[m.room] ? m.room : 0;
   for(const c of m.crew || []){ flipDeep(c); c.netCtl = true; c.path = []; c.aiT = 0; G.ship.crew.push(c); placeCrew(G.ship, c, room); }
   fxAtRoom(G.ship, room, 'tele'); sfx('intruder'); toast(`${duelOppName()}'s crew beam aboard!`); });
 function duelOrder(group, room){ netSend({ t:'dorder', ids:group.map(c => c.id), room }); for(const c of group) c.manualT = 10; sfx('lock'); }
 netOn('dorder', (m) => { if(!G || !G.duel) return; for(const id of m.ids || []){ const c = G.ship.crew.find(x => x.id===id && x.netCtl); if(c && G.ship.rooms[m.room]) orderMove(G.ship, c, m.room); } });
-function duelRecall(){ netSend({ t:'drecall' }); }
+function duelRecall(){ DUEL.beamT = performance.now() + 3000; netSend({ t:'drecall' }); }
 netOn('drecall', () => { if(!G || !G.duel) return; const back = G.ship.crew.filter(c => c.netCtl && !c.drone && c.mcT<=0); G.ship.crew = G.ship.crew.filter(c => !back.includes(c));
   netSend({ t:'dreturn', crew:back.map(c => san(c, 'crew')) }); });
 netOn('dreturn', (m) => { if(!G || !G.duel) return; const tr = Math.max(0, roomOf(G.ship, 'teleporter'));
@@ -142,7 +143,8 @@ netOn('dpulse', (m) => { if(!G || !G.duel) return; const h = G.ship.hacked; if(h
 function duelTick(dt){
   if(!G || !G.duel) return false;
   if(DUEL.phase==='fight'){ DUEL.roundT += dt;
-    if(!DUEL.downSent && (G.ship.hull<=0 || ownerCrewCount('p')===0)){ DUEL.downSent = true; G.ship.hull = Math.max(0, G.ship.hull); const b = G.ship._b; if(b) for(let i=0;i<6;i++) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), 1.4, '#ff8a3d'); sfx('explode');
+    const beaming = performance.now() < (DUEL.beamT||0);
+    if(!DUEL.downSent && (G.ship.hull<=0 || (ownerCrewCount('p')===0 && !beaming))){ DUEL.downSent = true; G.ship.hull = Math.max(0, G.ship.hull); const b = G.ship._b; if(b) for(let i=0;i<6;i++) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), 1.4, '#ff8a3d'); sfx('explode');
       if(mpAmHost()) duelDown(NET.id); else netSend({ t:'ddown', round:DUEL.round }); }
     if(mpAmHost() && DUEL.roundT > 240 && !DUEL.timeUp){ DUEL.timeUp = true; const a = G.ship.hull/G.ship.maxHull, b = G.enemy ? G.enemy.hull/G.enemy.maxHull : 0; duelDecide(Math.abs(a - b) < .02 ? null : a > b ? NET.id : duelOppId(), 'Time! The ship with more hull left takes it.'); }
   }

@@ -33,7 +33,13 @@ function parOptions(opt, sx, sy){
 }
 function parStart(host){
   if(PAR.goAt){ const n = Math.ceil((PAR.goAt - performance.now())/1000); T(n > 0 ? `Launching in ${n}…` : 'Launch!', W-80, H-48, { s:26, f:FD, w:700, a:'right', c:C.good }); return true; }
-  if(PAR.waiting){ T('Waiting for everyone to pick a ship…', W-80, H-48, { s:18, a:'right', c:C.muted }); return true; }
+  if(G && G.par && host){ T('Your run is under way.', W-440, H-48, { s:16, a:'right', c:C.muted }); btn(W-410, H-86, 330, 60, 'Back to my run', () => { UI.screen = 'game'; }, { fill:true, s:20 }); return true; }
+  const picked = host ? !!PAR.picks[NET.id] : !!PAR.sent;
+  if(PAR.waiting || PAR.asked){
+    if(!picked){ T(NET.mode==='race' ? 'Pick your ship for the race.' : 'Pick your ship for the flight.', W-440, H-48, { s:16, a:'right', c:C.muted }); btn(W-410, H-86, 330, 60, 'Pick your ship', () => parOpenPick(host), { fill:true, s:20, col:C.good }); return true; }
+    T('Waiting for everyone to pick a ship…', host ? W-440 : W-80, H-48, { s:18, a:'right', c:C.muted });
+    if(host) btn(W-410, H-86, 330, 60, 'Stop waiting', () => { PAR.waiting = false; PAR.picks = {}; netSend({ t:'ppx' }); }, { s:18, col:C.hostile });
+    return true; }
   if(!host) return false;
   btn(W-410, H-86, 330, 60, NET.players.length < 2 ? 'Waiting for players…' : MP.opts.ship==='each' ? 'Everyone pick a ship' : 'Pick the ship', () => {
     if(MP.opts.ship==='each'){ PAR.picks = {}; netSend({ t:'pp' }); PAR.waiting = true; MP.toHangar = true; openHangar(); }
@@ -45,13 +51,15 @@ function parHangar(sel, open){
   btn(1240, 890, 300, 70, 'Ready', () => {
     const pick = { ship:sel, name:UI.shipName || null };
     if(mpAmHost()){ PAR.picks[NET.id] = pick; if(MP.opts.ship==='each') { UI.screen = 'mp'; MP.view = 'room'; parMaybeGo(); } else parGo(pick); }
-    else { netSend({ t:'pk', pick }); UI.screen = 'mp'; MP.view = 'room'; PAR.waiting = true; } }, { fill:true, s:26, disabled:!open });
+    else { netSend({ t:'pk', pick }); UI.screen = 'mp'; MP.view = 'room'; PAR.sent = true; PAR.asked = false; PAR.waiting = true; } }, { fill:true, s:26, disabled:!open });
   btn(1060, 890, 160, 70, 'Back', () => { UI.screen = 'mp'; MP.view = 'room'; });
   return true;
 }
-netOn('pp', () => { if(NET.role==='guest' && parOn()){ MP.toHangar = true; applyModsKeep(); UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : Object.keys(DATA.ships)[0]; UI.shipName = null; UI.seed = null; UI.screen = 'select'; toast('Pick your ship for the race.'); } });
+netOn('pp', () => { if(NET.role==='guest' && parOn()){ PAR.asked = true; PAR.sent = false; PAR.waiting = false; if(!(G && G.par && UI.screen==='game')) parOpenPick(false); toast(NET.mode==='race' ? 'Pick your ship for the race.' : 'Pick your ship for the flight.'); } });
+netOn('ppx', () => { if(NET.role==='guest' && parOn()){ PAR.asked = PAR.sent = PAR.waiting = false; if(UI.screen==='select'){ UI.screen = 'mp'; MP.view = 'room'; } toast('The host stopped the ship picking.'); } });
+/* open the hangar to pick a ship (guests keep the host's game data, so no mods are re-applied) */
+function parOpenPick(host){ MP.toHangar = true; if(host){ openHangar(); return; } UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : Object.keys(DATA.ships)[0]; UI.shipName = null; UI.seed = null; UI._prev = null; UI.screen = 'select'; }
 netOn('pk', (m, P) => { if(!mpAmHost() || !parOn() || !m.pick) return; PAR.picks[P.id] = { ship:String(m.pick.ship), name:m.pick.name ? String(m.pick.name).slice(0, 24) : null }; mpFeed(`${P.name} is ready.`, mpColor(P.id)); parMaybeGo(); });
-function applyModsKeep(){ /* guests keep the host's data: nothing to do */ }
 function parMaybeGo(){ if(!mpAmHost()) return; const need = parRacers().map(p => p.id); if(need.every(id => PAR.picks[id])) parGo(); }
 /* host: everyone launches together, three seconds from now */
 function parGo(one){
@@ -62,7 +70,7 @@ function parGo(one){
   netSend(go); parArm(go); UI.screen = 'mp'; MP.view = 'room';
 }
 netOn('go', (m) => { if(NET.role==='guest' && parOn()) parArm(m); });
-function parArm(m){ PAR.go = m; PAR.goAt = performance.now() + (m.inMs || 3000); PAR.waiting = false; PAR.prog = {}; PAR.res = {}; sfx('ftlready'); UI.screen = 'mp'; MP.view = 'room'; }
+function parArm(m){ PAR.go = m; PAR.goAt = performance.now() + (m.inMs || 3000); PAR.waiting = PAR.asked = PAR.sent = false; PAR.prog = {}; PAR.res = {}; sfx('ftlready'); UI.screen = 'mp'; MP.view = 'room'; }
 function parFrame(dt){
   if(PAR.goAt && performance.now() >= PAR.goAt){ const m = PAR.go; PAR.goAt = 0; PAR.go = null; const pick = (m.ships && m.ships[NET.id]) || { ship:'pestrel' };
     const ship = DATA.ships[pick.ship] ? pick.ship : Object.keys(DATA.ships)[0];
@@ -198,5 +206,6 @@ function parEndButtons(win){
 }
 const PAR_UI = { options:parOptions, start:parStart, hangar:parHangar, frame:parFrame, hud:parHud, launch:parLaunch, fightWon:parFightWon, runEnded:parRunEnded, endButtons:parEndButtons,
   left:(P) => { delete PAR.picks[P.id]; if(PAR.waiting) parMaybeGo(); },
-  ended:() => { PAR.goAt = 0; PAR.waiting = false; if(G && G.par){ toast('Disconnected from the other pilots. Your run goes on.'); } } };
+  joined:(P) => { if(mpAmHost() && PAR.waiting && MP.opts.ship==='each') netSend({ t:'pp' }, P.id); },
+  ended:() => { PAR.goAt = 0; PAR.waiting = PAR.asked = PAR.sent = false; if(G && G.par){ toast('Disconnected from the other pilots. Your run goes on.'); } } };
 MP_UI.race = PAR_UI; MP_UI.wing = PAR_UI;

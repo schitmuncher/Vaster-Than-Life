@@ -118,6 +118,7 @@ function draw(){
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
   if(typeof drawMPOverlay==='function') drawMPOverlay();
+  if(typeof drawKeyboard==='function') drawKeyboard();
   if(typeof drawPadCursor==='function') drawPadCursor();
 }
 
@@ -148,6 +149,8 @@ function drawTitle(){
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
 }
 function hangarThumb(id){ UI._thumbs = UI._thumbs || {}; if(id in UI._thumbs) return UI._thumbs[id]; let sh = null; try{ sh = makeShip(DATA.ships[id], 'p', {}); sh.crew = []; }catch(e){ sh = null; } return UI._thumbs[id] = sh; }
+/* leaving Settings or the Manual: back to the run, the multiplayer room, or the title */
+function backFromOptions(){ const inSession = typeof NET!=='undefined' && NET.on && NET.mode; UI.screen = UI.setFrom==='game' && G ? 'game' : inSession ? 'mp' : 'title'; UI.setFrom = null; UI.confirmReset = false; if(typeof SYNC!=='undefined' && SYNC.guest) syncScreen(); }
 function openHangar(){ applyMods(); UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
 function dailyStreak(){ let n = 0; const d = new Date(); for(let i=0;i<60;i++){ const k = todayKey(d); if(PROFILE.daily?.[k]) n++; else if(i>0) break; d.setDate(d.getDate()-1); } return n; }
 function fmtNum(n){ return Math.round(n).toLocaleString('en-GB'); }
@@ -214,7 +217,7 @@ function drawHangar(){
   const y0 = 390; panel(60, y0, 1480, 470, 12);
   groups[selCls].forEach((id, i) => btn(84 + i*140, y0+22, 130, 44, `Layout ${DATA.ships[id].layout||'A'}`, () => { UI.selShip = id; UI.shipName = null; }, { fill:id===sel, s:16 }));
   T(UI.shipName || def.name, 84, y0+118, { s:36, f:FD, w:700, c:def.color||C.amber });
-  if(open && !inXR()) btn(84 + Math.min(520, ctx.measureText(UI.shipName || def.name).width + 20), y0+86, 110, 40, 'Rename', () => openRename('ship'), { s:15 });
+  if(open) btn(84 + Math.min(520, ctx.measureText(UI.shipName || def.name).width + 20), y0+86, 110, 40, 'Rename', () => openRename('ship'), { s:15 });
   para(def.desc||'', 84, y0+156, 640, { s:18, lh:26, c:C.muted });
   let temp = UI._prev && UI._prev.id===sel ? UI._prev.sh : null;
   if(!temp){ try{ temp = makeShip(def,'p',{}); }catch(e){ temp = null; } UI._prev = { id:sel, sh:temp }; }
@@ -234,7 +237,7 @@ function drawHangar(){
   label('Seed', 1240, y0+360, C.muted, 'left', 14);
   T(UI.seed || 'Random', 1240, y0+404, { s:20, f:FD, w:700, c: UI.seed ? C.amber : C.ink });
   btn(1240, y0+416, 132, 34, 'Random', () => { UI.seed = null; }, { s:13, disabled:!UI.seed });
-  btn(1384, y0+416, 132, 34, 'Enter seed', () => { if(inXR()) toast('Exit VR to type a seed.'); else openRename('seed'); }, { s:13 });
+  btn(1384, y0+416, 132, 34, 'Enter seed', () => openRename('seed'), { s:13 });
   tip(1236, y0+340, 290, 110, 'Seed', 'Every run has a seed. The same seed gives the same maps, beacons, enemies and stores, so you can replay a run or share it with a friend. Leave it on Random for a fresh run.');
   if(typeof mpHangarLaunch==='function' && mpHangarLaunch(sel, open)) return;
   btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName, { seed:UI.seed }); }, { fill:true, s:26, disabled:!open });
@@ -347,7 +350,7 @@ function drawSettings(){
       choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
       head('Touch');
       onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
-      btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 60;
+      btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 74;
       note('Tap to use anything. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
       break;
     case 'vr':
@@ -376,7 +379,7 @@ function drawSettings(){
       btn(X, y+6, 260, 44, 'Reset console size', () => { SET.vrPanelScale = 1; saveProfile(); if(typeof panelGroup!=='undefined' && panelGroup) panelGroup.scale.setScalar(1); toast('Console size reset.'); }, { s:15 });
       btn(X+280, y+6, 260, 44, 'Reset holotable size', () => { SET.vrHoloScale = 1; saveProfile(); if(typeof holo!=='undefined' && holo) holo.top.scale.setScalar(1); toast('Holotable size reset.'); }, { s:15 });
       btn(X+560, y+6, 280, 44, 'Put everything back', () => { SET.vrPanelScale = 1; SET.vrHoloScale = 1; saveProfile(); if(inXR()){ panelGroup.scale.setScalar(1); holo.top.scale.setScalar(1); applyPlayMode(); } toast('Console, holotable and position reset.'); }, { s:15 }); btn(X+860, y+6, 240, 44, 'Replay VR tour', () => { if(typeof deckReplayTour==='function') deckReplayTour(); }, { s:15 }); y += 68;
-      note('In VR: grip while pointing at the console to move it; grip on its edges or corner brackets to resize; two hands to move and scale. Do the same with the holotable.');
+      y += 10; note('In VR: grip while pointing at the console to move it; grip on its edges or corner brackets to resize; two hands to move and scale. Do the same with the holotable.');
       break;
     case 'gameplay':
       head('Challenge');
@@ -406,11 +409,11 @@ function drawSettings(){
       break;
     case 'mp':
       head('Multiplayer');
-      T('Your name', X, y+30, { s:20 }); T(mpName(), VX, y+32, { s:20, f:FD, w:700, c:C.amber }); if(!inXR()) btn(VX+330, y+4, 150, 42, 'Change', () => openRename('mp'), { s:15 }); btn(VX+490, y+4, 150, 42, 'Random', () => { PROFILE.mpName = mpRandomName(); saveProfile(); }, { s:15 }); y += 50;
+      T('Your name', X, y+30, { s:20 }); T(mpName(), VX, y+32, { s:20, f:FD, w:700, c:C.amber }); btn(VX+330, y+4, 150, 42, 'Change', () => openRename('mp'), { s:15 }); btn(VX+490, y+4, 150, 42, 'Random', () => { PROFILE.mpName = mpRandomName(); saveProfile(); }, { s:15 }); y += 50;
       choice('Meeting servers', 'netSignal', [['auto','Both'],['peerjs','PeerJS'],['nostr','Nostr']], 'auto', 'How players find each other before connecting directly. Both tries the free PeerJS server and Nostr relays at once and uses whichever answers.');
       onoff('Post scores', 'autoPost', false, 'Send your weekly cup and daily scores to the public boards when a run ends.');
       T('Relay server (TURN)', X, y+30, { s:20 }); T(SET.turnUrl ? SET.turnUrl.slice(0, 40) : 'None', VX, y+32, { s:16, c: SET.turnUrl ? C.ink : C.muted, max:320 });
-      if(!inXR()) btn(VX+330, y+4, 150, 42, 'Set', () => openRename({ title:'TURN server: url, user, password (comma separated)', value:[SET.turnUrl||'', SET.turnUser||'', SET.turnPass||''].filter(Boolean).join(', '), max:300, onOk:v => { const [u, n, pw] = v.split(',').map(x => x.trim()); SET.turnUrl = u || ''; SET.turnUser = n || ''; SET.turnPass = pw || ''; saveProfile(); } }), { s:15 });
+      btn(VX+330, y+4, 150, 42, 'Set', () => openRename({ title:'TURN server: url, user, password (comma separated)', value:[SET.turnUrl||'', SET.turnUser||'', SET.turnPass||''].filter(Boolean).join(', '), max:300, onOk:v => { const [u, n, pw] = v.split(',').map(x => x.trim()); SET.turnUrl = u || ''; SET.turnUser = n || ''; SET.turnPass = pw || ''; saveProfile(); } }), { s:15 });
       if(SET.turnUrl) btn(VX+490, y+4, 150, 42, 'Clear', () => { SET.turnUrl = SET.turnUser = SET.turnPass = ''; saveProfile(); }, { s:15, col:C.hostile });
       tip(X-10, y, 440, 50, 'Relay server (TURN)', 'Only needed if two players can\'t connect directly (some strict office or mobile networks). Paste the address of a TURN server you have access to.'); y += 50;
       y += 12; note('Players connect browser to browser. The meeting servers only pass along connection details, for a moment; on Nostr relays those details are encrypted with your room code. Game traffic never touches them.');
@@ -424,7 +427,7 @@ function drawSettings(){
       else btn(X, y, 300, 52, 'Reset profile', () => { UI.confirmReset = true; }, { col:C.hostile });
       break;
   }
-  btn(60, 870, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; UI.confirmReset = false; });
+  btn(60, 870, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => backFromOptions());
 }
 function drawAchievements(){
   label('Your record', 60, 70, C.cyan, 'left', 18);
@@ -488,7 +491,7 @@ function drawHelpScreen(){
   const pg = clamp(UI.helpPage||0, 0, HELP_PAGES.length-1);
   { const n = HELP_PAGES.length, w = Math.min(230, Math.floor((1540 - 520 - (n-1)*8)/n)); tabs(520, 80, HELP_PAGES.map((p,i) => [i, p[0]]), pg, i => { UI.helpPage = i; }, w); }
   HELP_PAGES[pg][1].forEach(([h,t],i) => { const x = i%2 ? 820 : 60, y = 170 + Math.floor(i/2)*176; label(h, x, y, C.amber, 'left', 17); para(t, x, y+30, 700, { s:17, lh:25, max:5 }); });
-  btn(60, 880, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; });
+  btn(60, 880, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => backFromOptions());
   if(pg < HELP_PAGES.length-1) btn(W-260, 880, 200, 64, 'Next ›', () => { UI.helpPage = pg+1; }, { fill:true });
 }
 function drawEnd(){
@@ -805,11 +808,12 @@ function drawRoster(){
   const n = list.length, x0 = 24, y0 = 572, gap = 6, cw = Math.min(160, (760 - gap*(n-1))/Math.max(1,n));
   list.forEach(([c, s], i) => { const x = x0 + i*(cw+gap), sel = UI.selCrew===c.id, race = DATA.races[c.race] || {};
     rr(x,y0,cw,66,8); ctx.fillStyle = sel ? hexA(C.amber,.16) : hexA(C.panel,.94); ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : c.mcT>0 ? C.violet : hovered(x,y0,cw,66) ? C.muted : C.line; ctx.stroke();
-    drawPortrait(x+21, y0+27, 16, c, false);
-    T(c.name, x+43, y0+24, { s: cw<120 ? 14 : 16, f:FD, w:600, max: cw-50 });
-    const jb = crewJob(c, s); const short = { fight:'Fighting', repair:'Repairing', fire:'Firefighting', breach:'Patching', heal:'Healing', man:'Manning', move:'Moving', idle:'Standing by', mind:'Controlled!', board:'Aboard enemy', stun:'Stunned' }[jb.k];
-    T(short + (jb.k==='man' ? ' ' + (STATION_NAME[jb.sys]||'') : ''), x+43, y0+42, { s:11, c: JOB_COL[jb.k] || C.muted, max:cw-50 });
-    bar(x+43, y0+50, cw-53, 7, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
+    const narrow = cw < 125, tx = narrow ? x+31 : x+43;   // with a full crew the chips get narrow: smaller portrait, shorter words
+    drawPortrait(narrow ? x+16 : x+21, y0+27, narrow ? 12 : 16, c, false);
+    T(c.name, tx, y0+24, { s: narrow ? 13 : 16, f:FD, w:600, max: x+cw-6-tx });
+    const jb = crewJob(c, s); const short = narrow ? { fight:'Fighting', repair:'Repairs', fire:'Fire', breach:'Breach', heal:'Healing', man:'', move:'Moving', idle:'Idle', mind:'Controlled', board:'Aboard', stun:'Stunned' }[jb.k] : { fight:'Fighting', repair:'Repairing', fire:'Firefighting', breach:'Patching', heal:'Healing', man:'Manning', move:'Moving', idle:'Standing by', mind:'Controlled!', board:'Aboard enemy', stun:'Stunned' }[jb.k];
+    T(jb.k==='man' ? ((narrow ? '' : short + ' ') + (STATION_NAME[jb.sys]||'')) : short, tx, y0+42, { s:11, c: JOB_COL[jb.k] || C.muted, max:x+cw-6-tx });
+    bar(tx, y0+50, x+cw-10-tx, 7, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
     tip(x, y0, cw, 66, `${c.name} · ${race.name||''}${c.trait && DATA.traits?.[c.trait] ? ' · ' + DATA.traits[c.trait].name : ''}`, `${crewJob(c, s).text}. ${c.trait && DATA.traits?.[c.trait] ? DATA.traits[c.trait].name + ': ' + DATA.traits[c.trait].desc + ' ' : ''}${raceTraits(race)}. Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}. Click for details.`);
     if(c.mcT<=0) region(x,y0,cw,66, () => { UI.selCrew = sel ? null : c.id; UI.selWeapon = null; UI.mode = null; }); });
 }
@@ -1274,8 +1278,9 @@ function drawStoreModal(m){
         drawPortrait(rx+60, y0+120, 40, cand, false);
         T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
         if(crewN < R.maxCrew) btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { joinCrew(cand); if(st.arena){ st._cand = null; } else st.crewSold = true; }), { disabled: G.scrap<cc, fill:G.scrap>=cc, col:C.good });
+        else if(st.arena) T('Your bunks are full.', rx+20, y0+254, { s:16, c:C.warn });
         if(st.arena){ const rk = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); btn(rx+280, y0+220, 240, 54, 'Another race', () => { st.crewRace = rk[(rk.indexOf(st.crewRace) + 1) % rk.length]; st._cand = null; }, { s:16 }); }
-        else { const sc = Math.max(0, cc - TRADE_IN), node = m.node;
+        else if(crewN >= R.maxCrew){ const sc = Math.max(0, cc - TRADE_IN), node = m.node;
           btn(rx+20, y0+220, 300, 54, `Swap someone · ${sc}`, () => openSwap(cand, sc, (ok) => { if(ok) st.crewSold = true; G.modal = { type:'store', node }; UI.storeTab = 'supplies'; }), { disabled: G.scrap<sc, fill:G.scrap>=sc, col:C.good });
           para(`Bunks are full. Swap one of your crew for ${cand.name}; the store takes ${TRADE_IN} off for the one who leaves.`, rx+340, y0+238, 320, { s:14, lh:18, c:C.warn, max:3 }); } }
       else T('Nobody else is looking for work.', rx+20, y0+80, { s:18, c:C.muted });
@@ -1297,7 +1302,8 @@ function drawStoreModal(m){
         btn(qx+half-190, y+10, 176, 38, conf ? 'Really trade?' : `Trade in · ${TRADE_IN}`, () => { if(mine.length<=1){ toast('You need at least one crew member.'); return; } if(fighting){ toast('Not while fighting.'); return; } if(!conf){ UI.confirmTrade = c.id; return; } UI.confirmTrade = null; crewLeaves(c); G.scrap += TRADE_IN; sfx('buy'); toast(`${c.name} signs on with the store crew.`); save(); }, { s:14, col:C.hostile, fill:conf, disabled:mine.length<=1 }); });
       break; }
   }
-  btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; save(); });
+  if(st.arena && G.duel && typeof duelReady==='function' && DUEL.phase==='build'){ btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Ready', () => duelReady(), { fill:true, col:C.good, loc:true }); btn(f.x+f.w-444, f.y+f.h-80, 200, 56, 'Look at ship', () => { G.modal = null; }); }
+  else btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; save(); });
 }
 function sysDesc(k){ return { shields:'Every 2 power gives one shield layer that blocks a shot and recharges.', engines:'More power means more evasion. Needs a pilot at the helm.', oxygen:'Keeps the air breathable in every room.', weapons:'Powers your weapons. Each weapon needs its own power.', piloting:'Someone must sit at the helm to dodge and to charge the jump drive. Higher levels add an autopilot.', drones:'Power drones that fight, defend, repair or board.', teleporter:'Send up to 4 crew to the enemy ship and bring them back.', cloaking:'Vanish: +60% evasion and enemy weapons stop charging.',
   hacking:'Attach a drone to an enemy system, then pulse it to shut it down.', mindcontrol:'Turn an enemy crew member to your side for a while.', medbay:'Heals crew standing inside it.', clonebay:'Brings dead crew back after a short delay.',
@@ -1312,7 +1318,7 @@ function drawShipModal(){
       T(SYSN[k], x, y+30, { s:20, f:FD, w:700, c:SYSC[k] });
       for(let b=0;b<capL;b++){ rr(x+170+b*24, y+12, 19, 24, 3); ctx.fillStyle = b<sy.max ? SYSC[k] : C.panel2; ctx.fill(); }
       btn(x+380, y+6, 170, 44, sy.max>=capL ? 'Maxed' : `+1 · ${cost}`, () => buy(cost, () => { sy.max++; if(SUB.includes(k)) {} }), { disabled: sy.max>=capL || G.scrap<cost, s:16 });
-      if(k==='shields' && sy.max<capL) T(sy.max%2 ? 'next level adds a layer' : `layer ${Math.floor(sy.max/2)+1} at level ${sy.max+2}`, x+560, y+32, { s:13, c: sy.max%2 ? C.good : C.muted }); };
+      if(k==='shields' && sy.max<capL) T(sy.max%2 ? 'next level adds a layer' : `layer ${Math.floor(sy.max/2)+1} at level ${sy.max+2}`, x+170, y+52, { s:12, c: sy.max%2 ? C.good : C.muted }); };
     const main = MAIN.filter(k=>s.systems[k]), sub = SUB.filter(k=>s.systems[k]);
     label('Main systems', cx, y0+10, C.muted, 'left', 14); main.forEach((k,i) => sysRow(k, cx, y0+20 + i*58));
     const rx = f.x+740; label('Subsystems (no reactor power)', rx, y0+10, C.muted, 'left', 14); sub.forEach((k,i) => sysRow(k, rx, y0+20 + i*58));
@@ -1328,7 +1334,7 @@ function drawShipModal(){
       T(`${race.name} · ${c.gender==='f'?'♀':'♂'} ${pronouns(c)} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+82, y+62, { s:14, c:C.muted }); { const sh_ = [G.ship, G.enemy].find(q=>q && q.crew.includes(c)); const jb = crewJob(c, sh_); T(jb.text, x+82, y+80, { s:13, c:JOB_COL[jb.k]||C.ink, max:340 }); para(raceTraits(race), x+440, y+72, 220, { s:11, lh:14, c:C.cyan, max:1 }); }
       SKILLS.forEach((k,j) => { const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; const sx = x+20 + j*106, sy = y+90;
         T(SKILLN[k], sx, sy+12, { s:12, c:C.muted }); bar(sx, sy+20, 96, 8, lv>=2 ? 1 : lv===1 ? .5 + .5*(v-t[0])/(t[1]-t[0]) : .5*v/t[0], lv>=2 ? C.amber : lv===1 ? C.good : C.cyan); });
-      btn(x+440, y+14, 100, 40, inXR() ? 'Reroll' : 'Rename', () => { if(inXR()) c.name = pick(NAMES); else openRename('crew', c); }, { s:14 });
+      btn(x+440, y+14, 100, 40, 'Rename', () => openRename('crew', c), { s:14 });
       btn(x+550, y+14, 100, 40, 'Dismiss', () => { if(crew.length<=1){ toast('You need at least one crew member.'); return; } UI.confirmDismiss = c.id; }, { s:14, col:C.hostile });
       if(UI.confirmDismiss===c.id){ rr(x+300, y+60, 350, 70, 8); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.hostile; ctx.stroke(); T('Leave them at this beacon?', x+316, y+86, { s:15, c:C.hostile });
         btn(x+316, y+94, 150, 32, 'Yes', () => { for(const sh of [G.ship, G.enemy]) if(sh){ const k = sh.crew.indexOf(c); if(k>=0) sh.crew.splice(k,1); } UI.confirmDismiss = null; }, { s:13, col:C.hostile, fill:true });

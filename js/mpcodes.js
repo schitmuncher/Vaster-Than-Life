@@ -33,7 +33,6 @@ function codesIncoming(o){
   else toast('That code is for a newer version of the game.');
 }
 function codesPaste(){
-  if(inXR()){ toast('Take off the headset to paste a code.'); return; }
   openRename({ title:'Paste a link or code', value:'', max:3000, onOk:(v) => { const o = codeDec(v); if(!o){ toast('That is not a Vaster Than Life code.'); return; } codesIncoming(o); } });
 }
 
@@ -92,8 +91,9 @@ function drawSharePanel(){
   para('Send the link: it opens the game with everything set up. On a headset, read out the short version instead.', x+28, y+70, w-56, { s:16, c:C.muted, lh:22 });
   if(S.short){ T(S.short, x+28, y+150, { s:30, f:FD, w:700, c:C.ink, max:w-56 }); label('Short version: enter the seed in the hangar', x+28, y+178, C.muted, 'left', 12); }
   T(S.code.slice(0, 64) + (S.code.length > 64 ? '…' : ''), x+28, y+228, { s:14, c:C.cyan, max:w-56 });
-  btn(x+28, y+h-84, 260, 60, 'Copy link', () => copyText(S.link, 'Link'), { fill:true, s:18 });
-  btn(x+300, y+h-84, 260, 60, 'Copy code', () => copyText(S.code, 'Code'), { s:18 });
+  if(inXR()) para('Copying needs a computer or phone: open this screen there to send the link.', x+28, y+h-62, w-260, { s:15, c:C.muted, lh:20 });
+  else { btn(x+28, y+h-84, 260, 60, 'Copy link', () => copyText(S.link, 'Link'), { fill:true, s:18 });
+    btn(x+300, y+h-84, 260, 60, 'Copy code', () => copyText(S.code, 'Code'), { s:18 }); }
   btn(x+w-208, y+h-84, 180, 60, 'Done', () => { CODES.share = null; }, { s:18 });
 }
 
@@ -140,7 +140,7 @@ function drawCodesView(){
   const b = CODES.build || (CODES.build = buildDefault()); const x = 80, y0 = 196;
   label('Build a challenge', x, y0, C.amber, 'left', 16); panel(x, y0+14, 900, 680, 12);
   const cyc = (arr, cur, d) => arr[(arr.indexOf(cur) + d + arr.length) % arr.length];
-  T(b.name, x+24, y0+62, { s:24, f:FD, w:700, c:C.amber, max:560 }); if(!inXR()) btn(x+660, y0+30, 210, 46, 'Name it', () => openRename({ title:'Name your challenge', value:b.name, max:30, onOk:v => { b.name = v; }, random:() => pick(['Glass Cannon','Cold Start','Last Light','Thin Ice','Iron Will','Long Shot','Dead Reckoning','Fumes and Faith']) }), { s:15 });
+  T(b.name, x+24, y0+62, { s:24, f:FD, w:700, c:C.amber, max:560 }); btn(x+660, y0+30, 210, 46, 'Name it', () => openRename({ title:'Name your challenge', value:b.name, max:30, onOk:v => { b.name = v; }, random:() => pick(['Glass Cannon','Cold Start','Last Light','Thin Ice','Iron Will','Long Shot','Dead Reckoning','Fumes and Faith']) }), { s:15 });
   // a two-column grid of settings: label above, ‹ value › below
   const cells = []; const ships = Object.keys(DATA.ships), diffs = Object.keys(DIFFICULTY);
   cells.push(['Ship', (DATA.ships[b.ship]||{}).name || b.ship, d => { b.ship = cyc(ships, b.ship, d); }]);

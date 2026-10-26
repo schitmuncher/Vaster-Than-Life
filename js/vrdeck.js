@@ -69,6 +69,7 @@ function deckInitPop(){
 function deckPopSource(){
   if(SET.vrPopups === false) return null;
   if(UI.screen==='game' && G){
+    if(typeof KB!=='undefined' && KB.open && UI.kbRect) return { r:UI.kbRect, key:'kb' };
     // standing at the holotable with the 3D star map up: no need for a flat copy of the map floating in front of you
     if(G.modal && G.modal.type==='map' && deckMapActive() && holo.group.getWorldPosition(_dv()).distanceTo(headWorld()) < 2.5) return null;
     if(G.modal && UI.modalRect) return { r:UI.modalRect, key:G.modal }; if(UI.hint && UI.hintRect) return { r:UI.hintRect, key:UI.hint }; return null; }

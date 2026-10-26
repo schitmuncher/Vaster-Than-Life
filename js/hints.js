@@ -104,6 +104,7 @@ function checkHints(dt){
 }
 function drawHint(){
   const h = UI.hint; if(!h || UI.screen!=='game') return; const H_ = HINTS[h.id]; if(!H_) { UI.hint = null; return; }
+  if((typeof MP!=='undefined' && MP.chatOpen) || (typeof PAR!=='undefined' && (PAR.cardsOpen || PAR.giftOpen)) || (typeof KB!=='undefined' && KB.open)) return;   // a multiplayer panel or the keyboard is on top: the tip waits
   const a = Math.min(1, h.t*4);
   // highlight what the hint talks about
   const at = H_.at && H_.at();
@@ -120,7 +121,7 @@ function drawHint(){
   label('Captain\'s tip', bx+86, by+32, C.cyan, 'left', 14);
   T(htitle, bx+86, by+62, { s:24, f:FD, w:700 });
   L.forEach((l,i) => T(l, bx+86, by+94 + i*27, { s:20, c:C.ink }));
-  ctx.restore();
-  btn(bx+bw-170, by+16, 150, 46, h.paused ? 'Got it · resume' : 'Got it', () => closeHint(false), { s:16, fill:true, col:C.cyan });
-  btn(bx+bw-170, by+bh-52, 150, 38, 'No more tips', () => closeHint(true), { s:13 });
+  btn(bx+bw-170, by+16, 150, 46, h.paused ? 'Got it · resume' : 'Got it', () => closeHint(false), { s:16, fill:true, col:C.cyan, loc:true });   // tips are each player's own
+  btn(bx+bw-170, by+bh-52, 150, 38, 'No more tips', () => closeHint(true), { s:13, loc:true });
+  ctx.restore();   // the buttons fade in with the panel
 }

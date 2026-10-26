@@ -192,8 +192,12 @@ if(window.visualViewport) visualViewport.addEventListener('resize', () => setTim
    At the title it does what the browser normally does. */
 function handleBack(){
   if(UI.hint){ closeHint(false); return true; }
-  if(UI.screen==='game' && G){ if(G.modal && ['map','ship','store'].includes(G.modal.type)){ G.modal = null; return true; } if(!G.modal) G.paused = !G.paused; return true; }
-  if(UI.screen!=='title'){ UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; return true; }
+  if(typeof KB!=='undefined' && KB.open){ closeKeyboard(); return true; }
+  if(typeof MP!=='undefined' && MP.chatOpen){ MP.chatOpen = false; return true; }
+  if(UI.screen==='game' && G){ if(G.modal && ['map','ship','store'].includes(G.modal.type)){ G.modal = null; return true; } if(!G.modal && !(typeof SYNC!=='undefined' && SYNC.spect)) G.paused = !G.paused; return true; }
+  if(UI.screen==='mp' && typeof MP!=='undefined'){ if(NET.on) return true; if(MP.view!=='menu'){ MP.view = 'menu'; return true; } }   // in a room, leave with its own button
+  if(UI.screen==='select' && typeof NET!=='undefined' && NET.on){ UI.screen = 'mp'; MP.view = 'room'; return true; }
+  if(UI.screen!=='title'){ if(typeof backFromOptions==='function' && (UI.screen==='settings' || UI.screen==='help')) backFromOptions(); else { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; } return true; }
   return false;
 }
 if(MOB.touch && window.history && history.pushState){

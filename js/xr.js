@@ -135,25 +135,29 @@ async function enterXR(mode){
   }catch(err){ document.getElementById('xrNote').textContent = 'Could not start VR: ' + (err.message || err); }
 }
 let last = performance.now(), fc = 0, _fr = null, _frM = null, _bs = null;
+/* one bad frame (a broken mod, an odd moment in a shared game) must never stop the game loop for good */
+let LOOP_ERR = '', LOOP_ERRN = 0;
+function loopGuard(e, where){ const k = where + ':' + String(e && e.message || e); LOOP_ERRN++; if(k!==LOOP_ERR){ LOOP_ERR = k; console.error('[loop] ' + where, e); }
+  try{ if(ctx.reset) ctx.reset(); else { ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; } }catch(_){} }
+function safeStep(dt){ try{ update(dt); }catch(e){ loopGuard(e, 'update'); } try{ draw(); }catch(e){ loopGuard(e, 'draw'); } }
 function loop(){
   const now = performance.now(), dt = Math.min(.05, (now-last)/1000); last = now;
   const xr = inXR();
-  if(xr){ updateNav(dt); xrPointers(); xrButtons(dt); updateGrab(dt); if(typeof deckUpdate==='function') deckUpdate(dt); }
-  update(dt); draw();
+  if(xr){ try{ updateNav(dt); xrPointers(); xrButtons(dt); updateGrab(dt); if(typeof deckUpdate==='function') deckUpdate(dt); }catch(e){ loopGuard(e, 'xr'); } }
+  safeStep(dt);
   if(xr){
     if(recenterIn>0){ recenterIn--; if(recenterIn===0){ applyPlayMode(); nav.sessionT = 0; } }
     // only upload the console texture when you can actually see the console (or its magnifier)
     if((++fc & 1)===0){ panelGroup.updateMatrixWorld(); _frM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); _fr.setFromProjectionMatrix(_frM);
       const bs = _bs || (_bs = new THREE.Sphere()); bs.center.setFromMatrixPosition(panelGroup.matrixWorld); bs.radius = 2.4*panelGroup.scale.x;
       if(_fr.intersectsSphere(bs) || (typeof loupe!=='undefined' && loupe?.visible) || (typeof deckNeedsTex==='function' && deckNeedsTex())) tex.needsUpdate = true; }
-    update3D(dt);
-    if(typeof avUpdate==='function') avUpdate(dt);
+    try{ update3D(dt); if(typeof avUpdate==='function') avUpdate(dt); }catch(e){ loopGuard(e, '3d'); }
     const warp = warpAmt();
     starPts.rotation.y += dt*(.004 + warp*.8); starPts.scale.z = 1 + warp*6; if(scene.userData.planet) scene.userData.planet.rotation.y += dt*.01;
     renderer.render(scene, camera);
   }
 }
-function fallbackLoop(){ const now = performance.now(), dt = Math.min(.05,(now-last)/1000); last = now; update(dt); draw(); requestAnimationFrame(fallbackLoop); }
+function fallbackLoop(){ requestAnimationFrame(fallbackLoop); const now = performance.now(), dt = Math.min(.05,(now-last)/1000); last = now; safeStep(dt); }
 
 /* ---------------- flat-screen sizing ---------------- */
 const barEl = document.getElementById('bar');
@@ -193,24 +197,6 @@ document.getElementById('copyEx').onclick = async () => { try{ await navigator.c
   catch(e){ const r = document.createRange(); r.selectNodeContents(document.getElementById('modExample')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); setMsg('Copy did not work here, so the example is selected. Copy it manually.', false); } };
 
 /* ---------------- rename dialog ---------------- */
-const renameDlg = document.getElementById('renameDlg'), renameInput = document.getElementById('renameInput');
-let renameTarget = null;
-function openRename(kind, crew){
-  renameTarget = kind && typeof kind==='object' ? Object.assign({ kind:'custom' }, kind) : { kind, crew };
-  const t = renameTarget, k = t.kind;
-  document.getElementById('renameTitle').textContent = k==='custom' ? (t.title || 'Enter text') : k==='ship' ? 'Name your ship' : k==='seed' ? 'Enter a seed' : k==='mp' ? 'Your name in multiplayer' : `Rename ${crew.name}`;
-  renameInput.maxLength = t.max || 24;
-  renameInput.value = k==='custom' ? (t.value || '') : k==='ship' ? (UI.shipName || DATA.ships[UI.selShip]?.name || '') : k==='seed' ? (UI.seed || '') : k==='mp' ? mpName() : crew.name;
-  renameDlg.hidden = false; renameInput.focus(); renameInput.select();
-}
-function applyRename(){ const t = renameTarget, v = renameInput.value.trim().slice(0, renameInput.maxLength || 24);
-  if(v && t){ if(t.kind==='custom') t.onOk(v); else if(t.kind==='ship') UI.shipName = v; else if(t.kind==='seed') UI.seed = cleanSeed(v) || null; else if(t.kind==='mp'){ PROFILE.mpName = v.slice(0, 22); saveProfile(); } else t.crew.name = v; }
-  renameDlg.hidden = true; renameTarget = null; }
-document.getElementById('renameOk').onclick = applyRename;
-document.getElementById('renameCancel').onclick = () => { renameDlg.hidden = true; };
-renameInput.addEventListener('keydown', e => { if(e.key==='Enter') applyRename(); if(e.key==='Escape') renameDlg.hidden = true; });
-document.getElementById('renameRandom').onclick = () => { const t = renameTarget; renameInput.value = t?.kind==='custom' ? (t.random ? t.random() : '') : t?.kind==='ship' ? pick(SHIP_NAMES) : t?.kind==='seed' ? randomSeed() : t?.kind==='mp' ? mpRandomName() : pick(NAMES); };
-
 /* ---------------- boot ---------------- */
 applyMods();
 fit();

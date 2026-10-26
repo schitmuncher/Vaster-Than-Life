@@ -100,5 +100,6 @@ const SHARED_UI = { fightWon:() => { if(NET.players.length > 1 && mpAmHost()) gr
       T(inXR() ? 'Away team: step onto the teleporter pad and press BEAM ME OVER' : 'Away team: gather crew in the teleporter, then Send them over', W/2, 120, { s:14, f:FD, w:700, a:'center', c:'#c6e05a' }); }
     return x; } };
 MP_UI.coop = SHARED_UI; MP_UI.nav = SHARED_UI; MP_UI.away = SHARED_UI; MP_UI.spect = {};
-MP_UI.hunt = { runEnded:(win) => { if(mpAmHost()){ if(win) grant('mp_courier'); netSend({ t:'huntEnd', win:!!win }); } } };
+MP_UI.hunt = { options:(opt) => opt('Length', 'How far the courier must get to win', MP.opts.hunt==='short' ? 'Short · sector 4' : 'Full run', () => { MP.opts.hunt = MP.opts.hunt==='short' ? 'full' : 'short'; mpBroadcastOpts(); }),
+  runEnded:(win) => { if(mpAmHost()){ if(win) grant('mp_courier'); netSend({ t:'huntEnd', win:!!win }); } } };
 netOn('huntEnd', (m) => { if(huntCommander() && !m.win) grant('mp_hunter'); });

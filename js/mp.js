@@ -33,9 +33,9 @@ ACHIEVEMENTS.push(
 const ROLES = {
   captain:{ name:'Captain', desc:'Everything', col:'#ffb547' },
   helm:{ name:'Helm', desc:'Map, jumps, events, Helm and Engines', col:'#5fd3e6' },
-  tactical:{ name:'Tactical', desc:'Weapons, drones, targeting, hacking, mind control, cloak', col:'#ff5a7a' },
-  engineer:{ name:'Engineer', desc:'Power, doors, crew, repairs, upgrades, store', col:'#7be0a0' },
-  navigator:{ name:'Navigator', desc:'Map, jumps, events, store and ship screen', col:'#5fd3e6' },
+  tactical:{ name:'Tactical', desc:'Guns, drones, hacking, mind control', col:'#ff5a7a' },
+  engineer:{ name:'Engineer', desc:'Power, doors, crew, repairs, store', col:'#7be0a0' },
+  navigator:{ name:'Navigator', desc:'Map, jumps, events, store, upgrades', col:'#5fd3e6' },
   boarder:{ name:'Away team', desc:'Teleporter, boarders, sabotage', col:'#c6e05a' },
   viewer:{ name:'Viewer', desc:'Watching', col:'#ff8ad8' },
   courier:{ name:'Courier', desc:'Flies the ship', col:'#ffb547' },
@@ -111,7 +111,7 @@ async function mpJoin(code, o={}){
   const ok = await netJoin(code); if(!ok){ MP.err = NET.error || 'Could not join.'; MP.view = 'menu'; return false; }
   return true;
 }
-function mpLeave(){ netLeave(); }
+function mpLeave(){ MP.leaving = true; try{ netLeave(); } finally { MP.leaving = false; } }
 function mpJoinInfo(){ return { spect:!!MP.wantSpect }; }
 /* net.js calls this when a session ends, for whatever reason */
 function netEnded(quiet){
@@ -119,12 +119,14 @@ function netEnded(quiet){
   if(typeof VCHAT!=='undefined'){ if(VCHAT.on && VCHAT.stream) for(const t of VCHAT.stream.getTracks()) t.stop(); VCHAT.on = false; VCHAT.stream = null; for(const k in VCHAT.els){ VCHAT.els[k].srcObject = null; } VCHAT.els = {}; VCHAT.remote = []; }
   if(typeof AV!=='undefined'){ AV.peers = {}; }
   mpHook('ended');
-  if(wasGuest && wasShared && G && (UI.screen==='game' || UI.screen==='over' || UI.screen==='win')){
+  const inRun = ['game','over','win','settings','help'].includes(UI.screen);
+  if(wasGuest && wasShared && G && inRun && !MP.leaving){
     MP.ended = { why: why || 'The session ended.', g:G, data:DATA }; syncStop(); UI.screen = 'mp'; MP.view = 'ended'; return; }
   if(wasShared && SYNC.host){ syncStop(); if(G) G.modal = null; }
   else syncStop();
   if(MP.guestData && !(G && G.par)){ MP.guestData = false; applyMods(); if(wasGuest) G = null; }
-  if(UI.screen==='mp' || (wasGuest && UI.screen==='game')){ UI.screen = 'mp'; MP.view = 'menu'; }
+  if(wasGuest && wasShared){ G = null; }   // a guest's copy of someone else's run goes with the session
+  if(UI.screen==='mp' || (wasGuest && (inRun || UI.screen==='select'))){ UI.screen = 'mp'; MP.view = 'menu'; }
   if(why && !quiet) MP.err = why;
   MP.stopBrowse && MP.stopBrowse(); MP.stopBrowse = null;
 }
@@ -157,7 +159,7 @@ netOn('join', (m, P) => {
   const used = new Set(NET.players.map(p => p.color)); const color = spect ? '#8592b0' : NET_COLORS.find(c => !used.has(c)) || NET_COLORS[NET.players.length % NET_COLORS.length];
   const role = spect ? 'viewer' : mpRoleFor(NET.mode, players.length, P.dev);
   NET.players = NET.players.filter(p => p.id!==P.id); NET.players.push({ id:P.id, name:P.name, color, dev:P.dev, role, spect, ready:false });
-  netSend({ t:'hello', mode:NET.mode, opts:MP.opts, players:NET.players, you:P.id, code:NET.code, run:!!G }, P.id);
+  netSend({ t:'hello', mode:NET.mode, opts:MP.opts, players:NET.players, you:P.id, code:NET.code, run:!!G && def.kind==='shared', busy:!!G && def.kind!=='shared' }, P.id);
   mpBroadcastPlayers(); toast(`${P.name} joined${spect ? ' to watch' : ''}.`); mpFeed(`${P.name} joined${spect ? ' to watch' : ''}.`, color); sfx('hail');
   if(def.kind==='shared'){ P.spect = spect || role==='commander'; if(G) mpShareWith(P); }
   mpHook('joined', P);
@@ -177,7 +179,7 @@ netOn('hello', (m) => {
   UI.screen = 'mp'; MP.view = 'room'; MP.err = '';
   if(def && (def.kind==='shared' || def.kind==='brawl')) syncStartGuest(!!me.spect || me.role==='commander' || me.role==='viewer');
   mpHook('hello', m);
-  mpFeed(`Joined ${def ? def.name : 'the room'}${m.run ? '. A run is under way: you\'ll be aboard in a moment.' : '. Waiting for the host to start.'}`, C.good);
+  mpFeed(`Joined ${def ? def.name : 'the room'}${m.run ? '. A run is under way: you\'ll be aboard in a moment.' : m.busy ? '. A match is under way: you\'ll be in the next one.' : '. Waiting for the host to start.'}`, C.good);
   sfx('hail');
 });
 netOn('kick', (m) => { netFail(m.why || 'The host turned you away.'); });
@@ -200,7 +202,9 @@ function mpArea(x, y){ if(G && G.modal){ const t = G.modal.type; return t==='map
 function mpRoleAllows(role, area){ const a = ROLE_AREAS[role]; if(!a || a==='*') return true; if(a.includes(area)) return true;
   if(area==='power' && role==='helm') return true;   // helm still balances power on the bridge
   return false; }
-function mpClickAllowed(x, y, r){ if(!G || UI.screen!=='game') return true; const role = mpRole(), area = mpArea(x, y);
+const MP_CLOSE = /^(Leave|Done|Close|Back|Cancel|Not yet|Look at ship)$/;
+function mpClickAllowed(x, y, r){ if(!G || UI.screen!=='game') return true; if(r && r.t && (MP_CLOSE.test(r.t) || (typeof LOOK_OK!=='undefined' && LOOK_OK.has(r.t)))) return true;   // anyone may look around and close their own windows
+  const role = mpRole(), area = mpArea(x, y);
   if(mpRoleAllows(role, area)) return true; if(performance.now() - (MP.denyT||0) > 1500){ MP.denyT = performance.now(); toast(`${ROLES[role]?.name || role}: that's another station's job.`); sfx('error'); } return false; }
 function mpOpAllowed(p, P){
   if(G && G.brawl){ for(const k of ['scrap','fuel','missiles','parts','paused']) delete p[k]; if(p.ship) for(const k of ['systems','weapons','drones','reactor','augments','hull']) delete p.ship[k]; }
@@ -218,6 +222,8 @@ function mpKey(e){
   if(e.key==='t' || e.key==='T' || e.key==='Enter'){ if(UI.screen==='game' && !e.repeat){ MP.chatOpen = !MP.chatOpen; e.preventDefault(); return true; } }
   if(MP.chatOpen && /^[1-9]$/.test(e.key)){ mpSay(+e.key - 1); e.preventDefault(); return true; }
   if(SYNC.spect && UI.screen==='game') return true;   // viewers have no hotkeys in someone else's game
+  if(MP.opts.strict && SYNC.on && UI.screen==='game' && G){ const k = String(e.key||'').toLowerCase(), area = /^[1-4vfc]$/.test(k) ? 'weapons' : k==='h' ? 'crew' : null;   // stations apply to hotkeys too
+    if(area && !mpRoleAllows(mpRole(), area)){ if(performance.now() - (MP.denyT||0) > 1500){ MP.denyT = performance.now(); toast(`${ROLES[mpRole()]?.name || 'Your role'}: that's another station's job.`); sfx('error'); } return true; } }
   return false;
 }
 
@@ -225,7 +231,6 @@ function mpKey(e){
 function drawMP(){
   if(typeof drawWallpaper==='function' && MP.view!=='room') drawWallpaper();
   switch(MP.view){
-    case 'keypad': return drawMPKeypad();
     case 'browse': return drawMPBrowse();
     case 'room': return drawMPRoom();
     case 'joining': return drawMPJoining();
@@ -239,12 +244,13 @@ function drawMP(){
 function mpTitle(t, sub){ label(sub || 'Multiplayer', 80, 92, C.cyan, 'left', 18); T(t, 76, 152, { s:56, f:FD, w:700, c:C.amber, ls:4 }); }
 function mpNameChip(x, y){
   panel(x, y, 520, 64, 10); label('Your name', x+18, y+26, C.muted, 'left', 12); T(mpName(), x+18, y+52, { s:22, f:FD, w:700, max:250 });
-  btn(x+290, y+12, 104, 40, 'Change', () => { if(typeof openRename==='function' && !inXR()) openRename('mp'); else { PROFILE.mpName = mpRandomName(); saveProfile(); } }, { s:14 });
+  btn(x+290, y+12, 104, 40, 'Change', () => openRename('mp'), { s:14 });
   btn(x+402, y+12, 104, 40, 'Random', () => { PROFILE.mpName = mpRandomName(); saveProfile(); }, { s:14 });
 }
 function drawMPMenu(){
   mpTitle('PLAY TOGETHER'); mpNameChip(W-600, 70);
-  para('Free and simple: players connect directly, browser to browser. Share a five-letter room code and you\'re in. Works between a Quest, a laptop and a phone.', 80, 196, 780, { s:18, c:C.muted, lh:26 });
+  if(MP.err){ panel(80, 182, 780, 84, 10); ctx.fillStyle = hexA(C.hostile, .12); rr(80, 182, 780, 84, 10); ctx.fill(); para(MP.err, 100, 214, 740, { s:17, lh:24, c:C.hostile, max:2 }); }
+  else para('Free and simple: players connect directly, browser to browser. Share a five-letter room code and you\'re in. Works between a Quest, a laptop and a phone.', 80, 196, 780, { s:18, c:C.muted, lh:26 });
   label('Host a game', 80, 286, C.amber, 'left', 16);
   const ids = Object.keys(MP_MODES), cw = 372, ch = 104;
   ids.forEach((id, i) => { const d = MP_MODES[id], x = 80 + (i%2)*(cw+16), y = 300 + Math.floor(i/2)*(ch+12), hov = hovered(x, y, cw, ch);
@@ -257,8 +263,8 @@ function drawMPMenu(){
   label('Join a game', rx, ry, C.amber, 'left', 16);
   panel(rx, ry+14, 640, 228, 12);
   T('Got a code from a friend?', rx+24, ry+56, { s:20, f:FD, w:700 });
-  btn(rx+24, ry+76, 290, 62, 'Enter room code', () => { MP.view = 'keypad'; MP.code = ''; MP.err = ''; }, { fill:true });
-  btn(rx+326, ry+76, 290, 62, 'Watch with a code', () => { MP.view = 'keypad'; MP.code = ''; MP.err = ''; MP.wantSpect = true; }, { col:'#ff8ad8' });
+  btn(rx+24, ry+76, 290, 62, 'Enter room code', () => mpCodeEntry(false), { fill:true });
+  btn(rx+326, ry+76, 290, 62, 'Watch with a code', () => mpCodeEntry(true), { col:'#ff8ad8' });
   btn(rx+24, ry+152, 592, 62, 'Browse public games', () => mpOpenBrowse(), { col:C.cyan });
   label('No room needed', rx, ry+290, C.amber, 'left', 16);
   panel(rx, ry+304, 640, 268, 12);
@@ -267,33 +273,13 @@ function drawMPMenu(){
     ['Weekly cup & daily boards', 'Everyone flies the same run this week. Post your score to the public board.', 'cup', C.cyan]];
   items.forEach(([t, d, v, c], i) => { const y = ry+318 + i*82; rr(rx+14, y, 612, 72, 8); const hov = hovered(rx+14, y, 612, 72); ctx.fillStyle = hov ? hexA(c,.14) : 'rgba(10,15,30,.7)'; ctx.fill(); ctx.strokeStyle = hov ? c : C.line; ctx.lineWidth = hov ? 2.5 : 1; ctx.stroke();
     T(t, rx+32, y+30, { s:19, f:FD, w:700, c }); T(d, rx+32, y+54, { s:13, c:C.muted, max:570 }); region(rx+14, y, 612, 72, () => { MP.view = v; MP.err = ''; if(typeof mpCodesOpen==='function') mpCodesOpen(v); }, 'v:' + v); });
-  if(MP.err){ panel(80, 902, 1440, 44, 8); T(MP.err, 100, 931, { s:17, c:C.hostile, max:1400 }); }
   btn(80, H-86, 200, 60, 'Back', () => { UI.screen = 'title'; }, { s:18 });
   label('Rooms meet through free public servers (PeerJS and Nostr). Nothing about you is stored there.', W-80, H-48, C.muted, 'right', 12);
 }
-function drawMPKeypad(){
-  mpTitle(MP.wantSpect ? 'WATCH A GAME' : 'JOIN A GAME');
-  const code = MP.code || '', bx = W/2 - 5*92/2;
-  for(let i=0;i<5;i++){ const x = bx + i*92; rr(x, 210, 80, 96, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = i===code.length ? C.amber : C.line; ctx.stroke();
-    if(code[i]) T(code[i], x+40, 274, { s:56, f:FD, w:700, a:'center', c:C.ink }); }
-  const keys = NET_CODE_CH.split(''); const kw = 104, kh = 76, cols = 7, kx = W/2 - (cols*kw + (cols-1)*10)/2;
-  keys.forEach((k, i) => { const x = kx + (i%cols)*(kw+10), y = 350 + Math.floor(i/cols)*(kh+10);
-    btn(x, y, kw, kh, k, () => { if(MP.code.length < 5) MP.code += k; if(MP.code.length===5) sfx('lock'); }, { s:30 }); });
-  const n = keys.length, y2 = 350 + Math.ceil(n/cols)*(kh+10);
-  btn(kx + (n%cols)*(kw+10), 350 + Math.floor(n/cols)*(kh+10), kw*2+10, kh, '⌫ Delete', () => { MP.code = MP.code.slice(0, -1); }, { s:20, col:C.hostile });
-  btn(W/2 - 310, y2 + 20, 300, 70, 'Cancel', () => { MP.view = 'menu'; MP.wantSpect = false; }, { s:20 });
-  btn(W/2 + 10, y2 + 20, 300, 70, MP.wantSpect ? 'Watch' : 'Join', () => mpJoin(MP.code, { spect:MP.wantSpect }), { fill:code.length===5, disabled:code.length<5, s:22 });
-  if(!inXR() && !MOB.touch) label('You can also type the code on your keyboard', W/2, y2 + 130, C.muted, 'center', 13);
-  if(MP.err) T(MP.err, W/2, y2 + 160, { s:18, a:'center', c:C.hostile });
-}
-window.addEventListener('keydown', e => {
-  if(UI.screen!=='mp' || MP.view!=='keypad') return;
-  if(e.key==='Backspace'){ MP.code = MP.code.slice(0, -1); e.preventDefault(); return; }
-  if(e.key==='Enter' && MP.code.length===5){ mpJoin(MP.code, { spect:MP.wantSpect }); return; }
-  if(e.key==='Escape'){ MP.view = 'menu'; return; }
-  const k = netCleanCode(e.key); if(k.length===1 && NET_CODE_CH.includes(k) && MP.code.length < 5) MP.code += k;
-});
-window.addEventListener('paste', e => { if(UI.screen==='mp' && MP.view==='keypad'){ const t = netCleanCode((e.clipboardData || window.clipboardData)?.getData('text') || ''); if(t) MP.code = t.slice(0, 5); } });
+/* a room code: five letters on the QWERTY keyboard; letters that are never in a code are greyed out */
+function mpCodeEntry(spect){ MP.err = ''; MP.wantSpect = !!spect;
+  openKeyboard({ title:spect ? 'Watch a game: room code' : 'Join a game: room code', value:'', max:5, min:5, upper:true, allowed:NET_CODE_CH, boxes:true, ok:spect ? 'Watch' : 'Join', hint:'Five letters, from the host\'s screen',
+    clean:s => { const m = /[#&?]join=([A-Za-z0-9]{5})/.exec(s); return m ? m[1].toUpperCase() : netCleanCode(s); }, onOk:code => mpJoin(code, { spect }) }); }
 function mpOpenBrowse(){ MP.view = 'browse'; MP.rooms = []; MP.browseT = performance.now(); MP.stopBrowse && MP.stopBrowse(); MP.stopBrowse = netBrowse(list => { MP.rooms = list; }); }
 function drawMPBrowse(){
   mpTitle('PUBLIC GAMES');
@@ -336,18 +322,18 @@ function drawMPRoom(){
   // players
   label('Aboard', 80, 268, C.amber, 'left', 16);
   const list = NET.players;
-  list.forEach((p, i) => { const y = 282 + i*76; panel(80, y, 860, 66, 10); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(116, y+33, 14, 0, 7); ctx.fill();
-    T(p.name + (p.id===NET.id ? ' (you)' : ''), 146, y+30, { s:20, f:FD, w:700, max:340 }); const dv = p.dev==='vr' ? 'VR headset' : p.dev==='touch' ? 'Phone or tablet' : 'Computer';
+  list.forEach((p, i) => { const y = 282 + i*76, canRole = p.id===NET.id && mpKind()==='shared' && !['spect','hunt'].includes(NET.mode) && !p.spect; panel(80, y, 860, 66, 10); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(116, y+33, 14, 0, 7); ctx.fill();
+    T(p.name + (p.id===NET.id ? ' (you)' : ''), 146, y+30, { s:20, f:FD, w:700, max:canRole ? 310 : 440 }); const dv = p.dev==='vr' ? 'VR headset' : p.dev==='touch' ? 'Phone or tablet' : 'Computer';
     T(`${p.host ? 'Host · ' : ''}${dv}${p.ready ? ' · ready' : ''}`, 146, y+54, { s:13, c: p.ready ? C.good : C.muted });
-    const R_ = ROLES[p.role] || ROLES.crew; T(R_.name, 600, y+30, { s:18, f:FD, w:700, c:R_.col }); T(R_.desc, 600, y+52, { s:12, c:C.muted, max:250 });
+    const R_ = ROLES[p.role] || ROLES.crew; T(R_.name, 600, y+30, { s:18, f:FD, w:700, c:R_.col, max:300 }); T(R_.desc, 600, y+52, { s:12, c:C.muted, max:300 });
     const P = NET.peers.get(p.id); if(P && P.rtt) label(`${P.rtt} ms`, 920, y+30, P.rtt < 120 ? C.good : C.warn, 'right', 11);
-    if(p.id===NET.id && mpKind()==='shared' && !['spect','hunt'].includes(NET.mode) && !p.spect) btn(780, y+12, 120, 42, 'Role ▾', () => mpCycleRole(), { s:14, loc:true }); });
+    if(canRole) btn(470, y+12, 112, 42, 'Role ▾', () => mpCycleRole(), { s:14, loc:true }); });
   if(!list.length) T('Opening the room…', 100, 320, { s:18, c:C.muted });
   // settings
   const sx = 980; label('Settings', sx, 268, C.amber, 'left', 16); panel(sx, 282, 540, 470, 12);
   let sy = 300; const opt = (name, desc, val, onClick) => { T(name, sx+20, sy+26, { s:17, f:FD, w:700 }); T(desc, sx+20, sy+48, { s:12, c:C.muted, max:330 });
     btn(sx+360, sy+8, 160, 44, val, host ? onClick : null, { s:15, disabled:!host, col:C.cyan }); sy += 66; };
-  sy = mpHook('options', opt, sx, sy) ?? sy;
+  mpHook('options', opt, sx, sy);   // each opt() moves sy down itself
   if(mpKind()==='shared'){
     if(NET.mode!=='spect' && NET.mode!=='hunt'){ opt('Stick to stations', 'Each player only works their own role\'s panels', MP.opts.strict ? 'On' : 'Off', () => { MP.opts.strict = !MP.opts.strict; mpBroadcastOpts(); });
       opt('Event choices', 'Who answers beacons, hails and offers', MP.opts.choices==='captain' ? 'Captain' : 'Anyone', () => { MP.opts.choices = MP.opts.choices==='captain' ? 'any' : 'captain'; mpBroadcastOpts(); });
@@ -418,7 +404,7 @@ function drawMPOverlay(){
     const x = here ? q.x + 20 : 40, y = here ? q.y - 34 : 420 - (k++)*40; ctx.globalAlpha = a;
     ctx.font = `700 17px ${FD}`; const txt = here ? s.text : `${s.name}: ${s.text}`, w = ctx.measureText(txt).width + 26;
     rr(x, y, w, 32, 10); ctx.fillStyle = 'rgba(244,247,255,.96)'; ctx.fill(); ctx.strokeStyle = s.col; ctx.lineWidth = 3; ctx.stroke(); T(txt, x+13, y+22, { s:17, f:FD, w:700, c:'#141b31' }); ctx.globalAlpha = 1; }
-  if(MP.chatOpen && (UI.screen==='game' || UI.screen==='mp')){ UI.hint = null; drawQuickChat(); }
+  if(MP.chatOpen && (UI.screen==='game' || UI.screen==='mp')) drawQuickChat();
   for(const r of SYNC.react){ const k_ = r.t/3.2; ctx.globalAlpha = Math.min(1, (1 - k_)*2); T(r.e, r.x + Math.sin(r.t*3)*14, H - 120 - k_*520, { s:44 + 10*Math.sin(r.t*5), a:'center', b:'middle' }); ctx.globalAlpha = 1; }
 }
 /* the end-of-run screen in a shared game */

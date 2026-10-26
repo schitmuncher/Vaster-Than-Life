@@ -11,7 +11,7 @@
    - Star layout: guests connect to the host, the host relays what others need.
    Also here: a small Nostr client (public lobby list, scoreboards).
    ========================================================================= */
-const NET_V = 1;                       // bump when messages change shape
+const NET_V = 2;                       // bump when messages change shape
 const NET_CODE_CH = 'ACDEFGHJKLMNPQRTUVWXY3479';
 const NET_COLORS = ['#ffb547', '#5fd3e6', '#7be0a0', '#ff8ad8'];
 const NOSTR_RELAYS = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.primal.net', 'wss://nostr.mom', 'wss://relay.nostr.band'];

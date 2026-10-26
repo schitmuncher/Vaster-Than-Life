@@ -69,7 +69,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 
 ## Multiplayer
 
-Free, with no accounts and no game servers: players connect directly, browser to browser, so a Quest, a laptop and a phone can all play together. Open **Multiplayer** on the title screen, host a game and read out the five-letter room code, or join with a friend's code (there's an on-screen keypad that works in VR, and invite links like `…/index.html#join=ABCDE`). You can also invite friends into the run you're already flying: pause and press **Invite friends into this run**.
+Free, with no accounts and no game servers: players connect directly, browser to browser, so a Quest, a laptop and a phone can all play together. Open **Multiplayer** on the title screen, host a game and read out the five-letter room code, or join with a friend's code (typed on the on-screen keyboard, which works in VR, or opened from an invite link like `…/index.html#join=ABCDE`). You can also invite friends into the run you're already flying: pause and press **Invite friends into this run**.
 
 | Mode | Players | What it is |
 | --- | --- | --- |
@@ -87,7 +87,7 @@ Free, with no accounts and no game servers: players connect directly, browser to
 
 **Talking.** Quick chat (**T**, or the Chat button) sends calls like *Fire!* or *Jump now?* and emoji. **Voice** is optional: it asks for your microphone and sends your voice straight to the other players. Everyone sees where the others are pointing, with their name. In co-op, VR players see each other on the bridge as a helmet, hands and a name tag, and flat-screen players see a marker in the room a VR player is standing in.
 
-If the host leaves, guests in a shared game can **keep playing the run solo**, or rejoin with the same code. Settings → Multiplayer has your name, which meeting servers to use, automatic score posting and an optional TURN relay server (only needed on networks that block direct connections).
+If the host's connection drops, guests in a shared game can **keep playing the run solo**, or rejoin with the same code. Leaving on purpose takes you back to the multiplayer menu. Players who join late are brought straight into the run in progress (or to the end screen, if the run just ended); in a race, late arrivals are asked to pick a ship if picking is still going on. Settings → Multiplayer has your name, which meeting servers to use, automatic score posting and an optional TURN relay server (only needed on networks that block direct connections).
 
 ## What's in the game
 
@@ -243,6 +243,7 @@ If the host leaves, guests in a shared game can **keep playing the run solo**, o
 - The pause menu can be shrunk to a small tab (the ▴ button) so both ships stay in view; it remembers your choice.
 - Settings > Accessibility: a red-green safe palette (green becomes blue and the reds deepen, for protanopia and deuteranopia), high contrast text, text size, fewer flashes, game speed and smart pause in one place.
 - Play with a game controller or the keyboard alone: the d-pad or arrow keys jump between buttons and rooms with a clear focus ring, and A or Enter selects. See the tables above.
+- Every text box (ship and crew names, your multiplayer name, seeds, room codes, challenge codes, the TURN server) uses one on-screen QWERTY keyboard drawn on the game screen, so typing works the same in VR, on a phone and with a mouse. A physical keyboard types straight into it, Ctrl+V pastes, Enter confirms and Esc cancels. Room codes show five boxes and grey out letters that never appear in a code; in VR the keyboard opens as a pop-out window in front of you.
 
 **Interface helpers**
 - The title screen shows today's daily challenge, your last run and your record at a glance.
@@ -403,6 +404,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/handson.js` | VR hands-on bonuses: fixing hazards, captain's station pads, enemy sabotage, salvage crates |
 | `js/vrdeck.js` | VR command deck: datapad, pop-out windows, touch presses, bridge stations, aiming at the enemy ship, 3D star map, jump lever, extinguisher, sidearm, hit sparks, guided tour |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
+| `js/keyboard.js` | The on-screen QWERTY keyboard every text box uses (VR, touch, mouse and physical keys) |
 | `js/pad.js` | Game controller and keyboard focus: d-pad and arrow-key navigation between buttons and rooms, cursor, button actions |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |

@@ -120,7 +120,7 @@ function nacelles(b){
 function shipArt(sh, mini){
   const b = sh._b; if(!b) return null;
   const key = [sh.id, sh.rooms.length, sh.rooms.map(r=>r.sys+(sh.systems[r.sys]?1:0)).join(','), (b.x1-b.x0)|0, (b.y1-b.y0)|0, (b.cell*10)|0, b.facing, mini?1:0, sh.color, sh.weapons.length].join('|');
-  if(sh._art && sh._artKey===key) return sh._art;
+  if(sh._art && sh._artKey===key && sh._art.c && typeof sh._art.c.getContext==='function') return sh._art;
   const pad = 70, ox = Math.min(b.x0, b.x0 - b.nose) - pad, oy = b.y0 - pad;
   const w = (b.x1 - b.x0) + 2*b.nose + 2*pad, h = (b.y1 - b.y0) + 2*pad;
   const c = mkCanvas(w, h), g = c.getContext('2d'); g.translate(-ox, -oy);
