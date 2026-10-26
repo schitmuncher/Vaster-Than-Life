@@ -39,6 +39,8 @@ function grant(id){
   if(typeof toast==='function') toast(`Achievement: ${a.name}`); sfx('buy');
 }
 /* the difficulty of the run in progress (a daily challenge fixes its own), or the one picked in the hangar */
+/* the pop-up that stops the game (in multiplayer only shared pop-ups do; the map, ship screen and store are each player's own) */
+function blockingModal(){ return typeof SYNC!=='undefined' && SYNC.on ? SYNC.smodal : (G && G.modal); }
 function curDiff(){ return DIFFICULTY[(typeof G!=='undefined' && G && G.diff) || SET.difficulty] || DIFFICULTY.normal; }
 function shipUnlocked(def){
   if(SET.unlockAll || PROFILE.unlocked?.[def.id]) return true; const u = def.unlock; if(!u) return true;

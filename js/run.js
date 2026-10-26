@@ -21,34 +21,37 @@ function withSeed(key, fn){ if(!G || !G.seed) return fn(); const prev = Math.ran
 function startDaily(){ const k = todayKey(); newRun(dailyShip(k), null, { seed:'DAILY-' + k, daily:k }); }
 
 function newRun(shipId, name, o={}){
-  applyMods(!!o.daily);
+  if(!o.keepData) applyMods(!!(o.daily || o.cup));   // multiplayer races keep the host's game data
   const ch = o.challenge && typeof challengeDef==='function' ? challengeDef(o.challenge) : null; if(ch) challengeRules(ch);
   const def = DATA.ships[shipId] || Object.values(DATA.ships)[0];
-  const diffKey = o.daily ? 'normal' : ch ? (DIFFICULTY[ch.difficulty] ? ch.difficulty : 'normal') : SET.difficulty, diff = DIFFICULTY[diffKey] || DIFFICULTY.normal;
-  G = { seed:cleanSeed(o.seed) || randomSeed(), daily:o.daily || null, challenge:ch ? o.challenge : null, chDone:false, diff:diffKey, shipDef:def.id, ship:null, enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
+  const diffKey = o.daily || o.cup ? 'normal' : ch ? (DIFFICULTY[ch.difficulty] ? ch.difficulty : 'normal') : o.diff && DIFFICULTY[o.diff] ? o.diff : SET.difficulty, diff = DIFFICULTY[diffKey] || DIFFICULTY.normal;
+  G = { seed:cleanSeed(o.seed) || randomSeed(), daily:o.daily || null, cup:o.cup || null, seedDuel:o.seedDuel || null, challenge:ch ? o.challenge : null, chDone:false, diff:diffKey, shipDef:def.id, ship:null, enemy:null, proj:[], fx:[], units:[], sector:1, sectorType:'civilian',
     scrap:Math.max(0, R.startScrap + diff.startScrap), fuel:def.fuel ?? 16, missiles:def.missiles ?? 8, parts:def.parts ?? R.startParts,
     paused:false, modal:null, ftl:0, warp:0, warpNode:null, fleetX:-.2, boss:false, dieT:0, shake:0, flash:0, map:null,
     hazard:null, hzT:6, hzWarn:false, nebula:false, autofire:true, combatT:0, time:0, afterWin:null, flag:null, questQueue:[],
     stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true };
   G.ship = withSeed('start', () => makeShip(def,'p',{ name }));
   if(ch) challengeLoadout(ch);
-  if(!o.daily && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
+  if(!o.daily && !o.cup && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
   genSector(1, 'civilian');
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`);
-  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : ch ? `Challenge · ${ch.name}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
+  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
+  if(typeof mpRunStarted==='function') mpRunStarted(o);
   save();
 }
 function saveReplacer(k, v){ if(k==='adj' || k==='modal' || (typeof k==='string' && k[0]==='_')) return undefined; return v; }
-function save(){ if(!G || G.enemy || UI.screen!=='game') return;
+function save(){ if(!G || G.enemy || UI.screen!=='game' || (typeof SYNC!=='undefined' && SYNC.guest) || G.noSave) return;
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({ G:Object.assign({}, G, { proj:[], fx:[], units:[], warp:0, warpNode:null }), DATA }, saveReplacer)); }catch(e){} }
 function loadSave(){
   const s = LS.get(SAVE_KEY, null); if(!s || !s.G || !s.DATA) return false;
   DATA = s.DATA; R = DATA.rules; G = s.G; G.modal = null; G.fx = []; G.proj = []; G.units = [];
   if(G.crewAuto===undefined) G.crewAuto = true; G.flags = G.flags||{}; G.seen = G.seen||{}; G.later = G.later||[]; G.log = G.log||[]; G.chat = []; G.mapPieces = G.mapPieces||0;
-  buildGraph(G.ship); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; return true;
+  buildGraph(G.ship); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
+  if(typeof mpRunStarted==='function') mpRunStarted({ loaded:true });
+  return true;
 }
 
 /* ---------------- sectors & map ---------------- */
@@ -91,6 +94,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0;
   G.flag = null;
   if(sd.secret){ G.flags.glassDone = true; grant('glasswork'); placeQuest('glass_welcome'); }
   logEntry(`Entered sector ${n}: ${sd.name}.`);
+  if(typeof mpSector==='function') mpSector(n);
   if(final){ const cand = nodes.map((nd,i)=>i).filter(i => nodes[i].col===3);
     G.flag = { node:pick(cand), phase:0, baseHP:R.baseHP, step:0 };
     nodes[G.flag.node].type = 'combat'; }
@@ -105,6 +109,7 @@ function openMap(){ UI.selWeapon = null; UI.mode = null; save(); G.modal = { typ
 function canJump(){ return !G.enemy || G.enemy.dead || G.ftl>=1; }
 function jumpTo(i){
   if(!canJump()){ toast('The VTL drive is still charging.'); return; }
+  if(typeof netGuestCmd==='function' && netGuestCmd({ c:'jump', i })){ if(G.fuel<=0) toast('Out of fuel.'); SYNC.overlay = null; return; }
   if(G.fuel<=0){ G.modal = { type:'stranded' }; return; }
   if(G.enemy && !G.enemy.dead){ const aboard = G.enemy.crew.filter(c=>c.owner==='p' && !c.drone); if(aboard.length){ for(const c of aboard) killCrew(G.enemy, c); toast('Crew left aboard the enemy ship are lost.'); } }
   G.fuel--; G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump'); haptic(.4, 300); if(Math.random()<.35) say('jump');
@@ -113,7 +118,7 @@ function leaveCombat(){
   if(G.enemy){ for(const c of [...G.ship.crew]) if(c.owner==='e' && c.drone) G.ship.crew.splice(G.ship.crew.indexOf(c),1); }
   for(const r of G.ship.rooms) if(r.scorch>0) r.scorch = Math.max(0, r.scorch - 2);
   for(const c of G.ship.crew) if(c.owner==='p') c.mcT = 0;
-  G.enemy = null; G.proj = []; G.units = []; G.ftl = 0; G.boss = false; UI.selWeapon = null; UI.mode = null;
+  G.enemy = null; G.proj = []; G.units = []; G.ftl = 0; G.boss = false; G.jam = 0; UI.selWeapon = null; UI.mode = null;
   for(const w of G.ship.weapons){ w.charge = 0; w.target = null; w.autoTarget = null; }
   for(const d of G.ship.drones){ const bp = DATA.drones[d.id]; if(bp && bp.kind!=='internal') d.unit = null; }
   G.ship.hackLaunched = false; G.ship.hacked = null; G.ship.super = 0; G.ship.cloak.t = 0;
@@ -147,6 +152,7 @@ function arrive_(i){
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
   if(node.x < G.fleetX - .02 && node.type!=='base'){
     startCombat('random', { harder:true, hail:'fleet' }); return; }
+  if(typeof mpArrive==='function' && mpArrive(i, node, first)) return;
   const due = G.later.find(l => --l.jumps <= 0); G.later = G.later.filter(l => l.jumps > 0);
   if(due && DATA.events[due.event] && !['base'].includes(node.type)){ startEvent(due.event); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
@@ -174,7 +180,7 @@ function sectorOptions_(){
   if(G.flags.coords && !G.flags.glassDone && DATA.sectors.glass) opts.push('glass');
   return opts;
 }
-function nextSector(type){ G.modal = null; G.warp = 1; G.warpNode = 'sector:' + type; sfx('jump'); haptic(.4, 300); }
+function nextSector(type){ if(typeof netGuestCmd==='function' && netGuestCmd({ c:'sector', v:type })){ SYNC.overlay = null; return; } G.modal = null; G.warp = 1; G.warpNode = 'sector:' + type; sfx('jump'); haptic(.4, 300); }
 
 /* ---------------- events ---------------- */
 /* what an event can hand out (worked out once per event), so recent rewards can make similar events rarer */
@@ -356,6 +362,7 @@ function startCombat_(id, o={}){
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
   G.enemy.super = G.enemy.superMax;
   sfx('alarm'); haptic(.3, 200); emit('combatStart', G.enemy); logEntry(`Engaged the ${G.enemy.name}.`);
+  if(typeof mpCombatStart==='function') mpCombatStart(G.enemy);
   if(o.hail){ const hid = pickHail(o.hail===true ? (G.enemy.hailTag || G.enemy.faction) : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
   if(def.boss && (G.flags.intel || G.flags.sabotage)) o.text = (o.text||'') + (G.flags.intel ? ' Commander Vane\'s codes expose a flaw in its hull.' : '') + (G.flags.sabotage ? ' Your spy\'s sabotage has knocked out one of its weapons.' : '');
   G.modal = { type:'msg', title:o.title || 'Hostile contact', text:o.text || `The ${G.enemy.name} powers its weapons. Pick targets, then fire. Pause any time to think.`, btn:'Battle stations' };
@@ -380,6 +387,7 @@ function finishCombat(kind, offer){
   if(kind!=='surrender' && (G.combatT||0) < 20) grant('quickdraw');
   if(G.ship.hull >= (G.hull0 ?? 0)){ G.stats.flawless = (G.stats.flawless||0) + 1; if(G.stats.flawless >= 5) grant('flawless5'); }
   if(kind==='crew') grant('boardkill'); if(kind==='surrender') grant('surrender');
+  if(typeof mpFightWon==='function') mpFightWon(kind, e);
   if(G.ship.hull<=3) grant('hullbreadth');
   emit('combatEnd', { kind, enemy:e });
   const L = [];
@@ -418,6 +426,7 @@ function recordRun(win, reason){
   UI.lastRun = entry;
   if(G.daily){ grant('daily'); if(typeof dailyStreak==='function' && dailyStreak() >= 3) grant('streak3'); if(typeof dailyStreak==='function' && dailyStreak() >= 7) grant('streak7'); }
   if(typeof challengeRecord==='function') challengeRecord();
+  if(typeof codesRecordRun==='function') codesRecordRun(entry, win);
   if(win){ if(G.diff==='hard') grant('hardwin'); if(!(G.lost||[]).length) grant('noloss'); if((G.time||0) < 2400) grant('speedwin'); if(R.sectors >= 10) grant('marathonwin'); }
 }
 function endRun(win, reason){
@@ -426,9 +435,10 @@ function endRun(win, reason){
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
+  if(typeof mpRunEnded==='function') mpRunEnded(win, reason);
 }
 
-function smartPause(reason){ if(SET.smartPause && G && !G.modal && !G.paused && UI.screen==='game'){ G.paused = true; toast(`Auto-paused: ${reason}`); } }
+function smartPause(reason){ if(typeof SYNC!=='undefined' && SYNC.on && !MP.opts.smartPause) return; if(SET.smartPause && G && !G.modal && !G.paused && UI.screen==='game'){ G.paused = true; toast(`Auto-paused: ${reason}`); } }
 /* ---------------- crew chatter & enemy taunts ---------------- */
 function say(trigger, o={}){
   if(!G) return; if(!o.force && G.time - (G.lastSay ?? -99) < 3.5) return;
@@ -463,29 +473,36 @@ function update(dt){
   if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
   if(typeof checkHints==='function') checkHints(dt);
   if(typeof updateAmbience==='function') updateAmbience(dt);
+  if(typeof netFrame==='function') netFrame(dt);
   if(UI.screen!=='game' || !G) return;
   for(const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
   G.shake = Math.max(0, G.shake - dt*2); G.flash = Math.max(0, (G.flash||0) - dt*1.5);
+  if(typeof SYNC!=='undefined' && SYNC.on){
+    if(SYNC.guest){ syncGuestTick(dt); return; }   // the host runs the game; guests animate their copy
+    if(SYNC.host){ SYNC.relay = SYNC.inShared = true; try{ updateGame(dt); } finally { SYNC.relay = SYNC.inShared = false; } return; } }
+  updateGame(dt);
+}
+function updateGame(dt){
   if(G.warp>0){ G.warp -= dt;
     if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
       if(typeof n==='string' && n.startsWith('sector:')){ const t = n.slice(7); genSector(G.sector+1, t);
         G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.'), btn:'Open map', then:openMap }; save(); }
       else arrive(n); } }
-  const live = !G.paused && !G.modal && G.warp<=0;
+  const live = !G.paused && !blockingModal() && G.warp<=0 && !(typeof mpHold==='function' && mpHold());
   if(live){
-    dt *= (SET.speed || 1);   // Settings > Gameplay > Game speed: slower fights for VR or new captains
+    dt *= (G.duel ? 1 : (SET.speed || 1));   // Settings > Gameplay > Game speed: slower fights for VR or new captains (duels run at one speed)
     G.time += dt;
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null;
     if(foe) G.combatT += dt;
     tickShip(G.ship, dt, foe);
-    if(foe){ tickShip(foe, dt, G.ship); enemyBrain(foe, G.ship, dt); }
-    deployDrones(G.ship, foe); if(foe) deployDrones(foe, G.ship);
+    if(foe && !G.duel){ tickShip(foe, dt, G.ship); enemyBrain(foe, G.ship, dt); }   // a duel opponent's ship runs in their own game
+    deployDrones(G.ship, foe); if(foe && !G.duel) deployDrones(foe, G.ship);
     tickUnits(dt);
     for(const p of G.proj) p.t += dt;
     const done = G.proj.filter(p => p.t >= p.dur); G.proj = G.proj.filter(p => p.t < p.dur);
     done.forEach(resolve);
     tickHazard(dt);
-    if(foe){
+    if(foe && !G.duel){
       const s = G.ship; const ok = eff(s,'engines')>0 && eff(s,'piloting')>0 && (manned(s,'piloting') || eff(s,'piloting')>=2);
       if(ok && G.ftl<1){ G.ftl = Math.min(1, G.ftl + dt*(.02 + .006*eff(s,'engines'))); if(G.ftl>=1) sfx('ftlready'); }
       // stalemate breaker: if nobody has been able to hurt anybody for a while, the enemy gives up and leaves
@@ -496,19 +513,20 @@ function update(dt){
     }
     if(G.enemy && G.enemy.dead){ G.dieT -= dt; const b = G.enemy._b; if(b && Math.random() < dt*10) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), .8, '#ff8a3d'); if(G.dieT<=0){ finishCombat(G.enemy.deadKind || 'destroyed'); } }
     for(const b of (G.chat||[])) b.t -= dt;
-    if(foe){ if(!foe.hurtSaid && foe.hull < foe.maxHull*.5){ foe.hurtSaid = true; taunt('hurt'); say('enemyHurt'); }
+    if(foe && !G.duel){ if(!foe.hurtSaid && foe.hull < foe.maxHull*.5){ foe.hurtSaid = true; taunt('hurt'); say('enemyHurt'); }
       if(!foe.gloatSaid && G.ship.hull < G.ship.maxHull*.4){ foe.gloatSaid = true; taunt('gloat'); }
       if(!foe.lowSaid && G.ship.hull < G.ship.maxHull*.3){ foe.lowSaid = true; say('lowHull', { force:true }); smartPause('hull critical'); } }
     else { G.idleT = (G.idleT||0) + dt; if(G.idleT > 22){ G.idleT = 0; if(Math.random()<.35) say('idle'); } }
     updateParts(dt);
     emit('tick', dt);
   }
-  if(G.enemy && !G.enemy.dead && !G.modal){
+  if(G.enemy && !G.enemy.dead && !blockingModal() && !G.duel){
     const e = G.enemy;
     if(e.hull<=0){ e.dead = true; e.deadKind = 'destroyed'; G.dieT = 1.3; sfx('explode'); haptic(.8, 400); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e');
       const b = e._b; if(b){ for(let i=0;i<6;i++) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), 1.4, '#ff8a3d'); debris((b.x0+b.x1)/2, (b.y0+b.y1)/2, e.color, 26); } sfx('hit'); haptic(.6, 300); }
     else if(!e.auto && ownerCrewCount('e')===0){ e.dead = true; e.deadKind = 'crew'; G.dieT = .8; G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e'); }
   }
+  if(typeof mpGameTick==='function' && mpGameTick(dt)) return;
   if(UI.screen==='game' && (G.ship.hull<=0 || ownerCrewCount('p')===0)){
     endRun(false, G.ship.hull<=0 ? 'Your hull gave out. The Rebuff Fleet collects the pieces.' : 'Your last crew member is gone. The ship drifts on, empty.'); }
 }

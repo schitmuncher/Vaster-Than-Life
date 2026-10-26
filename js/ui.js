@@ -14,7 +14,7 @@ let HR = [];
 const PTR = [{ x:-1, y:-1, on:false }, { x:-1, y:-1, on:false, xr:true }, { x:-1, y:-1, on:false, xr:true }];
 function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
 let VRTXT = false, MINF = 0;   // set each frame: larger minimum text in VR or with Settings > Display > Text size
-function region(x,y,w,h,cb){ HR.push({ x,y,w,h,cb }); }
+function region(x,y,w,h,cb,t,loc){ HR.push({ x,y,w,h,cb,t,loc }); }   // t: a label so a pressed button can be named to another player; loc: this player's own button (multiplayer)
 function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
 function T(t,x,y,o={}){ let fs_ = o.s||22; if(MINF && fs_ < MINF) fs_ = Math.max(fs_ + 3, Math.min(MINF, fs_*1.35)); ctx.font = `${o.w||400} ${fs_}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
   if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; if(o.max) ctx.fillText(t,x,y,o.max); else ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
@@ -35,7 +35,7 @@ function btn(x,y,w,h,text,cb,o={}){
   if(!dis){ ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x+6, y+2.5); ctx.lineTo(x+w-6, y+2.5); ctx.stroke(); }
   if(hov && !o.fill) glow(x+w/2, y+h/2, Math.max(w,h)*.55, col, .12);
   T(text, x+w/2, y+h/2+1, { a:'center', b:'middle', s:o.s||20, f:FD, w:600, c: dis ? C.muted : (o.fill ? C.void : col), ls:1 });
-  if(!dis && cb) region(x,y,w,h,cb);
+  if(!dis && cb) region(x,y,w,h,cb,String(text),o.loc);
 }
 
 function panel(x,y,w,h,r=10){ rr(x,y,w,h,r); const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,'rgba(22,30,56,.96)'); g.addColorStop(1,'rgba(10,14,28,.96)'); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.line; ctx.stroke(); corners(x,y,w,h); }
@@ -78,7 +78,7 @@ function drawTip(){
       if(x+w > W-8) x = p.x-w-20; if(y+h > H-8) y = p.y-h-20;
       panel(x,y,w,h,8); T(t.title, x+16, y+28, { s:17, f:FD, w:700, c:C.amber }); ls.forEach((l,k) => T(l, x+16, y+52+k*20, { s:15 })); return; } }
 }
-function typed(m, text){ if(!m || m.skip) return text; if(!m.t0) m.t0 = performance.now(); const n = Math.floor((performance.now() - m.t0)*.11); if(n >= text.length){ m.skip = true; return text; } return text.slice(0, n); }
+function typed(m, text){ if(!m || m._skip) return text; if(!m._t0) m._t0 = performance.now(); const n = Math.floor((performance.now() - m._t0)*.11); if(n >= text.length){ m._skip = true; return text; } return text.slice(0, n); }
 function drawBubbles(){
   for(const bub of (G.chat||[])){
     if(bub.t<=0) continue; let x, y;
@@ -108,6 +108,7 @@ function draw(){
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); break;
     case 'record': drawRecord(); break;
+    case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
@@ -116,6 +117,7 @@ function draw(){
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fillStyle = C.amber; ctx.fill(); }
+  if(typeof drawMPOverlay==='function') drawMPOverlay();
   if(typeof drawPadCursor==='function') drawPadCursor();
 }
 
@@ -140,6 +142,7 @@ function drawTitle(){
   btn(110, y, hw, 58, 'Record', () => { UI.screen = 'record'; }, { s:18 });
   btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:17 }); y += 68;
   btn(110, y, hw, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
+  btn(x2, y, hw, 58, NET.on ? `Room ${NET.code}` : 'Multiplayer', () => { UI.screen = 'mp'; MP.view = NET.on ? 'room' : 'menu'; MP.err = ''; }, { s:17, col:'#ff8ad8', fill:NET.on });
   drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
@@ -233,8 +236,9 @@ function drawHangar(){
   btn(1240, y0+416, 132, 34, 'Random', () => { UI.seed = null; }, { s:13, disabled:!UI.seed });
   btn(1384, y0+416, 132, 34, 'Enter seed', () => { if(inXR()) toast('Exit VR to type a seed.'); else openRename('seed'); }, { s:13 });
   tip(1236, y0+340, 290, 110, 'Seed', 'Every run has a seed. The same seed gives the same maps, beacons, enemies and stores, so you can replay a run or share it with a friend. Leave it on Random for a fresh run.');
+  if(typeof mpHangarLaunch==='function' && mpHangarLaunch(sel, open)) return;
   btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName, { seed:UI.seed }); }, { fill:true, s:26, disabled:!open });
-  btn(1060, 890, 160, 70, 'Back', () => { UI.screen = 'title'; });
+  btn(1060, 890, 160, 70, 'Back', () => { if(NET.on){ UI.screen = 'mp'; MP.view = 'room'; return; } UI.screen = 'title'; });
 }
 function drawModsScreen(){
   label('User content', 60, 70, C.cyan, 'left', 18);
@@ -288,7 +292,7 @@ function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);
   T('Settings', 60, 122, { s:50, f:FD, w:700 });
   const tab = UI.setTab || 'audio';
-  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['access','Accessibility'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 175);
+  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['access','Accessibility'],['mp','Multiplayer'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 157);
   panel(60, 204, 1480, 640, 12);
   const X = 100, VX = 560; let y = 236;
   const head = (t) => { label(t, X, y+18, C.cyan, 'left', 15); y += 34; };
@@ -400,6 +404,17 @@ function drawSettings(){
       head('Controls'); y += 12;
       note('Game controller: the d-pad jumps between buttons and rooms, the left stick moves a cursor, A selects, B goes back, Start pauses. X holds fire, Y opens the map, LB and RB pick weapons, LT sends crew to stations, RT toggles autofire, View opens the ship. Keyboard: the arrow keys move the same way and Enter selects.');
       break;
+    case 'mp':
+      head('Multiplayer');
+      T('Your name', X, y+30, { s:20 }); T(mpName(), VX, y+32, { s:20, f:FD, w:700, c:C.amber }); if(!inXR()) btn(VX+330, y+4, 150, 42, 'Change', () => openRename('mp'), { s:15 }); btn(VX+490, y+4, 150, 42, 'Random', () => { PROFILE.mpName = mpRandomName(); saveProfile(); }, { s:15 }); y += 50;
+      choice('Meeting servers', 'netSignal', [['auto','Both'],['peerjs','PeerJS'],['nostr','Nostr']], 'auto', 'How players find each other before connecting directly. Both tries the free PeerJS server and Nostr relays at once and uses whichever answers.');
+      onoff('Post scores', 'autoPost', false, 'Send your weekly cup and daily scores to the public boards when a run ends.');
+      T('Relay server (TURN)', X, y+30, { s:20 }); T(SET.turnUrl ? SET.turnUrl.slice(0, 40) : 'None', VX, y+32, { s:16, c: SET.turnUrl ? C.ink : C.muted, max:320 });
+      if(!inXR()) btn(VX+330, y+4, 150, 42, 'Set', () => openRename({ title:'TURN server: url, user, password (comma separated)', value:[SET.turnUrl||'', SET.turnUser||'', SET.turnPass||''].filter(Boolean).join(', '), max:300, onOk:v => { const [u, n, pw] = v.split(',').map(x => x.trim()); SET.turnUrl = u || ''; SET.turnUser = n || ''; SET.turnPass = pw || ''; saveProfile(); } }), { s:15 });
+      if(SET.turnUrl) btn(VX+490, y+4, 150, 42, 'Clear', () => { SET.turnUrl = SET.turnUser = SET.turnPass = ''; saveProfile(); }, { s:15, col:C.hostile });
+      tip(X-10, y, 440, 50, 'Relay server (TURN)', 'Only needed if two players can\'t connect directly (some strict office or mobile networks). Paste the address of a TURN server you have access to.'); y += 50;
+      y += 12; note('Players connect browser to browser. The meeting servers only pass along connection details, for a moment; on Nostr relays those details are encrypted with your room code. Game traffic never touches them.');
+      break;
     case 'profile':
       head('Your record');
       T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)} · Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, X, y+24, { s:20 }); y += 70;
@@ -457,12 +472,21 @@ const HELP_PAGES = [
     ['Keep crew alive', 'Send hurt crew to the Medbay. Keep Oxygen powered. Fireproof Pebblekin and air-free drones are good firefighters and boarders.'],
     ['Spend scrap well', 'An early second weapon and two shield layers carry you far. Then engines for dodge, a bigger reactor and better guns. Do not hoard: scrap only helps once it is spent.'],
     ['Seeds and dailies', 'Every run has a seed: the same seed gives the same maps and events. The daily run is the same for everyone each day. Replay seeds from your record.'],
-    ['Challenges', 'Challenges on the title screen are hand-made runs with a twist: one crew member, no guns, a tiny hull, a faster fleet. Reach the goal and it is complete even if the run goes on. Mods can add more.'] ]] ];
+    ['Challenges', 'Challenges on the title screen are hand-made runs with a twist: one crew member, no guns, a tiny hull, a faster fleet. Reach the goal and it is complete even if the run goes on. Mods can add more.'] ]],
+  ['Multiplayer', [
+    ['Play together', 'Multiplayer on the title screen. Host a game and read out the five-letter room code, or join with a friend\'s code. Players connect browser to browser: Quest, laptop and phone mix freely. You can also invite friends into a run from the pause menu.'],
+    ['One ship', 'Co-op crew: two to four captains on one ship. Turn on "Stick to stations" to give each player a role. Navigator: a VR captain fights, a navigator on a flat screen runs the map, events and shop. Away team: one player leads the boarders, in VR if they like.'],
+    ['Watch and hunt', 'Go live streams your run to viewers, who send emoji. Hunter and hunted: one flies the courier, the other commands the fleet, spending points on ambushes, hazards and enemy gunnery.'],
+    ['Versus', 'Duel arena: build a ship on a budget, then fight a friend, best of three. Boarding brawl: two crews on one ship, last crew standing.'],
+    ['Same run, own ships', 'Race to the Flaggship: everyone flies the same seed; winning fights draws trouble cards to play on rivals. Wingmen: meet at the same beacon to fight together, and send supplies.'],
+    ['No room needed', 'Seed duels send any finished run as a link. Challenge codes share runs you design. The weekly cup and daily boards post scores to public Nostr relays under your multiplayer name.'],
+    ['Talking', 'Quick chat (T or the Chat button) sends calls and emoji. Turn on Voice to talk: it goes straight to the other players. Everyone sees where the others are pointing.'],
+  ]] ];
 function drawHelpScreen(){
   label('Field manual', 60, 70, C.cyan, 'left', 18);
   T('How to play', 60, 122, { s:50, f:FD, w:700 });
   const pg = clamp(UI.helpPage||0, 0, HELP_PAGES.length-1);
-  tabs(560, 80, HELP_PAGES.map((p,i) => [i, p[0]]), pg, i => { UI.helpPage = i; }, 230);
+  { const n = HELP_PAGES.length, w = Math.min(230, Math.floor((1540 - 520 - (n-1)*8)/n)); tabs(520, 80, HELP_PAGES.map((p,i) => [i, p[0]]), pg, i => { UI.helpPage = i; }, w); }
   HELP_PAGES[pg][1].forEach(([h,t],i) => { const x = i%2 ? 820 : 60, y = 170 + Math.floor(i/2)*176; label(h, x, y, C.amber, 'left', 17); para(t, x, y+30, 700, { s:17, lh:25, max:5 }); });
   btn(60, 880, 200, 64, UI.setFrom==='game' && G ? 'Back to game' : 'Back', () => { UI.screen = UI.setFrom==='game' && G ? 'game' : 'title'; UI.setFrom = null; });
   if(pg < HELP_PAGES.length-1) btn(W-260, 880, 200, 64, 'Next ›', () => { UI.helpPage = pg+1; }, { fill:true });
@@ -483,6 +507,8 @@ function drawEnd(){
     if(G.daily){ const best = PROFILE.daily?.[G.daily]; rows.push(['Daily best', best ? `${fmtNum(best.score)} pts` : '-']); }
     if(G.challenge){ const ch = challengeDef(G.challenge); rows.push(['Challenge', `${ch ? ch.name : G.challenge}: ${G.chDone ? 'complete ✓' : 'not yet'}`]); }
     rows.forEach((r,i) => { label(r[0], W/2+224, 626 + i*36, C.muted, 'left', 12); T(r[1], W/2+360, 626 + i*36, { s:16, max:260 }); }); }
+  if(typeof mpEndExtras==='function') mpEndExtras(win);
+  if(typeof mpEndButtons==='function' && mpEndButtons(win)) return;
   btn(W/2-640, 884, 300, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { s:22 });
   if(G && G.challenge){ const cid = G.challenge; btn(W/2-320, 884, 300, 72, 'Retry challenge', () => startChallenge(cid), { fill:true, s:20, col:C.good }); btn(W/2, 884, 300, 72, 'All challenges', () => { UI.screen = 'challenges'; G = null; }, { s:20 }); }
   else if(G && !G.daily){ const ship = G.shipDef, seed = G.seed;
@@ -552,10 +578,11 @@ function drawGame(){
   drawTopBar();
   ctx.save(); if(G.shake>0 && SET.shake!==false && !inXR()) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
   drawShip(G.ship, PBOX, 1, false, false); ctx.restore();
-  if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else drawQuiet();
+  if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else if(G.brawl && typeof drawBrawlSide==='function') drawBrawlSide(); else drawQuiet();
   drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
   drawRoster(); if(G.enemy) drawEnemyStrip();
   drawSystems(); drawArmory(); drawCrewCard();
+  if(typeof drawMPHud==='function' && NET.on) drawMPHud();
   const sw_ = UI.selWeapon!=null ? DATA.weapons[G.ship.weapons[UI.selWeapon]?.id] : null;
   const hint = UI.selWeapon!=null ? (sw_?.heal ? 'Point at one of YOUR rooms to target the burst' : `Point at an enemy room · ${sw_?.type==='beam'||sw_?.type==='bomb' ? 100 : 100-evasion(G.enemy||G.ship)}% to hit · ${G.enemy?.shield||0} shield layer${(G.enemy?.shield||0)===1?'':'s'}`)
     : UI.mode==='tele' ? 'Point at an enemy room to teleport your away team' : UI.mode==='hack' ? 'Point at an enemy room to launch the hacking drone'
@@ -580,7 +607,9 @@ function drawGame(){
     panel(W/2-300, 438, 600, 66, 10); speedButton(W/2-290, 448);
     btn(W/2-60, 448, 160, 46, 'Manual', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
     const fighting = G.enemy && !G.enemy.dead;
-    btn(W/2+110, 448, 180, 46, UI.confirmExit ? 'Really leave?' : 'Save & exit', () => { if(fighting && !UI.confirmExit){ UI.confirmExit = true; toast('Leaving mid-fight: Continue will start from your last autosave, before this beacon.'); return; } UI.confirmExit = false; save(); UI.screen = 'title'; G = null; }, { s:15, col:C.hostile, fill:!!UI.confirmExit }); }
+    if(NET.on && SYNC.guest) btn(W/2+110, 448, 180, 46, 'Leave game', () => mpLeave(), { s:15, col:C.hostile, loc:true });
+    else btn(W/2+110, 448, 180, 46, UI.confirmExit ? 'Really leave?' : NET.on ? 'Save & end' : 'Save & exit', () => { if(fighting && !UI.confirmExit){ UI.confirmExit = true; toast('Leaving mid-fight: Continue will start from your last autosave, before this beacon.'); return; } UI.confirmExit = false; save(); if(NET.on){ netSend({ t:'end', why:'The host ended the session.' }); mpLeave(); } UI.screen = 'title'; G = null; }, { s:15, col:C.hostile, fill:!!UI.confirmExit });
+    if(!NET.on && !G.daily && !G.noInvite) btn(W/2-300, 512, 600, 46, '👥  Invite friends into this run', () => mpHostFromGame('coop'), { s:15, col:'#ff8ad8' }); }
   else UI.confirmExit = false;
   if(G.modal) drawModal();
 }
@@ -751,6 +780,7 @@ function speedButton(x, y){ const sp = SET.speed||1; btn(x, y, 220, 46, `Speed $
 function moveSelected(sh, ri_){
   const ids = UI.selCrews && UI.selCrews.length ? UI.selCrews : [UI.selCrew];
   const group = sh.crew.filter(x => ids.includes(x.id) && controlled(x));
+  if(G.duel && sh===G.enemy && group.length && typeof duelOrder==='function'){ duelOrder(group, ri_); UI.selCrew = null; UI.selCrews = []; return; }
   if(!group.length){ toast('Crew can only walk within the ship they are on. Use the teleporter to cross.'); UI.selCrew = null; UI.selCrews = []; return; }
   let moved = 0; for(const c of group){ if(orderMove(sh, c, ri_)){ moved++; c.manualT = 10; if(sh===G.ship) c.station = ri_; } }
   if(!moved) toast('That room is full.'); else if(moved < group.length) toast('Not everyone fits in that room.');
@@ -913,6 +943,7 @@ function projOrigin(p){
   if(p._ox==null){
     if(p.unit){ const u = G.units.find(x=>x.id===p.unit); if(u && u._x!=null){ p._ox = u._x; p._oy = u._y; } }
     if(p._ox==null && p.from==='h'){ p._ox = rand(200, 1400); p._oy = -20; }
+    if(p._ox==null && p.from==='w'){ p._ox = PBOX.x + PBOX.w - 80; p._oy = PBOX.y + 28; }
     if(p._ox==null){ const s = shipBySide(p.from); const g = s ? gunPoint(s) : { x:800, y:-20 }; p._ox = g.x; p._oy = g.y; }
   }
   return { x:p._ox, y:p._oy };
@@ -966,7 +997,7 @@ function drawFX(){
 
 /* ---------------- modals ---------------- */
 function mframe(w,h,title,col=C.amber,m){
-  ctx.fillStyle = 'rgba(4,6,12,.74)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,() => { if(m) m.skip = true; });
+  ctx.fillStyle = 'rgba(4,6,12,.74)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,() => { if(m) m._skip = true; }, 'skip');
   const x = (W-w)/2, y = (H-h)/2; rr(x,y,w,h,14); const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,'#131b36'); g.addColorStop(1,'#090e1d'); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
   ctx.save(); rr(x,y,w,h,14); ctx.clip(); const hg = ctx.createLinearGradient(x,0,x+w,0); hg.addColorStop(0,hexA(col,.25)); hg.addColorStop(1,hexA(col,0)); ctx.fillStyle = hg; ctx.fillRect(x,y,w,68); ctx.fillStyle = hexA(col,.5); ctx.fillRect(x,y+68,w,1.5); ctx.restore();
   corners(x-5,y-5,w+10,h+10,col,18);
@@ -1048,7 +1079,7 @@ function drawEventModal(m){
     ctx.lineWidth = hov?3:1.5; ctx.strokeStyle = !ok ? C.line : blue ? C.cyan : (hov?C.amber:C.line); ctx.stroke();
     if(hov){ ctx.fillStyle = blue ? C.cyan : C.amber; ctx.fillRect(f.x+32, y+4, 4, h-8); }
     ls.forEach((l,k) => T(l, f.x+54, y+31+k*27, { s:19, c: !ok ? C.muted : blue ? C.cyan : C.ink }));
-    if(ok) region(f.x+32, y, f.w-64, h, () => chooseOption(c));
+    if(ok) region(f.x+32, y, f.w-64, h, () => chooseOption(c), 'choice:' + i);
     y += h + 10;
   });
 }
@@ -1157,6 +1188,7 @@ function drawMapModal(){
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
       tip(x-26, y-26, 52, 52, name, bits.join(' ')); }
   });
+  if(typeof mpMapOverlay==='function' && NET.on) mpMapOverlay(mx, my, nodes, f);
   if(fleetPx > ax + 4) label('Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
@@ -1208,23 +1240,26 @@ function drawStoreModal(m){
   const f = mframe(1440, 880, 'Store', C.good);
   if(!m.greet) m.greet = pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian); T(m.greet, f.x+160, f.y+44, { s:16, c:C.muted });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['sell','Sell']], UI.storeTab, t => UI.storeTab = t, 186);
+  tabs(f.x+32, f.y+76, [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['sell','Sell']], UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; }, 186);
   const y0 = f.y+150, cx = f.x+32;
+  // the duel arena sells everything, five to a page
+  const per = st.arena ? 5 : 99, full = st.arena ? ({ weapons:st.weapons, drones:st.drones, augments:st.augments, systems:st.systems }[UI.storeTab] || []) : [], pages = Math.max(1, Math.ceil(full.length/per)), pg = st.arena ? clamp(UI.storePage||0, 0, pages-1) : 0, page = a => st.arena ? a.slice(pg*per, pg*per + per) : a;
+  if(st.arena && pages > 1){ btn(cx, f.y+f.h-80, 70, 56, '‹', () => { UI.storePage = pg - 1; }, { disabled:pg<=0 }); T(`${pg+1} / ${pages}`, cx+120, f.y+f.h-44, { s:18, a:'center', c:C.muted }); btn(cx+170, f.y+f.h-80, 70, 56, '›', () => { UI.storePage = pg + 1; }, { disabled:pg>=pages-1 }); }
   const item = (i, name, sub, cost, onBuy, disabled, soldTxt) => { const y = y0 + i*112; panel(cx, y, f.w-64, 100, 8);
     T(name, cx+20, y+36, { s:22, f:FD, w:700, c: disabled && soldTxt ? C.muted : C.ink }); para(sub, cx+20, y+64, 1000, { s:15, lh:20, c:C.muted, max:2 });
     btn(cx+f.w-300, y+24, 220, 54, soldTxt || `Buy · ${cost}`, onBuy, { disabled: disabled || G.scrap < cost, fill:!disabled && G.scrap>=cost, col:C.good }); };
   switch(UI.storeTab){
-    case 'weapons': { const adv = storeAdvice(); para(adv[0], cx, y0+3*112+24, 1300, { s:16, lh:22, c:adv[1] }); }
-      st.weapons.forEach((id,i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id); const c = price(d.cost, st);
+    case 'weapons': if(!st.arena){ const adv = storeAdvice(); para(adv[0], cx, y0+3*112+24, 1300, { s:16, lh:22, c:adv[1] }); }
+      page(st.weapons).forEach((id,i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id); const c = price(d.cost, st);
       item(i, d.name, `${d.type} · ${d.heal ? 'heals '+d.heal : d.type==='bomb' ? (d.sysDamage||0)+' system damage' : d.damage+' damage × '+(d.shots||1)} · ${d.power} power · ${d.charge}s${d.fire?' · fire':''}${d.breach?' · breach':''}${d.heal ? '' : ' · ' + vsShields(d)}${d.desc?' · '+d.desc:''}`, c,
         () => buy(c, () => { st.sold.push('w:'+id); toast(giveWeapon(id)); }), sold, sold ? 'Sold' : null); }); break;
     case 'drones': if(!s.systems.drones) T('Your ship has no Drone system yet. Install one from the Systems tab to use these.', cx, y0+300, { s:17, c:C.warn });
-      st.drones.forEach((id,i) => { const d = DATA.drones[id]; if(!d) return; const sold = st.sold.includes('d:'+id); const c = price(d.cost, st);
+      page(st.drones).forEach((id,i) => { const d = DATA.drones[id]; if(!d) return; const sold = st.sold.includes('d:'+id); const c = price(d.cost, st);
       item(i, d.name, `${d.kind} drone · ${d.power} power${d.desc?' · '+d.desc:''}`, c, () => buy(c, () => { st.sold.push('d:'+id); toast(giveDrone(id)); }), sold, sold ? 'Sold' : null); }); break;
-    case 'augments': st.augments.forEach((id,i) => { const a = DATA.augments[id]; if(!a) return; const sold = st.sold.includes('a:'+id) || s.augments.includes(id); const c = price(a.cost, st);
+    case 'augments': page(st.augments).forEach((id,i) => { const a = DATA.augments[id]; if(!a) return; const sold = st.sold.includes('a:'+id) || s.augments.includes(id); const c = price(a.cost, st);
       item(i, a.name, a.desc||'', c, () => { if(s.augments.length>=R.augmentSlots){ toast('All augment slots are full. Sell one first.'); return; } buy(c, () => { st.sold.push('a:'+id); toast(giveAugment(id)); }); }, sold, sold ? 'Owned' : null); });
       T(`Augment slots: ${s.augments.length}/${R.augmentSlots}`, cx, y0+260, { s:16, c:C.muted }); break;
-    case 'systems': st.systems.forEach((k,i) => { const have = !!s.systems[k]; const c = price(INSTALL[k]||60, st);
+    case 'systems': page(st.systems).forEach((k,i) => { const have = !!s.systems[k]; const c = price(INSTALL[k]||60, st);
       const clash = (k==='clonebay' && s.systems.medbay) || (k==='medbay' && s.systems.clonebay);
       item(i, `${SYSN[k]} system`, clash ? 'You can only have a Medbay or a Clone Bay, not both.' : sysDesc(k), c, () => buy(c, () => { installSystem(s, k); toast(`${SYSN[k]} installed.`); }), have || clash, have ? 'Installed' : clash ? 'Unavailable' : null); });
       if(!st.systems.length) T('No new systems for sale here.', cx, y0+40, { s:18, c:C.muted }); break;
@@ -1238,7 +1273,8 @@ function drawStoreModal(m){
       if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = withSeed(`s${G.sector}n${m.node}cand`, () => newCrew(st.crewRace, 'p')); const cand = st._cand; ensureLook(cand);
         drawPortrait(rx+60, y0+120, 40, cand, false);
         T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
-        if(crewN < R.maxCrew) btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { joinCrew(cand); st.crewSold = true; }), { disabled: G.scrap<cc, fill:G.scrap>=cc, col:C.good });
+        if(crewN < R.maxCrew) btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { joinCrew(cand); if(st.arena){ st._cand = null; } else st.crewSold = true; }), { disabled: G.scrap<cc, fill:G.scrap>=cc, col:C.good });
+        if(st.arena){ const rk = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); btn(rx+280, y0+220, 240, 54, 'Another race', () => { st.crewRace = rk[(rk.indexOf(st.crewRace) + 1) % rk.length]; st._cand = null; }, { s:16 }); }
         else { const sc = Math.max(0, cc - TRADE_IN), node = m.node;
           btn(rx+20, y0+220, 300, 54, `Swap someone · ${sc}`, () => openSwap(cand, sc, (ok) => { if(ok) st.crewSold = true; G.modal = { type:'store', node }; UI.storeTab = 'supplies'; }), { disabled: G.scrap<sc, fill:G.scrap>=sc, col:C.good });
           para(`Bunks are full. Swap one of your crew for ${cand.name}; the store takes ${TRADE_IN} off for the one who leaves.`, rx+340, y0+238, 320, { s:14, lh:18, c:C.warn, max:3 }); } }
@@ -1347,9 +1383,16 @@ function powerUp(k){ const s = G.ship, r = addPower(s,k); sfx(r==='ok' ? 'power'
 function powerDown(k){ removePower(G.ship, k); sfx('unpower'); }
 
 /* ---------------- input ---------------- */
+function hitRegion(x, y){ for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h) return r; } return null; }
+/* press a hit region: mouse, touch, gamepad and VR pointers all end up here */
+function runRegion(r, x, y){
+  if(typeof SYNC!=='undefined' && SYNC.on){ if(netRegion(r, x, y)) return; syncRunClick(r, x, y); sfx('click'); syncAfterInput(); return; }
+  r.cb(x, y); sfx('click');
+}
 function click(x,y){
   ensureAudio();
-  for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; if(x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h){ r.cb(x, y); sfx('click'); return; } }
+  const r = hitRegion(x, y); if(r){ runRegion(r, x, y); return; }
+  if(typeof SYNC!=='undefined' && SYNC.on && netRegion(null, x, y)) return;
   if(UI.screen==='game'){ UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
 }
 function canvasXY(e){ const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left)/r.width*W, y:(e.clientY - r.top)/r.height*H }; }
@@ -1358,6 +1401,7 @@ window.addEventListener('keydown', e => {
   if(UI.hint && (e.key==='Enter' || e.key==='Escape')){ closeHint(false); e.preventDefault(); return; }
   if(e.target && e.target.closest && e.target.closest('dialog,#modPanel,#renameDlg')) return;
   if(UI.screen!=='game' || !G) return;
+  if(typeof mpKey==='function' && mpKey(e)) return;
   if(e.code==='Space'){ e.preventDefault(); if(!G.modal) G.paused = !G.paused; }
   else if(e.key==='m' || e.key==='M'){ if(G.modal?.type==='map') G.modal = null; else if(!G.modal) openMap(); }
   else if(e.key==='c' || e.key==='C'){ if(!G.modal) activateCloak(G.ship); }
@@ -1368,4 +1412,5 @@ window.addEventListener('keydown', e => {
   else if(e.key==='+' || e.key==='=' || e.key==='-' || e.key==='_'){ const i = SPEEDS.indexOf(SET.speed||1); SET.speed = SPEEDS[clamp(i + (e.key==='+'||e.key==='=' ? 1 : -1), 0, SPEEDS.length-1)]; saveProfile(); toast(`Game speed ${Math.round(SET.speed*100)}%`); }
   else if(/^[1-4]$/.test(e.key) && !G.modal){ const i = +e.key-1, w = G.ship.weapons[i]; if(w && w.on) { UI.selWeapon = UI.selWeapon===i ? null : i; UI.mode = null; } }
   else if(e.key==='Escape'){ if(G.modal && ['map','ship','store'].includes(G.modal.type)) G.modal = null; UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
+  if(typeof syncAfterInput==='function' && SYNC.on) syncAfterInput();
 });

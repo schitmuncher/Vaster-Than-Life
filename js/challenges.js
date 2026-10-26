@@ -58,7 +58,7 @@ ACHIEVEMENTS.push(
   { id:'blaster5',    name:'Quick on the Trigger',    desc:'In VR, take down 5 hostile crew with your blaster.' }
 );
 
-function challengeDef(id){ return (typeof DATA!=='undefined' && DATA && DATA.challenges && DATA.challenges[id]) || BASE.challenges[id] || null; }
+function challengeDef(id){ return (typeof DATA!=='undefined' && DATA && DATA.challenges && DATA.challenges[id]) || BASE.challenges[id] || (PROFILE.customChallenges && PROFILE.customChallenges[id]) || null; }
 function startChallenge(id){
   const ch = challengeDef(id); if(!ch) return;
   const ship = (DATA.ships && DATA.ships[ch.ship]) ? ch.ship : 'pestrel';
@@ -107,7 +107,7 @@ function runAchCheck(){
 function drawChallenges(){
   label('Hand-made runs', 60, 70, C.cyan, 'left', 18);
   T('Challenges', 60, 122, { s:50, f:FD, w:700 });
-  const all = Object.entries((DATA && DATA.challenges) || BASE.challenges), P = PROFILE.challenges || {};
+  const all = Object.entries((DATA && DATA.challenges) || BASE.challenges).concat(Object.entries(PROFILE.customChallenges || {})), P = PROFILE.challenges || {};
   T(`${all.filter(([k]) => P[k] && P[k].done).length} of ${all.length} complete`, 1540, 122, { s:20, a:'right', c:C.amber });
   const per = 9, pages = Math.max(1, Math.ceil(all.length/per)); UI.chPage = clamp(UI.chPage||0, 0, pages-1);
   all.slice(UI.chPage*per, UI.chPage*per + per).forEach(([id, ch], i) => {
@@ -120,8 +120,10 @@ function drawChallenges(){
     T(`${challengeGoalText(ch)} · ${shipName} · ${(DIFFICULTY[ch.difficulty] || DIFFICULTY.normal).name}`, x+20, y+142, { s:14, c:C.cyan, max:440 });
     T(done ? `Complete ✓${rec.tries ? ' · ' + rec.tries + ' tr' + (rec.tries===1?'y':'ies') : ''}` : rec.tries ? `Best: sector ${rec.best||1} · ${rec.tries} tr${rec.tries===1?'y':'ies'}` : 'Not tried yet', x+20, y+190, { s:15, c: done ? C.good : C.muted });
     btn(x+320, y+158, 140, 44, done ? 'Again' : 'Start', () => startChallenge(id), { s:17, fill:!done });
+    if(ch.custom){ label('Custom', x+20, y+18, C.warn, 'left', 11); btn(x+180, y+158, 130, 44, 'Share', () => { if(typeof shareChallenge==='function') shareChallenge(id); }, { s:15, col:C.warn }); }
   });
   if(pages>1){ btn(300, 880, 80, 64, '‹', () => UI.chPage--, { disabled:UI.chPage<=0 }); T(`Page ${UI.chPage+1} of ${pages}`, 470, 920, { s:16, a:'center', c:C.muted }); btn(560, 880, 80, 64, '›', () => UI.chPage++, { disabled:UI.chPage>=pages-1 }); }
   para('Challenges use your mods. The goal is checked as you play: reach it and the challenge is yours, even if the run goes on.', 700, 900, 840, { s:15, lh:21, c:C.muted });
   btn(60, 880, 200, 64, 'Back', () => { UI.screen = 'title'; });
+  if(typeof mpCodesOpen==='function') btn(60, 800, 200, 64, 'Make your own', () => { UI.screen = 'mp'; MP.view = 'codes'; mpCodesOpen('codes'); }, { s:16, col:C.warn });
 }

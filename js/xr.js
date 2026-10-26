@@ -147,6 +147,7 @@ function loop(){
       const bs = _bs || (_bs = new THREE.Sphere()); bs.center.setFromMatrixPosition(panelGroup.matrixWorld); bs.radius = 2.4*panelGroup.scale.x;
       if(_fr.intersectsSphere(bs) || (typeof loupe!=='undefined' && loupe?.visible) || (typeof deckNeedsTex==='function' && deckNeedsTex())) tex.needsUpdate = true; }
     update3D(dt);
+    if(typeof avUpdate==='function') avUpdate(dt);
     const warp = warpAmt();
     starPts.rotation.y += dt*(.004 + warp*.8); starPts.scale.z = 1 + warp*6; if(scene.userData.planet) scene.userData.planet.rotation.y += dt*.01;
     renderer.render(scene, camera);
@@ -195,16 +196,20 @@ document.getElementById('copyEx').onclick = async () => { try{ await navigator.c
 const renameDlg = document.getElementById('renameDlg'), renameInput = document.getElementById('renameInput');
 let renameTarget = null;
 function openRename(kind, crew){
-  renameTarget = { kind, crew };
-  document.getElementById('renameTitle').textContent = kind==='ship' ? 'Name your ship' : kind==='seed' ? 'Enter a seed' : `Rename ${crew.name}`;
-  renameInput.value = kind==='ship' ? (UI.shipName || DATA.ships[UI.selShip]?.name || '') : kind==='seed' ? (UI.seed || '') : crew.name;
+  renameTarget = kind && typeof kind==='object' ? Object.assign({ kind:'custom' }, kind) : { kind, crew };
+  const t = renameTarget, k = t.kind;
+  document.getElementById('renameTitle').textContent = k==='custom' ? (t.title || 'Enter text') : k==='ship' ? 'Name your ship' : k==='seed' ? 'Enter a seed' : k==='mp' ? 'Your name in multiplayer' : `Rename ${crew.name}`;
+  renameInput.maxLength = t.max || 24;
+  renameInput.value = k==='custom' ? (t.value || '') : k==='ship' ? (UI.shipName || DATA.ships[UI.selShip]?.name || '') : k==='seed' ? (UI.seed || '') : k==='mp' ? mpName() : crew.name;
   renameDlg.hidden = false; renameInput.focus(); renameInput.select();
 }
-function applyRename(){ const v = renameInput.value.trim().slice(0, 24); if(v && renameTarget){ if(renameTarget.kind==='ship') UI.shipName = v; else if(renameTarget.kind==='seed') UI.seed = cleanSeed(v) || null; else renameTarget.crew.name = v; } renameDlg.hidden = true; renameTarget = null; }
+function applyRename(){ const t = renameTarget, v = renameInput.value.trim().slice(0, renameInput.maxLength || 24);
+  if(v && t){ if(t.kind==='custom') t.onOk(v); else if(t.kind==='ship') UI.shipName = v; else if(t.kind==='seed') UI.seed = cleanSeed(v) || null; else if(t.kind==='mp'){ PROFILE.mpName = v.slice(0, 22); saveProfile(); } else t.crew.name = v; }
+  renameDlg.hidden = true; renameTarget = null; }
 document.getElementById('renameOk').onclick = applyRename;
 document.getElementById('renameCancel').onclick = () => { renameDlg.hidden = true; };
 renameInput.addEventListener('keydown', e => { if(e.key==='Enter') applyRename(); if(e.key==='Escape') renameDlg.hidden = true; });
-document.getElementById('renameRandom').onclick = () => { renameInput.value = renameTarget?.kind==='ship' ? pick(SHIP_NAMES) : renameTarget?.kind==='seed' ? randomSeed() : pick(NAMES); };
+document.getElementById('renameRandom').onclick = () => { const t = renameTarget; renameInput.value = t?.kind==='custom' ? (t.random ? t.random() : '') : t?.kind==='ship' ? pick(SHIP_NAMES) : t?.kind==='seed' ? randomSeed() : t?.kind==='mp' ? mpRandomName() : pick(NAMES); };
 
 /* ---------------- boot ---------------- */
 applyMods();
@@ -212,6 +217,7 @@ fit();
 (document.fonts ? document.fonts.load(`700 40px 'Chakra Petch'`).then(()=>document.fonts.load(`400 20px 'IBM Plex Mono'`)) : Promise.resolve()).catch(()=>{});
 cv.addEventListener('pointerdown', ensureAudio, { once:true });
 loadLibrary();
+if(typeof mpCheckLink==='function') mpCheckLink();
 if(window.THREE){
   init3D();
   if(navigator.xr){

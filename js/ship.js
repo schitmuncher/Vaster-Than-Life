@@ -166,7 +166,7 @@ function makeShip(def, side, o={}){
   let hull = phase?.hull ?? def.hull;
   if(enemy && !def.boss) hull += Math.min(sector-1, 8) + diff.enemyHull;   // FTL: +1 hull per sector
   if(enemy && def.boss) hull += diff.enemyHull*2;
-  const sh = { side, isEnemy:enemy, id:def.id, name:o.name || def.name || def.id, cls:def.cls||'', color:def.color || (enemy?C.hostile:C.amber),
+  const sh = { uid:uid(), side, isEnemy:enemy, id:def.id, name:o.name || def.name || def.id, cls:def.cls||'', color:def.color || (enemy?C.hostile:C.amber),
     boss:!!def.boss, phase:o.phase||0, auto:!!def.auto, image:def.image||null,
     hull, maxHull:hull, reactor:def.reactor || (enemy ? 30 : 8), systems:{}, rooms, doors:null, weapons:[], drones:[], augments:[...(def.augments||[])],
     crew:[], shield:0, shieldT:0, super:0, superMax:phase?.super ?? def.super ?? 0, superRegen:phase?.superRegen||0, superT:0, surge:phase?.surge||0, surgeT:phase?.surge||0,

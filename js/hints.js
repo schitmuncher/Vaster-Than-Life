@@ -56,7 +56,7 @@ function showNextHint(){
   if(G.warp>0) return;
   const id = UI.hintQ.shift(); const H_ = HINTS[id];
   UI.hint = { id, t:0, paused:false };
-  if(H_.pause && G.enemy && !G.enemy.dead && !G.paused && !G.modal){ G.paused = true; UI.hint.paused = true; }
+  if(H_.pause && G.enemy && !G.enemy.dead && !G.paused && !G.modal && !(typeof SYNC!=='undefined' && SYNC.on)){ G.paused = true; UI.hint.paused = true; }   // never pause a shared game for one player's tip
   (PROFILE.hintsSeen = PROFILE.hintsSeen || {})[id] = 1; saveProfile();
 }
 function closeHint(all){
@@ -66,7 +66,7 @@ function closeHint(all){
 /* watch the game state for hint triggers (cheap checks, run a few times a second) */
 let hintT = 0;
 function checkHints(dt){
-  if(!G || UI.screen!=='game' || !hintsOn()) { if(UI.hint && !G) UI.hint = null; return; }
+  if(!G || UI.screen!=='game' || !hintsOn() || (typeof SYNC!=='undefined' && SYNC.spect) || G.duel || G.brawl) { if(UI.hint && (!G || (typeof SYNC!=='undefined' && SYNC.spect))) UI.hint = null; return; }
   if(UI.hint) UI.hint.t += dt;
   if((hintT -= dt) > 0) { showNextHint(); return; } hintT = .4;
   const s = G.ship, e = G.enemy && !G.enemy.dead ? G.enemy : null, m = G.modal;
@@ -110,7 +110,7 @@ function drawHint(){
   if(at && !G.modal){ const [x,y,w,hh] = at; const pulse = .5 + .5*Math.sin(performance.now()/180);
     ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = C.cyan; ctx.lineWidth = 3 + pulse*2; ctx.setLineDash([12,8]); ctx.lineDashOffset = -performance.now()/40; rr(x-6, y-6, w+12, hh+12, 10); ctx.stroke(); ctx.setLineDash([]); glow(x+w/2, y+hh/2, Math.max(w,hh)*.7, C.cyan, .12*pulse); ctx.restore(); }
   const side = at && !G.modal && at[1] < 560 ? (at[0] + at[2]/2 > W/2 ? -1 : 1) : 0;
-  const bw = side ? 700 : 820; ctx.font = `400 20px ${FM}`; const L = lines(H_.text, bw-280, `400 20px ${FM}`);
+  const bw = side ? 700 : 820; const htitle = typeof SYNC!=='undefined' && SYNC.on ? H_.title.replace(' (game paused)', '') : H_.title; ctx.font = `400 20px ${FM}`; const L = lines(H_.text, bw-280, `400 20px ${FM}`);
   const bh = 92 + L.length*27; const bx = side<0 ? 40 : side>0 ? W - bw - 40 : W/2 - bw/2; const by = G.modal ? H - bh - 20 : 96;
   ctx.save(); ctx.globalAlpha = a;
   UI.hintRect = { x:bx-8, y:by-8, w:bw+16, h:bh+16 };   // VR shows the tip as a pop-out window
@@ -118,7 +118,7 @@ function drawHint(){
   ctx.beginPath(); ctx.arc(bx+44, by+46, 24, 0, 7); ctx.fillStyle = hexA(C.cyan,.18); ctx.fill(); ctx.strokeStyle = C.cyan; ctx.lineWidth = 2; ctx.stroke();
   T('?', bx+44, by+47, { s:30, f:FD, w:700, a:'center', b:'middle', c:C.cyan });
   label('Captain\'s tip', bx+86, by+32, C.cyan, 'left', 14);
-  T(H_.title, bx+86, by+62, { s:24, f:FD, w:700 });
+  T(htitle, bx+86, by+62, { s:24, f:FD, w:700 });
   L.forEach((l,i) => T(l, bx+86, by+94 + i*27, { s:20, c:C.ink }));
   ctx.restore();
   btn(bx+bw-170, by+16, 150, 46, h.paused ? 'Got it · resume' : 'Got it', () => closeHint(false), { s:16, fill:true, col:C.cyan });

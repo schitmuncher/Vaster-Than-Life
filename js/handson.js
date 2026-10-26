@@ -104,7 +104,7 @@ function hoAlerts(dt){
   HO.alertN = n;
 }
 function handsOnClear(){
-  if(G && G.ship) G.ship.capMan = null;
+  if(G && G.ship) G.ship._capMan = null;
   HO.work = null; HO.padT = 0; HO.padRoom = -1;
   for(const c of controllers) if(c.userData) c.userData.ho = false;
 }
@@ -148,7 +148,7 @@ function handsOnUpdate(dt){
   const I = IN.own; const sh = G && G.ship;
   const live = !!(I && sh && I.group.visible && I.rooms && !IN.aboard && handsOnEnabled() && UI.screen === 'game');
   if(!live){ if(I && I.ho) for(const k in I.ho.marks) I.ho.marks[k].g.visible = false, I.ho.pads[k] && (I.ho.pads[k].g.visible = false);
-    if(sh && sh.capMan) handsOnClear(); return; }
+    if(sh && sh._capMan) handsOnClear(); return; }
   const active = typeof inXR === 'function' && inXR() && !G.paused && !G.modal;
   hoHover(); hoAlerts(dt);
   const head = I.group.worldToLocal(headWorld());
@@ -172,7 +172,7 @@ function handsOnUpdate(dt){
     // captain's station pad
     if(r.sys && PAD_SYS.includes(r.sys) && sh.systems[r.sys]){
       const p = hoPad(I, ri, r); p.g.visible = near;
-      const mine = sh.capMan === r.sys && HO.padRoom === ri, other = !mine && mannedCrewReal(sh, r.sys);
+      const mine = sh._capMan === r.sys && HO.padRoom === ri, other = !mine && mannedCrewReal(sh, r.sys);
       p.ring.material.color.setHex(mine ? 0x7be0a0 : 0x5fd3e6); p.disc.material.opacity = mine ? .35 : .16;
       const pd = Math.hypot(head.x - p.pos.x, head.z - p.pos.z); p.label.material.map = mine ? HO.geo.onTex : HO.geo.padTex; p.label.visible = near && pd < 3.2 && pd > .9 && !other;   // hidden once you are on it, so it never fills your view
       p.ring.visible = !other || mine;
@@ -203,11 +203,11 @@ function handsOnUpdate(dt){
   if(padHit >= 0){
     if(HO.padRoom !== padHit){ HO.padRoom = padHit; HO.padT = 0; }
     HO.padT += dt;
-    if(HO.padT >= PAD_HOLD && sh.capMan !== sh.rooms[padHit].sys){ sh.capMan = sh.rooms[padHit].sys; sfx('power'); pulse(controllers[0].userData.src, .4, 40); pulse(controllers[1].userData.src, .4, 40);
-      toast('Manning ' + (SYSN[sh.capMan] || sh.capMan) + '. Step off the pad to stand down.'); if(typeof crewBarkNear==='function') crewBarkNear(I, I.ho.pads[padHit].pos, 'cover'); }
-    const p = I.ho.pads[padHit]; if(p && sh.capMan !== sh.rooms[padHit].sys) p.disc.material.opacity = .16 + .2*Math.min(1, HO.padT/PAD_HOLD);
-  } else if(sh.capMan || HO.padRoom >= 0){
-    if(sh.capMan) toast('Station stood down.'); sh.capMan = null; HO.padRoom = -1; HO.padT = 0; }
+    if(HO.padT >= PAD_HOLD && sh._capMan !== sh.rooms[padHit].sys){ sh._capMan = sh.rooms[padHit].sys; sfx('power'); pulse(controllers[0].userData.src, .4, 40); pulse(controllers[1].userData.src, .4, 40);
+      toast('Manning ' + (SYSN[sh._capMan] || sh._capMan) + '. Step off the pad to stand down.'); if(typeof crewBarkNear==='function') crewBarkNear(I, I.ho.pads[padHit].pos, 'cover'); }
+    const p = I.ho.pads[padHit]; if(p && sh._capMan !== sh.rooms[padHit].sys) p.disc.material.opacity = .16 + .2*Math.min(1, HO.padT/PAD_HOLD);
+  } else if(sh._capMan || HO.padRoom >= 0){
+    if(sh._capMan) toast('Station stood down.'); sh._capMan = null; HO.padRoom = -1; HO.padT = 0; }
 }
 function mannedCrewReal(sh, k){ const c = mannedCrew(sh, k); return c && c !== CAPTAIN_CREW ? c : null; }
 

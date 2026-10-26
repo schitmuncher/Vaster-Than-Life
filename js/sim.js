@@ -16,7 +16,7 @@ function bonusPower(sh, k){ const i = roomOf(sh,k); if(i<0) return 0; let b = 0;
   for(const c of sh.crew){ if(c.drone || c.path.length || c.room!==i || crewSide(c)!==sh.side) continue; b += (DATA.races[c.race]?.power||0); } return b; }
 function eff(sh, k){
   const s = sh.systems[k]; if(!s) return 0;
-  if(k==='sensors' && G && G.nebula) return 0;
+  if(k==='sensors' && G && (G.nebula || (G.jam && sh===G.ship))) return 0;
   let e = SUB.includes(k) ? s.max : s.power + bonusPower(sh,k);
   e = Math.min(e, s.max - s.dmg);
   if(s.ionT>0) e -= s.ion;
@@ -59,7 +59,7 @@ function mannedCrew(sh, k){
     if(hostilesFor(sh, i, sh.side)) continue;
     if(!best || skillLvl(c, SKILL_FOR[k]||'repair') > skillLvl(best, SKILL_FOR[k]||'repair')) best = c; }
   // the captain standing on a VR station pad covers a post nobody else is manning
-  if(!best && sh.side==='p' && sh.capMan===k && typeof CAPTAIN_CREW!=='undefined' && !hostilesFor(sh, i, sh.side)) return CAPTAIN_CREW;
+  if(!best && sh.side==='p' && (sh._capMan===k || (sh.capMen && Object.values(sh.capMen).includes(k))) && typeof CAPTAIN_CREW!=='undefined' && !hostilesFor(sh, i, sh.side)) return CAPTAIN_CREW;
   return best;
 }
 function manned(sh, k){ return sh.auto ? !!sh.systems[k] : !!mannedCrew(sh,k); }
@@ -110,7 +110,8 @@ function ionize(sh, k, n){
 }
 function igniteRoom(sh, ri_){ const r = sh.rooms[ri_]; if(!r) return; r.fire = Math.min(r.w*r.h, r.fire + 1); }
 function roomCenter(sh, ri_){ const q = sh._rects?.[ri_]; return q ? { x:q.x+q.w/2, y:q.y+q.h/2 } : { x: sh.isEnemy ? 1200 : 400, y:330 }; }
-function fx(type, x, y, text){ G.fx.push({ type, x, y, t:0, text }); }
+let FX_CAP = null;   // multiplayer duels: what a hit looked like, to show the shooter
+function fx(type, x, y, text){ G.fx.push({ type, x, y, t:0, text }); if(FX_CAP) FX_CAP.push([type, text==null ? null : text]); }
 function fxAtProj(p, sh, type){ if(p._x!=null){ fx(type, p._x, p._y); sparks(p._x, p._y, type==='super' ? '#7be0a0' : '#bff4ff', 8); } else fxAtRoom(sh, p.room, type); }
 function fxAtRoom(sh, ri_, type, text){ const c = roomCenter(sh, ri_); fx(type, c.x, c.y - (type==='text'?30:0), text); }
 function hitRoom(sh, ri_, d, o={}){
@@ -136,7 +137,7 @@ function hitRoom(sh, ri_, d, o={}){
 /* ---------------- projectiles ---------------- */
 function flightTime(d, kind){ if(kind==='hack' || kind==='bdrone') return 2.4; if(kind==='asteroid') return 1.6;
   switch(d.type){ case 'beam': return .6; case 'bomb': return .7; case 'missile': return 1.5; case 'flak': return 1.1; default: return 1.0; } }
-function launch(from, to, d, room, o={}){ const p = Object.assign({ id:uid(), from, to, d, room, t:0 }, o); p.dur = o.dur || flightTime(d, o.kind); G.proj.push(p); return p; }
+function launch(from, to, d, room, o={}){ const p = Object.assign({ id:uid(), from, to, d, room, t:0 }, o); p.dur = o.dur || flightTime(d, o.kind); G.proj.push(p); if((G.duel || G.par) && typeof netLaunch==='function') netLaunch(p); return p; }
 function beamRooms(sh, ri_, n){ return sh.rooms.map((r,i)=>i).sort((a,b) => roomDist(sh,ri_,a) - roomDist(sh,ri_,b)).slice(0, Math.max(1,n)); }
 function nearbyRoom(sh, ri_, rad){ const c = sh.rooms.map((r,i)=>i).filter(i => roomDist(sh, ri_, i) <= rad + 1.3); return c.length ? pick(c) : ri_; }
 function fireWeapon(sh, w, foe){
@@ -155,7 +156,8 @@ function fireWeapon(sh, w, foe){
   return true;
 }
 function projKind(p){ return p.kind || p.d.type; }
-function resolve(p){
+function resolve(p){ if(G.duel && typeof duelResolve==='function') return duelResolve(p); resolve_(p); }
+function resolve_(p){
   const tgt = shipBySide(p.to); if(!tgt || tgt.dead) return;
   const d = p.d, src = shipBySide(p.from);
   if(p.kind==='hack'){ tgt.hacked = { room:p.room, attached:true, pulseT:0, cd:2, by:p.from }; fxAtRoom(tgt, p.room, 'ion'); sfx('zap'); return; }
@@ -201,6 +203,7 @@ function removeDrone(sh, dr){
 function unitAlive(dr){
   if(!dr.unit) return false;
   if((G.units||[]).some(u=>u.id===dr.unit)) return true;
+  if(G.duel && typeof duelUnitAlive==='function' && duelUnitAlive(dr.unit)) return true;
   if(G.proj.some(p=>p.id===dr.unit)) return true;
   for(const s of [G.ship, G.enemy]) if(s && s.crew.some(c=>c.id===dr.unit)) return true;
   return false;
@@ -227,6 +230,7 @@ function deployDrones(sh, foe){
 }
 function tickUnits(dt){
   for(const u of [...G.units]){
+    if(u.pup) continue;   // a duel opponent's drone: their game moves it
     const bp = DATA.drones[u.bp]; const owner = shipBySide(u.side), foe = shipBySide(otherSide(u.side));
     if(!owner || !bp){ G.units = G.units.filter(x=>x!==u); continue; }
     u.ang += dt*(bp.kind==='attack' ? .7 : .9); u.cd -= dt;
@@ -237,14 +241,14 @@ function tickUnits(dt){
       sfx(shot.type==='ion'?'ion':shot.type==='beam'?'beam':'laser'); u.cd = (bp.rate||4) * (u.side==='e' ? 1.35 : 1);
     } else if(bp.kind==='defense'){
       const tg = G.proj.find(p => p.to===u.side && p.from!==u.side && p.t > .15*p.dur && p.t < .85*p.dur && (bp.targets||['missile']).includes(projKind(p)));
-      if(tg){ G.proj = G.proj.filter(p=>p!==tg); fx('zap', tg._x ?? 800, tg._y ?? 330); sfx('zap'); u.cd = bp.rate||2.5;
+      if(tg){ G.proj = G.proj.filter(p=>p!==tg); fx('zap', tg._x ?? 800, tg._y ?? 330); sfx('zap'); u.cd = bp.rate||2.5; if(G.duel && typeof duelZap==='function') duelZap(tg);
         if(tg.kind==='bdrone'){ const o = shipBySide(tg.from); const dr = o?.drones.find(x=>x.unit===tg.id); if(dr) dr.unit = null; }
         if(tg.kind==='hack'){ const o = shipBySide(tg.from); if(o) o.hackLaunched = false; }
         if(u.side==='p'){ G.stats.shotDown = (G.stats.shotDown||0) + 1; if(G.stats.shotDown>=10) grant('missilecmd'); } }
       else u.cd = .2;
     } else if(bp.kind==='anti'){
       const tu = G.units.find(x => x.side!==u.side);
-      if(tu){ destroyUnit(tu); sfx('zap'); u.cd = bp.rate||4; } else u.cd = .3;
+      if(tu){ destroyUnit(tu); sfx('zap'); u.cd = bp.rate||4; if(tu.pup && typeof duelUnitKill==='function') duelUnitKill(tu); } else u.cd = .3;
     }
   }
 }
@@ -259,33 +263,40 @@ function activateBattery(sh){ if(!canBattery(sh)) return false; sh.battery.t = 3
 function canHackLaunch(sh, foe){ return !!foe && !foe.dead && eff(sh,'hacking')>0 && !sh.hackLaunched && !(foe.hacked && foe.hacked.by===sh.side); }
 function hackLaunch(sh, foe, room){
   if(!canHackLaunch(sh, foe)) return false;
+  if(sh===G.ship && typeof netGuestCmd==='function' && SYNC.guest){ if(G.parts<=0){ toast('You need a drone part to launch a hacking drone.'); return false; } netGuestCmd({ c:'hack', room }); return true; }
   sfx('hack');
   if(sh.side==='p'){ if(G.parts<=0){ toast('You need a drone part to launch a hacking drone.'); return false; } G.parts--; }
   sh.hackLaunched = true; launch(sh.side, foe.side, { type:'hack', name:'Hacking drone' }, room, { kind:'hack' }); sfx('missile'); return true;
 }
 function canHackPulse(sh, foe){ return !!foe && !!foe.hacked && foe.hacked.by===sh.side && eff(sh,'hacking')>0 && foe.hacked.pulseT<=0 && foe.hacked.cd<=0; }
-function hackPulse(sh, foe){ if(!canHackPulse(sh, foe)) return false; foe.hacked.pulseT = HACK_T[lvlIdx(sh,'hacking')]; sfx('zap'); return true; }
+function hackPulse(sh, foe){ if(!canHackPulse(sh, foe)) return false; foe.hacked.pulseT = HACK_T[lvlIdx(sh,'hacking')]; sfx('zap'); if(G.duel && sh===G.ship && typeof duelPulse==='function') duelPulse(foe.hacked.pulseT); return true; }
 function canMind(sh){ return eff(sh,'mindcontrol')>0 && sh.mc.cd<=0; }
 function mindControl(sh, c){
   if(!canMind(sh)) return false;
   const race = DATA.races[c.race];
   if(c.drone || race?.mindImmune){ toast(`${c.drone ? 'Drones' : race.name+' crew'} cannot be mind controlled.`); return false; }
   if(crewSide(c)===sh.side) return false;
+  if(sh===G.ship && typeof netGuestCmd==='function' && SYNC.guest){ netGuestCmd({ c:'mind', id:c.id }); return true; }
   // the cooldown starts when control ends, so nobody is controlled forever
   c.mcT = (sh.isEnemy ? [10,14,18] : MIND_T)[lvlIdx(sh,'mindcontrol')]; c.path = []; sh.mc.cd = c.mcT + (sh.isEnemy ? 25 : 18); sfx('mind');
+  if(G.duel && sh===G.ship && G.enemy && G.enemy.crew.includes(c) && typeof duelMind==='function') duelMind(c);
   if(sh.side==='p') grant('mind'); return true;
 }
 function canTele(sh, foe){ return eff(sh,'teleporter')>0 && sh.tele.cd<=0 && !!foe && !foe.dead && foe.super<=0 && foe.cloak.t<=0; }
 function teleSend(sh, foe, room, group){
   if(!canTele(sh, foe)) return false;
+  if(sh===G.ship && typeof netGuestCmd==='function' && SYNC.guest){ const tr = roomOf(sh,'teleporter'); if(!sh.crew.some(c => c.room===tr && !c.path.length && c.owner===sh.side && crewSide(c)===sh.side && !c.drone)) return false; netGuestCmd({ c:'tele', room }); return true; }
   if(!group){ const tr = roomOf(sh,'teleporter'); group = sh.crew.filter(c => c.room===tr && !c.path.length && c.owner===sh.side && crewSide(c)===sh.side && !c.drone).slice(0,4); }
   if(!group.length) return false;
+  if(G.duel && sh===G.ship && typeof duelBoard==='function'){ duelBoard(group, room); sh.tele.cd = TELE_CD[lvlIdx(sh,'teleporter')]; fxAtRoom(foe, room, 'tele'); sfx('tele'); return true; }
   for(const c of group){ sh.crew.splice(sh.crew.indexOf(c),1); foe.crew.push(c); placeCrew(foe, c, room); }
   sh.tele.cd = TELE_CD[lvlIdx(sh,'teleporter')]; fxAtRoom(foe, room, 'tele'); sfx('tele'); return true;
 }
 function teleRecall(sh, foe){
   if(!foe || eff(sh,'teleporter')<=0 || sh.tele.cd>0) return false;
+  if(sh===G.ship && typeof netGuestCmd==='function' && SYNC.guest){ if(!foe.crew.some(c => c.owner===sh.side && !c.drone)) return false; netGuestCmd({ c:'recall' }); return true; }
   const group = foe.crew.filter(c => c.owner===sh.side && !c.drone); if(!group.length) return false;
+  if(G.duel && sh===G.ship && typeof duelRecall==='function'){ duelRecall(); sh.tele.cd = TELE_CD[lvlIdx(sh,'teleporter')]; sfx('tele'); return true; }
   for(const c of group){ foe.crew.splice(foe.crew.indexOf(c),1); sh.crew.push(c); placeCrew(sh, c, Math.max(0, roomOf(sh,'teleporter'))); c.mcT = 0; }
   sh.tele.cd = TELE_CD[lvlIdx(sh,'teleporter')]; sfx('tele'); return true;
 }
@@ -313,7 +324,7 @@ function ownerCrewCount(side){ let n = 0; for(const s of [G.ship, G.enemy]) if(s
 /* ---------------- crew behaviour ---------------- */
 function controlled(c){ return c.owner==='p' && c.mcT<=0 && !c.drone; }
 function crewAI(sh, c){
-  if(controlled(c) || c.stunT>0) return;
+  if(controlled(c) || c.stunT>0 || c.netCtl) return;
   const side = crewSide(c), friendly = side===sh.side, here = c.room;
   const role = c.drone ? (DATA.drones[c.drone]?.role || 'board') : null;
   if(hostilesFor(sh, here, side) && role!=='repair') return;
@@ -392,7 +403,7 @@ function moveCrewStep(sh, c, dt){
     const di = doorBetween(sh, [cx,cy], [nx,ny]);
     if(di>=0){ const d = sh.doors[di];
       if(!doorOpen(d)){
-        if(crewSide(c)===sh.side){ d.passT = .8; }
+        if(crewSide(c)===sh.side || G.brawl){ d.passT = .8; }
         else { d.brk += dt*(c.drone?1:raceOf(c).combat); if(d.brk >= doorStrength(sh)){ d.broken = 12; d.brk = 0; sfx('punch'); } else return; }
       } else d.passT = Math.max(d.passT, .5);
     }
@@ -406,6 +417,7 @@ function moveCrewStep(sh, c, dt){
 function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps')); }
 function killCrew(sh, c){
   const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
+  if(G.duel && c.netCtl && typeof duelDied==='function'){ duelDied(c); return; }
   const race = DATA.races[c.race];
   if(race?.deathBurst) for(const o of sh.crew) if(o.room===c.room && crewSide(o)!==crewSide(c)) o.hp -= race.deathBurst;
   if(c.lastBy==='p' || c.lastByCrew) { /* credit */ }
@@ -510,7 +522,7 @@ function tickShip(sh, dt, foe){
       if(r.fire>0 && !race.fireproof) c.hp -= Math.min(6, 2*r.fire)*dt;
       if(r.o2 < 5 && !race.noAir) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
     }
-    if(c.owner===sh.side && crewSide(c)===sh.side && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
+    if((G.brawl ? c.mcT<=0 && !c.drone : c.owner===sh.side && crewSide(c)===sh.side) && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
     if(medHack && c.room===medR && crewSide(c)===sh.side) c.hp -= 8*dt;
     if(c.owner==='p' && hasAug(G.ship,'gel') && !c.drone) c.hp = Math.min(c.maxHp, c.hp + .6*dt);
     if(c.owner==='p' && !c.drone && c.hp > 0){ const hf = augFx(G.ship,'heal'); if(hf > 0) c.hp = Math.min(c.maxHp, c.hp + hf*dt); }
@@ -533,6 +545,7 @@ function tickShip(sh, dt, foe){
         tgt.hp -= dps*dt; tgt.lastByCrew = a.id; if(a.owner==='p' && sh.isEnemy) tgt.killedByBoarder = true;
         if(tgt.hp<=0 && !tgt._counted){ tgt._counted = true; a.kills++; gainXP(a,'combat',1); }
         if(Math.random()<dt*.6 && (sh.side==='p' || a.owner==='p')) sfx('punch'); }
+    } else if(G.brawl){ return;
     } else if(friends.length){
       const workers = friends.filter(c => c.stunT<=0 && raceOf(c).repair>0 && !(c.drone && DATA.drones[c.drone]?.role!=='repair'));
       if(!workers.length) return;
@@ -577,7 +590,7 @@ function tickShip(sh, dt, foe){
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     w.charge = Math.min(d.charge, w.charge + dt*mult);
     if(w.charge >= d.charge){
-      if(sh.isEnemy && w.target==null) w.target = aiTargetRoom(foe, d);
+      if(sh.isEnemy && w.target==null) w.target = w.cmdT!=null && foe.rooms[w.cmdT] ? w.cmdT : aiTargetRoom(foe, d);   // a fleet commander (multiplayer) can aim enemy guns
       if(sh.isEnemy && G.sector>=3 && foe.shield>0 && ['laser','flak','ion'].includes(d.type)){
         const ready = sh.weapons.filter(x => x.on && DATA.weapons[x.id] && x.charge >= DATA.weapons[x.id].charge).reduce((t,x) => t + (DATA.weapons[x.id].shots||1), 0);
         const soon = sh.weapons.some(x => x.on && DATA.weapons[x.id] && x.charge < DATA.weapons[x.id].charge && x.charge > DATA.weapons[x.id].charge*.55);

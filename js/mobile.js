@@ -75,7 +75,7 @@ function tapAt(x, y, tolCss){
   const tol = tolCss / Math.max(.05, cssPerCanvas());
   const r = nearestRegion(x, y, tol);
   MOB.taps.push({ x, y, t:0, hit:!!r });
-  if(r){ r.cb(x, y); sfx('click'); return true; }
+  if(r){ runRegion(r, x, y); return true; }
   if(UI.screen==='game'){ UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
   return false;
 }

@@ -67,6 +67,28 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 | LT / RT | Crew back to stations / autofire |
 | Start / View | Pause / ship screen |
 
+## Multiplayer
+
+Free, with no accounts and no game servers: players connect directly, browser to browser, so a Quest, a laptop and a phone can all play together. Open **Multiplayer** on the title screen, host a game and read out the five-letter room code, or join with a friend's code (there's an on-screen keypad that works in VR, and invite links like `…/index.html#join=ABCDE`). You can also invite friends into the run you're already flying: pause and press **Invite friends into this run**.
+
+| Mode | Players | What it is |
+| --- | --- | --- |
+| **Co-op crew** | 2–4 | One ship, everyone aboard. By default anyone can do anything; turn on **Stick to stations** to give each player a role (Captain, Helm, Tactical, Engineer). The map, ship screen and store are each player's own window, so two players can browse different things at once. Event choices can be anyone's, or the captain's only. |
+| **Navigator** | 2 | A captain in VR flies and fights; a navigator on a laptop or phone plots the course, answers beacons and runs the shop. |
+| **Away team** | 2–4 | Co-op with a boarding specialist, who is prompted to beam over with the teleporter crew. In VR they can walk the enemy ship, sabotage systems by hand and use the sidearm. |
+| **Go live** | 1 + up to 7 viewers | Stream your run. Viewers watch from any device, can look at the map and ship screen, and send emoji that float up on everyone's screen. Games can be listed publicly, and any co-op game can take viewers too. |
+| **Hunter and hunted** | 2 | The host flies the courier as usual. The guest is the Rebuff fleet commander, earning 2 command points per courier jump and spending them on cards: ambushes and hazards placed on the map, fleet surges, jammed sensors, and in a fight overcharged guns, boarders and shield surges. The commander can also aim every enemy gun. Play the whole run, or a short hunt to sector 4. |
+| **Duel arena** | 2 | Each player picks a hull and spends the same budget in an arena store that sells everything, then the two ships fight. Best of 1, 3 or 5. Each player's own game runs their own ship; shots, boarders, hacking pulses and mind control cross over, and whoever is hit works out the hit. |
+| **Boarding brawl** | 2 | Pick up to four crew on a points budget. Both crews start at opposite ends of the same ship with the doors open; the medbay heals whoever stands in it. After two minutes, life support fails. |
+| **Race to the Flaggship** | 2–4 | Everyone flies the same seed at the same time. A strip under the top bar shows how far each rival has got; winning fights draws trouble cards to play on them (fleet surge, ambush, ion storm, sensor jam, fuel leak, pirate toll, or a jammer to block one). |
+| **Wingmen** | 2–4 | Your own ships on the same sectors. Jump to the same beacon as a wingmate and you fight the same ship together: each of your shots is echoed into their fight as covering fire. Send each other scrap, fuel, missiles and drone parts. |
+
+**No room needed.** **Seed duels** send any finished run as a link or code: your friend flies the same seed (same maps, events and shops) and sees whose score wins, and their answer comes back the same way. **Challenge codes**: design a challenge (ship, difficulty, goal, hull, crew, starting supplies, guns, fleet speed, sector count, salvage) and share it as a code; codes from friends are saved to the Challenges screen. The **weekly cup** is a run everyone flies all week (Normal, mods off); it and the **daily run** have public score boards.
+
+**Talking.** Quick chat (**T**, or the Chat button) sends calls like *Fire!* or *Jump now?* and emoji. **Voice** is optional: it asks for your microphone and sends your voice straight to the other players. Everyone sees where the others are pointing, with their name. In co-op, VR players see each other on the bridge as a helmet, hands and a name tag, and flat-screen players see a marker in the room a VR player is standing in.
+
+If the host leaves, guests in a shared game can **keep playing the run solo**, or rejoin with the same code. Settings → Multiplayer has your name, which meeting servers to use, automatic score posting and an optional TURN relay server (only needed on networks that block direct connections).
+
 ## What's in the game
 
 **Ships and crew**
@@ -251,7 +273,7 @@ Text is larger by default on touch screens (Normal / Large / Huge in Settings). 
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
-- 45 achievements and three difficulties.
+- 55 achievements (10 of them for multiplayer) and three difficulties.
 
 **Challenges**
 - 14 hand-made challenge runs on the title screen, from one to three stars: Lone Wolf (one crew member), Glass Jaw (12 hull), Shoestring Budget, Hot Pursuit, Drone Commander, Boarders Away (no guns), Short Fuse (four sectors), Paper Tiger, The Hard Way, Endurance (ten sectors) and more.
@@ -384,7 +406,26 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/pad.js` | Game controller and keyboard focus: d-pad and arrow-key navigation between buttons and rooms, cursor, button actions |
 | `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |
+| `js/netcrypto.js` | SHA-256, AES-GCM and BIP-340 Schnorr signatures (for Nostr), with no libraries |
+| `js/net.js` | Rooms and codes, WebRTC connections, the three meeting points (PeerJS, Nostr, a local BroadcastChannel for testing), a small Nostr client, the public room list |
+| `js/netsync.js` | Shared-ship replication: patches, the guest copy, capturing guest changes, shared pop-ups, sounds and effects relayed from the host |
+| `js/mp.js` | The multiplayer menu, rooms, players and roles, the in-game strip, pointers, quick chat |
+| `js/mphunt.js` | Hunter and hunted, what viewers may press, co-op medals |
+| `js/mpcodes.js` | Seed duels, challenge codes and their builder, the weekly cup and daily boards |
+| `js/mprun.js` | Race to the Flaggship and Wingmen: progress, trouble cards, covering fire, supplies |
+| `js/mpversus.js` | Duel arena and Boarding brawl |
+| `js/mpvr.js` | VR avatars and voice chat |
 
+
+### Multiplayer, under the hood
+
+No servers of our own. Players find each other through free public meeting points (the PeerJS cloud server and a handful of Nostr relays, tried at the same time), swap connection details, then talk directly over WebRTC data channels: one reliable and ordered for game state, one fast and lossy for pointers and VR poses. Messages over 15 KB are chunked. The host is the hub: guests connect to the host, which passes on what the others need. On Nostr, connection details are sealed with AES-GCM using a key made from the room code, and posted as short-lived events tagged with a hash of it.
+
+*Shared-ship modes* (co-op, navigator, away team, go live, hunter and hunted, brawl): the host runs the only real game. Ten times a second it works out what changed in the game state since the last send and sends a patch: arrays of crew, shots and drones are matched by id, everything else by key, numbers rounded. Each guest applies patches to its own copy and animates it in between (shots fly, crew walk, drones circle). A guest's own actions run on their copy at once, then a comparison with the copy as it was finds what changed (power, targets, doors, crew orders, upgrades, store buys, VR hands-on work) and sends it to the host: counts like scrap, hull, fire and repair progress as differences, crew paths as move orders, and teleporting, hacking, mind control and jumps as commands. Until the host confirms, the guest keeps showing its own change. Shared pop-ups (events, results, surrender offers) are run by the host: a guest's click is sent as "this button was pressed", so every player sees the same choice play out. Sounds, toasts, sparks and medals the host's game makes are sent along with each patch.
+
+*Duels* split the work: each player's game runs their own ship and shows a copy of the opponent's, refreshed ten times a second; shots, boarders and mind control cross as messages. *Race and wingmen* games are fully separate games of the same seed, with the host's game data, exchanging progress, cards, covering fire and supplies.
+
+Scoreboards and the public room list are Nostr events (kind 30078), signed with a key made on the device and kept in the browser's storage.
 
 ## Credits
 
