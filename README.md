@@ -42,7 +42,7 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 
 **Screen shape** (Settings → Screen & touch): *Fill* stretches the game to the whole screen so no black bars show (the default on phones and tablets), *16:10* is the original shape, *16:9* and *21:9* are wide shapes, and *Crop* zooms in so nothing is left over; drag to see the edges.
 
-Text is larger by default on touch screens (Normal / Large / Huge in Settings). On a phone, events, messages and tips zoom in by themselves so you can read them, and zoom back out when you close them (**Settings → Display → Zoom in to read**). Tips are spaced out, so you don't get one straight after another. The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
+Text is larger by default on touch screens (Normal / Large / Huge in Settings). If you'd like events and messages to zoom in to fill a phone screen while they're open, switch on **Settings → Display → Zoom in to read** (off by default; tips never zoom). Tips are spaced out, so you don't get one straight after another. The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
 
 | Keyboard | Action |
 | --- | --- |

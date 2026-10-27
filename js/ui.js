@@ -350,7 +350,7 @@ function drawSettings(){
       choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
       head('Touch');
       onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
-      onoff('Zoom in to read', 'readZoom', true, 'On phones, events, messages and captain\'s tips zoom in to fill the screen while they are open, then zoom back out.');
+      onoff('Zoom in to read', 'readZoom', false, 'Off by default. On phones, events and messages zoom in to fill the screen while they are open, then zoom back out. Tips never zoom.');
       btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 74;
       note('Tap to use anything: tap a weapon\'s card to power it and pick it to aim. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
       break;

@@ -194,12 +194,10 @@ function mobileFrame(){
 const READ_TYPES = new Set(['event','msg','result','exit','surrender','stranded','swapcrew']);
 function phoneSized(){ return MOB.touch && Math.min(MOB.gw, MOB.gh) < 560; }
 function readingRect(){
-  if(SET.readZoom === false || !phoneSized() || UI.screen!=='game' || !G || MOB.ptrs.size) return null;
+  if(SET.readZoom !== true || !phoneSized() || UI.screen!=='game' || !G || MOB.ptrs.size) return null;
   if(typeof KB!=='undefined' && KB.open) return null;
   let r = null; const m = G.modal;
   if(m && UI.modalRect && READ_TYPES.has(m.type)) r = UI.modalRect;
-  else if(!m && UI.hint && UI.hintRect) r = UI.hintRect;
-  if(r && UI.hint && UI.hintRect && r!==UI.hintRect){ const h = UI.hintRect, x0 = Math.min(r.x, h.x), y0 = Math.min(r.y, h.y); r = { x:x0, y:y0, w:Math.max(r.x+r.w, h.x+h.w) - x0, h:Math.max(r.y+r.h, h.y+h.h) - y0 }; }
   return r;
 }
 function readingZoom(){
