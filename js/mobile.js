@@ -42,7 +42,7 @@ function applyTransform(){
   cv.style.transform = `translate(-50%,-50%) translate(${MOB.px}px,${MOB.py}px) rotate(${MOB.rot}deg) scale(${MOB.z})`;
   const ah = stageEl.getBoundingClientRect().height - ((!MOB.touch && !document.fullscreenElement) ? (document.getElementById('bar').offsetHeight + 12) : 0);
   cv.style.top = (ah/2) + 'px';
-  if(zoomBtn) zoomBtn.hidden = MOB.z < 1.05;
+  if(zoomBtn) zoomBtn.hidden = MOB.z < 1.05 || !!MOB.autoZ;
 }
 function clampPan(){
   const sw = (MOB.rot ? MOB.gh : MOB.gw)*MOB.z, sh = (MOB.rot ? MOB.gw : MOB.gh)*MOB.z;
@@ -60,14 +60,16 @@ function screenToGame(sx, sy, st = MOB){
 }
 function gameToScreenDelta(gx, gy, z){ let dx = (gx/W - .5)*MOB.gw*z, dy = (gy/H - .5)*MOB.gh*z; if(MOB.rot){ const t = dx; dx = -dy; dy = t; } return { dx, dy }; }
 function cssPerCanvas(){ return MOB.gw*MOB.z / W; }
-function resetZoom(){ MOB.z = 1; MOB.px = 0; MOB.py = 0; applyTransform(); }
+function resetZoom(){ MOB.z = 1; MOB.px = 0; MOB.py = 0; MOB.userZoom = false; MOB.autoZ = false; applyTransform(); }
 if(zoomBtn) zoomBtn.onclick = resetZoom;
 
 /* ---------------- forgiving clicks ---------------- */
 function nearestRegion(x, y, tol){
   let best = null, bd = tol;
   for(let i=HR.length-1;i>=0;i--){ const r = HR[i]; const dx = Math.max(r.x - x, 0, x - (r.x + r.w)), dy = Math.max(r.y - y, 0, y - (r.y + r.h)); const d = Math.hypot(dx, dy);
-    if(d===0) return r; if(d < bd && r.w < W*.6 && r.h < H*.6){ bd = d; best = r; } }
+    // a tap that lands on a window's backdrop just next to one of its buttons meant the button
+    if(d===0) return (best && r.w >= W*.6 && r.h >= H*.6) ? best : r;
+    if(d < bd && r.w < W*.6 && r.h < H*.6){ bd = d; best = r; } }
   return best;
 }
 function tapAt(x, y, tolCss){
@@ -96,7 +98,7 @@ cv.addEventListener('pointermove', e => {
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
   const moved = Math.hypot(e.clientX - pr.sx, e.clientY - pr.sy);
   if(moved > 12 && !pr.long){ pr.drag = true; clearTimeout(pr.timer); }
-  if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
+  if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ if(MOB.autoZ){ MOB.userZoom = true; MOB.autoZ = false; } MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
   else if(!pr.drag || pr.long){ PTR[0].x = p.x; PTR[0].y = p.y; }   // hold-and-slide reads tooltips
 });
 cv.addEventListener('pointerleave', e => { if(e.pointerType==='mouse') PTR[0].on = false; });
@@ -108,6 +110,7 @@ cv.addEventListener('pointerdown', e => {
   MOB.ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if(MOB.ptrs.size === 2){ // start pinch: cancel any tap in progress
     if(MOB.press){ clearTimeout(MOB.press.timer); MOB.press = null; } PTR[0].on = false;
+    MOB.userZoom = true; MOB.autoZ = false;
     const [a, b] = [...MOB.ptrs.values()]; MOB.pinch = { d0:Math.hypot(a.x-b.x, a.y-b.y), z0:MOB.z, px0:MOB.px, py0:MOB.py, mx0:(a.x+b.x)/2, my0:(a.y+b.y)/2, t0:performance.now(), maxD:0 };
     return; }
   if(MOB.ptrs.size > 2) return;
@@ -129,7 +132,7 @@ function endPointer(e){
     const hit = tapAt(p.x, p.y, 26), now = performance.now(), L = MOB.lastEmpty;
     // double-tap on empty space zooms in on that spot (or back out)
     if(!hit && L && now - L.t < 320 && Math.hypot(e.clientX - L.x, e.clientY - L.y) < 40 && UI.screen==='game'){
-      MOB.lastEmpty = null;
+      MOB.lastEmpty = null; MOB.userZoom = true; MOB.autoZ = false;
       if(MOB.z > 1.2) resetZoom();
       else { const z = 2.2, off = gameToScreenDelta(p.x, p.y, z); MOB.z = z; MOB.px = e.clientX - MOB.cx - off.dx; MOB.py = e.clientY - MOB.cy - off.dy; clampPan(); applyTransform(); }
       haptic(.3, 15);
@@ -183,6 +186,33 @@ function mobileFrame(){
   mobT += dt; if(mobT > 2){ mobT = 0; if(UI.screen==='game') wantWake(); }
   // long-press tooltip marker
   if(MOB.press && MOB.press.long){ ctx.beginPath(); ctx.arc(PTR[0].x, PTR[0].y, 22, 0, 7); ctx.strokeStyle = hexA(C.cyan, .8); ctx.lineWidth = 3; ctx.stroke(); }
+  readingZoom();
+}
+/* ---------------- reading zoom (phones) ----------------
+   On a phone the whole console is shrunk onto a small screen. Windows you have to read (events, messages, results, captain's tips)
+   zoom in to fill the screen while they are open, and zoom back out when they close. A pinch or double-tap takes over. */
+const READ_TYPES = new Set(['event','msg','result','exit','surrender','stranded','swapcrew']);
+function phoneSized(){ return MOB.touch && Math.min(MOB.gw, MOB.gh) < 560; }
+function readingRect(){
+  if(SET.readZoom === false || !phoneSized() || UI.screen!=='game' || !G || MOB.ptrs.size) return null;
+  if(typeof KB!=='undefined' && KB.open) return null;
+  let r = null; const m = G.modal;
+  if(m && UI.modalRect && READ_TYPES.has(m.type)) r = UI.modalRect;
+  else if(!m && UI.hint && UI.hintRect) r = UI.hintRect;
+  if(r && UI.hint && UI.hintRect && r!==UI.hintRect){ const h = UI.hintRect, x0 = Math.min(r.x, h.x), y0 = Math.min(r.y, h.y); r = { x:x0, y:y0, w:Math.max(r.x+r.w, h.x+h.w) - x0, h:Math.max(r.y+r.h, h.y+h.h) - y0 }; }
+  return r;
+}
+function readingZoom(){
+  if(MOB.userZoom){ if(!readingRect() && MOB.z <= 1.01) MOB.userZoom = false; return; }
+  const r = readingRect(); let zt = 1, pxt = 0, pyt = 0;
+  if(r){ zt = clamp(Math.min(W/(r.w + 30), H/(r.h + 30)), 1, 2.4);
+    if(zt > 1.12){ const off = gameToScreenDelta(r.x + r.w/2, r.y + r.h/2, zt); pxt = -off.dx; pyt = -off.dy; } else zt = 1; }
+  if(zt===1 && !MOB.autoZ) return;
+  MOB.autoZ = true;   // stays on until the view is back at normal size
+  const k = .28; MOB.z += (zt - MOB.z)*k; MOB.px += (pxt - MOB.px)*k; MOB.py += (pyt - MOB.py)*k;
+  if(Math.abs(MOB.z - zt) < .004){ MOB.z = zt; MOB.px = pxt; MOB.py = pyt; }
+  if(zt===1 && MOB.z===1) MOB.autoZ = false;
+  applyTransform();
 }
 window.addEventListener('resize', () => setTimeout(layoutGame, 30));
 window.addEventListener('orientationchange', () => setTimeout(layoutGame, 250));

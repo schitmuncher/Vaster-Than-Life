@@ -51,9 +51,12 @@ function hint(id, force){
   if((UI.hint && UI.hint.id===id) || UI.hintQ.includes(id)) return false;
   UI.hintQ.push(id); return true;
 }
+/* general advice waits a few seconds after the last tip, so tips don't arrive in a barrage; tips about what is on screen right now don't wait */
+const HINT_CALM = new Set(['skills','upgrade','power','shields2','fuel','fleet','sector','volley','missile','beam','medbay','hull','welcome']);
 function showNextHint(){
   if(UI.hint || !UI.hintQ || !UI.hintQ.length || !G) return;
   if(G.warp>0) return;
+  if(performance.now() < (UI.hintNext||0)){ const urgent = UI.hintQ.findIndex(h => !HINT_CALM.has(h)); if(urgent < 0) return; UI.hintQ.unshift(UI.hintQ.splice(urgent, 1)[0]); }
   const id = UI.hintQ.shift(); const H_ = HINTS[id];
   UI.hint = { id, t:0, paused:false };
   if(H_.pause && G.enemy && !G.enemy.dead && !G.paused && !G.modal && !(typeof SYNC!=='undefined' && SYNC.on)){ G.paused = true; UI.hint.paused = true; }   // never pause a shared game for one player's tip
@@ -61,7 +64,7 @@ function showNextHint(){
 }
 function closeHint(all){
   if(!UI.hint) return; if(UI.hint.paused && G) G.paused = false;
-  UI.hint = null; if(all){ SET.hints = false; saveProfile(); UI.hintQ = []; toast('Hints turned off. Turn them back on in Settings.'); }
+  UI.hint = null; UI.hintNext = performance.now() + 7000; if(all){ SET.hints = false; saveProfile(); UI.hintQ = []; toast('Hints turned off. Turn them back on in Settings.'); }
 }
 /* watch the game state for hint triggers (cheap checks, run a few times a second) */
 let hintT = 0;

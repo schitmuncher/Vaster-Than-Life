@@ -627,7 +627,9 @@ function enemyBrain(sh, foe, dt){
   if(!sh.boss && !sh.auto && !sh.surrenderAsked && sh.hull <= sh.maxHull*.4){
     sh.surrenderAsked = true; if(Math.random()<.4){ offerSurrender(sh); return; }
   }
-  if(!sh.boss && sh.fleeT==null && sh.hull <= sh.maxHull*.3 && Math.random()<.5) { sh.fleeT = 22; toast(`The ${sh.name} is charging its jump drive to escape!`); }
+  if(!sh.boss && sh.fleeT==null && !sh.fleeRolled && sh.hull <= sh.maxHull*.3){ sh.fleeRolled = true;   // one roll per fight: being denied the kill every time is no fun
+    const ch = { pyrate:.45, rebuff:.3, sloog:.35, voltan:.25, enjinn:.3, auto:.2, mantlis:.05, pebblekin:.1, glass:.25 }[sh.faction] ?? .3;
+    if(Math.random() < ch){ sh.fleeT = 24; toast(`The ${sh.name} is charging its jump drive to escape!`); } }
 }
 
 /* ---------------- hazards ---------------- */

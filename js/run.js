@@ -157,14 +157,20 @@ function arrive_(i){
   if(due && DATA.events[due.event] && !['base'].includes(node.type)){ startEvent(due.event); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
-  if(!first){ G.modal = { type:'msg', title:'Familiar beacon', text:'You have been here before. Nothing new on sensors.' }; save(); return; }
+  if(!first){ toast(pick(['Familiar beacon: nothing new on sensors.', 'You have been here before. Still nothing here.', 'Same old beacon. Your crew waves at the scorch marks.'])); save(); return; }   // no box to close: going back somewhere empty should cost no taps
   if(node.quest){ startEvent(node.quest); return; }
   switch(node.type){
     case 'event': startEvent(pickEvent(node)); break;
     case 'combat': startCombat('random', { hail:true }); break;
     case 'exit': G.modal = { type:'exit', opts:sectorOptions() }; save(); break;
-    default: { let text = hazardText(G.hazard) || fillText(pick(QUIET_TEXTS), { crew:randomCrewName() });
+    default: { const hzFlavour = G.hazard && typeof HAZARD_ARRIVALS!=='undefined' && HAZARD_ARRIVALS[G.hazard] ? fillText(pick(HAZARD_ARRIVALS[G.hazard]), { crew:randomCrewName() }) + ' ' : '';
+      let text = G.hazard ? hzFlavour + hazardText(G.hazard) : fillText(pick(QUIET_TEXTS), { crew:randomCrewName() });
       if(Math.random() < .3){ const f = ri(1,2); G.fuel += f; text += ` Sensors find a drifting fuel canister. +${f} fuel.`; }
+      else if(typeof QUIET_FINDS!=='undefined'){ for(const fd of QUIET_FINDS){ if(Math.random() >= fd.p) continue;   // now and then, something small
+        if(fd.parts){ G.parts += fd.parts; text += ` ${fd.text} +${fd.parts} drone part.`; } else if(fd.missiles){ G.missiles += fd.missiles; text += ` ${fd.text} +${fd.missiles} missile.`; }
+        else if(fd.scrap){ const v = ri(fd.scrap[0], fd.scrap[1]); G.scrap += v; G.stats.scrap += v; text += ` ${fd.text} +${v} scrap.`; }
+        else if(fd.xp){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) gainXP(c, pick(['pilot','engines','shields','weapons','repair']), 2); text += ` ${fd.text}`; }
+        break; } }
       if(!G.hazard && G.ship.hull < G.ship.maxHull && Math.random() < .6){ const n = Math.min(G.ship.maxHull - G.ship.hull, ri(1,3)); G.ship.hull += n; text += ` With nobody shooting at you, the crew bolt on spare plating. +${n} hull.`; }
       G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text }; save(); }
   }
@@ -216,7 +222,7 @@ function fillText(t, cx={}){ return String(t||'').replace(/\{crew\}/g, cx.crew||
 function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t }); if(G.log.length>80) G.log.shift(); }
 function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
   emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:{ crew:randomCrewName() } }; }
-function pickHail(tag){ const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
+function pickHail(tag){ if(typeof pickHailFresh==='function') return pickHailFresh(tag); const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
 function reqHidden(q){ return !!(q && (q.race || q.system || q.weaponType || q.drone || q.augment)); }
 function reqMet(q){
   if(!q) return true; const s = G.ship;
@@ -356,7 +362,7 @@ function startCombat_(id, o={}){
     for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
-  G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.afterWin = o.afterWin || null;
+  G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
@@ -371,7 +377,9 @@ function offerSurrender(e){
   const n = G.sector; const offer = { scrap: 12 + n*5 + ri(0,10) }; const r = Math.random();
   if(r<.33) offer.fuel = ri(2,4); else if(r<.66) offer.missiles = ri(2,4); else offer.parts = ri(2,4);
   if(Math.random()<.15) offer.weapon = 'random';
-  G.modal = { type:'surrender', offer, name:e.name, line:SURRENDER_LINES[e.faction] || SURRENDER_LINES.generic };
+  const theirs = e.crew.filter(c => c.owner==='e' && !c.drone && DATA.races[c.race] && !DATA.races[c.race].secret);
+  if(theirs.length && Math.random() < .12) offer.crew = pick(theirs).race;
+  G.modal = { type:'surrender', offer, name:e.name, line:[].concat(SURRENDER_LINES[e.faction] || SURRENDER_LINES.generic).length ? pick([].concat(SURRENDER_LINES[e.faction] || SURRENDER_LINES.generic)) : '' };
 }
 function finishCombat(kind, offer){
   const e = G.enemy; if(!e) return; const wasBoss = G.boss;
@@ -401,11 +409,13 @@ function finishCombat(kind, offer){
     if(!reward.weapon && Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(!reward.augment && Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
+    const races = [...new Set(e.crew.filter(c => c.owner==='e' && !c.drone && DATA.races[c.race] && !DATA.races[c.race].secret).map(c => c.race))];
+    if(kind==='destroyed' && Math.random() < .07){ reward.crew = races.length ? pick(races) : 'random'; L.push(pick(SURVIVOR_LINES)); }
     L.push(...applyEffect(reward)); }); }
   }
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
-    text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : (VICTORY_LINES[e.faction]||VICTORY_LINES.generic).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
+    text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : pick([].concat(VICTORY_LINES[e.faction]||VICTORY_LINES.generic)).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
   logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
 }
 function flagDefeated(){
@@ -440,15 +450,20 @@ function endRun(win, reason){
 
 function smartPause(reason){ if(typeof SYNC!=='undefined' && SYNC.on && !MP.opts.smartPause) return; if(SET.smartPause && G && !G.modal && !G.paused && UI.screen==='game'){ G.paused = true; toast(`Auto-paused: ${reason}`); } }
 /* ---------------- crew chatter & enemy taunts ---------------- */
+const SAY_GAP = { shieldsDown:35, hit:9, repair:20, fire:12, breach:12, jump:25, enemyHurt:30, boarders:20 };   // seconds before the same kind of line again
 function say(trigger, o={}){
   if(!G) return; if(!o.force && G.time - (G.lastSay ?? -99) < 3.5) return;
+  const gap = SAY_GAP[trigger], last = (G.sayT = G.sayT || {}); if(gap && G.time - (last[trigger] ?? -999) < gap) return;
   let c = o.crew; if(!c){ const list = G.ship.crew.filter(x => x.owner==='p' && !x.drone && x.mcT<=0); if(!list.length) return; c = pick(list); }
   if(!c || c.drone) return;
-  const rc = RACE_CHATTER[c.race]; const pool = rc && rc[trigger] && Math.random()<.6 ? rc[trigger] : CHATTER[trigger]; if(!pool) return;
-  G.chat = (G.chat||[]).filter(b => b.t>0).slice(-3); G.chat.push({ text:pick(pool), id:c.id, t:3 }); G.lastSay = G.time; if(typeof voiceOf==='function') sfx('voice', voiceOf(c.race));
+  const rc = RACE_CHATTER[c.race]; const pool = rc && rc[trigger] && Math.random()<.5 ? rc[trigger] : CHATTER[trigger]; if(!pool) return;
+  const recent = (G.sayRecent = G.sayRecent || []), text = typeof pickFresh==='function' ? pickFresh(pool, recent) : pick(pool); recent.push(text); if(recent.length > 8) recent.shift();
+  last[trigger] = G.time;
+  G.chat = (G.chat||[]).filter(b => b.t>0).slice(-3); G.chat.push({ text, id:c.id, t:3 }); G.lastSay = G.time; if(typeof voiceOf==='function') sfx('voice', voiceOf(c.race));
 }
 function taunt(kind){ if(!G || !G.enemy || G.enemy.dead) return; const set = TAUNTS[kind]||{}; const pool = set[G.enemy.faction] || set.generic; if(!pool) return;
-  G.chat = (G.chat||[]).filter(b => b.t>0 && !b.enemy); G.chat.push({ text:pick(pool), enemy:true, t:3.2 }); if(typeof voiceOf==='function') sfx('voice', Object.assign(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race), { base:(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race).base||1)*.85, vol:.7 })); }
+  const recent = (G.tauntRecent = G.tauntRecent || []), text = typeof pickFresh==='function' ? pickFresh(pool, recent) : pick(pool); recent.push(text); if(recent.length > 6) recent.shift();
+  G.chat = (G.chat||[]).filter(b => b.t>0 && !b.enemy); G.chat.push({ text, enemy:true, t:3.2 }); if(typeof voiceOf==='function') sfx('voice', Object.assign(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race), { base:(voiceOf(G.enemy.crew.find(c=>!c.drone)?.race).base||1)*.85, vol:.7 })); }
 
 /* ---------------- stores & upgrades ---------------- */
 function makeStore(){ return withSeed(`s${G.sector}n${G.map?.cur}store`, makeStore_); }
@@ -506,9 +521,15 @@ function updateGame(dt){
       const s = G.ship; const ok = eff(s,'engines')>0 && eff(s,'piloting')>0 && (manned(s,'piloting') || eff(s,'piloting')>=2);
       if(ok && G.ftl<1){ G.ftl = Math.min(1, G.ftl + dt*(.02 + .006*eff(s,'engines'))); if(G.ftl>=1) sfx('ftlready'); }
       // stalemate breaker: if nobody has been able to hurt anybody for a while, the enemy gives up and leaves
-      if(!foe.dead && !foe.boss){ const sig = s.hull*1000 + foe.hull*7 + Object.values(foe.systems).reduce((t,y)=>t+y.dmg,0)*3 + Object.values(s.systems).reduce((t,y)=>t+y.dmg,0)*5 + Math.round([...s.crew, ...foe.crew].reduce((t,c)=>t+c.hp,0)/10);
-        if(sig!==G.stSig){ G.stSig = sig; G.stT = 0; } else if(!G.paused) G.stT = (G.stT||0) + dt;
-        if(G.stT > 60 && foe.fleeT==null){ foe.fleeT = 15; foe.stalemate = true; toast(`Neither ship can land a blow. The ${foe.name} gives up and spins up its jump drive.`); } }
+      // a crew that keeps getting hurt and healed, or a system that keeps getting knocked out and fixed, is not progress:
+      // only a ship losing hull, crew or a whole system for good counts
+      if(!foe.dead && !foe.boss){ const st = G.stProg || (G.stProg = { ph:s.hull, eh:foe.hull, pc:99, ec:99, es:99 });
+        const pc = s.crew.filter(c => c.owner==='p' && !c.drone).length + foe.crew.filter(c => c.owner==='p' && !c.drone).length, ec = foe.crew.filter(c => c.owner==='e' && !c.drone).length + s.crew.filter(c => c.owner==='e' && !c.drone).length;
+        const es = Object.values(foe.systems).filter(y => y.dmg >= y.max).length;
+        if(s.hull < st.ph || foe.hull < st.eh || pc < st.pc || ec < st.ec || es > (st.es===99 ? es : st.es)){ G.stT = 0; }
+        else if(!G.paused) G.stT = (G.stT||0) + dt;
+        st.ph = Math.min(st.ph, s.hull); st.eh = Math.min(st.eh, foe.hull); st.pc = Math.min(st.pc, pc); st.ec = Math.min(st.ec, ec); st.es = st.es===99 ? es : Math.max(st.es, es);
+        if(G.stT > 45 && foe.fleeT==null){ foe.fleeT = 12; foe.stalemate = true; toast(`Neither ship can land a blow. The ${foe.name} gives up and spins up its jump drive.`); } }
       if(foe.fleeT!=null && !foe.dead){ if(foe.stalemate || (eff(foe,'engines')>0 && (manned(foe,'piloting') || foe.auto))) foe.fleeT -= dt; if(foe.fleeT<=0){ finishCombat('fled'); return; } }
     }
     if(G.enemy && G.enemy.dead){ G.dieT -= dt; const b = G.enemy._b; if(b && Math.random() < dt*10) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), .8, '#ff8a3d'); if(G.dieT<=0){ finishCombat(G.enemy.deadKind || 'destroyed'); } }

@@ -35,13 +35,14 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 | Touch | Action |
 | --- | --- |
 | Tap | Use anything. Taps that land just off a button still hit it |
+| Tap a weapon or drone card | Power it (the game moves spare reactor power over if it needs to) and pick it for aiming |
 | Press and hold | Show details about what's under your finger, without clicking it |
 | Pinch, or double-tap empty space | Zoom in (up to 4×); double-tap again or tap **Reset zoom** to zoom out |
 | Drag while zoomed | Look around |
 
 **Screen shape** (Settings → Screen & touch): *Fill* stretches the game to the whole screen so no black bars show (the default on phones and tablets), *16:10* is the original shape, *16:9* and *21:9* are wide shapes, and *Crop* zooms in so nothing is left over; drag to see the edges.
 
-Text is larger by default on touch screens (Normal / Large / Huge in Settings). The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
+Text is larger by default on touch screens (Normal / Large / Huge in Settings). On a phone, events, messages and tips zoom in by themselves so you can read them, and zoom back out when you close them (**Settings → Display → Zoom in to read**). Tips are spaced out, so you don't get one straight after another. The game pauses itself when you switch apps, keeps the screen awake while you play, and gives a short vibration on hits (switch off in Settings). Settings can also be opened from the pause screen mid-run.
 
 | Keyboard | Action |
 | --- | --- |
@@ -114,7 +115,8 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - Teleporter boarding: send crew over, recall them, and win by killing the whole enemy crew.
 - Hacking drones with timed pulses, mind control, and enemies who board, hack and mind-control you back.
 - Drones: combat, beam, ion, defense, anti-drone, system repair, anti-personnel, boarding and hull repair.
-- Enemies that surrender or try to flee.
+- Enemies that surrender (now and then with a crew member who wants to join you) or try to flee once they're badly hurt. If neither ship can land a blow for 45 seconds, the enemy gives up and jumps away, so a fight never drags on forever.
+- Enemy ships of the same type don't always carry the same guns, and a survivor sometimes climbs out of a wreck and asks to join your crew.
 
 **Augments**
 - 16 augments, such as Scrapture Arm, Weapon Pre-Igniter, Long-Range Scanners and Backup DNA Bank.
@@ -123,14 +125,14 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - 10 sector types, including Civilian, Rebuff Stronghold, Pyrate Haven, Nebula, the race homeworlds and the Last Stand.
 - At each exit you choose between two next sectors.
 - Beacon hazards: asteroid fields, solar flares, ion storms, pulsars and nebulae, where sensors go blind.
-- About 185 events with race, system and equipment "blue options", distress beacons and quest chains. Events never repeat within a run until you've seen the rest, and whatever the last few beacons gave you (a free crew member, a weapon) turns up less for a while.
+- About 210 events with race, system and equipment "blue options", distress beacons and quest chains. Events never repeat within a run until you've seen the rest, and whatever the last few beacons gave you (a free crew member, a weapon) turns up less for a while.
 - Stores with tabs for weapons, drones, augments, new systems, supplies, crew and selling.
 - The Rebuff Fleet advances every jump.
 - The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
 
 **Story and dialogue**
-- About 185 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
-- Ships hail you before most fights. Every faction has its own hails, and you can bluff, bribe, intimidate or sneak past.
+- About 210 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
+- Ships hail you before most fights. Every faction has several hails of its own, and you won't hear the same hail twice in a run until you've heard the rest. You can bluff, bribe, intimidate or sneak past.
 - Ten multi-beacon quest lines:
   - The Glass Shard: unlocks a secret sector, the Glasswork Expanse, with a new race (the Glassborn) and two new ships.
   - The Defector: a Rebuff officer whose codes weaken the Flaggship.
@@ -143,7 +145,8 @@ If the host's connection drops, guests in a shared game can **keep playing the r
   - The Weevil nest.
   - A medical escort mission.
 - Named enemy ships, enemy taunts, surrender speeches, sector intros and store-keeper greetings.
-- Crew chatter in speech bubbles (with lines for each race), and a captain's log of everything you did.
+- Crew chatter in speech bubbles (with lines for each race), spaced out so the crew don't repeat themselves, and a captain's log of everything you did.
+- Quiet beacons have a few dozen different descriptions, sometimes turn up a small find, and hazard beacons describe what you've jumped into. Going back to an empty beacon costs no taps.
 
 **Graphics**
 - Procedurally textured hulls with plating, fins, nacelles, cockpit glass and weapon hardpoints.
@@ -383,6 +386,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
 | `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
+| `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |
 | `js/gfx.js` | Procedural hulls, planets, nebulae, icons, particles, event art |
 | `js/sprites.js` | Crew looks, sprites, poses and portraits for every race |
 | `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |

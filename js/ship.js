@@ -180,6 +180,7 @@ function makeShip(def, side, o={}){
     for(const k of order){ const y = sh.systems[k]; if(!y) continue; const p = Math.min(y.max, left); y.power = p; left -= p; } }
   buildGraph(sh);
   let wl = (phase?.weapons || def.weapons || []).filter(id => DATA.weapons[id]);
+  if(enemy && !def.boss && typeof varyEnemyGuns==='function') wl = varyEnemyGuns(wl, sector);
   if(enemy && !def.boss){
     // extra guns come from the sector's tier and must fit the ship's weapon power, so late ships are dangerous without being one-shot machines
     const want = Math.min(4, Math.max(wl.length, 1 + Math.floor((sector+1)/3)));
@@ -189,6 +190,12 @@ function makeShip(def, side, o={}){
   }
   sh.weapons = wl.slice(0, enemy ? 4 : R.weaponSlots).map(id => ({ id, charge:0, on:false, target:null }));
   sh.drones = (phase?.drones || def.drones || []).filter(id => DATA.drones[id]).slice(0, enemy ? 4 : R.droneSlots).map(id => ({ id, on:enemy, unit:null }));
+  if(!enemy){   // the starting power follows the loadout: a drone ship's drones and a gun ship's guns get power before the extras
+    const needW = sh.weapons.reduce((t,w) => t + (DATA.weapons[w.id]?.power||0), 0), needD = sh.drones.reduce((t,d) => t + (DATA.drones[d.id] && DATA.drones[d.id].kind!=='hull' ? DATA.drones[d.id].power||0 : 0), 0);
+    for(const k in sh.systems) sh.systems[k].power = 0; let left = sh.reactor;
+    const give = (k, n) => { const y = sh.systems[k]; if(!y || SUB.includes(k)) return; const p = Math.max(0, Math.min(y.max - y.power, n, left)); y.power += p; left -= p; };
+    give('shields', 99); give('oxygen', 1); give('engines', 1); give('weapons', needW); give('drones', needD); give('engines', 99); give('oxygen', 99);
+    for(const k of ['clonebay','teleporter','cloaking','hacking','mindcontrol','medbay','weapons','drones']) give(k, 99); }
   const crewList = [...(def.crew||[])];
   if(enemy && !def.auto && !def.boss) for(let i=0;i<Math.floor((sector-1)/3) && crewList.length<6;i++) crewList.push(pick(crewList.length?crewList:['human']));
   if(!enemy && !crewList.length) crewList.push('human');

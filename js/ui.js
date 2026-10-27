@@ -350,8 +350,9 @@ function drawSettings(){
       choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
       head('Touch');
       onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
+      onoff('Zoom in to read', 'readZoom', true, 'On phones, events, messages and captain\'s tips zoom in to fill the screen while they are open, then zoom back out.');
       btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 74;
-      note('Tap to use anything. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
+      note('Tap to use anything: tap a weapon\'s card to power it and pick it to aim. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
       break;
     case 'vr':
       head('Body');
@@ -911,8 +912,13 @@ function drawArmory(){
     for(let p=0;p<d.power;p++){ rr(cx+8+p*16, cy+58, 13, 9, 2); ctx.fillStyle = wp.on ? C.amber : C.line; ctx.fill(); }
     bar(cx+8, cy+72, cw-16, 9, wp.charge/d.charge, ready ? C.good : C.amber);
     T(!wp.on ? 'Off' : ready ? (wp.target==null ? 'Ready' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+8, cy+96, { s:12, c: ready ? C.good : C.muted });
-    btn(cx+6, cy+102, cw-12, 22, wp.on ? 'Power off' : 'Power on', () => weaponToggle(i), { s:12, col: wp.on ? C.muted : C.amber });
-    btn(cx+6, cy+127, cw-12, 22, wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target'), () => weaponAim(i), { s:12, col:C.hostile, fill: sel });
+    // the whole card is a big target to press (handy on a phone): it powers the weapon if needed and picks it for aiming
+    region(cx, cy, cw, 100, () => { if(!wp.on){ weaponToggle(i); if(!wp.on) return; } if(UI.selWeapon===i){ UI.selWeapon = null; UI.mode = null; } else if((G.enemy && !G.enemy.dead) || d.heal){ UI.selWeapon = i; UI.mode = null; UI.selCrew = null; } }, 'card:' + i);
+    const pwrL = wp.on ? 'Power off' : 'Power on', aimL = wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target');
+    if(typeof phoneSized==='function' && phoneSized()){   // on a phone, two thin buttons stacked on top of each other are too easy to mix up: put them side by side, twice as tall
+      const bw = (cw-16)/2; btn(cx+6, cy+102, bw, 47, bw < 80 ? (wp.on ? 'Off' : 'On') : pwrL, () => weaponToggle(i), { s:12, col: wp.on ? C.muted : C.amber }); btn(cx+10+bw, cy+102, bw, 47, bw < 80 && aimL==='Pick room' ? 'Aim' : aimL, () => weaponAim(i), { s:12, col:C.hostile, fill: sel }); }
+    else { btn(cx+6, cy+102, cw-12, 22, pwrL, () => weaponToggle(i), { s:12, col: wp.on ? C.muted : C.amber });
+      btn(cx+6, cy+127, cw-12, 22, aimL, () => weaponAim(i), { s:12, col:C.hostile, fill: sel }); }
   }
   const dy = y+236;
   label('Drones', x+16, dy, '#f0a6ff', 'left', 15);
@@ -929,6 +935,7 @@ function drawArmory(){
     for(let p=0;p<bp.power;p++){ rr(cx+8+p*14, cy+28, 11, 8, 2); ctx.fillStyle = dr.on ? '#f0a6ff' : C.line; ctx.fill(); }
     const status = !dr.on ? (bp.kind==='hull' ? 'Use out of combat' : 'Off') : dr.unit ? 'Deployed' : (G.parts<=0 && !hasAug(s,'recovery')) ? 'No parts!' : ['attack','defense','anti','boarding'].includes(bp.kind) && !G.enemy ? 'Waits for combat' : 'Deploying';
     T(status, cx+dw-8, cy+36, { s:11, a:'right', c: dr.unit ? C.good : C.muted });
+    region(cx, cy, dw, 46, () => droneToggle(i), 'dcard:' + i);
     btn(cx+6, cy+48, dw-12, 30, dr.on ? 'Power off' : (bp.kind==='hull' ? 'Use' : 'Power on'), () => droneToggle(i), { s:13, col:'#f0a6ff' });
   }
 }
@@ -1044,7 +1051,7 @@ function drawModal(){
       btn(f.x+32, f.y+f.h-92, 420, 62, 'Broadcast distress call', () => { G.fuel += 3; G.fleetX += .3; G.modal = { type:'msg', title:'Signal answered', text:'A passing trader sells you 3 fuel cells at a mercy price. The fleet is much closer now.', btn:'Open map', then:openMap }; }, { fill:true, col:C.hostile });
       btn(f.x+f.w-252, f.y+f.h-92, 220, 62, 'Not yet', () => { G.modal = null; }); break; }
     case 'surrender': { const f = mframe(940, 470, 'They surrender', C.good);
-      const parts = []; const o = m.offer; if(o.scrap) parts.push(`${o.scrap} scrap`); if(o.fuel) parts.push(`${o.fuel} fuel`); if(o.missiles) parts.push(`${o.missiles} missiles`); if(o.parts) parts.push(`${o.parts} drone parts`); if(o.weapon) parts.push('a weapon');
+      const parts = []; const o = m.offer; if(o.scrap) parts.push(`${o.scrap} scrap`); if(o.fuel) parts.push(`${o.fuel} fuel`); if(o.missiles) parts.push(`${o.missiles} missiles`); if(o.parts) parts.push(`${o.parts} drone parts`); if(o.weapon) parts.push('a weapon'); if(o.crew) parts.push(`a ${DATA.races[o.crew]?.name || 'crew member'} who wants to join you`);
       const y2 = para(m.line || '"Enough!"', f.x+32, f.y+104, f.w-64, { s:21, c:C.ink });
       para(`The ${m.name} offers ${parts.join(', ')} if you let them go.`, f.x+32, f.y+120+y2, f.w-64, { s:19, c:C.muted });
       btn(f.x+32, f.y+f.h-92, 340, 62, 'Accept surrender', () => { G.modal = null; finishCombat('surrender', o); }, { fill:true, col:C.good });
@@ -1371,19 +1378,23 @@ function drawShipModal(){
 }
 
 /* ---------------- shared actions (2D panels and the VR stations use the same ones) ---------------- */
+/* turning a weapon or drone on tops up its system's power from the free reactor first, so it takes one tap, not three */
+function topUpPower(s, k, need){ const used = () => k==='weapons' ? weaponPowerUsed(s) : dronePowerUsed(s); let n = 8;
+  while(eff(s,k) - used() < need && n-- > 0){ const y = s.systems[k]; if(!y || y.power >= y.max - y.dmg || reactorFree(s) <= 0) break; y.power++; }
+  return eff(s,k) - used() >= need; }
 function weaponToggle(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return;
   if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; sfx('unpower'); }
-  else if(eff(s,'weapons') - weaponPowerUsed(s) >= d.power){ wp.on = true; sfx('power'); }
-  else toast('Not enough weapon power. Add power to Weapons.'); }
+  else if(topUpPower(s, 'weapons', d.power)){ wp.on = true; sfx('power'); }
+  else { const y = s.systems.weapons; sfx('error'); toast(y && y.power >= y.max - y.dmg ? (y.dmg ? 'Weapons are damaged: repair them, or turn another weapon off.' : `Weapons can't power the ${d.name} too: turn another weapon off, or upgrade Weapons.`) : 'No reactor power free: take some from another system (tap − under it).'); } }
 function weaponAim(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return; const sel = UI.selWeapon===i;
   if(wp.target!=null){ wp.target = null; UI.selWeapon = null; }
-  else if(!wp.on) toast('Power the weapon first.');
   else if(!G.enemy && !d.heal) toast('No enemy to target.');
+  else if(!wp.on){ weaponToggle(i); if(wp.on){ UI.selWeapon = i; UI.mode = null; UI.selCrew = null; } }   // aiming an unpowered weapon powers it first, like pressing its card
   else { UI.selWeapon = sel ? null : i; UI.mode = null; UI.selCrew = null; } }
 function droneToggle(i){ const s = G.ship, dr = s.drones[i], bp = dr && DATA.drones[dr.id]; if(!bp) return;
   if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); sfx('unpower'); }
   else if(!s.systems.drones) toast('Install a Drone system first.');
-  else if(eff(s,'drones') - dronePowerUsed(s) < bp.power) toast('Not enough drone power.');
+  else if(!topUpPower(s, 'drones', bp.power)){ const y = s.systems.drones; sfx('error'); toast(y.power >= y.max - y.dmg ? (y.dmg ? 'Drones are damaged: repair them, or turn another drone off.' : `The Drone system can't power the ${bp.name} too: turn another drone off, or upgrade it.`) : 'No reactor power free: take some from another system (tap − under it).'); }
   else { dr.on = true; sfx('power'); } }
 function powerUp(k){ const s = G.ship, r = addPower(s,k); sfx(r==='ok' ? 'power' : 'error'); if(r==='reactor') toast('No reactor power free.'); else if(r==='damaged') toast(`${SYSN[k]} is damaged. Send crew to repair it.`); else if(r==='full') toast(`${SYSN[k]} is at full power. Upgrade it in Ship.`); return r; }
 function powerDown(k){ removePower(G.ship, k); sfx('unpower'); }
