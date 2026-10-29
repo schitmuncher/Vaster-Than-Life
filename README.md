@@ -130,6 +130,17 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - The Rebuff Fleet advances every jump.
 - The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
 
+**Your crew's story**
+
+Inspired by the spirit of the absurd trail games: a small crew you grow fond of, strange things on the road, and deaths that get remembered.
+- **Personalities.** Every crew member has a personality as well as a skill trait: Gambler, Poet, Galley cook, Superstitious, Daredevil, Worrier, Tinkerer, Romantic, Conspiracy buff, Sleepwalker, Collector, Ex-pyrate, Mystic, Optimist, Grump or Bookworm. Each has its own chatter, last words and scenes, and unlocks its own options in events and hails (an ex-pyrate can talk pyrates down in the old cant, a bookworm can quote regulations at the Rebuff, a gambler has "a system" at the casino).
+- **Bonds.** Crew can be best friends, siblings, rivals or sweethearts. They banter between beacons, and when one dies the other grieves, and hits 30% harder for a while.
+- **Crew moments.** Two or three times a run, a beacon is a short scene starring one of your crew, with their portrait: a snail race, an epic poem broadcast to the whole sector, a mystery stew, a black comet, a sleepwalker at the airlock button, a cursed statue, a double of someone after a bad jump. Some come back later in the run: a lost bet, a curse, a pyrate sweetheart, a statue that wakes up.
+- **The ship's pet.** Hatch an egg, take in a stray or keep a lost Biscuit. Pets get up to things between beacons, grow, rescue the ship, and sometimes go home.
+- **A nemesis.** An enemy captain who gets away (or whom you run from) may swear revenge and come back a few jumps later with a named, upgraded ship. They return angrier each time until you finish them, make peace, or they vanish for good. Beating one pays well.
+- **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run.
+- **The saga.** At the end of every run, read the whole story written out: who set out, who joined, who died and how, the nemesis, the pet and the strange things in between, with an epitaph for each crew member. Pause and choose **Saga so far** to read it mid-run. Your last twelve sagas are kept in **Record → Sagas**.
+
 **Story and dialogue**
 - About 210 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
 - Ships hail you before most fights. Every faction has several hails of its own, and you won't hear the same hail twice in a run until you've heard the rest. You can bluff, bribe, intimidate or sneak past.
@@ -339,7 +350,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 
 **Event choices**
 - Each choice needs `text` plus either an `effect`, or a `chance` with `success` and `fail` effects.
-- `req` limits who can pick it: `race`, `system` + `level`, `weaponType`, `drone`, `augment`, `scrap`, `fuel`, `missiles`, `parts`, `crewCount`. Race, system and equipment requirements show as blue options.
+- `req` limits who can pick it: `race`, `quirk` (a crew personality such as `"gambler"`), `pet` (`true`: needs the ship's pet), `system` + `level`, `weaponType`, `drone`, `augment`, `scrap`, `fuel`, `missiles`, `parts`, `crewCount`. Race, personality, pet, system and equipment requirements show as blue options.
 - `cost` takes `scrap`, `fuel`, `missiles` or `parts`.
 
 **Effects** can include:
@@ -351,7 +362,8 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 - Story: `fight` (an enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (chains to another event), `quest` (marks a quest beacon with that event), `later` (`{"event":"id","jumps":4}` fires an event after some jumps), `store`
 - Dialogue: `choices` (continue the conversation on a new page), `setFlag` / `clearFlag` (story flags that choices and events can require), `begin` / `dismiss` (in hails: start the fight, or end the encounter)
 - More: `crewHeal`, `crewHurt`, `maxHull`, `xp` (`{"skill":"pilot","amt":20}`), `reveal` (shows the sector map), `fleetPush`, `mapPiece`
-- Text can use `{crew}`, `{who}` (the crew member who meets a race requirement), `{ship}`, `{enemy}` and `{sector}`.
+- Text can use `{crew}`, `{who}` (the crew member who meets a race or personality requirement), `{ship}`, `{enemy}` and `{sector}`, and in crew moments `{friend}`, `{fallen}`, `{pet}` and `{nemesis}`.
+- Crew moments: give an event `moment: true` and it is picked as a crew scene instead of a normal beacon. `star` (a personality, or `"any"`) chooses who it is about, `bond: true` (with an optional `bondKind`) needs a crew member with a friend, sibling, rival or sweetheart, `fallen: true` needs someone who died, `pet: true` needs the pet. Extra effects for these: `starHurt`, `starHeal`, `starXp`, `starQuirk`, `starLeave`, `starClone`, `bondFix`, `pet`, `petBig`, `petGone`, and `saga` (the line the run's saga tells about that choice).
 - Progress: `unlock`, `achievement`
 
 **Ship layouts**
@@ -386,6 +398,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
 | `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
+| `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |
 | `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |
 | `js/gfx.js` | Procedural hulls, planets, nebulae, icons, particles, event art |
 | `js/sprites.js` | Crew looks, sprites, poses and portraits for every race |

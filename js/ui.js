@@ -81,7 +81,7 @@ function drawTip(){
 function typed(m, text){ if(!m || m._skip) return text; if(!m._t0) m._t0 = performance.now(); const n = Math.floor((performance.now() - m._t0)*.11); if(n >= text.length){ m._skip = true; return text; } return text.slice(0, n); }
 function drawBubbles(){
   for(const bub of (G.chat||[])){
-    if(bub.t<=0) continue; let x, y;
+    if(bub.t<=0 || bub.d>0) continue; let x, y;
     if(bub.enemy){ const b = G.enemy?._b; if(!b) continue; x = (b.x0+b.x1)/2; y = b.y0 - 34; }
     else { let c = null; for(const s of [G.ship, G.enemy]) if(s) c = c || s.crew.find(q => q.id===bub.id); if(!c || c._sx==null) continue; x = c._sx; y = c._sy - 30; }
     const a = Math.min(1, bub.t*2); ctx.globalAlpha = a; ctx.font = `600 15px ${FD}`; const w = Math.min(320, ctx.measureText(bub.text).width + 22), h = 28;
@@ -108,6 +108,7 @@ function draw(){
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); break;
     case 'record': drawRecord(); break;
+    case 'saga': drawSaga(); break;
     case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
@@ -505,6 +506,7 @@ function drawEnd(){
     st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
     // the journey: the last entries of the captain's log
     panel(W/2-640, 552, 820, 300, 12); label("Captain's log", W/2-616, 588, C.amber, 'left', 15);
+    if(UI.saga && typeof openSaga==='function') btn(W/2-640+820-262, 562, 246, 40, 'Read the saga ›', () => openSaga(UI.saga), { fill:true, s:16, col:C.amber });
     (G.log||[]).slice(-8).forEach((e,i) => { T(`S${e.s}`, W/2-616, 624 + i*28, { s:13, f:FD, w:700, c:C.amber }); T(e.t, W/2-572, 624 + i*28, { s:14, c:C.ink, max:740 }); });
     panel(W/2+200, 552, 440, 300, 12); label('This run', W/2+224, 588, C.cyan, 'left', 15);
     const rows = [['Ship', `${G.ship.name}`], ['Difficulty', (DIFFICULTY[G.diff]||{}).name || ''], ['Seed', G.seed || '-'], ['Crew lost', G.lost.length ? G.lost.slice(0,4).join(', ') + (G.lost.length>4 ? '…' : '') : 'nobody'], ['Time', fmtTime(G.time||0)]];
@@ -528,6 +530,7 @@ function drawRecord(){
   T("Captain's record", 60, 122, { s:50, f:FD, w:700 });
   const hist = PROFILE.history || [];
   panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
+  if((PROFILE.sagas||[]).length && typeof openSaga==='function') btn(780, 160, 224, 36, `Sagas (${PROFILE.sagas.length}) ›`, () => { UI.sagaIdx = 0; openSaga(PROFILE.sagas[0], 'record'); UI.sagaList = true; }, { s:14, col:C.amber });
   ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
   if(!hist.length) T('No runs yet.', 84, 268, { s:18, c:C.muted });
   hist.slice(0, 14).forEach((r,i) => { const y = 256 + i*37; const def = DATA?.ships?.[r.ship] || BASE.ships[r.ship];
@@ -603,10 +606,11 @@ function drawGame(){
     panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted });
     btn(W/2+148, 258, 44, 34, '▴', () => { SET.pauseMin = true; saveProfile(); }, { s:16 }); tip(W/2+148, 258, 44, 34, 'Hide menu', 'Shrinks the pause menu to a small tab so you can see both ships. Your choice is remembered.');
     if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); }
-    else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const n = fsOk ? 2 : 1, bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
+    else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const sg = typeof buildSaga==='function', n = (fsOk ? 2 : 1) + (sg ? 1 : 0), bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
       panel(x0-10, 362, n*bw + (n-1)*12 + 20, 70, 10);
       btn(x0, 372, bw, 50, '⚙ Settings', () => { UI.setFrom = 'game'; UI.screen = 'settings'; }, { s:16 });
-      if(fsOk) btn(x0 + bw + 12, 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); }
+      if(sg) btn(x0 + bw + 12, 372, bw, 50, '📜 Saga so far', () => openSaga(buildSaga(null), 'game'), { s:16 });
+      if(fsOk) btn(x0 + (bw + 12)*(sg ? 2 : 1), 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); }
     // second row: speed, the manual, and leaving the run
     panel(W/2-300, 438, 600, 66, 10); speedButton(W/2-290, 448);
     btn(W/2-60, 448, 160, 46, 'Manual', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
@@ -815,7 +819,7 @@ function drawRoster(){
     const jb = crewJob(c, s); const short = narrow ? { fight:'Fighting', repair:'Repairs', fire:'Fire', breach:'Breach', heal:'Healing', man:'', move:'Moving', idle:'Idle', mind:'Controlled', board:'Aboard', stun:'Stunned' }[jb.k] : { fight:'Fighting', repair:'Repairing', fire:'Firefighting', breach:'Patching', heal:'Healing', man:'Manning', move:'Moving', idle:'Standing by', mind:'Controlled!', board:'Aboard enemy', stun:'Stunned' }[jb.k];
     T(jb.k==='man' ? ((narrow ? '' : short + ' ') + (STATION_NAME[jb.sys]||'')) : short, tx, y0+42, { s:11, c: JOB_COL[jb.k] || C.muted, max:x+cw-6-tx });
     bar(tx, y0+50, x+cw-10-tx, 7, c.hp/c.maxHp, c.hp/c.maxHp>.5?C.good:c.hp/c.maxHp>.25?C.warn:C.hostile);
-    tip(x, y0, cw, 66, `${c.name} · ${race.name||''}${c.trait && DATA.traits?.[c.trait] ? ' · ' + DATA.traits[c.trait].name : ''}`, `${crewJob(c, s).text}. ${c.trait && DATA.traits?.[c.trait] ? DATA.traits[c.trait].name + ': ' + DATA.traits[c.trait].desc + ' ' : ''}${raceTraits(race)}. Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}. Click for details.`);
+    tip(x, y0, cw, 66, `${c.name} · ${race.name||''}${c.trait && DATA.traits?.[c.trait] ? ' · ' + DATA.traits[c.trait].name : ''}${c.quirk && typeof quirkName==='function' ? ' · ' + quirkName(c) : ''}`, `${crewJob(c, s).text}. ${c.quirk && typeof quirkDef==='function' && quirkDef(c.quirk) ? quirkDef(c.quirk).desc + ' ' : ''}${c.trait && DATA.traits?.[c.trait] ? DATA.traits[c.trait].name + ': ' + DATA.traits[c.trait].desc + ' ' : ''}${raceTraits(race)}. Skills: ${SKILLS.map(k=>SKILLN[k]+' '+['-','I','II'][skillLvl(c,k)]).join(', ')}. Click for details.`);
     if(c.mcT<=0) region(x,y0,cw,66, () => { UI.selCrew = sel ? null : c.id; UI.selWeapon = null; UI.mode = null; }); });
 }
 function drawEnemyStrip(){
@@ -1067,11 +1071,17 @@ function drawEventModal(m){
   const fullText = fillText(ev.text, m.ctx);
   const visChoices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));
   let need = 272 + lines(fullText, 1056, `400 20px ${FM}`).length*29 + 16 + (m.lines ? Math.min(4, m.lines.length)*26 + 4 : 0);
-  for(const c of visChoices){ const rk = c.req?.race || '_'; if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : m.ctx.crew;
+  for(const c of visChoices){ const rk = c.req?.race || (c.req?.quirk ? 'q:' + c.req.quirk : '_'); if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : c.req?.quirk ? quirkCrewName(c.req.quirk) : m.ctx.crew;
     need += lines(`1. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`, 1010, `400 19px ${FM}`).length*27 + 32; }
   const f = mframe(1120, clamp(need + 30, 480, 940), title, m.combat ? C.hostile : C.amber, m);
   const ak = artFor(base || ev, m); const art = eventArt(ak, (m.id||'x') + (m.inline ? ':' + (ev.text||'').length : ''), 1056, 150);
   ctx.drawImage(art, f.x+32, f.y+84); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.strokeRect(f.x+32, f.y+84, 1056, 150);
+  // a scene about one of your crew shows who it is about
+  { const sc = m.ctx && m.ctx.starId && typeof crewById==='function' ? crewById(m.ctx.starId) : null;
+    if(sc && !m.combat){ const px = f.x+32+78, py = f.y+84+68; ctx.beginPath(); ctx.arc(px, py, 50, 0, 7); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
+      if(typeof ensureLook==='function') ensureLook(sc); drawPortrait(px, py, 40, sc, false);
+      const tag = sc.name + (sc.quirk && typeof quirkName==='function' ? ' · ' + quirkName(sc) : ''); ctx.font = `700 15px ${FD}`; const tw = ctx.measureText(tag).width + 20;
+      const tx = Math.max(f.x+40, px - tw/2); rr(tx, f.y+84+120, tw, 24, 12); ctx.fillStyle = 'rgba(6,9,18,.9)'; ctx.fill(); T(tag, tx + tw/2, f.y+84+137, { s:15, f:FD, w:700, a:'center', c:C.amber }); } }
   if(m.combat && G.enemy?._art){ const a = G.enemy._art.c; const sc = Math.min(560/a.width, 140/a.height); const w = a.width*sc, h = a.height*sc; ctx.drawImage(a, f.x+32+1056-w-20, f.y+84+(150-h)/2, w, h); glow(f.x+32+1056-w*.2, f.y+84+75, 60, C.hostile, .15); }
   let y = f.y + 272;
   const text = fillText(ev.text, m.ctx); const shown = typed(m, text); const done = shown.length===text.length;
@@ -1082,7 +1092,7 @@ function drawEventModal(m){
   const choices = visChoices;
   choices.forEach((c,i) => {
     const ok = reqMet(c.req), blue = reqHidden(c.req);
-    const rk = c.req?.race || '_'; if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : m.ctx.crew;
+    const rk = c.req?.race || (c.req?.quirk ? 'q:' + c.req.quirk : '_'); if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : c.req?.quirk ? quirkCrewName(c.req.quirk) : m.ctx.crew;
     const txt = `${i+1}. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`;
     const ls = lines(txt, f.w-110, `400 19px ${FM}`); const h = ls.length*27 + 22;
     const hov = ok && hovered(f.x+32, y, f.w-64, h);
@@ -1283,7 +1293,7 @@ function drawStoreModal(m){
       const crewN = s.crew.filter(c=>c.owner==='p'&&!c.drone).length; const cc = price(50, st);
       if(race && !st.crewSold){ if(!st._cand || st._cand.race!==(DATA.races[st.crewRace]?st.crewRace:'human')) st._cand = withSeed(`s${G.sector}n${m.node}cand`, () => newCrew(st.crewRace, 'p')); const cand = st._cand; ensureLook(cand);
         drawPortrait(rx+60, y0+120, 40, cand, false);
-        T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
+        T(cand.name, rx+120, y0+92, { s:26, f:FD, w:700 }); T(`${race.name} · ${pronouns(cand)}${cand.trait && DATA.traits?.[cand.trait] ? ' · ' + DATA.traits[cand.trait].name : ''}${cand.quirk && typeof quirkName==='function' ? ' · ' + quirkName(cand) : ''}`, rx+120, y0+120, { s:16, c:race.color||C.ink, max:560 }); para((cand.trait && DATA.traits?.[cand.trait] ? DATA.traits[cand.trait].desc + ' ' : '') + (race.desc||''), rx+120, y0+148, 540, { s:15, lh:20, c:C.muted, max:3 });
         if(crewN < R.maxCrew) btn(rx+20, y0+220, 240, 54, `Hire · ${cc}`, () => buy(cc, () => { joinCrew(cand); if(st.arena){ st._cand = null; } else st.crewSold = true; }), { disabled: G.scrap<cc, fill:G.scrap>=cc, col:C.good });
         else if(st.arena) T('Your bunks are full.', rx+20, y0+254, { s:16, c:C.warn });
         if(st.arena){ const rk = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); btn(rx+280, y0+220, 240, 54, 'Another race', () => { st.crewRace = rk[(rk.indexOf(st.crewRace) + 1) % rk.length]; st._cand = null; }, { s:16 }); }

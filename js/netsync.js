@@ -356,7 +356,7 @@ function syncGuestTick(dt){
   for(const p of G.proj||[]) if(p.t < p.dur) p.t = Math.min(p.dur, p.t + d);
   for(const u of G.units||[]){ const bp = DATA.drones[u.bp]; u.ang = (u.ang||0) + d*(bp && bp.kind==='attack' ? .7 : .9); }
   for(const sh of [G.ship, G.enemy]) if(sh && sh.crew) for(const c of sh.crew) syncWalk(c, d);
-  for(const b of G.chat||[]) b.t -= dt;
+  for(const b of G.chat||[]){ if(b.d > 0) b.d -= dt; else b.t -= dt; }
   if(typeof updateParts==='function') updateParts(dt);
 }
 function syncWalk(c, dt){

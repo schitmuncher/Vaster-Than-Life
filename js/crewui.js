@@ -73,8 +73,12 @@ function drawCrewCard(){
   drawPortrait(x+44, y+48, 30, c, false);
   T(c.name, x+86, y+36, { s:22, f:FD, w:700, max:200 });
   const tr = c.trait && DATA.traits?.[c.trait];
-  if(tr){ const nx = x+86 + Math.min(200, ctx.measureText(c.name).width) + 12; T(tr.name, nx, y+36, { s:14, f:FD, w:600, c:C.amber, max:x+w-56-nx }); tip(x+86, y+18, w-150, 24, tr.name, tr.desc); }
-  T(`${race.name||c.race} · ${pronouns(c)} · ${c.kills} kill${c.kills===1?'':'s'}`, x+86, y+58, { s:13, c:C.muted, max:w-200 });
+  { const qd = typeof quirkDef==='function' && quirkDef(c.quirk), lab = [tr && tr.name, qd && qd.name].filter(Boolean).join(' · ');   // trait and personality
+    if(lab){ const nx = x+86 + Math.min(200, ctx.measureText(c.name).width) + 12; T(lab, nx, y+36, { s:14, f:FD, w:600, c:C.amber, max:x+w-56-nx }); if(tr) tip(x+86, y+18, w-150, 24, tr.name, tr.desc); } }
+  { const q = typeof quirkDef==='function' && quirkDef(c.quirk), b = typeof bondOf==='function' && c.owner==='p' ? bondOf(c) : null, lostB = c.bond && c.bond.lost;
+    const extra = b ? ` · ${b.kind==='siblings' ? 'sibling' : b.kind==='friends' ? 'friend' : b.kind==='rivals' ? 'rival' : 'sweetheart'}: ${b.other.name}` : '';
+    T(`${race.name||c.race} · ${pronouns(c)} · ${c.kills} kill${c.kills===1?'':'s'}${extra}`, x+86, y+58, { s:13, c:C.muted, max:w-200 });
+    if(q) tip(x+86, y+18, w-150, 44, q.name + (c.vengeT > 0 ? ' · out for revenge' : ''), q.desc + (b ? ` ${c.name} and ${b.other.name} are ${BOND_KINDS[b.kind]}.` : lostB ? ' They lost someone close to them on this voyage.' : '') + (c.vengeT > 0 ? ' Grief has made them furious: they hit 30% harder for a while.' : '')); }
   btn(x+w-46, y+10, 34, 30, '×', () => { UI.selCrew = null; }, { s:16 });
   const fr = clamp(c.hp/c.maxHp, 0, 1); bar(x+86, y+68, w-110, 10, fr, fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile); T(`${Math.ceil(c.hp)}/${c.maxHp} HP`, x+w-24, y+64, { s:12, a:'right', c:C.muted });
   drawJobIcon(x+24, y+100, job, 9); T(job.text, x+42, y+105, { s:15, c:JOB_COL[job.k] || C.ink, max:w-60 });

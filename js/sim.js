@@ -414,7 +414,7 @@ function moveCrewStep(sh, c, dt){
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps')); }
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps')); }
 function killCrew(sh, c){
   const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
   if(G.duel && c.netCtl && typeof duelDied==='function'){ duelDied(c); return; }
@@ -426,8 +426,9 @@ function killCrew(sh, c){
   const home = shipBySide(c.owner);
   if(home && !home.dead && home.systems.clonebay){ home.clones.push({ c, t:12 }); if(c.owner==='p') toast(`${c.name} died. The clone bay is regrowing them.`); }
   else if(c.owner==='p' && hasAug(G.ship,'dna')){ G.dna.push(c); toast(`${c.name} died. Their DNA backup will restore them after the fight.`); }
-  else if(c.owner==='p'){ toast(`${c.name} has died.`); G.lost.push(c.name); }
+  else if(c.owner==='p'){ G.lost.push(c.name); if(typeof sagaDeath==='function') sagaDeath(c, sh); else toast(`${c.name} has died.`); }
   if(c.owner==='p'){ say('death', { force:true }); smartPause(`${c.name} died`); }
+  if(c.owner==='p' && G.wordsToast){ UI.toast = { text:G.wordsToast + (G.paused ? ' (Paused.)' : ''), t:5.5 }; G.wordsToast = null; }
   if(UI.selCrew===c.id) UI.selCrew = null;
   if(UI.selCrews) UI.selCrews = UI.selCrews.filter(id => id!==c.id);
 }

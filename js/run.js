@@ -34,6 +34,7 @@ function newRun(shipId, name, o={}){
   if(ch) challengeLoadout(ch);
   if(!o.daily && !o.cup && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
   genSector(1, 'civilian');
+  if(typeof sagaRunStart==='function') sagaRunStart();
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   emit('runStart', G);
@@ -49,7 +50,7 @@ function loadSave(){
   const s = LS.get(SAVE_KEY, null); if(!s || !s.G || !s.DATA) return false;
   DATA = s.DATA; R = DATA.rules; G = s.G; G.modal = null; G.fx = []; G.proj = []; G.units = [];
   if(G.crewAuto===undefined) G.crewAuto = true; G.flags = G.flags||{}; G.seen = G.seen||{}; G.later = G.later||[]; G.log = G.log||[]; G.chat = []; G.mapPieces = G.mapPieces||0;
-  buildGraph(G.ship); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
+  buildGraph(G.ship); if(typeof sagaRunStart==='function') sagaRunStart(true); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   if(typeof mpRunStarted==='function') mpRunStarted({ loaded:true });
   return true;
 }
@@ -58,7 +59,7 @@ function loadSave(){
 function sectorDef(t){ return DATA.sectors[t || G.sectorType] || DATA.sectors.civilian || Object.values(DATA.sectors)[0]; }
 function genSector(n, type){ return withSeed(`sector${n}:${type}`, () => genSector_(n, type)); }
 function genSector_(n, type){ if(G) G.fleetFights = 0;
-  G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final;
+  G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final; if(typeof sagaSector==='function') sagaSector(n, type);
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
   if(typeof challengeCheck==='function'){ challengeCheck(false); runAchCheck(); }
@@ -111,6 +112,7 @@ function jumpTo(i){
   if(!canJump()){ toast('The VTL drive is still charging.'); return; }
   if(typeof netGuestCmd==='function' && netGuestCmd({ c:'jump', i })){ if(G.fuel<=0) toast('Out of fuel.'); SYNC.overlay = null; return; }
   if(G.fuel<=0){ G.modal = { type:'stranded' }; return; }
+  if(G.enemy && !G.enemy.dead && typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(G.enemy, 'when the crew fled the fight');
   if(G.enemy && !G.enemy.dead){ const aboard = G.enemy.crew.filter(c=>c.owner==='p' && !c.drone); if(aboard.length){ for(const c of aboard) killCrew(G.enemy, c); toast('Crew left aboard the enemy ship are lost.'); } }
   G.fuel--; G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump'); haptic(.4, 300); if(Math.random()<.35) say('jump');
 }
@@ -154,7 +156,7 @@ function arrive_(i){
     startCombat('random', { harder:true, hail:'fleet' }); return; }
   if(typeof mpArrive==='function' && mpArrive(i, node, first)) return;
   const due = G.later.find(l => --l.jumps <= 0); G.later = G.later.filter(l => l.jumps > 0);
-  if(due && DATA.events[due.event] && !['base'].includes(node.type)){ startEvent(due.event); return; }
+  if(due && DATA.events[due.event] && !['base'].includes(node.type) && !(DATA.events[due.event].moment && typeof momentOk==='function' && !momentOk(DATA.events[due.event]))){ startEvent(due.event); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
   if(!first){ toast(pick(['Familiar beacon: nothing new on sensors.', 'You have been here before. Still nothing here.', 'Same old beacon. Your crew waves at the scorch marks.'])); save(); return; }   // no box to close: going back somewhere empty should cost no taps
@@ -163,7 +165,8 @@ function arrive_(i){
     case 'event': startEvent(pickEvent(node)); break;
     case 'combat': startCombat('random', { hail:true }); break;
     case 'exit': G.modal = { type:'exit', opts:sectorOptions() }; save(); break;
-    default: { const hzFlavour = G.hazard && typeof HAZARD_ARRIVALS!=='undefined' && HAZARD_ARRIVALS[G.hazard] ? fillText(pick(HAZARD_ARRIVALS[G.hazard]), { crew:randomCrewName() }) + ' ' : '';
+    default: { if(!G.hazard && typeof pickMoment==='function'){ const mo = pickMoment(node, .3); if(mo){ startEvent(mo); break; } }
+      const hzFlavour = G.hazard && typeof HAZARD_ARRIVALS!=='undefined' && HAZARD_ARRIVALS[G.hazard] ? fillText(pick(HAZARD_ARRIVALS[G.hazard]), { crew:randomCrewName() }) + ' ' : '';
       let text = G.hazard ? hzFlavour + hazardText(G.hazard) : fillText(pick(QUIET_TEXTS), { crew:randomCrewName() });
       if(Math.random() < .3){ const f = ri(1,2); G.fuel += f; text += ` Sensors find a drifting fuel canister. +${f} fuel.`; }
       else if(typeof QUIET_FINDS!=='undefined'){ for(const fd of QUIET_FINDS){ if(Math.random() >= fd.p) continue;   // now and then, something small
@@ -197,8 +200,9 @@ function eventKinds(e){
   walk(e, 0); EV_KINDS.set(e, K); return K;
 }
 function pickEvent(node){
+  if(typeof pickMoment==='function'){ const mo = pickMoment(node); if(mo) return mo; }   // now and then the beacon is about your crew (saga.js)
   const sd = sectorDef(); const tags = sd.tags || [];
-  let list = Object.values(DATA.events).filter(e => !e.questOnly && !e.hail && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
+  let list = Object.values(DATA.events).filter(e => !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
     && (!e.tags || e.tags.includes('') || e.tags.some(t => tags.includes(t) || t===G.sectorType)) && (!e.nebula || node?.nebula));
   // no reruns: events already met this run only come back once everything else has been seen
   const fresh = list.filter(e => !G.seen[e.id]); if(fresh.length) list = fresh;
@@ -217,16 +221,19 @@ function pickEvent(node){
 }
 function noteGain(k){ if(!G) return; (G.gains = G.gains || {})[k] = G.stats?.jumps || 0; }
 function randomCrewName(race){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && (!race || c.race===race)); return l.length ? pick(l).name : 'Someone'; }
-function fillText(t, cx={}){ return String(t||'').replace(/\{crew\}/g, cx.crew||'Your crew').replace(/\{who\}/g, cx.who||cx.crew||'Your crew').replace(/\{ship\}/g, G?.ship?.name||'your ship')
-  .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); }
+function fillText(t, cx={}){ const out = String(t||'').replace(/\{crew\}/g, cx.crew||'Your crew').replace(/\{who\}/g, cx.who||cx.crew||'Your crew').replace(/\{ship\}/g, G?.ship?.name||'your ship')
+  .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); return typeof sagaFill==='function' ? sagaFill(out, cx) : out; }
+function quirkCrewName(q){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && c.quirk===q); return l.length ? pick(l).name : 'Someone'; }
 function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t }); if(G.log.length>80) G.log.shift(); }
 function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
-  emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:{ crew:randomCrewName() } }; }
+  emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:(ev.moment && typeof sagaCtx==='function' && sagaCtx(ev)) || { crew:randomCrewName() } }; }
 function pickHail(tag){ if(typeof pickHailFresh==='function') return pickHailFresh(tag); const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
-function reqHidden(q){ return !!(q && (q.race || q.system || q.weaponType || q.drone || q.augment)); }
+function reqHidden(q){ return !!(q && (q.race || q.system || q.weaponType || q.drone || q.augment || q.quirk || q.pet)); }
 function reqMet(q){
   if(!q) return true; const s = G.ship;
   if(q.race && !s.crew.some(c=>c.race===q.race && c.owner==='p')) return false;
+  if(q.quirk && !s.crew.some(c=>c.quirk===q.quirk && c.owner==='p' && !c.drone)) return false;
+  if(q.pet && !(G.pet && !G.pet.gone)) return false;
   if(q.system && (!s.systems[q.system] || s.systems[q.system].max < (q.level||1))) return false;
   if(q.weaponType && !s.weapons.some(w=>DATA.weapons[w.id]?.type===q.weaponType)) return false;
   if(q.drone && !s.drones.some(d=>d.id===q.drone || DATA.drones[d.id]?.kind===q.drone)) return false;
@@ -241,20 +248,20 @@ function reqMet(q){
   return true;
 }
 function reqLabel(q){ if(!q) return '';
-  if(q.race) return `[${DATA.races[q.race]?.name||q.race}] `; if(q.system) return `[${SYSN[q.system]||q.system} ${q.level||1}] `;
+  if(q.race) return `[${DATA.races[q.race]?.name||q.race}] `; if(q.quirk) return `[${(typeof quirkDef==='function' && quirkDef(q.quirk)?.name)||q.quirk}] `; if(q.pet) return `[${G.pet ? G.pet.name : 'Pet'}] `; if(q.system) return `[${SYSN[q.system]||q.system} ${q.level||1}] `;
   if(q.weaponType) return `[${q.weaponType}] `; if(q.drone) return `[${DATA.drones[q.drone]?.name||q.drone}] `; if(q.augment) return `[${DATA.augments[q.augment]?.name||q.augment}] `; return ''; }
 function costLabel(c, text){ if(!c) return ''; if(text && /\d+\s*(scrap|fuel|missile|drone part)/i.test(text)) return ''; const p=[]; for(const k of ['scrap','fuel','missiles','parts']) if(c[k]) p.push(`${c[k]} ${k==='parts'?'drone parts':k}`); return p.length ? ` (costs ${p.join(', ')})` : ''; }
 function chooseOption(ch){
   const prev = G.modal || {}; const cx = Object.assign({}, prev.ctx||{ crew:randomCrewName() });
-  cx.who = ch.req?.race ? randomCrewName(ch.req.race) : cx.crew;
+  cx.who = ch.req?.race ? randomCrewName(ch.req.race) : ch.req?.quirk ? quirkCrewName(ch.req.quirk) : cx.crew;
   if(ch.cost){ G.scrap -= ch.cost.scrap||0; G.fuel -= ch.cost.fuel||0; G.missiles -= ch.cost.missiles||0; G.parts -= ch.cost.parts||0; }
   const ck = `s${G.sector}n${G.map?.cur}c${hashStr(ch.text||'')}`;
   let e = ch.effect || {};
   if(ch.chance!=null) e = withSeed(ck + 'roll', () => Math.random()) < ch.chance ? (ch.success||{}) : (ch.fail||{});
-  const lines = withSeed(ck + 'fx', () => applyEffect(e));
+  G.evCtx = cx; const lines = withSeed(ck + 'fx', () => applyEffect(e)); G.evCtx = null;
   logEntry(`${fillText(ch.text, cx)} ${e.text ? '— ' + fillText(e.text, cx) : ''}`.trim());
   if(UI.screen!=='game') return;
-  const after = { fight:e.fight, event:e.event, store:e.store, afterWin:e.afterWin, begin:e.begin, dismiss:e.dismiss };
+  const after = { fight:e.fight || (e.nemFight && G.nemesis ? G.nemesis.def : undefined), event:e.event, store:e.store, afterWin:e.afterWin, begin:e.begin, dismiss:e.dismiss };
   if(Array.isArray(e.choices) && e.choices.length){ G.modal = { type:'event', inline:{ text:e.text||'', choices:e.choices, art:prev.inline?.art || DATA.events[prev.id]?.art }, id:prev.id, lines, ctx:cx, combat:prev.combat }; return; }
   if(!e.text && !lines.length && (e.begin || e.dismiss)){ closeResult({ after }); return; }
   G.modal = { type:'result', title: prev.combat ? 'Comms' : 'Outcome', text:fillText(e.text||'', cx), lines, after };
@@ -269,9 +276,9 @@ function applyEffect(e){
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
   if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
   if(e.crew){ noteGain('crew'); const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
-    if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); L.push(`${c.name} the ${DATA.races[c.race].name} joins your crew`); checkCrewAch(); }
+    if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); if(typeof sagaJoined==='function') sagaJoined(c); L.push(`${c.name} the ${DATA.races[c.race].name}${c.quirk && typeof quirkName==='function' ? ' (' + quirkName(c).toLowerCase() + ')' : ''} joins your crew`); checkCrewAch(); }
     else { const cand = newCrew(race, 'p'); G.recruitOffer = cand; L.push(`${cand.name} the ${DATA.races[cand.race].name} wants to join, but every bunk is full. You can swap someone out next`); } }
-  if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); } }
+  if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); G.lost.push(c.name); if(typeof sagaDeath==='function') sagaDeath(c, null, 'lost on the way'); } }
   if(e.weapon){ L.push(giveWeapon(e.weapon)); noteGain('weapon'); }
   if(e.drone){ L.push(giveDrone(e.drone)); noteGain('drone'); }
   if(e.augment){ L.push(giveAugment(e.augment)); noteGain('augment'); }
@@ -297,6 +304,7 @@ function applyEffect(e){
   if(e.primeWeapons){ for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge||0; }
   if(e.mapPiece){ G.mapPieces = (G.mapPieces||0) + e.mapPiece; L.push(`Treasure map piece ${Math.min(3,G.mapPieces)} of 3`);
     if(G.mapPieces>=3 && !G.flags.mapDone){ G.flags.mapDone = true; placeQuest('treasure_vault'); L.push('The map is complete! The treasure is marked on your map'); } }
+  if(typeof sagaEffect==='function') sagaEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -323,7 +331,7 @@ function giveAugment(id){
 }
 /* crew swaps: a recruit joins in place of someone who leaves (events and stores, when every bunk is full) */
 const TRADE_IN = 20;
-function joinCrew(cand){ const nc = addCrew(G.ship, cand.race, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; nc.trait = cand.trait || null; nc.maxHp = cand.maxHp || nc.maxHp; nc.hp = nc.maxHp; checkCrewAch(); return nc; }
+function joinCrew(cand){ const nc = addCrew(G.ship, cand.race, 'p', cand.name); nc.gender = cand.gender; nc.look = cand.look; nc.trait = cand.trait || null; nc.maxHp = cand.maxHp || nc.maxHp; nc.hp = nc.maxHp; nc.quirk = cand.quirk || nc.quirk; checkCrewAch(); if(typeof sagaJoined==='function') sagaJoined(nc); return nc; }
 function crewLeaves(c){ for(const sh of [G.ship, G.enemy]) if(sh){ const k = sh.crew.indexOf(c); if(k>=0) sh.crew.splice(k,1); } if(UI.selCrew===c.id) UI.selCrew = null; UI.selCrews = (UI.selCrews||[]).filter(id => id!==c.id); }
 function openSwap(cand, cost, done){ G.modal = { type:'swapcrew', cand, cost:cost||0, done }; }
 function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); else save(); }
@@ -360,6 +368,7 @@ function startCombat_(id, o={}){
   // now and then a veteran crew: tougher and faster, but they carry better salvage
   if(!def.boss && !o.harder && G.sector >= 3 && Math.random() < .12){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
     for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
+  if(typeof sagaCombatStart==='function') sagaCombatStart(G.enemy, o);   // your nemesis, back for more
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
   G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
@@ -389,7 +398,7 @@ function finishCombat(kind, offer){
   if(kind!=='fled') for(const c of [...G.ship.crew]) if(c.owner==='e') G.ship.crew.splice(G.ship.crew.indexOf(c),1);
   leaveCombat();
   for(const c of G.dna){ c.hp = c.maxHp; c.path = []; c.mcT = 0; G.ship.crew.push(c); placeCrew(G.ship, c, c.station ?? 0); } G.dna = [];
-  if(kind==='fled'){ G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.` }; save(); return; }
+  if(kind==='fled'){ const lf = []; if(typeof sagaFightLines==='function') sagaFightLines(lf); G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.${lf.length ? ' ' + lf.join(' ') : ''}` }; if(typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(e, 'by jumping out before the crew could finish them'); save(); return; }
   if(wasBoss){ flagDefeated(); return; }
   G.stats.kills++; PROFILE.kills++; saveProfile(); if(PROFILE.kills>=25) grant('kills25'); if(PROFILE.kills>=100) grant('kills100');
   if(kind!=='surrender' && (G.combatT||0) < 20) grant('quickdraw');
@@ -414,12 +423,13 @@ function finishCombat(kind, offer){
     L.push(...applyEffect(reward)); }); }
   }
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
+  if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
     text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : pick([].concat(VICTORY_LINES[e.faction]||VICTORY_LINES.generic)).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
   logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
 }
 function flagDefeated(){
-  const f = G.flag; grant('phase1');
+  const f = G.flag; grant('phase1'); if(typeof sagaNote==='function') sagaNote('boss', f && f.phase >= 2 ? 'At Fedoration command, the Flaggship finally broke apart.' : `They beat the Flaggship${f && f.phase ? ' a second time' : ''}, and it ran.`);
   if(!f || f.phase >= 2){ endRun(true); return; }
   f.phase++; f.step = 1; moveFlagship();
   G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command. Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
@@ -441,7 +451,7 @@ function recordRun(win, reason){
 }
 function endRun(win, reason){
   if(typeof challengeCheck==='function') challengeCheck(win);
-  sfx(win ? 'victory' : 'defeat'); recordRun(win, reason);
+  sfx(win ? 'victory' : 'defeat'); recordRun(win, reason); if(typeof sagaRunEnd==='function') sagaRunEnd(win, reason);
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
@@ -456,7 +466,8 @@ function say(trigger, o={}){
   const gap = SAY_GAP[trigger], last = (G.sayT = G.sayT || {}); if(gap && G.time - (last[trigger] ?? -999) < gap) return;
   let c = o.crew; if(!c){ const list = G.ship.crew.filter(x => x.owner==='p' && !x.drone && x.mcT<=0); if(!list.length) return; c = pick(list); }
   if(!c || c.drone) return;
-  const rc = RACE_CHATTER[c.race]; const pool = rc && rc[trigger] && Math.random()<.5 ? rc[trigger] : CHATTER[trigger]; if(!pool) return;
+  const rc = RACE_CHATTER[c.race], ql = typeof quirkLine==='function' ? quirkLine(c, trigger) : null;
+  const pool = ql && Math.random()<.4 ? ql : rc && rc[trigger] && Math.random()<.5 ? rc[trigger] : CHATTER[trigger]; if(!pool) return;
   const recent = (G.sayRecent = G.sayRecent || []), text = typeof pickFresh==='function' ? pickFresh(pool, recent) : pick(pool); recent.push(text); if(recent.length > 8) recent.shift();
   last[trigger] = G.time;
   G.chat = (G.chat||[]).filter(b => b.t>0).slice(-3); G.chat.push({ text, id:c.id, t:3 }); G.lastSay = G.time; if(typeof voiceOf==='function') sfx('voice', voiceOf(c.race));
@@ -533,11 +544,12 @@ function updateGame(dt){
       if(foe.fleeT!=null && !foe.dead){ if(foe.stalemate || (eff(foe,'engines')>0 && (manned(foe,'piloting') || foe.auto))) foe.fleeT -= dt; if(foe.fleeT<=0){ finishCombat('fled'); return; } }
     }
     if(G.enemy && G.enemy.dead){ G.dieT -= dt; const b = G.enemy._b; if(b && Math.random() < dt*10) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), .8, '#ff8a3d'); if(G.dieT<=0){ finishCombat(G.enemy.deadKind || 'destroyed'); } }
-    for(const b of (G.chat||[])) b.t -= dt;
+    for(const b of (G.chat||[])){ if(b.d > 0) b.d -= dt; else b.t -= dt; }
+    for(const c of G.ship.crew) if(c.vengeT > 0) c.vengeT -= dt;
     if(foe && !G.duel){ if(!foe.hurtSaid && foe.hull < foe.maxHull*.5){ foe.hurtSaid = true; taunt('hurt'); say('enemyHurt'); }
       if(!foe.gloatSaid && G.ship.hull < G.ship.maxHull*.4){ foe.gloatSaid = true; taunt('gloat'); }
       if(!foe.lowSaid && G.ship.hull < G.ship.maxHull*.3){ foe.lowSaid = true; say('lowHull', { force:true }); smartPause('hull critical'); } }
-    else { G.idleT = (G.idleT||0) + dt; if(G.idleT > 22){ G.idleT = 0; if(Math.random()<.35) say('idle'); } }
+    else { G.idleT = (G.idleT||0) + dt; if(G.idleT > 22){ G.idleT = 0; if(!(typeof sagaIdle==='function' && Math.random()<.5 && sagaIdle()) && Math.random()<.35) say('idle'); } }
     updateParts(dt);
     emit('tick', dt);
   }

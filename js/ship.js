@@ -97,7 +97,8 @@ function freshName(sh){ const used = new Set(); for(const s of [sh, typeof G!=='
 function newCrew(race, owner, name){
   const rid = DATA.races[race] ? race : 'human', r = DATA.races[rid];
   const tk = owner==='p' && DATA.traits ? Object.keys(DATA.traits) : [], trait = tk.length ? pick(tk) : null, hp = r.hp + (trait ? (DATA.traits[trait].hp||0) : 0);
-  return { id:uid(), name:name||(owner==='p' ? freshName() : pick(NAMES)), race:rid, hp, maxHp:hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0, trait,
+  const quirk = owner==='p' && typeof rollQuirk==='function' ? rollQuirk() : null;   // a personality (saga.js)
+  return { id:uid(), name:name||(owner==='p' ? freshName() : pick(NAMES)), race:rid, hp, maxHp:hp, owner, mcT:0, stunT:0, x:0, y:0, tx:0, ty:0, path:[], room:0, trait, quirk,
     station:null, sk:{ pilot:0, engines:0, shields:0, weapons:0, repair:0, combat:0 }, kills:0, drone:null, aiT:Math.random() };
 }
 function newDroneUnit(bpId, owner){
