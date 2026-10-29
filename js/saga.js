@@ -109,9 +109,13 @@ function rollBondKind(){ return wpick(['friends','siblings','rivals','sweetheart
 function sagaRunStart(loaded){
   if(!G || !G.ship) return; const crew = mineAlive();
   // personalities: one each, no two crew alike at the start
-  const used = []; for(const c of crew){ if(!c.quirk || (!loaded && used.includes(c.quirk))) c.quirk = rollQuirk(used); used.push(c.quirk); }
+  const used = []; for(const c of crew){ if(!c.quirk || (!loaded && !c.quirkSet && used.includes(c.quirk))) c.quirk = rollQuirk(used); used.push(c.quirk); }
   G.saga = G.saga || []; G.fallen = G.fallen || []; G.crewJoined = G.crewJoined || {};
   if(loaded) return;
+  // a nemesis who got away last time may be waiting somewhere on this run
+  const rivals = PROFILE.rivals || [];
+  if(rivals.length && !G.daily && !G.cup && !G.challenge && !G.seedDuel && Math.random() < .3){ const r = rivals.shift(); PROFILE.rivals = rivals;
+    G.nemesis = Object.assign({}, r, { level:Math.min(3, (r.level||1) + 1), met:(r.met||1), s:1, done:false, old:true }); G.later.push({ event:'nem_old', jumps:ri(5,9) }); }
   if(crew.length >= 2 && Math.random() < .8){ const a = pick(crew), b = pick(crew.filter(c => c!==a)); makeBond(a, b, rollBondKind()); }
   const names = crew.map(c => `${c.name} the ${quirkName(c).toLowerCase() || 'crew member'}`);
   sagaNote('start', `${shipThe(true)} set out from the Civilian Sector with ${listText(names)}.`);
@@ -120,6 +124,7 @@ function sagaRunStart(loaded){
 function sagaNote(k, t){ if(!G) return; (G.saga = G.saga || []).push({ s:G.sector || 1, j:G.stats ? G.stats.jumps : 0, k, t }); if(G.saga.length > 60) G.saga.splice(1, 1); }
 /* "the Kestrel", but not "the The Pestrel" */
 function shipThe(cap){ const n = (G && G.ship && G.ship.name) || 'ship'; return /^the /i.test(n) ? (cap ? n : n.replace(/^the /i, 'the ')) : (cap ? 'The ' : 'the ') + n; }
+function theName(n){ n = String(n || 'ship'); return /^the /i.test(n) ? n.replace(/^the /i, 'the ') : 'the ' + n; }
 function listText(a){ return a.length <= 1 ? (a[0]||'') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
 function sagaJoined(c, how){
   if(!G || !c || c.owner!=='p' || c.drone) return;
@@ -152,6 +157,7 @@ function sagaDeath(c, sh, cause){
   const why = cause || deathCause(c, sh);
   const f = { name:c.name, race:c.race, quirk:c.quirk || null, why, words, s:G.sector, kills:c.kills||0, served:G.stats.jumps - ((G.crewJoined||{})[c.id] || 0) };
   (G.fallen = G.fallen || []).push(f); (G.fightDeaths = G.fightDeaths || []).push(f);
+  if(!G.daily && !G.cup && typeof PROFILE!=='undefined'){ PROFILE.memorial = [Object.assign({ ship:G.ship.name, t:Date.now() }, f), ...(PROFILE.memorial||[])].slice(0, 60); }
   G.wordsToast = `${c.name} has died. Last words: "${words}"`; UI.toast = { text:G.wordsToast, t:5 };
   const qn = quirkName(c).toLowerCase() || 'crew member';
   sagaNote('death', pick([`${c.name} the ${qn} was ${why} in sector ${G.sector}. Their last words: "${words}"`, `In sector ${G.sector}, ${c.name} the ${qn} was ${why}. The last thing they said was "${words}"`,
@@ -213,11 +219,12 @@ function sagaCombatStart(e, o){
 }
 function sagaFightWon(kind, e, L){
   sagaFightLines(L);
+  for(const c of mineAlive()) if(!c.vet && (c.kills||0) >= 5){ c.vet = true; c.maxHp += 10; c.hp += 10; L.push(`${c.name} is a veteran now (+10 health)`); sagaNote('vet', `By sector ${G.sector}, ${c.name} had beaten five enemies hand to hand and earned the title of veteran.`); }
   if(e && e.nemesis && G.nemesis && !G.nemesis.done){ const n = G.nemesis; n.done = true; n.beaten = true;
     const v = 25 + n.level*15; G.scrap += v; G.stats.scrap += v; L.push(`+${v} scrap from ${n.cap}'s personal stash`);
     if(Math.random() < .5 + n.level*.15) L.push(giveWeapon('random'));
     L.unshift(kind==='surrender' ? `${n.cap} surrenders at last, and hands over everything.` : `${nemTitle(n)} is finished. Your crew cheer loud enough to rattle the hull.`);
-    G.later = G.later.filter(l => l.event!=='nem_return');
+    G.later = G.later.filter(l => l.event!=='nem_return' && l.event!=='nem_old');
     sagaNote('nemesis', kind==='surrender' ? `After ${n.met} meetings, ${n.cap} finally surrendered to ${shipThe()}.` : `After ${n.met} meetings, ${shipThe()} finally destroyed ${nemTitle(n)}.`);
     if(typeof grant==='function') grant('nemesis'); return; }
   if(e && e.elite) sagaNote('fight', `They beat a veteran crew aboard the ${e.name}.`);
@@ -238,12 +245,14 @@ function sagaEffect(e, L){
     if(e.bondFix){ const fr = cx.friendId && crewById(cx.friendId); if(fr){ makeBond(star, fr, e.bondFix); L.push(`${star.name} and ${fr.name} are ${BOND_KINDS[e.bondFix]} now`); } }
   }
   if(e.pet && !G.pet){ const po = typeof e.pet==='object' ? e.pet : {}, kind = po.kind || (e.pet==='random' || !PET_KINDS[e.pet] ? pick(Object.keys(PET_KINDS)) : e.pet); G.pet = { name:po.name || pick(PET_NAMES), kind, since:G.stats.jumps, s:G.sector };
-    L.push(`${G.pet.name} the ${PET_KINDS[kind]} is now the ship's pet`); grant('saga_pet'); sagaNote('pet', `In sector ${G.sector} the crew adopted ${G.pet.name}, a ${PET_KINDS[kind]}.`);
+    L.push(`${G.pet.name} the ${PET_KINDS[kind]} is now the ship's pet`); grant('saga_pet'); if(!po.name) G.petNaming = true; /* named when the result closes */ sagaNote('pet', `In sector ${G.sector} the crew adopted ${G.pet.name}, a ${PET_KINDS[kind]}.`);
     G.later.push({ event:'m_pet_grows', jumps:ri(6,9) }); }
   if(e.petBig && G.pet && !G.pet.gone){ G.pet.big = true; G.ship.maxHull += 3; G.ship.hull += 3; L.push(`+3 max hull (${G.pet.name} sleeps on the hull now)`); }
   if(e.petGone && G.pet && !G.pet.gone && (!e.petIs || G.pet.name===e.petIs)){ G.pet.gone = e.petGone; sagaNote('pet', `${G.pet.name} ${e.petGone}.`); }
+  if(e.legacyJoin && cx.legacy && mineAlive().length < R.maxCrew){ const lg = cx.legacy, k = addCrew(G.ship, DATA.races[lg.race] ? lg.race : 'human', 'p'); if(k.name===lg.name) k.name = pick(NAMES.filter(nm => nm!==lg.name && !G.ship.crew.some(o => o.name===nm))); k.quirk = lg.quirk || k.quirk; k.quirkSet = true;
+    L.push(`${k.name} joins your crew, to finish what ${lg.name} started`); sagaJoined(k, `to finish what their ${cx.kin || 'kin'} ${lg.name} had started aboard ${theName(lg.ship)}`); }
   if(e.nemFight){ G.nemNext = true; }
-  if(e.nemEnd && G.nemesis && !G.nemesis.done){ G.nemesis.done = true; G.nemesis.peace = true; G.later = G.later.filter(l => l.event!=='nem_return'); sagaNote('nemesis', fillText(e.nemEnd, cx)); }
+  if(e.nemEnd && G.nemesis && !G.nemesis.done){ G.nemesis.done = true; G.nemesis.peace = true; G.later = G.later.filter(l => l.event!=='nem_return' && l.event!=='nem_old'); sagaNote('nemesis', fillText(e.nemEnd, cx)); }
   if(e.nemAgain && G.nemesis && !G.nemesis.done){ G.later.push({ event:'nem_return', jumps:ri(3,5) }); }
 }
 /* who a saga event is about, picked when it starts */
@@ -253,18 +262,22 @@ function sagaCtx(ev){
   let star = null;
   if(ev.star && ev.star!=='any') star = pick(crew.filter(c => c.quirk===ev.star));
   else if(ev.bond){ const l = crew.filter(c => c.bond && !c.bond.lost && crewById(c.bond.id) && (!ev.bondKind || [].concat(ev.bondKind).includes(c.bond.kind))); star = l.length ? pick(l) : null; if(star) { const fr = crewById(star.bond.id); cx.friend = fr.name; cx.friendId = fr.id; } }
+  else if(ev.pair){ const free = crew.filter(c => !c.bond || c.bond.lost || !crewById(c.bond.id)); if(free.length >= 2){ star = pick(free); const fr = pick(free.filter(c => c!==star)); cx.friend = fr.name; cx.friendId = fr.id; } }
   else if(ev.star==='any' || ev.moment) star = pick(crew);
   if(!star && !ev.fallen && !ev.pet && !ev.nem) return null;
   if(star){ cx.crew = star.name; cx.starId = star.id; }
   else cx.crew = randomCrewName();
   if(ev.fallen && G.fallen && G.fallen.length) cx.fallen = pick(G.fallen).name;
+  if(ev.legacy && PROFILE.memorial && PROFILE.memorial.length){ const m = pick(PROFILE.memorial.slice(0, 20)); cx.legacy = m; cx.kin = pick(['younger sister','younger brother','cousin','oldest friend','apprentice','child']); }
   return cx;
 }
 function sagaFill(t, cx){
   return t.replace(/\{friend\}/g, cx.friend || 'their friend').replace(/\{fallen\}/g, cx.fallen || (G && G.fallen && G.fallen[0] ? G.fallen[0].name : 'an old friend'))
     .replace(/\{pet\}/g, G && G.pet ? G.pet.name : 'the pet').replace(/\{petkind\}/g, G && G.pet ? PET_KINDS[G.pet.kind] : 'creature')
     .replace(/\{nemesis\}/g, G && G.nemesis ? nemTitle(G.nemesis) : 'your nemesis').replace(/\{nemship\}/g, G && G.nemesis ? G.nemesis.ship : 'their ship')
-    .replace(/\{nemsector\}/g, G && G.nemesis ? String(G.nemesis.s) : '1');
+    .replace(/\{nemsector\}/g, G && G.nemesis ? String(G.nemesis.s) : '1').replace(/\{nemfrom\}/g, G && G.nemesis && G.nemesis.from ? theName(G.nemesis.from) : 'your last ship')
+    .replace(/\{legacy\}/g, cx.legacy ? cx.legacy.name : 'an old shipmate').replace(/\{legacyship\}/g, cx.legacy ? theName(cx.legacy.ship) : 'your last ship').replace(/\{legacywhy\}/g, cx.legacy ? cx.legacy.why : 'lost')
+    .replace(/\{legacywords\}/g, cx.legacy ? cx.legacy.words : '...').replace(/\{legacyrace\}/g, cx.legacy ? ((DATA.races[cx.legacy.race]||{}).name || 'traveller') : 'traveller').replace(/\{kin\}/g, cx.kin || 'friend');
 }
 /* can this saga event happen right now? */
 function momentOk(ev){
@@ -273,6 +286,9 @@ function momentOk(ev){
   if(ev.star && ev.star!=='any' && !crew.some(c => c.quirk===ev.star)) return false;
   if(ev.bond && !crew.some(c => c.bond && !c.bond.lost && crewById(c.bond.id) && (!ev.bondKind || [].concat(ev.bondKind).includes(c.bond.kind)))) return false;
   if(ev.fallen && !(G.fallen && G.fallen.length)) return false;
+  if(ev.pair && crew.filter(c => !c.bond || c.bond.lost || !crewById(c.bond.id)).length < 2) return false;
+  if(ev.legacy && !(PROFILE.memorial && PROFILE.memorial.length && crew.length < R.maxCrew && !G.daily && !G.cup)) return false;
+  if(ev.nem && !(G.nemesis && !G.nemesis.done)) return false;
   if(ev.pet && !(G.pet && !G.pet.gone)) return false;
   if(ev.noPet && G.pet) return false;
   if(ev.minCrew && crew.length < ev.minCrew) return false;
@@ -326,6 +342,8 @@ function buildSaga(win, reason){
   return { title, sub, paras:P, win:!!win, live:win===null, ship:G.ship.name, sector:G.sector, t:Date.now() };
 }
 function sagaRunEnd(win, reason){
+  const n = G.nemesis;   // a nemesis still at large will remember you next time
+  if(n && !n.beaten && !n.peace && !G.daily && !G.cup){ PROFILE.rivals = [{ cap:n.cap, def:n.def, ship:n.ship, faction:n.faction, level:n.level, met:n.met, from:G.ship.name, t:Date.now() }, ...(PROFILE.rivals||[]).filter(r => r.cap!==n.cap)].slice(0, 5); }
   const s = buildSaga(win, reason); if(!s) return; UI.saga = s; UI.sagaPage = 0;
   PROFILE.sagas = [s, ...(PROFILE.sagas||[])].slice(0, 12);
 }
@@ -336,7 +354,7 @@ function drawSaga(){
   const big = typeof phoneSized==='function' && phoneSized(), fs = big ? 34 : 21, lh = big ? 46 : 31;   // bigger type on a phone
   const x = W/2 - 600, w = 1200;
   panel(x - 40, 60, w + 80, 870, 14);
-  label(s.live ? 'The story so far' : s.win ? 'A tale of victory' : 'A tale of the void', W/2, 112, s.win ? C.good : C.hostile, 'center', 16);
+  label(s.memorial ? 'Across all your voyages' : s.live ? 'The story so far' : s.win ? 'A tale of victory' : 'A tale of the void', W/2, 112, s.win ? C.good : C.hostile, 'center', 16);
   T(s.title, W/2, 168, { s:46, f:FD, w:700, a:'center', c:C.amber, max:w });
   T(s.sub, W/2, 208, { s:20, a:'center', c:C.muted, max:w });
   // lay the paragraphs out into pages that fit
@@ -348,10 +366,23 @@ function drawSaga(){
     btn(x, 848, 200, 56, '‹ Back a page', () => { UI.sagaPage = pg-1; }, { s:17, disabled:pg<=0 });
     btn(x+w-200, 848, 200, 56, 'Next page ›', () => { UI.sagaPage = pg+1; }, { s:17, disabled:pg>=pages.length-1, fill:pg<pages.length-1 }); }
   btn(W/2-140, 942, 280, 50, 'Close', () => { UI.screen = UI.sagaBack || 'title'; UI.sagaList = false; }, { s:18 });
-  if(UI.sagaList){ const L = PROFILE.sagas || [], i = UI.sagaIdx || 0;   // leafing through old sagas from the record
+  if(UI.sagaList && !s.memorial){ const L = PROFILE.sagas || [], i = UI.sagaIdx || 0;   // leafing through old sagas from the record
     btn(W/2-480, 942, 300, 50, '‹ Newer saga', () => { UI.sagaIdx = i-1; UI.saga = L[i-1]; UI.sagaPage = 0; }, { s:16, disabled:i<=0 });
     btn(W/2+180, 942, 300, 50, 'Older saga ›', () => { UI.sagaIdx = i+1; UI.saga = L[i+1]; UI.sagaPage = 0; }, { s:16, disabled:i>=L.length-1 });
     const d = new Date(s.t||0); T(`${d.getDate()} ${d.toLocaleString('en-GB',{ month:'short' })} · ${s.win ? 'won' : 'lost in sector ' + s.sector}`, W/2, 236, { s:14, a:'center', c:C.muted }); }
+}
+function sagaNamePet(){
+  if(!G || !G.pet || typeof openKeyboard!=='function' || (typeof SYNC!=='undefined' && SYNC.guest)) return;
+  const old = G.pet.name;
+  openKeyboard({ title:`Name your ${PET_KINDS[G.pet.kind] || 'pet'}`, value:old, max:18, ok:'Name it', random:() => pick(PET_NAMES), onOk:v => { const nm = String(v).trim().slice(0, 18); if(!nm || !G.pet) return; G.pet.name = nm;
+    for(const s of G.saga || []) s.t = s.t.split(old).join(nm); toast(`Welcome aboard, ${nm}.`); } });
+}
+function memorialSaga(){
+  const m = PROFILE.memorial || []; if(!m.length) return null;
+  const paras = m.slice(0, 40).map(f => `${f.name} the ${(quirkDef(f.quirk)||{}).name ? quirkDef(f.quirk).name.toLowerCase() : 'crew member'} (${(DATA.races[f.race]||{}).name || f.race}), of ${theName(f.ship)}: ${f.why}, in sector ${f.s}. "${f.words}"`);
+  const rv = (PROFILE.rivals||[]).map(r => `${r.cap} of the ${r.ship}, still out there somewhere, still holding a grudge.`);
+  if(rv.length) paras.push('At large: ' + rv.join(' '));
+  return { title:'The Memorial Wall', sub:'For the crew who did not come home', paras, win:false, live:false, memorial:true, t:Date.now() };
 }
 function openSaga(s, back){ if(!s) return; grant('saga_tale'); UI.sagaList = false; UI.saga = s; UI.sagaPage = 0; UI.sagaBack = back || UI.screen; UI.screen = 'saga'; }
 
@@ -500,8 +531,67 @@ const SAGA_EVENTS = {
     { text:'"Not really, no."', effect:{ text:'{nemesis} goes very red. The guns come out.', nemFight:true, saga:'{nemesis} came back for revenge, and the crew pretended not to remember them.' } },
     { text:'Fight it out. This ends now.', effect:{ text:'Both ships power their weapons at the same moment.', nemFight:true } },
     { text:'Offer to settle it with a drink instead.', chance:.25, success:{ text:'{nemesis} is so surprised that nobody has offered before that they agree. Several drinks later, it is all forgotten and they leave you a crate.', scrap:25, nemEnd:'{nemesis} and your crew settled their feud over drinks, and parted friends.' }, fail:{ text:'"A DRINK?!" {nemesis} throws the glass at the screen. Their guns warm up.', nemFight:true } },
-    { text:'Outrun them again.', req:{ system:'engines', level:3 }, effect:{ text:'You burn hard and leave them in your wake. {nemesis} screams something about "next time". There will be a next time.', nemAgain:true, dismiss:true } } ] }
+    { text:'Outrun them again.', req:{ system:'engines', level:3 }, effect:{ text:'You burn hard and leave them in your wake. {nemesis} screams something about "next time". There will be a next time.', nemAgain:true, dismiss:true } } ] },
+  /* --- people finding each other (two crew with no bond yet) --- */
+  m_romance:{ moment:true, pair:true, minSector:2, text:'{crew} and {friend} have been "accidentally" scheduled on the same night shift for the fifth time running. The rest of the crew have started a betting pool.', choices:[
+    { text:'Keep scheduling them together.', chance:.65, success:{ text:'By the end of the week they are holding hands on the bridge and pretending they are not. The betting pool pays out to the cook, who had "this week".', bondFix:'sweethearts', crewHeal:15, saga:'{crew} and {friend} fell for each other on the night shift.' }, fail:{ text:'It turns out they just both really like the night shift. They become firm friends instead.', bondFix:'friends' } },
+    { text:'Split the shifts up. Focus, people.', effect:{ text:'Everyone groans. The betting pool is refunded, grudgingly.' } } ] },
+  m_feud:{ moment:true, pair:true, text:'{crew} and {friend} have been arguing all day about whether the ship\'s oxygen smells "fresh" or "a bit like soup". It is getting personal.', choices:[
+    { text:'Let them settle it with an arm-wrestle.', chance:.5, success:{ text:'{crew} wins. {friend} demands a rematch. And another. A proper rivalry is born, and both get stronger.', bondFix:'rivals', xp:{ skill:'combat', amt:4 }, saga:'An argument about how the oxygen smelled made {crew} and {friend} lifelong rivals.' }, fail:{ text:'The table breaks. They both laugh so hard they forget what they were arguing about, and become friends.', bondFix:'friends' } },
+    { text:'Change the oxygen filter.', req:{ parts:1 }, cost:{ parts:1 }, effect:{ text:'It smells of nothing now. Both of them say they preferred it before.' } } ] },
+
+  /* --- more personalities --- */
+  m_cookoff:{ moment:true, star:'cook', minSector:2, text:'A station at this beacon is holding its annual Galactic Cook-Off. First prize is a crate of military rations and a medal shaped like a spoon. {crew} is already sharpening a ladle.', choices:[
+    { text:'Enter {crew}. (5 scrap entry)', req:{ scrap:5 }, cost:{ scrap:5 }, chance:.5, success:{ text:'{crew}\'s salvage stew wins by a landslide. One judge proposes marriage. The crate is full of useful things.', scrap:30, missiles:2, crewHeal:20, saga:'{crew} won the Galactic Cook-Off with a stew made of salvage.' }, fail:{ text:'Second place, behind a Sloog who cooked something that was still singing. {crew} demands a recount.', crewHeal:10 } },
+    { text:'Just go for the free samples.', effect:{ text:'The crew eat their way around the whole hall. Nobody is hungry for two days.', crewHeal:25 } } ] },
+  m_buddy_drone:{ moment:true, star:'tinkerer', text:'{crew} has built a small drone out of spare parts and a toaster. It follows them around, beeping. They have named it "Gary".', choices:[
+    { text:'Let Gary help with repairs.', chance:.6, success:{ text:'Gary turns out to be brilliant at tightening bolts in places nobody can reach.', hull:3, starXp:{ skill:'repair', amt:8 }, saga:'{crew} built a little drone called Gary out of a toaster, and it turned out to be a better mechanic than most.' }, fail:{ text:'Gary tightens everything, including a few things that were meant to be loose. The engines complain.', damageSystem:'engines' } },
+    { text:'Strip Gary for parts.', effect:{ text:'{crew} takes Gary apart with tears in their eyes. You get the parts. You do not get forgiven for some time.', parts:3 } } ] },
+  m_junk_trade:{ moment:true, star:'collector', text:'A rag-and-bone trader docks and spots {crew}\'s collection. Their eyes light up. "I\'ll trade you something good for that rusty bolt. The one with character."', choices:[
+    { text:'Trade the bolt.', chance:.5, success:{ text:'In return: a working weapon, wrapped in a blanket. {crew} cries a little about the bolt.', weapon:'random', saga:'{crew} traded a rusty bolt "with character" for a working weapon.' }, fail:{ text:'In return: a different rusty bolt. {crew} says this one has even more character.' } },
+    { text:'"The bolt is not for sale."', effect:{ text:'The trader respects that, and sells you some fuel cheap instead.', fuel:2, scrap:-5 } } ] },
+  m_tarot:{ moment:true, star:'mystic', text:'{crew} has made a deck of fortune cards out of old ration labels, and insists on reading everyone\'s future before the next jump.', choices:[
+    { text:'Have your fortune read.', chance:.5, success:{ text:'"The Rocket, reversed: danger ahead, but also snacks." Strangely, it helps. The crew stay sharp all sector.', xp:{ skill:'pilot', amt:4 }, crewHeal:10 }, fail:{ text:'Every card is The Explosion. {crew} quietly puts the deck away and does not make eye contact for an hour.' } },
+    { text:'Ask the cards where the fleet is.', chance:.5, success:{ text:'The cards are surprisingly specific. You slip past a Rebuff picket you would never have seen.', fleetPush:-.04, saga:'{crew} read the Rebuff Fleet\'s movements in a deck of fortune cards made of ration labels, and was right.' }, fail:{ text:'The cards say "behind you". You check. Nothing. You check again. Still nothing. Everyone is jumpy.' } } ] },
+  m_blue_day:{ moment:true, star:'optimist', minSector:3, text:'For the first time on the whole voyage, {crew} is not smiling. They are sitting in the cargo hold, looking at an old photo. Nobody knows what to do.', choices:[
+    { text:'Sit with them.', effect:{ text:'You do not say much. Neither do they. After an hour they smile again, a smaller and realer smile, and thank you.', starHeal:40, crewHeal:10, saga:'Even {crew} the optimist had a sad day, and the crew sat with them through it.' } },
+    { text:'Get the whole crew to cheer them up.', chance:.6, success:{ text:'There is a song, a cake made of rations and a very bad puppet show. It works.', crewHeal:30 }, fail:{ text:'It is a bit much. {crew} appreciates it, mostly, and goes to bed early.' } } ] },
+  m_grump_hero:{ moment:true, star:'grump', minSector:2, text:'While the rest of the crew were asleep, someone fixed the broken heater, cleaned the galley and left a blanket on every bunk. {crew} says they have no idea who did it. {crew} has oil on their hands.', choices:[
+    { text:'Thank {crew} in front of everyone.', effect:{ text:'{crew} goes bright red and says it was "probably space elves". Everyone knows. Everyone is very fond of {crew}.', crewHeal:25, saga:'{crew} the grump secretly fixed the heater and left a blanket on every bunk, and denied it to the end.' } },
+    { text:'Pretend you didn\'t notice.', effect:{ text:'{crew} looks relieved, and a little disappointed. The heater works very well.', crewHeal:15 } } ] },
+  m_sleep_away:{ moment:true, star:'sleepwalker', minSector:2, text:'{crew} is missing. Security footage shows them sleepwalking out of the airlock, across a docking tube, and onto the trading ship parked next door.', choices:[
+    { text:'Go and get them back.', chance:.6, success:{ text:'You find {crew} asleep in the other ship\'s cargo hold, hugging a crate. The traders, charmed, let them keep the crate.', scrap:30, missiles:2, saga:'{crew} sleepwalked onto a trading ship and came back hugging a crate of supplies.' }, fail:{ text:'The traders want a "storage fee" for {crew}. You pay it. {crew} remembers nothing.', scrap:-15 } },
+    { text:'Wait for them to sleepwalk back.', chance:.7, success:{ text:'At dawn {crew} walks back in, still asleep, carrying a plate of the traders\' breakfast.', crewHeal:10 }, fail:{ text:'The trading ship leaves with {crew} still aboard. A few beacons later they hail you, very confused, and you collect them. It costs a fuel cell.', fuel:-1 } } ] },
+  m_daredevil_bet:{ moment:true, star:'daredevil', minSector:2, text:'A pyrate dares {crew} to fly through the beacon\'s asteroid ring with the lights off. There is a 30 scrap bet on it. {crew} has already said yes.', choices:[
+    { text:'Let them fly it.', chance:.55, success:{ text:'{crew} threads the ring blind, at full burn, while humming. The pyrate pays up and asks for an autograph.', scrap:30, starXp:{ skill:'pilot', amt:10 }, saga:'{crew} flew {ship} blind through an asteroid ring on a pyrate\'s dare.' }, fail:{ text:'{crew} clips three asteroids and the pride of everyone aboard. The pyrate laughs all the way home.', hull:-3 } },
+    { text:'Pay the pyrate to go away. (10 scrap)', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'{crew} will not speak to you for a sector. The ship remains in one piece.' } } ] },
+  m_worry_list:{ moment:true, star:'worrier', minSector:3, text:'{crew} has drawn up an emergency plan for the Flaggship. It is three hundred pages, colour-coded, with a pull-out map.', choices:[
+    { text:'Study it with the whole crew.', effect:{ text:'It is exhausting and it is brilliant. Everybody knows exactly where to stand when things go wrong.', xp:{ skill:'repair', amt:6 }, saga:'{crew} wrote a three-hundred-page plan for fighting the Flaggship. It was colour-coded.' } },
+    { text:'Read the summary.', effect:{ text:'The summary is twelve pages. It mostly says "do not panic" in different fonts.', crewHeal:10 } } ] },
+
+  /* --- the pet --- */
+  m_pet_trick:{ moment:true, pet:true, text:'{crew} has spent all week teaching {pet} a trick, and wants to show everyone.', choices:[
+    { text:'Watch the trick.', chance:.6, success:{ text:'{pet} presses the right button on the console, on command. It is the button that makes coffee. The crew go wild.', crewHeal:25, saga:'{crew} taught {pet} to make coffee.' }, fail:{ text:'{pet} presses the wrong button on the console. It is the one that opens every door on the ship at once.', crewHurt:5 } },
+    { text:'Teach {pet} to fetch spare parts.', effect:{ text:'{pet} brings back two drone parts, a sock and something nobody can identify.', parts:2 } } ] },
+  m_pet_sick:{ moment:true, pet:true, minSector:3, weight:.6, text:'{pet} is unwell: off their food, not purring, and hiding under the reactor. {crew} has not slept.', choices:[
+    { text:'Use your medbay\'s supplies on {pet}. (2 drone parts)', req:{ parts:2 }, cost:{ parts:2 }, effect:{ text:'It takes two days. Then {pet} wanders into the galley and eats an entire loaf. Everyone cries with relief.', crewHeal:20, saga:'{pet} fell ill, and the crew nursed them back to health.' } },
+    { text:'Hope {pet} sleeps it off.', chance:.6, success:{ text:'{pet} wakes up the next morning as if nothing happened and demands breakfast.' }, fail:{ text:'{pet} goes quiet and does not wake up. The crew bury {pet} among the stars with full honours.', petGone:'died peacefully, and was given a funeral among the stars' } } ] },
+
+  /* --- strange things --- */
+  m_holiday:{ moment:true, star:'any', weight:.6, text:'According to {crew}, today is Hull Day: an old spacer holiday where you thank your ship by giving it a wash and a song. Nobody else has ever heard of it.', choices:[
+    { text:'Celebrate Hull Day.', effect:{ text:'Everyone scrubs the hull in spacesuits, singing badly. The ship seems to run a little smoother afterwards. It is probably the cleaning.', hull:2, crewHeal:15, saga:'The crew celebrated Hull Day, a holiday {crew} may have invented.' } },
+    { text:'"That is not a real holiday."', effect:{ text:'{crew} celebrates anyway, alone, very loudly.' } } ] },
+  m_hermit:{ moment:true, star:'any', minSector:2, text:'An old hermit lives at this beacon in a ship made of other ships. She offers to teach one of your crew "the old ways" in exchange for a song.', choices:[
+    { text:'Send {crew} to learn.', effect:{ text:'{crew} comes back three days later with a beard (somehow) and an uncanny feel for the ship.', starXp:{ skill:'engines', amt:10 }, starHeal:20, saga:'{crew} spent three days learning the old ways from a hermit, and came back changed.' } },
+    { text:'Sing her a song and move on.', effect:{ text:'She cries, laughs and gives you a jar of fuel she has been saving "for someone nice".', fuel:2 } } ] },
+
+  /* --- across voyages --- */
+  m_legacy:{ moment:true, legacy:true, star:'any', minSector:2, weight:.8, text:'A young {legacyrace} hails you. "Is this the captain who flew {legacyship}? My {kin}, {legacy}, flew with you. They were {legacywhy}." A pause. "I want to finish what they started."', choices:[
+    { text:'Welcome them aboard.', effect:{ text:'They come aboard carrying an old photo of {legacy} with the crew. It goes up on the bridge wall.', legacyJoin:true, crewHeal:10 } },
+    { text:'Tell them {legacy}\'s last words, and send them home safe.', effect:{ text:'You tell them: "{legacywords}". They laugh and cry at the same time, and press a gift into your hands before they go.', scrap:20, crewHeal:15, saga:'The {kin} of {legacy}, who died on an earlier voyage, came looking for the captain, and heard their last words.' } } ] },
+  nem_old:{ moment:true, questOnly:true, nem:true, once:false, art:'fleet', text:'A ship drops out of hyperspace on an intercept course, and you know it at once: the {nemship}. On screen, {nemesis}, older and angrier. "You flew {nemfrom} back then. New ship, same captain. I never forget a captain."', choices:[] }
 };
+SAGA_EVENTS.nem_old.choices = SAGA_EVENTS.nem_return.choices;
 Object.assign(BASE.events, SAGA_EVENTS);
 
 /* ---------------- medals ---------------- */

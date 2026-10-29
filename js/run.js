@@ -34,9 +34,11 @@ function newRun(shipId, name, o={}){
   if(ch) challengeLoadout(ch);
   if(!o.daily && !o.cup && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
   genSector(1, 'civilian');
+  if(o.crewNames || o.crewQuirks){ G.ship.crew.filter(c => c.owner==='p' && !c.drone).forEach((c, i) => {   // the crew you named in the hangar
+    if(o.crewNames && o.crewNames[i]) c.name = String(o.crewNames[i]).slice(0, 16); if(o.crewQuirks && o.crewQuirks[i]){ c.quirk = o.crewQuirks[i]; c.quirkSet = true; } }); }
   if(typeof sagaRunStart==='function') sagaRunStart();
   PROFILE.runs++; saveProfile();
-  UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
+  UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; UI.crewPanel = false; if(typeof svReset==='function') svReset();
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`);
   G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
@@ -337,6 +339,7 @@ function openSwap(cand, cost, done){ G.modal = { type:'swapcrew', cand, cost:cos
 function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); else save(); }
 function closeResult(m){
   G.modal = null; const a = m.after || {};
+  if(G.petNaming){ G.petNaming = false; if(typeof sagaNamePet==='function') sagaNamePet(); }   // a new pet needs a name
   if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }
   if(a.begin){ if(G.enemy) taunt('start'); return; }
   if(a.dismiss){ leaveCombat(); save(); return; }

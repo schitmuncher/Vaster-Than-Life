@@ -12,9 +12,29 @@ const FD = "'Chakra Petch','Segoe UI',system-ui,sans-serif", FM = "'IBM Plex Mon
 /* ---------------- primitives ---------------- */
 let HR = [];
 const PTR = [{ x:-1, y:-1, on:false }, { x:-1, y:-1, on:false, xr:true }, { x:-1, y:-1, on:false, xr:true }];
-function hovered(x,y,w,h){ return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
+function hovered(x,y,w,h){ if(XF){ const r = xfRect(x,y,w,h); if(!r) return false; [x,y,w,h] = r; } return PTR.some(p => p.on && p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h); }
+/* ---------------- the battle view zoom ----------------
+   On the game screen you can zoom into the ships (pinch or double-tap them on a touch screen, mouse wheel on a computer) while the
+   top bar, crew, power and weapon panels stay at normal size and keep working. While the ships are drawn, XF holds the zoom, and
+   region(), tip() and hovered() turn ship coordinates into screen coordinates, clipped to the battle area. */
+const BF = { x:0, y:78, w:1600, h:458 };   // the battle area: between the top bar and the crew roster
+const SV = { z:1, cx:800, cy:78 + 229 };
+let XF = null;
+function svOn(){ return UI.screen==='game' && !!G && SV.z > 1.01 && !(typeof inXR==='function' && inXR()); }
+function svClamp(){ SV.z = clamp(SV.z, 1, 3); const hw = BF.w/(2*SV.z), hh = BF.h/(2*SV.z); SV.cx = clamp(SV.cx, BF.x + hw, BF.x + BF.w - hw); SV.cy = clamp(SV.cy, BF.y + hh, BF.y + BF.h - hh); }
+function svReset(){ SV.z = 1; SV.cx = BF.x + BF.w/2; SV.cy = BF.y + BF.h/2; }
+function svToScreen(x, y){ return { x:(x - SV.cx)*SV.z + BF.x + BF.w/2, y:(y - SV.cy)*SV.z + BF.y + BF.h/2 }; }
+function svToWorld(x, y){ return { x:(x - BF.x - BF.w/2)/SV.z + SV.cx, y:(y - BF.y - BF.h/2)/SV.z + SV.cy }; }
+function inBF(x, y){ return x >= BF.x && x <= BF.x + BF.w && y >= BF.y && y <= BF.y + BF.h; }
+/* zoom by k around a screen point, keeping that point still */
+function svZoomAt(x, y, z){ const w = svToWorld(x, y); SV.z = clamp(z, 1, 3); SV.cx = w.x - (x - BF.x - BF.w/2)/SV.z; SV.cy = w.y - (y - BF.y - BF.h/2)/SV.z; svClamp(); }
+function xfRect(x, y, w, h){ const X = x*XF.z + XF.ox, Y = y*XF.z + XF.oy, x1 = Math.min(X + w*XF.z, BF.x + BF.w), y1 = Math.min(Y + h*XF.z, BF.y + BF.h), x0 = Math.max(X, BF.x), y0 = Math.max(Y, BF.y);
+  return x1 > x0 && y1 > y0 ? [x0, y0, x1 - x0, y1 - y0] : null; }
+function svBegin(){ if(!svOn()) return false; svClamp(); XF = { z:SV.z, ox:BF.x + BF.w/2 - SV.cx*SV.z, oy:BF.y + BF.h/2 - SV.cy*SV.z };
+  ctx.save(); ctx.beginPath(); ctx.rect(BF.x, BF.y, BF.w, BF.h); ctx.clip(); ctx.translate(XF.ox, XF.oy); ctx.scale(XF.z, XF.z); return true; }
+function svEnd(){ if(!XF) return; ctx.restore(); XF = null; }
 let VRTXT = false, MINF = 0;   // set each frame: larger minimum text in VR or with Settings > Display > Text size
-function region(x,y,w,h,cb,t,loc){ HR.push({ x,y,w,h,cb,t,loc }); }   // t: a label so a pressed button can be named to another player; loc: this player's own button (multiplayer)
+function region(x,y,w,h,cb,t,loc){ if(XF){ const r = xfRect(x,y,w,h); if(!r) return; [x,y,w,h] = r; } HR.push({ x,y,w,h,cb,t,loc }); }   // t: a label so a pressed button can be named to another player; loc: this player's own button (multiplayer)
 function rr(x,y,w,h,r){ ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
 function T(t,x,y,o={}){ let fs_ = o.s||22; if(MINF && fs_ < MINF) fs_ = Math.max(fs_ + 3, Math.min(MINF, fs_*1.35)); ctx.font = `${o.w||400} ${fs_}px ${o.f||FM}`; ctx.fillStyle = o.c||C.ink; ctx.textAlign = o.a||'left'; ctx.textBaseline = o.b||'alphabetic';
   if('letterSpacing' in ctx) ctx.letterSpacing = (o.ls||0)+'px'; if(o.max) ctx.fillText(t,x,y,o.max); else ctx.fillText(t,x,y); if('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
@@ -69,7 +89,7 @@ function corners(x,y,w,h,col=hexA(C.amber,.4),s=9){ ctx.strokeStyle = col; ctx.l
   ctx.moveTo(x,y+s); ctx.lineTo(x,y); ctx.lineTo(x+s,y); ctx.moveTo(x+w-s,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w,y+s);
   ctx.moveTo(x+w,y+h-s); ctx.lineTo(x+w,y+h); ctx.lineTo(x+w-s,y+h); ctx.moveTo(x+s,y+h); ctx.lineTo(x,y+h); ctx.lineTo(x,y+h-s); ctx.stroke(); }
 let TIPS = [], TIP_MODAL = false;
-function tip(x,y,w,h,title,body){ TIPS.push({ x,y,w,h,title,body, modal:TIP_MODAL }); }
+function tip(x,y,w,h,title,body){ if(XF){ const r = xfRect(x,y,w,h); if(!r) return; [x,y,w,h] = r; } TIPS.push({ x,y,w,h,title,body, modal:TIP_MODAL }); }
 function drawTip(){
   const p = PTR.find(q => q.on); if(!p) return;
   for(let i=TIPS.length-1;i>=0;i--){ const t = TIPS[i]; if(UI.screen==='game' && G && G.modal && !t.modal) continue;
@@ -98,7 +118,7 @@ function draw(){
   drawBG(); drawStars();
   switch(UI.screen){
     case 'title': drawTitle(); break;
-    case 'select': drawHangar(); break;
+    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); break;
     case 'mods': drawModsScreen(); break;
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
@@ -226,8 +246,9 @@ function drawHangar(){
     drawShip(temp, { x:760, y:y0+70, w:760, h:240 }, 1, false, true);
     const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
       ['Drones', temp.drones.map(d=>DATA.drones[d.id].name).join(', ')||'None'], ['Systems', Object.keys(temp.systems).filter(k=>!SUB.includes(k)).map(k=>SYSN[k]).join(', ')],
-      ['Crew', temp.crew.map(c=>DATA.races[c.race].name).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
-    rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, 520, { s:15, lh:18, max:1 }); });
+      ['Crew', hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
+    rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, k===5 && open ? 380 : 520, { s:15, lh:18, max:1 }); });
+    if(open && !NET.on) btn(600, y0+232+5*30-24, 140, 32, 'Name crew', () => { UI.crewPanel = true; }, { s:14, col:C.amber });
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
@@ -241,7 +262,7 @@ function drawHangar(){
   btn(1384, y0+416, 132, 34, 'Enter seed', () => openRename('seed'), { s:13 });
   tip(1236, y0+340, 290, 110, 'Seed', 'Every run has a seed. The same seed gives the same maps, beacons, enemies and stores, so you can replay a run or share it with a friend. Leave it on Random for a fresh run.');
   if(typeof mpHangarLaunch==='function' && mpHangarLaunch(sel, open)) return;
-  btn(1240, 890, 300, 70, 'Launch', () => { newRun(sel, UI.shipName, { seed:UI.seed }); }, { fill:true, s:26, disabled:!open });
+  btn(1240, 890, 300, 70, 'Launch', () => { const hc = UI.hangarCrew && UI.hangarCrew.ship===sel ? UI.hangarCrew : null; newRun(sel, UI.shipName, { seed:UI.seed, crewNames:hc ? hc.names : null, crewQuirks:hc ? hc.quirks : null }); }, { fill:true, s:26, disabled:!open });
   btn(1060, 890, 160, 70, 'Back', () => { if(NET.on){ UI.screen = 'mp'; MP.view = 'room'; return; } UI.screen = 'title'; });
 }
 function drawModsScreen(){
@@ -351,6 +372,7 @@ function drawSettings(){
       choice('Lock landscape', 'lockLandscape', [[true,'On'],[false,'Off']], true, 'In full screen, keep the game in landscape (on browsers that allow it).');
       head('Touch');
       onoff('Vibration', 'vibrate', true, 'Buzz on hits and big moments, on phones that support it.');
+      onoff('Zoom into the ships', 'shipZoom', true, 'Pinch or double-tap the ships (or use the mouse wheel over them) to zoom into the battle. The panels stay normal size and keep working. Drag to look around; tap Zoom out or double-tap to go back.');
       onoff('Zoom in to read', 'readZoom', false, 'Off by default. On phones, events and messages zoom in to fill the screen while they are open, then zoom back out. Tips never zoom.');
       btn(X, y+6, 220, 44, 'Reset zoom', () => resetZoom(), { s:15 }); y += 74;
       note('Tap to use anything: tap a weapon\'s card to power it and pick it to aim. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
@@ -523,6 +545,36 @@ function drawEnd(){
   else if(G && G.daily) btn(W/2-320, 884, 300, 72, 'Fly the daily again', () => startDaily(), { fill:true, s:20, col:C.cyan });
   btn(W/2+340, 884, 300, 72, 'All runs', () => { UI.screen = 'record'; }, { s:20 });
 }
+/* the starting crew in the hangar: names and personalities you can change before launch */
+function hangarCrew(sel, temp){
+  let hc = UI.hangarCrew; if(hc && hc.ship===sel && hc.names.length===temp.crew.length) return hc;
+  const used = []; const quirks = temp.crew.map(c => { const q = typeof rollQuirk==='function' ? rollQuirk(used) : null; used.push(q); return q; });
+  hc = UI.hangarCrew = { ship:sel, names:temp.crew.map(c => c.name), quirks }; return hc;
+}
+function drawCrewNaming(sel, temp){
+  const hc = hangarCrew(sel, temp), n = temp.crew.length, rowH = 76, w = 1080, h = 236 + n*rowH, x = (W-w)/2, y = Math.max(40, (H-h)/2);
+  ctx.fillStyle = 'rgba(4,6,12,.78)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,() => {});
+  panel(x, y, w, h, 14); label('Your crew', x+32, y+44, C.amber, 'left', 18);
+  T('Name them, and pick who they are. Personalities change what happens on the way.', x+32, y+78, { s:16, c:C.muted, max:w-64 });
+  const qs = typeof BASE!=='undefined' && BASE.quirks ? Object.keys(DATA.quirks || BASE.quirks) : [];
+  temp.crew.forEach((c, i) => { const ry = y + 100 + i*rowH, race = DATA.races[c.race] || {}, qd = typeof quirkDef==='function' ? quirkDef(hc.quirks[i]) : null;
+    rr(x+24, ry, w-48, rowH-10, 10); ctx.fillStyle = C.panel2; ctx.fill();
+    c.name = hc.names[i]; if(typeof ensureLook==='function') ensureLook(c); drawPortrait(x+62, ry+33, 26, c, false);
+    T(hc.names[i], x+104, ry+30, { s:24, f:FD, w:700, max:230 }); T(race.name || c.race, x+104, ry+54, { s:14, c:race.color || C.muted });
+    btn(x+344, ry+14, 110, 38, 'Rename', () => openRename({ title:`Name your ${(race.name||'crew member').toLowerCase()}`, value:hc.names[i], max:16, random:() => pick(NAMES), onOk:v => { hc.names[i] = v.trim().slice(0,16) || hc.names[i]; } }), { s:15 });
+    btn(x+462, ry+14, 50, 38, '🎲', () => { hc.names[i] = pick(NAMES.filter(nm => !hc.names.includes(nm))); }, { s:16 }); tip(x+462, ry+14, 50, 38, 'Random name', 'Pick a random name.');
+    if(qs.length){ const k = Math.max(0, qs.indexOf(hc.quirks[i]));
+      btn(x+600, ry+14, 50, 38, '‹', () => { hc.quirks[i] = qs[(k - 1 + qs.length) % qs.length]; hc.last = i; }, { s:18 });
+      rr(x+660, ry+14, 300, 38, 8); ctx.fillStyle = 'rgba(6,9,18,.7)'; ctx.fill(); T(qd ? qd.name : '?', x+810, ry+40, { s:18, f:FD, w:700, a:'center', c:C.amber, max:290 });
+      btn(x+970, ry+14, 50, 38, '›', () => { hc.quirks[i] = qs[(k + 1) % qs.length]; hc.last = i; }, { s:18 });
+      if(qd) tip(x+660, ry+14, 300, 38, qd.name, qd.desc); } });
+  { const li = clamp(hc.last || 0, 0, n-1), qd = typeof quirkDef==='function' ? quirkDef(hc.quirks[li]) : null;   // what the personality you just picked means
+    if(qd) para(`${hc.names[li]} the ${qd.name.toLowerCase()}: ${qd.desc}`, x+32, y + 112 + n*rowH, w-64, { s:16, lh:22, c:C.cyan, max:2 }); }
+  const by = y + h - 76;
+  btn(x+32, by, 230, 52, 'Random names', () => { const pool = NAMES.slice(); hc.names = hc.names.map(() => pool.splice(Math.floor(Math.random()*pool.length), 1)[0]); }, { s:16 });
+  if(qs.length) btn(x+274, by, 270, 52, 'Random personalities', () => { const used = []; hc.quirks = hc.quirks.map(() => { const q = rollQuirk(used); used.push(q); return q; }); }, { s:16 });
+  btn(x+w-232, by, 200, 52, 'Done', () => { UI.crewPanel = false; }, { fill:true, s:18 });
+}
 function fmtTime(sec){ sec = Math.round(sec); const m = Math.floor(sec/60), h = Math.floor(m/60); return h ? `${h}h ${String(m%60).padStart(2,'0')}m` : `${m}m ${String(sec%60).padStart(2,'0')}s`; }
 /* captain's record: run history, best per ship, daily scores, and backups */
 function drawRecord(){
@@ -530,6 +582,7 @@ function drawRecord(){
   T("Captain's record", 60, 122, { s:50, f:FD, w:700 });
   const hist = PROFILE.history || [];
   panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
+  if((PROFILE.memorial||[]).length && typeof memorialSaga==='function') btn(540, 160, 224, 36, `Memorial (${PROFILE.memorial.length}) ›`, () => openSaga(memorialSaga(), 'record'), { s:14, col:C.muted });
   if((PROFILE.sagas||[]).length && typeof openSaga==='function') btn(780, 160, 224, 36, `Sagas (${PROFILE.sagas.length}) ›`, () => { UI.sagaIdx = 0; openSaga(PROFILE.sagas[0], 'record'); UI.sagaList = true; }, { s:14, col:C.amber });
   ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
   if(!hist.length) T('No runs yet.', 84, 268, { s:18, c:C.muted });
@@ -583,10 +636,20 @@ function restoreBackup(d){
 const PBOX = { x:24, y:96, w:760, h:466 }, EBOX = { x:816, y:96, w:760, h:466 };
 function drawGame(){
   drawTopBar();
+  const zoomed = svBegin();   // zoomed into the ships: only this part is magnified
   ctx.save(); if(G.shake>0 && SET.shake!==false && !inXR()) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
   drawShip(G.ship, PBOX, 1, false, false); ctx.restore();
   if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else if(G.brawl && typeof drawBrawlSide==='function') drawBrawlSide(); else drawQuiet();
   drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
+  svEnd();
+  if(zoomed){   // how far in you are, and a way back out
+    const zx = BF.x + BF.w - 196, zy = BF.y + 10; panel(zx, zy, 186, 46, 10); T(`${SV.z.toFixed(1)}×`, zx + 16, zy + 31, { s:18, f:FD, w:700, c:C.cyan });
+    btn(zx + 72, zy + 6, 106, 34, 'Zoom out', () => { svReset(); }, { s:14, col:C.cyan });
+    const mw = 120, mh = mw*BF.h/BF.w, mx = zx + 186 - mw, my = zy + 54; rr(mx, my, mw, mh, 4); ctx.fillStyle = 'rgba(6,9,18,.75)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke();
+    const mb = (bx, col) => { const q = [mx + (bx.x - BF.x)/BF.w*mw, my + (bx.y - BF.y)/BF.h*mh, bx.w/BF.w*mw, Math.min(bx.h, BF.y + BF.h - bx.y)/BF.h*mh]; ctx.fillStyle = hexA(col, .35); ctx.fillRect(q[0]+4, q[1]+4, q[2]-8, q[3]-8); };
+    mb(PBOX, C.amber); if(G.enemy) mb(EBOX, C.hostile);   // where the two ships are
+    const vw = mw/SV.z, vh = mh/SV.z, vx = mx + (SV.cx - BF.x)/BF.w*mw - vw/2, vy = my + (SV.cy - BF.y)/BF.h*mh - vh/2; ctx.strokeStyle = C.cyan; ctx.lineWidth = 2; ctx.strokeRect(vx, vy, vw, vh);
+    region(mx, my, mw, mh, (x, y) => { SV.cx = BF.x + (x - mx)/mw*BF.w; SV.cy = BF.y + (y - my)/mh*BF.h; svClamp(); }, 'minimap'); }
   drawRoster(); if(G.enemy) drawEnemyStrip();
   drawSystems(); drawArmory(); drawCrewCard();
   if(typeof drawMPHud==='function' && NET.on) drawMPHud();

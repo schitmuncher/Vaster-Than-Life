@@ -73,7 +73,7 @@ function drawCrewCard(){
   drawPortrait(x+44, y+48, 30, c, false);
   T(c.name, x+86, y+36, { s:22, f:FD, w:700, max:200 });
   const tr = c.trait && DATA.traits?.[c.trait];
-  { const qd = typeof quirkDef==='function' && quirkDef(c.quirk), lab = [tr && tr.name, qd && qd.name].filter(Boolean).join(' · ');   // trait and personality
+  { const qd = typeof quirkDef==='function' && quirkDef(c.quirk), lab = [c.vet && 'Veteran', tr && tr.name, qd && qd.name].filter(Boolean).join(' · ');   // trait and personality
     if(lab){ const nx = x+86 + Math.min(200, ctx.measureText(c.name).width) + 12; T(lab, nx, y+36, { s:14, f:FD, w:600, c:C.amber, max:x+w-56-nx }); if(tr) tip(x+86, y+18, w-150, 24, tr.name, tr.desc); } }
   { const q = typeof quirkDef==='function' && quirkDef(c.quirk), b = typeof bondOf==='function' && c.owner==='p' ? bondOf(c) : null, lostB = c.bond && c.bond.lost;
     const extra = b ? ` · ${b.kind==='siblings' ? 'sibling' : b.kind==='friends' ? 'friend' : b.kind==='rivals' ? 'rival' : 'sweetheart'}: ${b.other.name}` : '';

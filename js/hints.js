@@ -10,7 +10,8 @@ const RECT = {
   power:[40,654,886,322], armory:[940,654,622,322], roster:[22,570,780,70], hull:[14,6,370,36], shields:[14,44,200,30],
   ftl:[1090,18,160,52], doors:[748,700,160,180]
 };
-function roomRect(sh, sys){ if(!sh || !sh._rects) return null; const i = roomOf(sh, sys); const q = sh._rects[i]; return q ? [q.x, q.y, q.w, q.h] : null; }
+function roomRect(sh, sys){ if(!sh || !sh._rects) return null; const i = roomOf(sh, sys); const q = sh._rects[i]; if(!q) return null;
+  if(typeof svOn==='function' && svOn()){ const a = svToScreen(q.x, q.y); return [a.x, a.y, q.w*SV.z, q.h*SV.z]; } return [q.x, q.y, q.w, q.h]; }
 const HINTS = {
   welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Rebuff Fleet, then defeat the Flaggship. Each jump uses 1 fuel. Press Map (or M) to choose your first beacon.', at:()=>RECT.map },
   vr:        { title:'You\'re on the bridge', text:'Playing seated or lying down? Pause (A) and pick your play position, or choose it in Settings. Walk with the left stick, or aim at the floor and pull the trigger to teleport. Right stick turns. Look at a controller to see what its buttons do. Click the left stick to toggle the magnifier over this console.' },

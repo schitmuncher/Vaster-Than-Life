@@ -37,8 +37,11 @@ In VR you stand on the bridge of your ship. A **holotable** under the console sh
 | Tap | Use anything. Taps that land just off a button still hit it |
 | Tap a weapon or drone card | Power it (the game moves spare reactor power over if it needs to) and pick it for aiming |
 | Press and hold | Show details about what's under your finger, without clicking it |
-| Pinch, or double-tap empty space | Zoom in (up to 4×); double-tap again or tap **Reset zoom** to zoom out |
-| Drag while zoomed | Look around |
+| Pinch or double-tap the ships | Zoom into the battle (up to 3×). Only the ships are magnified: the top bar, crew, power and weapon panels stay normal size and keep working, so you can aim, give orders and power systems while zoomed |
+| Drag while zoomed | Look around the battle (or tap the small map under **Zoom out**) |
+| Pinch or double-tap anywhere else | Zoom the whole screen (up to 4×); double-tap again or tap **Reset zoom** to zoom out |
+
+On a computer, the mouse wheel over the ships zooms the battle the same way. Switch it off in **Settings → Display → Zoom into the ships**.
 
 **Screen shape** (Settings → Screen & touch): *Fill* stretches the game to the whole screen so no black bars show (the default on phones and tablets), *16:10* is the original shape, *16:9* and *21:9* are wide shapes, and *Crop* zooms in so nothing is left over; drag to see the edges.
 
@@ -133,12 +136,14 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 **Your crew's story**
 
 Inspired by the spirit of the absurd trail games: a small crew you grow fond of, strange things on the road, and deaths that get remembered.
+- **Your crew, your names.** In the hangar, tap **Name crew** to name your starting crew and pick each one's personality before you launch.
 - **Personalities.** Every crew member has a personality as well as a skill trait: Gambler, Poet, Galley cook, Superstitious, Daredevil, Worrier, Tinkerer, Romantic, Conspiracy buff, Sleepwalker, Collector, Ex-pyrate, Mystic, Optimist, Grump or Bookworm. Each has its own chatter, last words and scenes, and unlocks its own options in events and hails (an ex-pyrate can talk pyrates down in the old cant, a bookworm can quote regulations at the Rebuff, a gambler has "a system" at the casino).
-- **Bonds.** Crew can be best friends, siblings, rivals or sweethearts. They banter between beacons, and when one dies the other grieves, and hits 30% harder for a while.
+- **Bonds.** Crew can be best friends, siblings, rivals or sweethearts. They banter between beacons, and when one dies the other grieves, and hits 30% harder for a while. Bonds also form on the way: two crew keep ending up on the same night shift, or fall out over how the oxygen smells.
+- **Veterans.** Crew who beat five enemies hand to hand become veterans, with extra health.
 - **Crew moments.** Two or three times a run, a beacon is a short scene starring one of your crew, with their portrait: a snail race, an epic poem broadcast to the whole sector, a mystery stew, a black comet, a sleepwalker at the airlock button, a cursed statue, a double of someone after a bad jump. Some come back later in the run: a lost bet, a curse, a pyrate sweetheart, a statue that wakes up.
-- **The ship's pet.** Hatch an egg, take in a stray or keep a lost Biscuit. Pets get up to things between beacons, grow, rescue the ship, and sometimes go home.
-- **A nemesis.** An enemy captain who gets away (or whom you run from) may swear revenge and come back a few jumps later with a named, upgraded ship. They return angrier each time until you finish them, make peace, or they vanish for good. Beating one pays well.
-- **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run.
+- **The ship's pet.** Hatch an egg, take in a stray or keep a lost Biscuit, and name it yourself. Pets get up to things between beacons, learn tricks, grow, fall ill, rescue the ship, and sometimes go home.
+- **A nemesis.** An enemy captain who gets away (or whom you run from) may swear revenge and come back a few jumps later with a named, upgraded ship. They return angrier each time until you finish them, make peace, or they vanish for good. Beating one pays well. A nemesis who is still at large when your run ends may turn up in a later run, remembering your old ship.
+- **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run. In later runs a relative or friend of someone you lost may come looking for you, wanting to finish what they started. **Record → Memorial** lists everyone you've lost, across every voyage.
 - **The saga.** At the end of every run, read the whole story written out: who set out, who joined, who died and how, the nemesis, the pet and the strange things in between, with an epitaph for each crew member. Pause and choose **Saga so far** to read it mid-run. Your last twelve sagas are kept in **Record → Sagas**.
 
 **Story and dialogue**
@@ -363,7 +368,7 @@ Every list holds objects with an `id`. Reusing an existing id replaces that item
 - Dialogue: `choices` (continue the conversation on a new page), `setFlag` / `clearFlag` (story flags that choices and events can require), `begin` / `dismiss` (in hails: start the fight, or end the encounter)
 - More: `crewHeal`, `crewHurt`, `maxHull`, `xp` (`{"skill":"pilot","amt":20}`), `reveal` (shows the sector map), `fleetPush`, `mapPiece`
 - Text can use `{crew}`, `{who}` (the crew member who meets a race or personality requirement), `{ship}`, `{enemy}` and `{sector}`, and in crew moments `{friend}`, `{fallen}`, `{pet}` and `{nemesis}`.
-- Crew moments: give an event `moment: true` and it is picked as a crew scene instead of a normal beacon. `star` (a personality, or `"any"`) chooses who it is about, `bond: true` (with an optional `bondKind`) needs a crew member with a friend, sibling, rival or sweetheart, `fallen: true` needs someone who died, `pet: true` needs the pet. Extra effects for these: `starHurt`, `starHeal`, `starXp`, `starQuirk`, `starLeave`, `starClone`, `bondFix`, `pet`, `petBig`, `petGone`, and `saga` (the line the run's saga tells about that choice).
+- Crew moments: give an event `moment: true` and it is picked as a crew scene instead of a normal beacon. `star` (a personality, or `"any"`) chooses who it is about, `bond: true` (with an optional `bondKind`) needs a crew member with a friend, sibling, rival or sweetheart, `pair: true` picks two crew with no bond yet (`{crew}` and `{friend}`), `fallen: true` needs someone who died, `pet: true` needs the pet. Extra effects for these: `starHurt`, `starHeal`, `starXp`, `starQuirk`, `starLeave`, `starClone`, `bondFix`, `pet`, `petBig`, `petGone`, and `saga` (the line the run's saga tells about that choice).
 - Progress: `unlock`, `achievement`
 
 **Ship layouts**

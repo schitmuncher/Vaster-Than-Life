@@ -89,6 +89,8 @@ function drawTaps(){ const now_ = performance.now(), dt = Math.min(.1, (now_ - t
 
 /* ---------------- pointer handling (mouse, pen and touch) ---------------- */
 function evGame(e){ return screenToGame(e.clientX, e.clientY); }
+/* gestures over the ships zoom the battle view, not the whole console, so every panel stays usable (ui.js: SV) */
+function svGesture(g){ return typeof svZoomAt==='function' && SET.shipZoom !== false && UI.screen==='game' && G && !G.modal && !(typeof KB!=='undefined' && KB.open) && !(typeof inXR==='function' && inXR()) && inBF(g.x, g.y); }
 cv.addEventListener('contextmenu', e => e.preventDefault());
 cv.addEventListener('pointermove', e => {
   const p = evGame(e);
@@ -98,7 +100,8 @@ cv.addEventListener('pointermove', e => {
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
   const moved = Math.hypot(e.clientX - pr.sx, e.clientY - pr.sy);
   if(moved > 12 && !pr.long){ pr.drag = true; clearTimeout(pr.timer); }
-  if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ if(MOB.autoZ){ MOB.userZoom = true; MOB.autoZ = false; } MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
+  if(pr.drag && pr.svPan && SV.z > 1.01){ const g = evGame(e); SV.cx = pr.sv0.cx - (g.x - pr.g0.x)/SV.z; SV.cy = pr.sv0.cy - (g.y - pr.g0.y)/SV.z; svClamp(); PTR[0].on = false; }
+  else if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ if(MOB.autoZ){ MOB.userZoom = true; MOB.autoZ = false; } MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
   else if(!pr.drag || pr.long){ PTR[0].x = p.x; PTR[0].y = p.y; }   // hold-and-slide reads tooltips
 });
 cv.addEventListener('pointerleave', e => { if(e.pointerType==='mouse') PTR[0].on = false; });
@@ -110,12 +113,14 @@ cv.addEventListener('pointerdown', e => {
   MOB.ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if(MOB.ptrs.size === 2){ // start pinch: cancel any tap in progress
     if(MOB.press){ clearTimeout(MOB.press.timer); MOB.press = null; } PTR[0].on = false;
-    MOB.userZoom = true; MOB.autoZ = false;
     const [a, b] = [...MOB.ptrs.values()]; MOB.pinch = { d0:Math.hypot(a.x-b.x, a.y-b.y), z0:MOB.z, px0:MOB.px, py0:MOB.py, mx0:(a.x+b.x)/2, my0:(a.y+b.y)/2, t0:performance.now(), maxD:0 };
+    const gm = screenToGame(MOB.pinch.mx0, MOB.pinch.my0);
+    if(svGesture(gm)) Object.assign(MOB.pinch, { sv:true, sz0:SV.z, scx0:SV.cx, scy0:SV.cy, w0:svToWorld(gm.x, gm.y) });   // pinching the ships zooms the battle view
+    else { MOB.userZoom = true; MOB.autoZ = false; }
     return; }
   if(MOB.ptrs.size > 2) return;
   PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = true;   // finger down shows the pressed/hover state
-  const pr = MOB.press = { id:e.pointerId, sx:e.clientX, sy:e.clientY, px0:MOB.px, py0:MOB.py, drag:false, long:false, t0:performance.now() };
+  const pr = MOB.press = { id:e.pointerId, sx:e.clientX, sy:e.clientY, px0:MOB.px, py0:MOB.py, drag:false, long:false, t0:performance.now(), g0:p, sv0:{ cx:SV.cx, cy:SV.cy }, svPan:SV.z > 1.01 && svGesture(p) };
   pr.timer = setTimeout(() => { if(MOB.press===pr && !pr.drag){ pr.long = true; haptic(.15, 15); } }, 430);
 });
 function endPointer(e){
@@ -123,7 +128,7 @@ function endPointer(e){
   MOB.ptrs.delete(e.pointerId);
   if(MOB.pinch){ if(MOB.ptrs.size < 2){ const P = MOB.pinch; MOB.pinch = null; MOB.pinchEnded = performance.now();
       // a quick two-finger tap (no pinch, no drag) pauses or resumes
-      if(performance.now() - P.t0 < 280 && P.maxD < 16 && UI.screen==='game' && G && !G.modal){ MOB.z = P.z0; MOB.px = P.px0; MOB.py = P.py0; clampPan(); applyTransform(); G.paused = !G.paused; haptic(.3, 20); toast(G.paused ? 'Paused (two-finger tap to resume)' : 'Resumed'); } }
+      if(performance.now() - P.t0 < 280 && P.maxD < 16 && UI.screen==='game' && G && !G.modal){ if(P.sv){ SV.z = P.sz0; SV.cx = P.scx0; SV.cy = P.scy0; } else { MOB.z = P.z0; MOB.px = P.px0; MOB.py = P.py0; clampPan(); applyTransform(); } G.paused = !G.paused; haptic(.3, 20); toast(G.paused ? 'Paused (two-finger tap to resume)' : 'Resumed'); } }
     return; }
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
   clearTimeout(pr.timer); MOB.press = null;
@@ -131,7 +136,9 @@ function endPointer(e){
   if(!pr.drag && !pr.long && performance.now() - (MOB.pinchEnded||0) > 250){
     const hit = tapAt(p.x, p.y, 26), now = performance.now(), L = MOB.lastEmpty;
     // double-tap on empty space zooms in on that spot (or back out)
-    if(!hit && L && now - L.t < 320 && Math.hypot(e.clientX - L.x, e.clientY - L.y) < 40 && UI.screen==='game'){
+    if(!hit && L && now - L.t < 320 && Math.hypot(e.clientX - L.x, e.clientY - L.y) < 40 && UI.screen==='game' && svGesture(p)){   // double-tap the ships: zoom the battle view
+      MOB.lastEmpty = null; if(SV.z > 1.2) svReset(); else svZoomAt(p.x, p.y, 2.2); haptic(.3, 15);
+    } else if(!hit && L && now - L.t < 320 && Math.hypot(e.clientX - L.x, e.clientY - L.y) < 40 && UI.screen==='game'){
       MOB.lastEmpty = null; MOB.userZoom = true; MOB.autoZ = false;
       if(MOB.z > 1.2) resetZoom();
       else { const z = 2.2, off = gameToScreenDelta(p.x, p.y, z); MOB.z = z; MOB.px = e.clientX - MOB.cx - off.dx; MOB.py = e.clientY - MOB.cy - off.dy; clampPan(); applyTransform(); }
@@ -145,13 +152,15 @@ cv.addEventListener('pointercancel', e => { MOB.ptrs.delete(e.pointerId); if(MOB
 function pinchMove(){
   const [a, b] = [...MOB.ptrs.values()]; const P = MOB.pinch; const d = Math.hypot(a.x-b.x, a.y-b.y); const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
   P.maxD = Math.max(P.maxD||0, Math.abs(d - P.d0), Math.hypot(mx - P.mx0, my - P.my0));
+  if(P.sv){ const g = screenToGame(mx, my), z = clamp(P.sz0 * d/Math.max(20, P.d0), 1, 3);   // the ship point under the fingers stays under them
+    SV.z = z; SV.cx = P.w0.x - (g.x - BF.x - BF.w/2)/z; SV.cy = P.w0.y - (g.y - BF.y - BF.h/2)/z; svClamp(); return; }
   const z = clamp(P.z0 * d/Math.max(20, P.d0), 1, 4);
   // keep the game point that was under the fingers' midpoint under it
   const g0 = screenToGame(P.mx0, P.my0, { z:P.z0, px:P.px0, py:P.py0 });
   const off = gameToScreenDelta(g0.x, g0.y, z);
   MOB.z = z; MOB.px = mx - MOB.cx - off.dx; MOB.py = my - MOB.cy - off.dy; clampPan(); applyTransform();
 }
-cv.addEventListener('wheel', e => { if(!e.ctrlKey) return; e.preventDefault(); const g = evGame(e); const z = clamp(MOB.z * (e.deltaY < 0 ? 1.1 : 1/1.1), 1, 4); const off = gameToScreenDelta(g.x, g.y, z); MOB.z = z; MOB.px = e.clientX - MOB.cx - off.dx; MOB.py = e.clientY - MOB.cy - off.dy; clampPan(); applyTransform(); }, { passive:false });
+cv.addEventListener('wheel', e => { if(!e.ctrlKey){ const g = evGame(e); if(svGesture(g)){ e.preventDefault(); svZoomAt(g.x, g.y, SV.z * (e.deltaY < 0 ? 1.15 : 1/1.15)); } return; } e.preventDefault(); const g = evGame(e); const z = clamp(MOB.z * (e.deltaY < 0 ? 1.1 : 1/1.1), 1, 4); const off = gameToScreenDelta(g.x, g.y, z); MOB.z = z; MOB.px = e.clientX - MOB.cx - off.dx; MOB.py = e.clientY - MOB.cy - off.dy; clampPan(); applyTransform(); }, { passive:false });
 
 /* ---------------- full screen & install ---------------- */
 function isFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement) || window.navigator.standalone === true || matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches; }
