@@ -189,8 +189,8 @@ function deckEngineering(){
       for(let b=0;b<sy.max;b++){ g.fillStyle = b >= sy.max - sy.dmg ? VCOL.bad : b < ef ? col : 'rgba(255,255,255,.12)'; g.fillRect(x + 14 + b*(pw + 4), y + 44, pw, 18); }
       const st = sy.dmg ? `${sy.dmg} damaged` : sy.ionT>0 ? 'ion locked' : k==='shields' ? `${shieldLayers(s)} layer${shieldLayers(s)===1?'':'s'}` : manned(s, k) ? 'manned' : `${sy.power}/${sy.max}`;
       vT(g, st, x + 14, y + 86, { s:18, c: sy.dmg ? VCOL.bad : VCOL.muted, max:tw - 28 });
-      vuiBtn(Wd, x + 12, y + 94, 136, 46, '−', () => powerDown(k), { s:40, col, disabled:sy.power<=0 });
-      vuiBtn(Wd, x + tw - 148, y + 94, 136, 46, '+', () => powerUp(k), { s:40, col, fill:free>0 && sy.power < sy.max - sy.dmg }); });
+      vuiBtn(Wd, x + 12, y + 94, 136, 46, '−', () => sysMinus(k), { s:40, col, disabled:sy.power<=0 });
+      vuiBtn(Wd, x + tw - 148, y + 94, 136, 46, '+', () => sysPlus(k), { s:40, col, fill:free>0 && sy.power < sy.max - sy.dmg }); });
     const vent = s.doors.some(d => d.b<0 && d.open);
     const acts = [['DOORS OPEN', () => { if(!setAllDoors(s, true, false)) toast('Door control is down.'); }, VCOL.good, false], ['DOORS SHUT', () => { if(!setAllDoors(s, false, true)) toast('Door control is down.'); }, '#c9a27e', false],
       [vent ? 'SEAL AIRLOCKS' : 'VENT AIRLOCKS', () => { if(!canDoors(s)){ toast('Door control is down.'); return; } for(const d of s.doors) if(d.b<0) d.open = !vent; }, VCOL.cyan, vent],

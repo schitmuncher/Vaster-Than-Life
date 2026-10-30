@@ -90,6 +90,10 @@ function resumeAuto(sh){
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null; if(w.autoTarget!=null && (DATA.weapons[w.id]?.heal ? sh.rooms[w.autoTarget] : foe && foe.rooms[w.autoTarget])) w.target = w.autoTarget; w.autoTarget = null; }
   for(const d of sh.drones){ if(!d.auto || d.on) continue; const p = DATA.drones[d.id]?.power||0; if(p > df) continue; d.on = true; d.auto = false; df -= p; }
 }
+/* FTL rule for the player's ship: Weapons and Drones only hold the power their powered weapons and drones use.
+   Bars nothing is using go back to the reactor (turning a weapon off frees its bars for Drones, Shields, anything). */
+function trimPower(sh, k){ const s = sh.systems[k]; if(!s || sh.isEnemy) return 0; const used = k==='weapons' ? weaponPowerUsed(sh) : k==='drones' ? dronePowerUsed(sh) : null; if(used==null) return 0;
+  let n = 0; while(s.power > 0 && eff(sh,k) - 1 >= used){ s.power--; n++; } if(n) s.prev = 0; return n; }
 function autoPowerDrones(sh){ let free = eff(sh,'drones') - dronePowerUsed(sh); for(const d of sh.drones){ const p = DATA.drones[d.id]?.power||0; if(!d.on && p<=free && DATA.drones[d.id].kind!=='hull'){ d.on = true; free -= p; } } }
 
 /* ---------------- damage ---------------- */
@@ -220,9 +224,9 @@ function deployDrones(sh, foe){
     if(bp.kind==='hull'){
       if(foe){ continue; }
       if(sh.side==='p' && sh.hull < sh.maxHull && G.parts>0){ G.parts--; sh.hull = Math.min(sh.maxHull, sh.hull + (bp.heal||4)); toast(`Hull repair drone patched ${bp.heal||4} hull.`); }
-      dr.on = false; continue;
+      dr.on = false; trimPower(sh, 'drones'); continue;
     }
-    if(sh.side==='p'){ if(G.parts<=0) continue; if(!hasAug(sh,'recovery') && !(hasAug(sh,'replicator') && Math.random()<.33) && !(Math.random() < augFx(sh,'ammo'))) G.parts--; }
+    if(sh.side==='p'){ if(G.parts<=0){ if(!dr.noParts){ dr.noParts = true; toast(`No drone parts left to launch the ${bp.name}. Buy some at a store.`); } continue; } dr.noParts = false; if(!hasAug(sh,'recovery') && !(hasAug(sh,'replicator') && Math.random()<.33) && !(Math.random() < augFx(sh,'ammo'))) G.parts--; }
     if(bp.kind==='internal'){ const c = newDroneUnit(dr.id, sh.side); sh.crew.push(c); placeCrew(sh, c, Math.max(0, roomOf(sh,'drones'))); dr.unit = c.id; }
     else if(bp.kind==='boarding'){ const p = launch(sh.side, foe.side, { type:'bdrone', name:bp.name }, aiTargetRoom(foe), { kind:'bdrone', bp:dr.id }); dr.unit = p.id; }
     else { const u = { id:uid(), bp:dr.id, side:sh.side, orbit: bp.kind==='attack' ? foe.side : sh.side, ang:Math.random()*6.28, cd:(bp.rate||3)*.7 }; G.units.push(u); dr.unit = u.id; }
@@ -587,7 +591,8 @@ function tickShip(sh, dt, foe){
     let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')] * (traitOf(wc).charge||1); else if(sh.auto) mult *= 1.05;
     if(hasAug(sh,'reloader')) mult *= 1.1; mult *= 1 + augFx(sh,'charge');
     if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .025*(G.sector-1));
-    if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;   // the Flaggship fires slower on Easy and Normal
+    if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;
+    if(sh.isEnemy && typeof alertLv==='function' && alertLv() >= 7) mult *= 1.06;   // Rebuff alert 7: drilled gunners   // the Flaggship fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     w.charge = Math.min(d.charge, w.charge + dt*mult);

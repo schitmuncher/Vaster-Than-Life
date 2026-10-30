@@ -127,7 +127,8 @@ function draw(){
     case 'challenges': drawChallenges(); break;
     case 'gallery': drawGallery(); break;
     case 'game': drawGame(); break;
-    case 'over': case 'win': drawEnd(); break;
+    case 'over': case 'win': drawEnd(); if(UI.debrief && typeof drawDebrief==='function') drawDebrief(); break;
+    case 'career': drawCareer(); break;
     case 'record': drawRecord(); break;
     case 'saga': drawSaga(); break;
     case 'mp': drawMP(); break;
@@ -201,9 +202,10 @@ function drawTitleCards(t){
     btn(x+w-204, 620, 180, 42, 'All runs', () => { UI.screen = 'record'; }, { s:14 }); }
   else para('No runs yet. Your first one is waiting: New run, then pick a ship. Easy is the gentle way in.', x+24, 552, w-48, { s:16, lh:23, c:C.muted });
   // record
-  panel(x, 696, w, 152, 12); label('Captain\'s record', x+24, 732, C.good, 'left', 16);
+  panel(x, 696, w, 226, 12); label('Captain\'s record', x+24, 732, C.good, 'left', 16);
+  if(typeof drawRankCard==='function'){ drawRankCard(x+24, 770, w-48); btn(x+w-164, 708, 140, 40, 'Career ›', () => { UI.screen = 'career'; }, { s:15, col:C.amber }); }
   const wins = Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0);
-  [['Runs', PROFILE.runs], ['Wins', wins], ['Best sector', PROFILE.maxSector], ['Ships beaten', PROFILE.kills]].forEach((r,i) => { const cx = x+24 + i*128; label(r[0], cx, 770, C.muted, 'left', 12); T(fmtNum(r[1]||0), cx, 812, { s:30, f:FD, w:700 }); });
+  [['Runs', PROFILE.runs], ['Wins', wins], ['Best sector', PROFILE.maxSector], ['Ships beaten', PROFILE.kills]].forEach((r,i) => { const cx = x+24 + i*128; label(r[0], cx, 852, C.muted, 'left', 12); T(fmtNum(r[1]||0), cx, 892, { s:28, f:FD, w:700 }); });
 }
 function classGroups(){
   const groups = {}; for(const id in DATA.ships){ const s = DATA.ships[id]; const k = s.cls || s.name; (groups[k] = groups[k] || []).push(id); }
@@ -255,6 +257,12 @@ function drawHangar(){
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
+  if((PROFILE.alert||0) > 0 && typeof ALERTS!=='undefined'){ const A = PROFILE.alert, cur = clamp(SET.alert||0, 0, A);
+    label('Rebuff alert', 84, y0+446, C.hostile, 'left', 13);
+    btn(210, y0+424, 40, 34, '‹', () => { SET.alert = Math.max(0, cur-1); saveProfile(); }, { s:18, disabled:cur<=0 });
+    T(cur ? `${cur} · ${ALERTS[cur].name}` : 'Off', 262, y0+448, { s:17, f:FD, w:700, c: cur ? C.hostile : C.muted, max:220 });
+    btn(490, y0+424, 40, 34, '›', () => { SET.alert = Math.min(A, cur+1); saveProfile(); }, { s:18, disabled:cur>=A });
+    tip(84, y0+424, 450, 34, cur ? `Rebuff alert ${cur}` : 'Rebuff alert', cur ? `${alertText(cur)} More renown (+${cur*15}%) and score (+${cur*10}%). Not used in dailies, challenges or multiplayer.` : `Harder runs for more renown and score. You have unlocked up to level ${A}.`); }
   // per-ship record and the run seed
   const bst = PROFILE.best?.[sel]; if(bst) T(`Your best with this ship: ${bst.wins ? bst.wins + ' win' + (bst.wins>1?'s':'') : 'sector ' + bst.sector} · ${fmtNum(bst.score)} pts`, 1516, y0+48, { s:15, a:'right', c:C.good });
   label('Seed', 1240, y0+360, C.muted, 'left', 14);
@@ -469,7 +477,7 @@ function drawAchievements(){
 }
 const HELP_PAGES = [
   ['Basics', [
-    ['Power', 'Your reactor has a fixed number of bars. Use + and − under each system. Helm, Sensors, Doors and Battery are subsystems that need no reactor power.'],
+    ['Power', 'Your reactor has a fixed number of bars. Use + and − under each system. Weapons and Drones hold exactly what their powered weapons and drones use: turning one off hands its bars back to the reactor, and + powers the next one in line. Helm, Sensors, Doors and Battery need no power.'],
     ['Weapons', 'Power a weapon, press Target, then point at an enemy room. With Autofire on it keeps firing at that room. Use Hold fire to let weapons charge, then Fire volley to hit shields all at once. Missiles and bombs use missile ammo.'],
     ['Shields', 'Every 2 shield power is one layer. Layers block lasers, ion and flak, then recharge in 2 seconds. Missiles ignore shields. Beams lose 1 damage per layer. Bombs teleport past them.'],
     ['Crew', 'Select a crew member, then any room, on either ship. Crew man stations for bonuses, repair systems, fight fires, patch breaches and fight boarders. They gain skills as they work.'],
@@ -488,6 +496,14 @@ const HELP_PAGES = [
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
     ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
+  ['Career', [
+    ['Renown & ranks', 'Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story all count, and harder runs earn more. Renown raises your Admiralty rank, from Cadet to Admiral. See Career on the title screen.'],
+    ['The send-off', 'Admiral Hale sees you off at the start of each run with a choice of gifts. Higher ranks mean more choices and better gifts, and some gifts come with a price. Hale remembers how your last run went.'],
+    ['Ship requisitions', 'Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing. Medals still unlock them sooner.'],
+    ['The data core', 'The core in your hold wakes up in sector 2. Its name is Pip. How you treat Pip changes the last sector, the Flaggship fight and how a win ends. There are four endings to find.'],
+    ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
+    ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
+    ['Rebuff alert', 'Win on Normal or Hard to unlock alert level 1. Each level adds one twist (tougher patrols, dearer stores, a faster fleet...) for more renown and score. Pick the level in the hangar. Dailies and challenges ignore it.'] ]],
   ['Controls', [
     ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
     ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
@@ -527,7 +543,7 @@ function drawEnd(){
   const win = UI.screen==='win', last = UI.lastRun;
   label(win ? 'Mission complete' : 'Run over', W/2, 172, win ? C.good : C.hostile, 'center', 22);
   T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
-  { const txt = win ? 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.' : (UI.overReason||''); const ls = lines(txt, 1100, `400 21px ${FM}`); ls.slice(0,2).forEach((l,i) => T(l, W/2, 312 + i*28, { s:21, c:C.muted, a:'center' })); }
+  { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const ls = lines(txt, 1100, `400 21px ${FM}`); ls.slice(0,2).forEach((l,i) => T(l, W/2, 312 + i*28, { s:21, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
   if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap found', G.stats.scrap], ['Jumps', G.stats.jumps], ['Score', last ? last.score : runScore(win)]];
     panel(W/2-640, 380, 1280, 150, 12);
     st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
@@ -665,6 +681,7 @@ function drawGame(){
   if(hint){ panel(W/2-330, 520, 660, 40, 8); T(hint, W/2, 541, { s:17, a:'center', b:'middle', c:C.amber }); }
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0) drawWarp2D();
+  if(G.banner && typeof drawBanner==='function') drawBanner();
   if(G.paused && !G.modal && !UI.hint && SET.pauseMin){   // collapsed: a small tab that leaves the ships in view
     const py = 142; panel(W/2-190, py, 380, 50, 10); T('PAUSED', W/2-176, py+34, { s:24, f:FD, w:700, c:C.amber, ls:4 });
     btn(W/2-28, py+8, 104, 34, 'Menu ▾', () => { SET.pauseMin = false; saveProfile(); }, { s:14 });
@@ -942,8 +959,8 @@ function drawSystems(){
       rr(bx, by, bw, bh, 3); if(fill){ ctx.fillStyle = fill; ctx.fill(); } ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); }
     let st = ''; if(k==='shields') st = `${shieldLayers(s)} layer${shieldLayers(s)===1?'':'s'}`; else if(manned(s,k)) st = 'manned'; else if(sy.ionT>0) st = 'ion';
     if(st) T(st, cx + cw/2, y+194, { s:11, a:'center', c: st==='ion' ? C.cyan : C.good });
-    btn(cx, y+202, cw, 40, '+', () => powerUp(k), { s:24 });
-    btn(cx, y+246, cw, 32, '−', () => powerDown(k), { s:22, disabled: sy.power<=0 });
+    btn(cx, y+202, cw, 40, '+', () => sysPlus(k), { s:24 });
+    btn(cx, y+246, cw, 32, '−', () => sysMinus(k), { s:22, disabled: sy.power<=0 });
     const act = sysAction(k); if(act) btn(cx, y+284, cw, 36, act[0], act[1], { s:14, disabled:act[2], col:SYSC[k], fill: (k==='teleporter'&&UI.mode==='tele')||(k==='hacking'&&UI.mode==='hack')||(k==='mindcontrol'&&UI.mode==='mind') });
   });
   const hx = x + w - subW - 10, hy = y+40;
@@ -1206,6 +1223,7 @@ function mapIcon(kind, x, y, s, col, g = ctx){
     case 'base': g.moveTo(0, -u); g.lineTo(u*.85, -u*.6); g.lineTo(u*.7, u*.3); g.lineTo(0, u); g.lineTo(-u*.7, u*.3); g.lineTo(-u*.85, -u*.6); g.closePath(); g.stroke(); dot(0, 0, u*.25); break;
     case 'flag': case 'ship': g.moveTo(u*1.1, 0); g.lineTo(-u*.75, -u*.7); g.lineTo(-u*.35, 0); g.lineTo(-u*.75, u*.7); g.closePath(); g.fill(); break;
     case 'empty': g.arc(0, 0, u*.3, 0, 7); g.stroke(); break;
+    case 'elite': for(const dy of [-u*.5, u*.05]){ g.moveTo(-u*.85, dy + u*.45); g.lineTo(0, dy - u*.2); g.lineTo(u*.85, dy + u*.45); } g.stroke(); dot(0, u*.82, u*.16); break;
     case 'sun': dot(0, 0, u*.4); g.beginPath(); for(let i=0;i<8;i++){ const a = i*Math.PI/4; g.moveTo(Math.cos(a)*u*.62, Math.sin(a)*u*.62); g.lineTo(Math.cos(a)*u*.98, Math.sin(a)*u*.98); } g.stroke(); break;
     case 'asteroid': g.moveTo(-u*.8, -u*.1); g.lineTo(-u*.35, -u*.75); g.lineTo(u*.4, -u*.6); g.lineTo(u*.85, 0); g.lineTo(u*.3, u*.75); g.lineTo(-u*.5, u*.55); g.closePath(); g.fill(); break;
     case 'ionstorm': g.moveTo(u*.25, -u); g.lineTo(-u*.45, u*.1); g.lineTo(u*.05, u*.1); g.lineTo(-u*.25, u); g.lineTo(u*.5, -u*.15); g.lineTo(0, -u*.15); g.closePath(); g.fill(); break;
@@ -1255,8 +1273,8 @@ function drawMapModal(){
   nodes.forEach((n,i) => {
     const x = mx(n), y = my(n), reach = reachSet.has(i), isCur = i===G.map.cur, hov = i===hovI;
     const flagHere = G.flag && G.flag.node===i, known = scan || n.revealed, taken = n.x < G.fleetX && !isCur, soon = !taken && !isCur && n.x < G.fleetX + step;
-    const kind = flagHere ? 'flag' : n.type==='store' ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
-    const col = { flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
+    const kind = flagHere ? 'flag' : n.type==='store' ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.elite && !n.visited ? 'elite' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
+    const col = { flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, elite:'#ff9f43', hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
     const r = hov ? 25 : 20;
     if(hov) glow(x, y, 48, col, .45); else if(reach && jumpable) glow(x, y, 34, col, .16 + .08*Math.sin(t*3 + i));
     ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = n.visited ? '#10172c' : C.room; ctx.fill(); ctx.lineWidth = reach ? 3 : 2; ctx.strokeStyle = kind==='visited' ? hexA(col,.6) : col; ctx.stroke();
@@ -1269,14 +1287,14 @@ function drawMapModal(){
     const showHz = n.hazard && (scan || n.revealed || n.visited || reach);
     if(showHz){ const hc = HZCOL[n.hazard] || C.warn, hx = x + 19, hy = y - 19; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fillStyle = '#0b1122'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = hc; ctx.stroke(); mapIcon(n.hazard, hx, hy, 13, hc);
       if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
-    let tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : '';
+    let tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
     if(flagHere) tag = 'FLAGGSHIP';
     if(tag) label(tag, x, y+48, col, 'center', 13);
     if(taken){ ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
     { const name = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
       const ahead = (n.x - G.fleetX)/step; const bits = [];
-      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.');
+      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.');
       if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
       bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
@@ -1287,7 +1305,7 @@ function drawMapModal(){
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
   // legend in the header
-  { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good]]){
+  { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['elite','Veteran','#ff9f43'],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good]]){
       T(name, lx, f.y+45, { s:14, c:C.muted, a:'right' }); const tw = ctx.measureText(name).width; mapIcon(k, lx - tw - 16, f.y+40, 16, c); lx -= tw + 50; } }
   // footer: where the exit is, how far behind the fleet is, fuel
   ctx.fillStyle = hexA(C.cyan,.35); ctx.fillRect(f.x, ay+ah, f.w, 1.5);
@@ -1465,23 +1483,42 @@ function drawShipModal(){
 
 /* ---------------- shared actions (2D panels and the VR stations use the same ones) ---------------- */
 /* turning a weapon or drone on tops up its system's power from the free reactor first, so it takes one tap, not three */
-function topUpPower(s, k, need){ const used = () => k==='weapons' ? weaponPowerUsed(s) : dronePowerUsed(s); let n = 8;
-  while(eff(s,k) - used() < need && n-- > 0){ const y = s.systems[k]; if(!y || y.power >= y.max - y.dmg || reactorFree(s) <= 0) break; y.power++; }
-  return eff(s,k) - used() >= need; }
+function topUpPower(s, k, need){ const used = () => k==='weapons' ? weaponPowerUsed(s) : dronePowerUsed(s), y = s.systems[k]; if(!y) return false;
+  const p0 = y.power; let n = 8;
+  while(eff(s,k) - used() < need && n-- > 0){ if(y.power >= y.max - y.dmg || reactorFree(s) <= 0) break; y.power++; }
+  if(eff(s,k) - used() >= need) return true;
+  y.power = p0; return false; }   // could not do it (ion, hacking, damage): hand back every bar we tried, nothing is left stranded
+function powerFailMsg(s, k, name){ const y = s.systems[k], sysn = k==='weapons' ? 'Weapons' : 'The Drone system';
+  if(y.ionT>0) return `${sysn} ${k==='weapons'?'are':'is'} ionised: wait for the ion charge to wear off.`;
+  if(hackedNow(s,k)) return `${sysn} ${k==='weapons'?'are':'is'} being hacked.`;
+  if(y.power >= y.max - y.dmg) return y.dmg ? `${sysn} ${k==='weapons'?'are':'is'} damaged: repair, or turn another ${k==='weapons'?'weapon':'drone'} off.` : `${sysn} can't power the ${name} too: turn another ${k==='weapons'?'weapon':'drone'} off, or upgrade ${k==='weapons'?'Weapons':'Drones'}.`;
+  return `Not enough reactor power for the ${name}: turn something else off (tap − under a system), or upgrade the reactor.`; }
 function weaponToggle(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return;
-  if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; sfx('unpower'); }
-  else if(topUpPower(s, 'weapons', d.power)){ wp.on = true; sfx('power'); }
-  else { const y = s.systems.weapons; sfx('error'); toast(y && y.power >= y.max - y.dmg ? (y.dmg ? 'Weapons are damaged: repair them, or turn another weapon off.' : `Weapons can't power the ${d.name} too: turn another weapon off, or upgrade Weapons.`) : 'No reactor power free: take some from another system (tap − under it).'); } }
+  if(wp.on){ wp.on = false; wp.auto = false; wp.target = null; if(UI.selWeapon===i) UI.selWeapon = null; trimPower(s, 'weapons'); sfx('unpower'); }
+  else if(!s.systems.weapons) toast('Install a Weapons system first.');
+  else if(topUpPower(s, 'weapons', d.power)){ wp.on = true; wp.auto = false; sfx('power'); }
+  else { sfx('error'); toast(powerFailMsg(s, 'weapons', d.name)); } }
 function weaponAim(i){ const s = G.ship, wp = s.weapons[i], d = wp && DATA.weapons[wp.id]; if(!d) return; const sel = UI.selWeapon===i;
   if(wp.target!=null){ wp.target = null; UI.selWeapon = null; }
   else if(!G.enemy && !d.heal) toast('No enemy to target.');
   else if(!wp.on){ weaponToggle(i); if(wp.on){ UI.selWeapon = i; UI.mode = null; UI.selCrew = null; } }   // aiming an unpowered weapon powers it first, like pressing its card
   else { UI.selWeapon = sel ? null : i; UI.mode = null; UI.selCrew = null; } }
 function droneToggle(i){ const s = G.ship, dr = s.drones[i], bp = dr && DATA.drones[dr.id]; if(!bp) return;
-  if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); sfx('unpower'); }
+  if(dr.on){ dr.on = false; dr.auto = false; removeDrone(s, dr); trimPower(s, 'drones'); sfx('unpower'); }
   else if(!s.systems.drones) toast('Install a Drone system first.');
-  else if(!topUpPower(s, 'drones', bp.power)){ const y = s.systems.drones; sfx('error'); toast(y.power >= y.max - y.dmg ? (y.dmg ? 'Drones are damaged: repair them, or turn another drone off.' : `The Drone system can't power the ${bp.name} too: turn another drone off, or upgrade it.`) : 'No reactor power free: take some from another system (tap − under it).'); }
-  else { dr.on = true; sfx('power'); } }
+  else if(bp.kind!=='hull' && G.parts<=0 && !hasAug(s,'recovery')){ sfx('error'); toast(`No drone parts: the ${bp.name} needs one to launch. Buy them at stores.`); }
+  else if(!topUpPower(s, 'drones', bp.power)){ sfx('error'); toast(powerFailMsg(s, 'drones', bp.name)); }
+  else { dr.on = true; dr.auto = false; dr.noParts = false; sfx('power'); } }
+/* + on Weapons or Drones powers the next weapon or drone in line, taking as many bars as it needs (like FTL); − turns the last one off and frees all its bars */
+function powerNext(k){ const s = G.ship, list = k==='weapons' ? s.weapons : s.drones, DB = k==='weapons' ? DATA.weapons : DATA.drones;
+  const i = list.findIndex(x => !x.on && DB[x.id] && !(k==='drones' && DB[x.id].kind==='hull'));
+  if(i < 0){ const y = s.systems[k]; if(y && y.power < y.max - y.dmg && reactorFree(s) > 0 && list.some(x => x.auto && !x.on)) return powerUp(k); sfx('error'); toast(list.length ? `Every ${k==='weapons'?'weapon':'drone'} is already powered.` : `No ${k==='weapons'?'weapons':'drones'} installed.`); return 'full'; }
+  if(k==='weapons') weaponToggle(i); else droneToggle(i); return list[i].on ? 'ok' : 'fail'; }
+function powerPrev(k){ const s = G.ship, list = k==='weapons' ? s.weapons : s.drones;
+  for(let i = list.length-1; i >= 0; i--) if(list[i].on){ if(k==='weapons') weaponToggle(i); else droneToggle(i); return; }
+  removePower(s, k); trimPower(s, k); sfx('unpower'); }
+function sysPlus(k){ return (k==='weapons' || k==='drones') ? powerNext(k) : powerUp(k); }
+function sysMinus(k){ return (k==='weapons' || k==='drones') ? powerPrev(k) : powerDown(k); }
 function powerUp(k){ const s = G.ship, r = addPower(s,k); sfx(r==='ok' ? 'power' : 'error'); if(r==='reactor') toast('No reactor power free.'); else if(r==='damaged') toast(`${SYSN[k]} is damaged. Send crew to repair it.`); else if(r==='full') toast(`${SYSN[k]} is at full power. Upgrade it in Ship.`); return r; }
 function powerDown(k){ removePower(G.ship, k); sfx('unpower'); }
 

@@ -23,7 +23,7 @@ const SKILLS = ['pilot','engines','shields','weapons','repair','combat'];
 const SKILLN = { pilot:'Piloting', engines:'Engines', shields:'Shields', weapons:'Weapons', repair:'Repair', combat:'Combat' };
 const SKILLT = { pilot:[60,150], engines:[60,150], shields:[20,50], weapons:[25,60], repair:[15,40], combat:[6,15] };
 const NAMES = ['Ash','Bryn','Coll','Dara','Eli','Fen','Gale','Hollis','Ione','Jory','Kit','Lark','Mosi','Noor','Oren','Pell','Quin','Rhea','Sol','Tam',
-  'Ude','Vale','Wren','Yara','Zeb','Moss','Pip','Juno','Bex','Cato','Dex','Ezra','Faye','Gus','Halo','Iggy','Jax','Kai','Lumi','Milo','Nix','Ozzy','Pax','Rook','Sage','Tibs','Vex','Wim','Zara'];
+  'Ude','Vale','Wren','Yara','Zeb','Moss','Pim','Juno','Bex','Cato','Dex','Ezra','Faye','Gus','Halo','Iggy','Jax','Kai','Lumi','Milo','Nix','Ozzy','Pax','Rook','Sage','Tibs','Vex','Wim','Zara'];
 const SHIP_NAMES = ['Kestrel Junior','Big Dipper','Space Oddity','Cosmic Latte','Nebula Nugget','Void Biscuit','Star Trekkie','Hull Monty','Ion Maiden','Warp Speedo'];
 
 const BASE = {

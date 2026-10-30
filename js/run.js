@@ -43,6 +43,7 @@ function newRun(shipId, name, o={}){
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`);
   G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
+  if(typeof campaignRunStart==='function') campaignRunStart(o);   // Admiral Hale's send-off, Rebuff alert (campaign.js)
   if(typeof mpRunStarted==='function') mpRunStarted(o);
   save();
 }
@@ -96,6 +97,8 @@ function genSector_(n, type){ if(G) G.fleetFights = 0;
   G.map = { nodes, cur:0, trail:[0] }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   if(G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='mystic') && Math.random() < .6){ const hid = nodes.filter(nd => !nd.revealed); shuffle(hid); for(const nd of hid.slice(0, 4)) nd.revealed = true; G.mysticSaw = true; }   // a mystic dreams the way ahead
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
+  if(typeof campaignElites==='function') campaignElites(nodes, n, final, sd);   // veteran beacons, marked on the map
+  if(typeof campaignSectorGen==='function') campaignSectorGen(n);
   G.flag = null;
   if(sd.secret){ G.flags.glassDone = true; grant('glasswork'); placeQuest('glass_welcome'); }
   logEntry(`Entered sector ${n}: ${sd.name}.`);
@@ -154,6 +157,7 @@ function arrive_(i){
   if(G.ship.systems.clonebay && eff(G.ship,'clonebay')>0) for(const c of G.ship.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + 20);
   const first = !node.visited; node.visited = true;
   if(typeof homeJump==='function') homeJump();   // the garden grows (homestead.js)
+  if(typeof campaignArrive==='function') campaignArrive(node, first);   // Pip has opinions (campaign.js)
   emit('arrive', node);
   if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
@@ -172,7 +176,7 @@ function arrive_(i){
   if(node.quest){ startEvent(node.quest); return; }
   switch(node.type){
     case 'event': startEvent(pickEvent(node)); break;
-    case 'combat': startCombat('random', { hail:true }); break;
+    case 'combat': startCombat('random', { hail:true, elite:!!node.elite }); break;
     case 'exit': G.modal = { type:'exit', opts:sectorOptions() }; save(); break;
     default: { if(!G.hazard && typeof pickMoment==='function'){ const mo = pickMoment(node, .3); if(mo){ startEvent(mo); break; } }
       const hzFlavour = G.hazard && typeof HAZARD_ARRIVALS!=='undefined' && HAZARD_ARRIVALS[G.hazard] ? fillText(pick(HAZARD_ARRIVALS[G.hazard]), { crew:randomCrewName() }) + ' ' : '';
@@ -187,7 +191,7 @@ function arrive_(i){
       G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof startFishing==='function' && G.hazard!=='sun' ? [{ id:'fish', label:'🎣 Cast a line', fn:startFishing }] : null }; save(); }
   }
 }
-function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
+function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
   ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Rebuff Fleet is slower in here too.' }[h]; }
 function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
@@ -316,6 +320,7 @@ function applyEffect(e){
     if(G.mapPieces>=3 && !G.flags.mapDone){ G.flags.mapDone = true; placeQuest('treasure_vault'); L.push('The map is complete! The treasure is marked on your map'); } }
   if(typeof marketEffect==='function') marketEffect(e, L);
   if(typeof sagaEffect==='function') sagaEffect(e, L);
+  if(typeof campaignEffect==='function') campaignEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -352,6 +357,7 @@ function closeResult(m){
   if(G.openClinic){ G.openClinic = false; G.modal = { type:'clinic' }; return; }   // Doctor Oddly (travellers.js)
   if(G.openMags){ G.openMags = false; G.modal = { type:'store', node:G.map.cur, mags:true }; UI.storeTab = 'goods'; return; }   // Mags's caravan (market.js)   // a new pet needs a name
   if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }
+  if(G.thenMap && !a.fight && !a.event && !a.store && !a.begin && !G.enemy){ G.thenMap = false; save(); openMap(); return; }   // a story scene on the way in: then the map, like the sector intro
   if(a.begin){ if(G.enemy) taunt('start'); return; }
   if(a.dismiss){ leaveCombat(); save(); return; }
   if(a.fight) startCombat(a.fight, { afterWin:a.afterWin });
@@ -380,11 +386,13 @@ function startCombat_(id, o={}){
   G.enemy.hailTag = (tags.includes(G.enemy.faction) && hasHail(G.enemy.faction)) ? G.enemy.faction : (tags.find(hasHail) || G.enemy.faction);
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
   // now and then a veteran crew: tougher and faster, but they carry better salvage
-  if(!def.boss && !o.harder && G.sector >= 3 && Math.random() < .12){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
+  if(!def.boss && typeof alertLv==='function' && alertLv() >= 1){ G.enemy.hull += 2; G.enemy.maxHull += 2; }   // Rebuff alert 1: patrols
+  if(!def.boss && !o.harder && ((o.elite && G.sector >= 2) || (G.sector >= 3 && Math.random() < (typeof alertLv==='function' && alertLv() >= 5 ? .1 : .05)))){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
     for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
   if(typeof sagaCombatStart==='function') sagaCombatStart(G.enemy, o);   // your nemesis, back for more
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
+  if(def.boss && typeof campaignBoss==='function') campaignBoss(G.enemy, o);   // Pip helps, Kross gloats (campaign.js)
   G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
@@ -426,8 +434,8 @@ function finishCombat(kind, offer){
   else {
     if(e.fleet){ L.push(...applyEffect({ scrap: ri(3,8) })); L.unshift('Fleet warships are stripped for war: there is almost nothing worth salvaging. Get ahead of the fleet!'); }
     else { withSeed(`s${G.sector}n${G.map?.cur}loot${G.fightsHere||0}`, () => {
-    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1) * (e.elite ? 1.5 : 1)) };
-    if(e.elite){ if(Math.random() < .5) reward.weapon = 'random'; else reward.augment = 'random'; grant('veteran'); }
+    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1) * (e.elite ? 1.5 : 1) * (typeof alertLv==='function' && alertLv() >= 4 ? .85 : 1)) };
+    if(e.elite){ G.stats.vets = (G.stats.vets||0) + 1; if(G.stats.vets >= 3) grant('veteran3'); if(Math.random() < .5) reward.weapon = 'random'; else reward.augment = 'random'; grant('veteran'); }
     if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
     if(!reward.weapon && Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
     if(!reward.augment && Math.random() < .05) reward.augment = 'random';
@@ -453,7 +461,7 @@ function flagDefeated(){
   G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command. Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
   save();
 }
-function runScore(win){ return (win ? 10000 : 0) + G.sector*1000 + G.stats.kills*40 + Math.round(G.stats.scrap/5) + (G.flag ? G.flag.phase*500 : 0); }
+function runScore(win){ return Math.round(((win ? 10000 : 0) + G.sector*1000 + G.stats.kills*40 + Math.round(G.stats.scrap/5) + (G.flag ? G.flag.phase*500 : 0)) * (1 + .1*(G.alert||0))); }
 function recordRun(win, reason){
   const st = G.stats, entry = { t:Date.now(), ship:G.shipDef, name:G.ship.name, diff:G.diff || SET.difficulty, seed:G.seed||'', daily:G.daily||null, win:!!win, sector:G.sector,
     kills:st.kills, scrap:st.scrap, jumps:st.jumps, lost:(G.lost||[]).length, reason:win ? '' : String(reason||'').slice(0,80), time:Math.round(G.time||0), score:runScore(win) };
@@ -470,6 +478,7 @@ function recordRun(win, reason){
 function endRun(win, reason){
   if(typeof challengeCheck==='function') challengeCheck(win);
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason); if(typeof sagaRunEnd==='function') sagaRunEnd(win, reason);
+  if(typeof campaignRunEnd==='function') campaignRunEnd(win, reason);   // renown, ranks, endings, alert levels (campaign.js)
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
   saveProfile(); LS.del(SAVE_KEY); emit('runEnd', { win });
@@ -504,7 +513,7 @@ function makeStore_(){
   const sp = Object.keys(INSTALL).filter(k => !s.systems[k] && !(k==='clonebay' && s.systems.medbay) && !(k==='medbay' && s.systems.clonebay)); shuffle(sp);
   return { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')), crewSold:false, discount:1 };
 }
-function price(v, st, cat, id){ return Math.max(1, Math.round(v * (st?.discount||1) * (typeof marketMult==='function' ? marketMult(st, cat, id) : 1))); }   // store kind, sector, haggling, loyalty (market.js)
+function price(v, st, cat, id){ return Math.max(1, Math.round(v * (st?.discount||1) * (typeof marketMult==='function' ? marketMult(st, cat, id) : 1) * (typeof alertLv==='function' && alertLv() >= 2 ? 1.1 : 1))); }   // store kind, sector, haggling, loyalty (market.js)
 function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
 function upgradeCost(k, lv){ const c = UPCOST[k] || [25,15]; return c[0] + c[1]*lv; }
 function reactorCost(){ return Math.round(12 + G.ship.reactor*2.5); }
@@ -530,11 +539,12 @@ function updateGame(dt){
   if(G.warp>0){ G.warp -= dt;
     if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
       if(typeof n==='string' && n.startsWith('sector:')){ const t = n.slice(7); genSector(G.sector+1, t);
-        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.'), btn:'Open map', then:openMap }; save(); }
+        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.'), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
       else arrive(n); } }
   const live = !G.paused && !blockingModal() && G.warp<=0 && !(typeof mpHold==='function' && mpHold());
   if(live){
     dt *= (G.duel ? 1 : (SET.speed || 1));   // Settings > Gameplay > Game speed: slower fights for VR or new captains (duels run at one speed)
+    if(G.slowT > 0){ G.slowT -= dt; dt *= .3; }   // the killing blow lands in slow motion (campaign.js)
     G.time += dt;
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null;
     if(foe) G.combatT += dt;
@@ -573,9 +583,9 @@ function updateGame(dt){
   }
   if(G.enemy && !G.enemy.dead && !blockingModal() && !G.duel){
     const e = G.enemy;
-    if(e.hull<=0){ e.dead = true; e.deadKind = 'destroyed'; G.dieT = 1.3; sfx('explode'); haptic(.8, 400); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e');
+    if(e.hull<=0){ e.dead = true; e.deadKind = 'destroyed'; G.dieT = 1.3; sfx('explode'); haptic(.8, 400); if(typeof juiceKill==='function') juiceKill(e, 'destroyed'); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e');
       const b = e._b; if(b){ for(let i=0;i<6;i++) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), 1.4, '#ff8a3d'); debris((b.x0+b.x1)/2, (b.y0+b.y1)/2, e.color, 26); } sfx('hit'); haptic(.6, 300); }
-    else if(!e.auto && ownerCrewCount('e')===0){ e.dead = true; e.deadKind = 'crew'; G.dieT = .8; G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e'); }
+    else if(!e.auto && ownerCrewCount('e')===0){ e.dead = true; e.deadKind = 'crew'; G.dieT = .8; if(typeof juiceKill==='function') juiceKill(e, 'crew'); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e'); }
   }
   if(typeof mpGameTick==='function' && mpGameTick(dt)) return;
   if(UI.screen==='game' && (G.ship.hull<=0 || ownerCrewCount('p')===0)){

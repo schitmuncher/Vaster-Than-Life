@@ -95,6 +95,17 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 ## What's in the game
 
+**A career, not just a run**
+- **Admiralty ranks.** Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story. Ten ranks from Cadet to Admiral, shown on the title screen and in **Career**. A debrief after each run counts it up.
+- **Ship requisitions.** Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing.
+- **The send-off.** Admiral Hale sees you off with a choice of gifts (fuel, scrap, a weapon, a crew member, star charts...). Some come with a price. Higher ranks bring more and better choices, and a reroll. Hale remembers how your last run went.
+- **Pip, the data core.** The core in your hold wakes up in sector 2. Talk to it, show it the stars, refuse Director Kross's offer to buy it (or don't), and decide what happens to it. How you treat Pip changes the Flaggship fight and how a win ends: four endings to find.
+- **Director Kross** of Rebuff Intelligence wants the core back, and waits for you aboard the Flaggship. He keeps a file on you.
+- **Veteran beacons** are marked on the map from sector 2: harder ships that always carry a weapon or an augment.
+- **Rebuff alert.** Win on Normal or Hard to unlock alert levels 1 to 8, each adding a twist for more renown and score.
+- **The killing blow** lands in slow motion with a banner.
+- **Fairer power.** Weapons and Drones only hold the bars their powered weapons and drones use: turning one off hands its power back to the reactor, and + powers the next one in line.
+
 **Ships and crew**
 - 16 ships: 8 cruiser classes, each with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
 - 7 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog, Mantlis and the secret Glassborn.
@@ -430,6 +441,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
 | `js/market.js` | Store kinds and keepers, prices, haggling, deals, mystery crates, the guild card, crew worth, trade goods and the cargo hold, the store screen |
 | `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
+| `js/campaign.js` | Ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |
 | `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |
 | `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |
