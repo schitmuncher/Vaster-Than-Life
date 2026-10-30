@@ -50,7 +50,7 @@ function shieldLayers(sh){ return Math.floor(eff(sh,'shields')/2); }
 function hostilesFor(sh, i, side){ for(const o of sh.crew) if(o.room===i && crewSide(o)!==side) return true; return false; }
 function enemySkill(){ return G ? clamp(Math.floor((G.sector-1)/3), 0, 2) : 0; }
 function skillLvl(c, s){ if(!c || c.drone) return 0; if(c.owner==='e') return enemySkill(); const t = SKILLT[s], v = c.sk[s]||0; return v>=t[1] ? 2 : v>=t[0] ? 1 : 0; }
-function gainXP(c, s, amt){ if(!c || c.drone || c.owner!=='p') return; const before = skillLvl(c,s); c.sk[s] = (c.sk[s]||0) + amt*(DATA.races[c.race]?.learn||1);
+function gainXP(c, s, amt){ if(!c || c.drone || c.owner!=='p') return; const before = skillLvl(c,s); if(c.quirk==='bookworm') amt *= 1.2; c.sk[s] = (c.sk[s]||0) + amt*(DATA.races[c.race]?.learn||1);
   if(skillLvl(c,s) > before){ sfx('levelup'); } if(skillLvl(c,s) > before) toast(`${c.name} is now ${skillLvl(c,s)===2?'an expert':'skilled'} at ${SKILLN[s]}.`); }
 function mannedCrew(sh, k){
   if(sh.auto) return null; const i = roomOf(sh,k); if(i<0 || !sh.systems[k]) return null;

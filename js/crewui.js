@@ -78,10 +78,11 @@ function drawCrewCard(){
   { const q = typeof quirkDef==='function' && quirkDef(c.quirk), b = typeof bondOf==='function' && c.owner==='p' ? bondOf(c) : null, lostB = c.bond && c.bond.lost;
     const extra = b ? ` · ${b.kind==='siblings' ? 'sibling' : b.kind==='friends' ? 'friend' : b.kind==='rivals' ? 'rival' : 'sweetheart'}: ${b.other.name}` : '';
     T(`${race.name||c.race} · ${pronouns(c)} · ${c.kills} kill${c.kills===1?'':'s'}${extra}`, x+86, y+58, { s:13, c:C.muted, max:w-200 });
-    if(q) tip(x+86, y+18, w-150, 44, q.name + (c.vengeT > 0 ? ' · out for revenge' : ''), q.desc + (b ? ` ${c.name} and ${b.other.name} are ${BOND_KINDS[b.kind]}.` : lostB ? ' They lost someone close to them on this voyage.' : '') + (c.vengeT > 0 ? ' Grief has made them furious: they hit 30% harder for a while.' : '')); }
+    if(typeof heartsOf==='function' && c.owner==='p'){ const hh = heartsOf(c); T('♥'.repeat(hh) + '♡'.repeat(10-hh), x+w-24, y+105, { s:12, a:'right', c:C.hostile }); }
+    if(q) tip(x+86, y+18, w-150, 44, q.name + (c.vengeT > 0 ? ' · out for revenge' : ''), q.desc + (typeof QUIRK_PERK_TEXT!=='undefined' && QUIRK_PERK_TEXT[c.quirk] ? ' ' + QUIRK_PERK_TEXT[c.quirk] : '') + (b ? ` ${c.name} and ${b.other.name} are ${BOND_KINDS[b.kind]}.` : lostB ? ' They lost someone close to them on this voyage.' : '') + (c.vengeT > 0 ? ' Grief has made them furious: they hit 30% harder for a while.' : '')); }
   btn(x+w-46, y+10, 34, 30, '×', () => { UI.selCrew = null; }, { s:16 });
   const fr = clamp(c.hp/c.maxHp, 0, 1); bar(x+86, y+68, w-110, 10, fr, fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile); T(`${Math.ceil(c.hp)}/${c.maxHp} HP`, x+w-24, y+64, { s:12, a:'right', c:C.muted });
-  drawJobIcon(x+24, y+100, job, 9); T(job.text, x+42, y+105, { s:15, c:JOB_COL[job.k] || C.ink, max:w-60 });
+  drawJobIcon(x+24, y+100, job, 9); T(job.text, x+42, y+105, { s:15, c:JOB_COL[job.k] || C.ink, max:w-180 });
   const post = c.station!=null && sh.rooms[c.station] ? (SYSN[sh.rooms[c.station].sys] || 'a corridor') : 'none';
   T(`Post: ${post}`, x+16, y+128, { s:13, c:C.muted }); para(raceTraits(race), x+150, y+128, w-166, { s:12, lh:15, c:C.cyan, max:1 });
   SKILLS.forEach((k,i) => { const sx = x+16 + (i%3)*150, sy = y+146 + Math.floor(i/3)*32; const lv = skillLvl(c,k);

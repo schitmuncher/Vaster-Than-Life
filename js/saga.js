@@ -235,6 +235,8 @@ function sagaEffect(e, L){
   if(!G) return; const cx = G.evCtx || {}, star = cx.starId ? crewById(cx.starId) : null;
   if(e.saga) sagaNote('moment', fillText(e.saga, cx));
   if(star){
+    if(typeof addHearts==='function' && !e.starLeave && !e.starDie) addHearts(star, e.starHearts ?? 25);   // time spent together
+    if(e.spouse){ const k = addCrew(G.ship, DATA.races[e.spouse] ? e.spouse : 'sloog', 'p'); makeBond(star, k, 'sweethearts'); L.push(`${k.name} the ${(DATA.races[k.race]||{}).name} joins the crew, as ${star.name}'s spouse`); sagaJoined(k, `as ${star.name}'s new spouse`); }
     if(e.starHurt){ star.hp = Math.max(1, star.hp - e.starHurt); L.push(`${star.name} is hurt`); }
     if(e.starHeal){ star.hp = Math.min(star.maxHp, star.hp + e.starHeal); L.push(`${star.name} feels better`); }
     if(e.starXp){ gainXP(star, e.starXp.skill, e.starXp.amt); L.push(`${star.name} trained in ${SKILLN[e.starXp.skill] || e.starXp.skill}`); }
@@ -251,16 +253,20 @@ function sagaEffect(e, L){
   if(e.petGone && G.pet && !G.pet.gone && (!e.petIs || G.pet.name===e.petIs)){ G.pet.gone = e.petGone; sagaNote('pet', `${G.pet.name} ${e.petGone}.`); }
   if(e.legacyJoin && cx.legacy && mineAlive().length < R.maxCrew){ const lg = cx.legacy, k = addCrew(G.ship, DATA.races[lg.race] ? lg.race : 'human', 'p'); if(k.name===lg.name) k.name = pick(NAMES.filter(nm => nm!==lg.name && !G.ship.crew.some(o => o.name===nm))); k.quirk = lg.quirk || k.quirk; k.quirkSet = true;
     L.push(`${k.name} joins your crew, to finish what ${lg.name} started`); sagaJoined(k, `to finish what their ${cx.kin || 'kin'} ${lg.name} had started aboard ${theName(lg.ship)}`); }
+  if(e.heartGift && star) sagaHeartGift(star, L);
+  if(e.gardenBoost != null && G.garden){ for(const p of G.garden.plots) if(p) p.g = Math.max(0, p.g + e.gardenBoost); if(e.gardenBoost) L.push(e.gardenBoost > 0 ? 'The garden grows faster' : 'The garden sets back'); }
+  if(e.shipName && G.ship){ const old = G.ship.name; G.ship.name = e.shipName; L.push(`The ship is now called the ${e.shipName}`); sagaNote('name', `In sector ${G.sector} the ${old} was renamed the ${e.shipName}, for reasons nobody will explain.`); }
   if(e.nemFight){ G.nemNext = true; }
   if(e.nemEnd && G.nemesis && !G.nemesis.done){ G.nemesis.done = true; G.nemesis.peace = true; G.later = G.later.filter(l => l.event!=='nem_return' && l.event!=='nem_old'); sagaNote('nemesis', fillText(e.nemEnd, cx)); }
   if(e.nemAgain && G.nemesis && !G.nemesis.done){ G.later.push({ event:'nem_return', jumps:ri(3,5) }); }
 }
 /* who a saga event is about, picked when it starts */
-function sagaCtx(ev){
+function sagaCtx(ev, forced){
   if(!ev || !G || !G.ship) return null; const crew = mineAlive(); if(!crew.length) return null;
   const cx = {};
   let star = null;
-  if(ev.star && ev.star!=='any') star = pick(crew.filter(c => c.quirk===ev.star));
+  if(forced && crewById(forced) && crewById(forced).owner==='p') star = crewById(forced);
+  else if(ev.star && ev.star!=='any') star = pick(crew.filter(c => c.quirk===ev.star));
   else if(ev.bond){ const l = crew.filter(c => c.bond && !c.bond.lost && crewById(c.bond.id) && (!ev.bondKind || [].concat(ev.bondKind).includes(c.bond.kind))); star = l.length ? pick(l) : null; if(star) { const fr = crewById(star.bond.id); cx.friend = fr.name; cx.friendId = fr.id; } }
   else if(ev.pair){ const free = crew.filter(c => !c.bond || c.bond.lost || !crewById(c.bond.id)); if(free.length >= 2){ star = pick(free); const fr = pick(free.filter(c => c!==star)); cx.friend = fr.name; cx.friendId = fr.id; } }
   else if(ev.star==='any' || ev.moment) star = pick(crew);
@@ -277,7 +283,9 @@ function sagaFill(t, cx){
     .replace(/\{nemesis\}/g, G && G.nemesis ? nemTitle(G.nemesis) : 'your nemesis').replace(/\{nemship\}/g, G && G.nemesis ? G.nemesis.ship : 'their ship')
     .replace(/\{nemsector\}/g, G && G.nemesis ? String(G.nemesis.s) : '1').replace(/\{nemfrom\}/g, G && G.nemesis && G.nemesis.from ? theName(G.nemesis.from) : 'your last ship')
     .replace(/\{legacy\}/g, cx.legacy ? cx.legacy.name : 'an old shipmate').replace(/\{legacyship\}/g, cx.legacy ? theName(cx.legacy.ship) : 'your last ship').replace(/\{legacywhy\}/g, cx.legacy ? cx.legacy.why : 'lost')
-    .replace(/\{legacywords\}/g, cx.legacy ? cx.legacy.words : '...').replace(/\{legacyrace\}/g, cx.legacy ? ((DATA.races[cx.legacy.race]||{}).name || 'traveller') : 'traveller').replace(/\{kin\}/g, cx.kin || 'friend');
+    .replace(/\{legacywords\}/g, cx.legacy ? cx.legacy.words : '...').replace(/\{legacyrace\}/g, cx.legacy ? ((DATA.races[cx.legacy.race]||{}).name || 'traveller') : 'traveller').replace(/\{kin\}/g, cx.kin || 'friend')
+    .replace(/\{story\}/g, () => { const c = cx.starId && crewById(cx.starId); return (c && HEART_STORY[c.quirk]) || 'They tell you about home, and about why they are really out here.'; })
+    .replace(/\{heartgift\}/g, () => { const c = cx.starId && crewById(cx.starId); return (c && HEART_GIFT[c.quirk] && HEART_GIFT[c.quirk].text) || 'They give you a little carved model of the ship.'; });
 }
 /* can this saga event happen right now? */
 function momentOk(ev){
@@ -290,6 +298,7 @@ function momentOk(ev){
   if(ev.legacy && !(PROFILE.memorial && PROFILE.memorial.length && crew.length < R.maxCrew && !G.daily && !G.cup)) return false;
   if(ev.nem && !(G.nemesis && !G.nemesis.done)) return false;
   if(ev.pet && !(G.pet && !G.pet.gone)) return false;
+  if(ev.garden && !(G.garden && G.garden.plots.some(p => p))) return false;
   if(ev.noPet && G.pet) return false;
   if(ev.minCrew && crew.length < ev.minCrew) return false;
   if((ev.minSector||1) > G.sector) return false;
@@ -629,3 +638,95 @@ const QUIRK_OPTIONS = {
   const lp = BASE.events.t_lost_pet; if(lp) lp.choices[0].effect = Object.assign({}, lp.choices[0].effect, { pet:{ name:'Biscuit', kind:'kitten' } });
   const bh = BASE.events.t_biscuit_home; if(bh) bh.choices[0].effect = Object.assign({}, bh.choices[0].effect, { petGone:'went home to its worried owner', petIs:'Biscuit' });
 })();
+
+/* =========================================================================
+   Home life (homestead.js, market.js) in the story
+   ========================================================================= */
+BASE.quirks.gardener = { name:'Green thumb', desc:'Talks to plants. The plants, worryingly, seem to listen.' };
+QUIRK_SAY.gardener = { idle:['The potatoes are doing well. I can tell. They told me.','Has anyone been watering the peppers? Someone has to love them.','I named all the melons. Do not ask me to eat Gerald.'], jump:['Hold on, little seedlings!'], victory:['Fertiliser!'], hit:['Not the planters!'] };
+LAST_WORDS.gardener = ['Water... the peppers...','Plant me somewhere sunny.'];
+EPITAPHS.gardener = 'grew something beautiful in the middle of a war';
+
+/* the story of a crew member, told once you are friends (4 hearts), and their thanks (8 hearts) */
+const HEART_STORY = {
+  gambler:'They tell you about the night they won a whole space station in a card game, and lost it again before breakfast. "Best night of my life. Don\'t tell anyone I was happy to lose it."',
+  poet:'They read you the one poem they have never shown anyone. It is about their mother\'s garden. It is very short, and very good.',
+  cook:'They tell you they learned to cook in a refugee camp, feeding forty people from one pot. "Nobody goes hungry on my ship. Not while I\'m alive."',
+  superstitious:'They show you the charm they wear: a bolt from the first ship they served on, the one that went down with everyone else aboard. "It\'s not lucky. I just can\'t take it off."',
+  daredevil:'They admit, quietly, that they are terrified all the time. "If I go first, nobody else has to. That\'s all it is."',
+  worrier:'They tell you about the list they keep of everyone they have lost. "I worry so it doesn\'t get longer. It mostly works."',
+  tinkerer:'They show you a tiny music box they built when they were six, still working. "Everything can be fixed. Almost everything."',
+  romantic:'They confess that all those letters go to the same person, under different names. "She never writes back. I just like to tell her where I am."',
+  conspiracy:'They show you the red string wall, and one thread at the centre: a photo of their old ship. "They said it was an accident. It wasn\'t."',
+  sleepwalker:'They tell you they only sleepwalk on ships. "At home, I sleep like a stone. Out here, part of me is always on watch."',
+  collector:'They tell you every item in their collection came from someone who did not make it home. "Someone has to remember them."',
+  expyrate:'They tell you why they left the pyrates: the night their captain ordered them to fire on a hospital ship. "I fired on the captain instead."',
+  mystic:'They admit the visions are mostly guesses. "But people feel better when someone seems sure. So I seem sure."',
+  optimist:'They tell you they decided to be happy on the worst day of their life, and never undecided. "It\'s a choice. Every morning. Some mornings it\'s hard."',
+  grump:'After a long silence they mutter that this crew is the first one they have ever liked. Then they deny saying it, loudly.',
+  bookworm:'They show you the book they always carry: a children\'s story about a little ship that crosses the galaxy. "This is why I got on a ship."',
+  gardener:'They show you a seed they have carried since childhood, from a tree on a planet that is gone now. "When we win, I\'m planting it somewhere safe."'
+};
+const HEART_GIFT = {
+  gambler:{ text:'They press their lucky coin into your hand. It is double-headed. "For when you really need to win."', scrap:40 },
+  poet:{ text:'They have written a poem about you. It is mortifying. It is also painted on the hull now, which helps somehow.', crewHeal:40 },
+  cook:{ text:'They cook you a private feast, then make enough for everyone. Two portions are left over for later.', goods:{ star_stew:2 } },
+  superstitious:{ text:'They give you a charm "for the captain\'s chair". Since it went up, things seem to miss you a little more.', augment:'random' },
+  daredevil:{ text:'They teach you the trick they use to dodge missiles. It involves screaming. It works.', xp:{ skill:'pilot', amt:10 } },
+  worrier:{ text:'They hand you a ring binder: every emergency they could think of, and what to do. It is very thick and very useful.', xp:{ skill:'repair', amt:8 } },
+  tinkerer:{ text:'They spent a week of nights tuning your reactor. It hums happier now.', reactor:1 },
+  romantic:{ text:'They give you a bottle of something very old and very expensive, "for when this is all over".', goods:{ space_wine:2 } },
+  conspiracy:{ text:'They hand you a datachip: Rebuff patrol routes, stolen years ago. They are still mostly right.', fleetPush:-.06 },
+  sleepwalker:{ text:'They admit they have been sleep-repairing things for weeks. Your ship has never been in better shape.', hull:6 },
+  collector:{ text:'They give you the best piece in their collection. They try very hard to look like it does not hurt.', goods:{ relic:1 } },
+  expyrate:{ text:'They call in an old favour. A crate turns up at the next beacon, no questions asked.', scrap:30, missiles:3 },
+  mystic:{ text:'They read your future, properly, for once. You will not say what it said. You fly differently afterwards.', reveal:true, crewHeal:20 },
+  optimist:{ text:'They organise a surprise party for the captain. It is the best day aboard in a long while.', crewHeal:50 },
+  grump:{ text:'They leave a gift on your chair without a word: a hand-knitted scarf in the ship\'s colours. They deny everything.', crewHeal:25 },
+  bookworm:{ text:'They give you their worn copy of the little ship story. Inside the cover: "For my captain."', xp:{ skill:'engines', amt:8 } },
+  gardener:{ text:'They hand you a packet of seeds from their own collection, the rare kind.', seeds:{ moon_melon:2, nebula_bloom:2 } }
+};
+/* what happened last night (the bar, homestead.js) */
+const MORNINGS = ['m_hangover','m_tattoo','m_married','m_lost_bet','m_dockworker','m_bunkmate'];
+function sagaHeartGift(star, L){ const g = HEART_GIFT[star.quirk] || { scrap:25 }; const fx = Object.assign({}, g); delete fx.text; L.push(...applyEffect(fx)); }
+
+Object.assign(BASE.events, {
+  m_heart4:{ moment:true, questOnly:true, star:'any', once:false, text:'{crew} finds you alone on the bridge late at night and sits down next to you. For a while neither of you says anything. Then: {story}', choices:[
+    { text:'Listen.', effect:{ text:'You listen until the coffee goes cold. Something between you is different now: steadier.', starHearts:60, saga:'One night on the bridge, {crew} told the captain the story they had never told anyone.' } },
+    { text:'Tell them something about you, too.', effect:{ text:'You trade stories until the night shift is over. {crew} laughs at the bit about your first ship. Everyone deserves to.', starHearts:70, crewHeal:10 } } ] },
+  m_heart8:{ moment:true, questOnly:true, star:'any', once:false, text:'{crew} has something for you, and has clearly rehearsed what to say. "You\'ve been good to me, captain. Better than anyone. So..." {heartgift}', choices:[
+    { text:'Thank them.', effect:{ text:'{crew} goes red, mumbles something, and hurries off. Later, you hear them telling everyone about it.', heartGift:true, starHearts:40, saga:'{crew} gave the captain a gift of their own, and was embarrassed about it for a week.' } } ] },
+  m_hangover:{ moment:true, questOnly:true, star:'any', text:'The morning after. {crew} wakes up in the cargo hold wearing a Rebuff officer\'s dress hat and absolutely nothing else. They do not remember the hat. They do not want to talk about the rest.', choices:[
+    { text:'Return the hat to the Rebuff officer.', effect:{ text:'The officer is so relieved to get it back that they slip you a pass that keeps the patrols off your back for a while.', fleetPush:-.03 } },
+    { text:'Keep the hat. It suits them.', effect:{ text:'{crew} wears it on the bridge from now on, at a jaunty angle. Morale soars.', crewHeal:20, saga:'After a night out, {crew} came home in nothing but a stolen Rebuff officer\'s hat, and kept the hat.' } } ] },
+  m_tattoo:{ moment:true, questOnly:true, star:'any', text:'The morning after. {crew} has a brand new tattoo of the captain\'s face. It is very large. It is somewhere they refuse to show anyone. The tattoo artist has sent a bill.', choices:[
+    { text:'Pay the bill. (10 scrap)', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'{crew} says it is "a sign of respect". The rest of the crew have questions. So do you.', starHearts:40, saga:'{crew} got a tattoo of the captain\'s face after a night out, somewhere they would not show anyone.' } },
+    { text:'"I\'d like to see it."', effect:{ text:'You see it. You will be thinking about it for the rest of the voyage. It is a very good likeness.', crewHeal:10 } } ] },
+  m_married:{ moment:true, questOnly:true, star:'any', text:'The morning after. {crew} is married. To a Sloog called Mrs Puddle. There are photos. There was a cake. Mrs Puddle is waiting at the airlock with her luggage.', choices:[
+    { text:'Welcome Mrs Puddle aboard.', effect:{ text:'Mrs Puddle moves into {crew}\'s bunk and reorganises the galley. Surprisingly, it is a very happy marriage.', spouse:'sloog', saga:'After one night out, {crew} came back married to a Sloog called Mrs Puddle. It was a very happy marriage.' } },
+    { text:'Pay for a quick annulment. (12 scrap)', req:{ scrap:12 }, cost:{ scrap:12 }, effect:{ text:'Mrs Puddle takes it well and keeps the cake. {crew} is quiet for a day.' } } ] },
+  m_lost_bet:{ moment:true, questOnly:true, star:'any', minSector:1, text:'The morning after. {crew} lost a card game last night, and the stake was the name of the ship. Official records now list your ship as the "Big Dave\'s Love Barge".', choices:[
+    { text:'Buy the name back. (15 scrap)', req:{ scrap:15 }, cost:{ scrap:15 }, effect:{ text:'Big Dave is reasonable about it. {crew} is not allowed near cards for a while.' } },
+    { text:'Fly the Love Barge with pride.', effect:{ text:'The crew paint it on the hull in big pink letters. Enemy captains laugh so hard they miss.', shipName:"Big Dave's Love Barge", crewHeal:15 } } ] },
+  m_dockworker:{ moment:true, questOnly:true, star:'any', text:'The morning after. A very attractive Voltan dock worker walks {crew} back to the airlock at dawn, kisses them goodbye, and presses a business card and a pack of batteries into their hands. "For the trip."', choices:[
+    { text:'Say nothing. Just raise an eyebrow.', effect:{ text:'{crew} grins all day. The batteries are top quality.', goods:{ voltan_cell:2 }, starHearts:20, saga:'{crew} came back from shore leave with a Voltan dock worker\'s business card and a very large smile.' } },
+    { text:'"Invite them to join the crew."', chance:.4, success:{ text:'They say yes! It turns out they are a qualified engineer, and they have been looking for an excuse.', spouse:'voltan' }, fail:{ text:'"I have a life here, darling." They blow a kiss and leave. {crew} sighs dramatically.', crewHeal:10 } } ] },
+  m_bunkmate:{ moment:true, questOnly:true, star:'any', text:'The morning after. There is a stranger in {crew}\'s bunk. They seem very comfortable, are wearing {crew}\'s dressing gown, and have opinions about the coffee.', choices:[
+    { text:'"Do you want a job?"', effect:{ text:'They do. They are a decent mechanic and a terrible singer, and they bring their own mug.', crew:'random' } },
+    { text:'Drop them at the next station.', effect:{ text:'They leave a note, a kiss on the coffee machine, and 20 scrap "for the hospitality".', scrap:20 } } ] },
+  m_smuggle:{ moment:true, star:'any', minSector:2, text:'A nervous Sloog in a very large coat sidles up to {crew}. "You have a hold. I have four crates of... love potion. Get them to the next sector, and there\'s money in it. Don\'t let the Rebuff see them."', choices:[
+    { text:'Take the job. (15 scrap now, the crates are yours to sell)', effect:{ text:'The crates go in the hold. They are warm, slightly pink, and they giggle when you shake them.', goods:{ love_potion:4 }, scrap:15, saga:'The crew agreed to smuggle four crates of "love potion" for a nervous Sloog.' } },
+    { text:'Turn it down.', effect:{ text:'The Sloog shuffles off to ask someone else. You hear giggling crates going past for the rest of the day.' } } ] },
+  m_garden_pests:{ moment:true, garden:true, star:'any', text:'Space aphids! Tiny, glowing, and very hungry, they have found the garden. {crew} is fighting them off with a spray bottle and a lot of swearing.', choices:[
+    { text:'Spray the lot. (1 drone part for the sprayer)', req:{ parts:1 }, cost:{ parts:1 }, effect:{ text:'The aphids retreat. The crops are fine, and oddly, growing faster.', gardenBoost:1 } },
+    { text:'Let {crew} handle it by hand.', chance:.5, success:{ text:'{crew} picks off every aphid by hand and keeps one as a pet. It is called Kevin.', gardenBoost:.5, saga:'{crew} saved the ship\'s garden from space aphids by hand.' }, fail:{ text:'The aphids win a round. Every crop sets back a little.', gardenBoost:-1 } } ] },
+  m_garden_talk:{ moment:true, garden:true, star:'gardener', text:'{crew} has been playing music to the crops. Loud music. Very loud. At three in the morning. The crew would like a word.', choices:[
+    { text:'Let them carry on. Science!', effect:{ text:'The crops love it. The crew do not. Everything in the garden shoots up overnight.', gardenBoost:1.5, crewHurt:5, saga:'{crew} grew prize crops by playing them loud music at three in the morning.' } },
+    { text:'Headphones for the plants.', effect:{ text:'{crew} builds tiny headphones for every planter. Everyone sleeps. The plants seem happy.', gardenBoost:.5 } } ] },
+  m_pet_crops:{ moment:true, garden:true, pet:true, text:'{pet} has discovered the garden. Specifically, {pet} has discovered that the garden is delicious.', choices:[
+    { text:'Build a little fence.', effect:{ text:'{pet} sits by the fence and looks at you, betrayed, for a whole day.', gardenBoost:0 } },
+    { text:'Let {pet} have a nibble.', effect:{ text:'{pet} eats exactly one row and falls asleep in the potting soil, very happy. The soil is better for it, somehow.', gardenBoost:.5, crewHeal:10 } } ] },
+  m_trader_friend:{ moment:true, star:'any', minSector:2, weight:.7, text:'A travelling trader in a ship covered in bells pulls alongside. "Fresh goods! Fair prices! I take scrap, stories, or anything shiny!"', choices:[
+    { text:'Trade a story. (Let {crew} tell one)', chance:.6, success:{ text:'{crew} tells the one about the snail race. The trader laughs so hard they give you a crate for free.', goods:'random' }, fail:{ text:'{crew} tells the one about the snail race. The trader has heard it before. Twice.' } },
+    { text:'Buy a mixed crate. (15 scrap)', req:{ scrap:15 }, cost:{ scrap:15 }, effect:{ text:'The crate is full of useful things and a small bell.', goods:'random', seeds:'random' } } ] }
+});

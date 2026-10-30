@@ -64,7 +64,7 @@ let MODS = LS.get(MOD_KEY, []);
 let DATA = null, R = null;
 const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges'];
 const NOTRAIT = {};
-function traitOf(c){ return (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; }
+function traitOf(c){ const t = (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; const p = typeof perkOf==='function' ? perkOf(c) : null; return p ? mergeTrait(t, p) : t; }   // personalities, friendship and good food (homestead.js)
 let HOOKS = {};
 function on(evt, fn){ (HOOKS[evt] = HOOKS[evt] || []).push(fn); }
 function emit(evt, arg){ const list = HOOKS[evt]; if(!list) return; for(const fn of list){ try{ fn(arg); }catch(e){ if(typeof toast==='function') toast('Mod script error: ' + e.message); } } }

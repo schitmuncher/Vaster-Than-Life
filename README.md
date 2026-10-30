@@ -146,6 +146,22 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run. In later runs a relative or friend of someone you lost may come looking for you, wanting to finish what they started. **Record → Memorial** lists everyone you've lost, across every voyage.
 - **The saga.** At the end of every run, read the whole story written out: who set out, who joined, who died and how, the nemesis, the pet and the strange things in between, with an epitaph for each crew member. Pause and choose **Saga so far** to read it mid-run. Your last twelve sagas are kept in **Record → Sagas**.
 
+**Stores and trade**
+- **Every sector has its own kind of store**, with a named keeper in a mood: general stores, Rebuff surplus depots, pyrate black markets, smugglers' dens, the Sloog emporium, the Pebblekin quarry exchange, Enjinn workshops, Voltan bazaars, Mantlis arms, the Fedoration quartermaster and the Glass gallery. Each has its own stock size, prices and tastes.
+- **More to buy:** up to five weapons, four drones and four augments, a deal of the day at 30% off, mystery crates, seeds, trade goods, cargo racks, hydroponic planters and full medical care. Prices rise a little each sector and wobble from store to store.
+- **Haggle** once per store (a gambler, or an ex-pyrate at a black market, helps), and the **merchant guild card** knocks 5%, 8% then 12% off as you spend.
+- **Crew are worth what they are worth.** Hiring and selling prices depend on race, training, veterancy, health and the store: a trained veteran fetches several times a raw recruit, Mantlis arms pay extra for fighters, and black markets ask no questions. Two candidates per store. Selling someone's best friend or sibling will not be forgiven.
+- **Sell almost anything:** gear in cargo, augments, spare fuel, missiles and drone parts, and every trade good, crop, fish and meal.
+- **Trade goods:** 28 goods, each cheap where it is made and worth up to three times as much where it is wanted, carried in a 16-space cargo hold (racks add more). Smuggled goods pay best, but Rebuff patrols may confiscate them.
+
+**Home life aboard** (light touch, all optional)
+- **A hydroponic garden:** plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps.
+- **The galley:** cook crops and fish into five meals. Eating together heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. A cook doubles every portion.
+- **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. Close crew fight and repair better, get tougher, and tell you their story at 4 and 8 hearts.
+- **Fishing** at quiet beacons: space fish, rare deep eels, seeds, junk and, very rarely, an ancient relic.
+- **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Sloog, a ship renamed in a card game.
+- **Personality perks:** every personality now does something: tinkerers repair faster, daredevils dodge more at the helm, ex-pyrates hit harder, collectors sell for more, mystics glimpse the sector ahead, and more.
+
 **Story and dialogue**
 - About 210 events with multi-page branching conversations, race and system "blue options", and lines that name your actual crew.
 - Ships hail you before most fights. Every faction has several hails of its own, and you won't hear the same hail twice in a run until you've heard the rest. You can bluff, bribe, intimidate or sneak past.
@@ -403,6 +419,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/data.js` | Ships, races, weapons, drones, augments, enemies, sectors, events, achievements |
 | `js/story.js` | Hails, quest chains, the secret sector, extra events, chatter, taunts, intros |
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
+| `js/market.js` | Store kinds and keepers, prices, haggling, deals, mystery crates, the guild card, crew worth, trade goods and the cargo hold, the store screen |
+| `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
 | `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |
 | `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |
 | `js/gfx.js` | Procedural hulls, planets, nebulae, icons, particles, event art |

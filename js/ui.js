@@ -42,7 +42,8 @@ function label(t,x,y,c=C.muted,a='left',s=16){ T(String(t).toUpperCase(),x,y,{ s
 function lines(text, maxW, font){ ctx.font = font; const out = [];
   for(const para of String(text).split('\n')){ let line = ''; for(const word of para.split(' ')){ const t = line ? line+' '+word : word; if(ctx.measureText(t).width > maxW && line){ out.push(line); line = word; } else line = t; } out.push(line); }
   return out; }
-function para(text,x,y,maxW,o={}){ const s = o.s||22, lh = o.lh||Math.round(s*1.45), font = `${o.w||400} ${s}px ${o.f||FM}`; let ls = lines(text,maxW,font);
+function para(text,x,y,maxW,o={}){ const s = o.s||22, sz = MINF && s < MINF ? Math.max(s + 3, Math.min(MINF, s*1.35)) : s;   // wrap at the size T() will really draw (larger text on phones)
+  const lh = Math.round((o.lh||Math.round(s*1.45)) * sz/s), font = `${o.w||400} ${sz}px ${o.f||FM}`; let ls = lines(text,maxW,font);
   if(o.max && ls.length>o.max){ ls = ls.slice(0,o.max); ls[ls.length-1] += '…'; }
   ls.forEach((l,i)=>T(l,x,y+i*lh,{ s, f:o.f||FM, w:o.w||400, c:o.c||C.ink, a:o.a||'left' })); return ls.length*lh; }
 function btn(x,y,w,h,text,cb,o={}){
@@ -479,7 +480,10 @@ const HELP_PAGES = [
   ['Map & hazards', [
     ['The map', 'Each sector is a web of beacons. Stores, the exit, distress calls and quests are always marked; hostile ships (crosshair) and events (?) show once known, and Long-Range Scanners reveal everything. Your route so far is traced in amber.'],
     ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
-    ['Stores', 'Two or three per sector. Buy weapons, drones, augments, new systems, fuel, missiles, drone parts, hull repairs and crew. Sell spare gear you stowed in cargo from the Ship screen.'],
+    ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
+    ['Trade goods', 'Goods turn up in wrecks, at stores, in your garden and on a fishing line, and live in your cargo hold (Ship → Hold & gifts). Every good is cheap where it is made and worth much more where it is wanted: the Goods tab says which stores pay well. Illegal goods pay best, but Rebuff patrols may find them.'],
+    ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights.'],
+    ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
     ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
@@ -569,7 +573,7 @@ function drawCrewNaming(sel, temp){
       btn(x+970, ry+14, 50, 38, '›', () => { hc.quirks[i] = qs[(k + 1) % qs.length]; hc.last = i; }, { s:18 });
       if(qd) tip(x+660, ry+14, 300, 38, qd.name, qd.desc); } });
   { const li = clamp(hc.last || 0, 0, n-1), qd = typeof quirkDef==='function' ? quirkDef(hc.quirks[li]) : null;   // what the personality you just picked means
-    if(qd) para(`${hc.names[li]} the ${qd.name.toLowerCase()}: ${qd.desc}`, x+32, y + 112 + n*rowH, w-64, { s:16, lh:22, c:C.cyan, max:2 }); }
+    if(qd) para(`${hc.names[li]} the ${qd.name.toLowerCase()}: ${qd.desc}${typeof QUIRK_PERK_TEXT!=='undefined' && QUIRK_PERK_TEXT[hc.quirks[li]] ? ' ' + QUIRK_PERK_TEXT[hc.quirks[li]] : ''}`, x+32, y + 112 + n*rowH, w-64, { s:16, lh:22, c:C.cyan, max:2 }); }
   const by = y + h - 76;
   btn(x+32, by, 230, 52, 'Random names', () => { const pool = NAMES.slice(); hc.names = hc.names.map(() => pool.splice(Math.floor(Math.random()*pool.length), 1)[0]); }, { s:16 });
   if(qs.length) btn(x+274, by, 270, 52, 'Random personalities', () => { const used = []; hc.quirks = hc.quirks.map(() => { const q = rollQuirk(used); used.push(q); return q; }); }, { s:16 });
@@ -1089,7 +1093,9 @@ function drawModal(){
   switch(m.type){
     case 'msg': { const f = mframe(960, clamp(230 + lines(m.text||'', 896, `400 21px ${FM}`).length*31, 340, 560), m.title, C.amber, m); const txt = fillText(m.text, m.ctx||{ crew:randomCrewName() }); m.ctx = m.ctx || { crew:randomCrewName() }; const sh_ = typed(m, txt);
       para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
-      if(sh_.length===txt.length) btn(f.x+f.w-332, f.y+f.h-92, 300, 62, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true }); else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
+      if(sh_.length===txt.length){ btn(f.x+f.w-332, f.y+f.h-92, 300, 62, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true });
+        (m.extra||[]).forEach((x, i) => btn(f.x+32 + i*280, f.y+f.h-92, 260, 62, x.label, () => x.fn(m), { col:C.cyan, s:18 })); }   // e.g. fishing at a quiet beacon
+      else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'event': drawEventModal(m); break;
     case 'result': { const f = mframe(960, clamp(220 + lines(m.text||'', 896, `400 21px ${FM}`).length*31 + Math.min(8,(m.lines||[]).length)*32, 360, 620), m.title||'Outcome', C.amber, m); const sh_ = typed(m, m.text||''); const hgt = para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
       if(sh_.length===(m.text||'').length){ (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+146 + hgt + i*32, { s:19, c: /^-|lost|damaged|fire|injured|closer/i.test(l) ? C.hostile : C.good }));
@@ -1321,6 +1327,7 @@ function storeAdvice(){ const v = volleyStats(G.ship), L = shieldsAhead(), pen =
 function vsShields(d){ if(d.type==='missile' || d.type==='bomb') return 'ignores shields'; if(d.type==='beam'){ const L = shieldsAhead(), pen = Math.max(0,(d.damage||0)-L); return !d.damage ? (d.crewDamage ? 'hurts crew, needs shields down' : d.fire ? 'starts fires, needs shields down' : 'needs shields down') : pen ? `${pen} per room through ${L} layer${L>1?'s':''}` : `needs shields down first (${L} layer${L>1?'s':''} here)`; } if(d.type==='ion') return 'strips a layer per hit'; return (d.shots||1) >= 3 ? 'strong vs shields' : (d.shots||1) === 2 ? 'fair vs shields' : 'weak vs shields'; }
 function drawStoreModal(m){
   const node = G.map.nodes[m.node], st = node.store; const s = G.ship;
+  if(!st.arena && typeof drawMarket==='function'){ drawMarket(m); return; }   // the full store (market.js); the duel arena keeps its own
   const f = mframe(1440, 880, 'Store', C.good);
   if(!m.greet) m.greet = pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian); T(m.greet, f.x+160, f.y+44, { s:16, c:C.muted });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
@@ -1391,7 +1398,7 @@ function sysDesc(k){ return { shields:'Every 2 power gives one shield layer that
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['augments','Augments'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 220);
+  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['augments','Augments'],['hold','Hold & gifts'],['garden','Garden & galley'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 188);
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
@@ -1436,6 +1443,8 @@ function drawShipModal(){
       const full = it.kind==='weapon' ? s.weapons.length>=R.weaponSlots : s.drones.length>=R.droneSlots;
       btn(rx+460, y+4, 170, 42, 'Mount', () => { s.cargo.splice(i,1); if(it.kind==='weapon') s.weapons.push({ id:it.id, charge:0, on:false, target:null }); else s.drones.push({ id:it.id, on:false, unit:null }); }, { disabled: full || lock, s:15 }); });
     if(lock) T('Gear cannot be swapped mid-fight.', cx, f.y+f.h-40, { s:16, c:C.warn });
+  } else if(UI.tab==='hold' && typeof drawHoldTab==='function'){ drawHoldTab(f, cx, y0);
+  } else if(UI.tab==='garden' && typeof drawGardenTab==='function'){ drawGardenTab(f, cx, y0);
   } else if(UI.tab==='log'){
     label('Captain\'s log', cx, y0+10, C.muted, 'left', 14);
     const entries = (G.log||[]).slice(-17).reverse(); if(!entries.length) T('Nothing logged yet.', cx, y0+56, { s:18, c:C.muted });
