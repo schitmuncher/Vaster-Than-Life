@@ -124,6 +124,7 @@ function sagaRunStart(loaded){
 function sagaNote(k, t){ if(!G) return; (G.saga = G.saga || []).push({ s:G.sector || 1, j:G.stats ? G.stats.jumps : 0, k, t }); if(G.saga.length > 60) G.saga.splice(1, 1); }
 /* "the Kestrel", but not "the The Pestrel" */
 function shipThe(cap){ const n = (G && G.ship && G.ship.name) || 'ship'; return /^the /i.test(n) ? (cap ? n : n.replace(/^the /i, 'the ')) : (cap ? 'The ' : 'the ') + n; }
+function aN(w){ w = String(w||''); return (/^[aeiou]/i.test(w) ? 'an ' : 'a ') + w; }   // 'an optimist', 'a poet'
 function theName(n){ n = String(n || 'ship'); return /^the /i.test(n) ? n.replace(/^the /i, 'the ') : 'the ' + n; }
 function listText(a){ return a.length <= 1 ? (a[0]||'') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
 function sagaJoined(c, how){
@@ -133,7 +134,7 @@ function sagaJoined(c, how){
   const lonely = mineAlive().filter(o => o!==c && !o.bond);
   if(!c.bond && lonely.length && Math.random() < .35){ const o = pick(lonely), k = wpick(['friends','rivals','sweethearts'], k => ({ friends:4, rivals:3, sweethearts:1 })[k]); makeBond(c, o, k);
     sagaNote('bond', `${c.name} and ${o.name} became ${BOND_KINDS[k]} almost at once.`); }
-  const who = `${c.name}, a ${(DATA.races[c.race]||{}).name || ''} ${quirkName(c).toLowerCase()}`;
+  const who = `${c.name}, ${aN(`${(DATA.races[c.race]||{}).name || ''} ${quirkName(c).toLowerCase()}`.trim())}`;
   sagaNote('join', pick([`In sector ${G.sector}, ${who}, joined the crew${how ? ' ' + how : ''}.`, `${who}, came aboard in sector ${G.sector}${how ? ' ' + how : ''}.`, `The crew grew by one in sector ${G.sector}: ${who}${how ? ', ' + how : ''}.`]));
 }
 function sagaSector(n, type){ if(!G || n <= 1) return; const sd = DATA.sectors[type]; if(!sd) return;
@@ -240,7 +241,7 @@ function sagaEffect(e, L){
     if(e.starHurt){ star.hp = Math.max(1, star.hp - e.starHurt); L.push(`${star.name} is hurt`); }
     if(e.starHeal){ star.hp = Math.min(star.maxHp, star.hp + e.starHeal); L.push(`${star.name} feels better`); }
     if(e.starXp){ gainXP(star, e.starXp.skill, e.starXp.amt); L.push(`${star.name} trained in ${SKILLN[e.starXp.skill] || e.starXp.skill}`); }
-    if(e.starQuirk && quirkDef(e.starQuirk)){ star.quirk = e.starQuirk; L.push(`${star.name} is now a ${quirkDef(e.starQuirk).name.toLowerCase()}`); }
+    if(e.starQuirk && quirkDef(e.starQuirk)){ star.quirk = e.starQuirk; L.push(`${star.name} is now ${aN(quirkDef(e.starQuirk).name.toLowerCase())}`); }
     if(e.starLeave && mineAlive().length > 1){ crewLeaves(star); L.push(`${star.name} leaves the crew`); sagaNote('leave', `${star.name} left the crew in sector ${G.sector}.`); }
     if(e.starDie && mineAlive().length > 1){ crewLeaves(star); G.lost.push(star.name); sagaDeath(star, null, e.starDie===true ? 'lost on a strange errand' : e.starDie); L.push(`${star.name} is gone`); }
     if(e.starClone){ const k = addCrew(G.ship, star.race, 'p', star.name + ' II'); k.quirk = star.quirk; k.look = star.look; k.gender = star.gender; L.push(`${k.name} joins the crew (somehow)`); sagaJoined(k, 'out of a slightly wrong jump'); }

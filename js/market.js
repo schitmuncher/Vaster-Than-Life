@@ -222,6 +222,7 @@ function marketEffect(e, L){
     for(const [k, n] of Object.entries(list)) if(SEEDS[k]){ G.seeds[k] = (G.seeds[k]||0) + n; L.push(`+${n} ${SEEDS[k].name} seeds`); } }
   if(e.hold){ G.holdBonus = (G.holdBonus||0) + e.hold; L.push(`+${e.hold} cargo hold space`); }
   if(typeof magsEffect==='function') magsEffect(e, L);
+  if(typeof travellerEffect==='function') travellerEffect(e, L);
 }
 /* a Rebuff patrol finds contraband in your hold */
 function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.keys(G.bay).filter(id => goodsDef(id)?.illegal); if(!bad.length) return null;
@@ -429,13 +430,13 @@ function magsEffect(e, L){
     grant('market_mags'); if(typeof sagaNote==='function') sagaNote('mags', `Mags Vetch called the captain her favourite customer, and meant it. She gave them her late husband's lucky charm.`); }
 }
 Object.assign(BASE.events, {
-  m_mags_meet:{ moment:true, star:'any', minSector:2, weight:1.4, art:'market', text:'A battered caravan ship covered in bells and bunting pulls alongside. On screen, a small grey-haired woman in welding goggles. "Mags Vetch, purveyor of fine and questionable goods. I\'ve got rare seeds, old relics, and I pay better than anyone for curios. Fancy a browse, love?"', choices:[
+  m_mags_meet:{ moment:true, noStar:true, star:'any', minSector:2, weight:1.4, art:'market', text:'A battered caravan ship covered in bells and bunting pulls alongside. On screen, a small grey-haired woman in welding goggles. "Mags Vetch, purveyor of fine and questionable goods. I\'ve got rare seeds, old relics, and I pay better than anyone for curios. Fancy a browse, love?"', choices:[
     { text:'Browse her wares.', effect:{ text:'The airlock opens onto a cloud of incense and a lot of shelves.', magsMeet:1, magsStall:true } },
     { text:'Invite her aboard for a cup of tea.', effect:{ text:'Mags drinks four cups, tells you three stories about her late husband and one about a pyrate king she "definitely did not marry", and draws you a map on a napkin before she goes.', magsMeet:2, reveal:true, crewHeal:10 } },
     { text:'"Not today, thanks."', effect:{ text:'"Suit yourself. I\'ll find you again. I always do." The bells jingle as she goes.', magsMeet:0 } } ] },
-  m_mags_again:{ moment:true, questOnly:true, once:false, star:'any', art:'market', text:'Bells on the comms: Mags Vetch\'s caravan is back. {magsline}', choices:[
+  m_mags_again:{ moment:true, noStar:true, questOnly:true, once:false, star:'any', art:'market', text:'Bells on the comms: Mags Vetch\'s caravan is back. {magsline}', choices:[
     { text:'Browse her wares.', effect:{ text:'She has new stock, and as always, she remembers what you like.', magsMeet:1, magsStall:true } },
     { text:'Tell her about the voyage.', effect:{ text:'She listens to all of it, laughs at the right bits, and goes quiet at the sad ones. She leaves a tin of biscuits for the crew.', magsMeet:2, crewHeal:15 } } ] },
-  m_mags_gift:{ moment:true, questOnly:true, star:'any', art:'market', text:'Mags Vetch\'s caravan, again, but she does not open her shop. She comes aboard with a box. "You lot are my favourite customers. Don\'t tell the others. This was my husband\'s lucky charm, and these are the best seeds I\'ve got. Go and win, alright?"', choices:[
+  m_mags_gift:{ moment:true, noStar:true, questOnly:true, star:'any', art:'market', text:'Mags Vetch\'s caravan, again, but she does not open her shop. She comes aboard with a box. "You lot are my favourite customers. Don\'t tell the others. This was my husband\'s lucky charm, and these are the best seeds I\'ve got. Go and win, alright?"', choices:[
     { text:'Hug her.', effect:{ text:'She pretends to hate it. She does not hate it.', magsGift:true, crewHeal:20 } } ] }
 });

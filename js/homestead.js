@@ -74,7 +74,7 @@ const GIFT_HATES = { rations:'*', junk:'*', contraband:['worrier','bookworm'], l
 function heartsOf(c){ return Math.floor(clamp(c && c.hearts || 0, 0, 1000)/100); }
 function addHearts(c, n){ if(!c || c.drone || c.owner!=='p') return; if(n > 0 && G && G.ship && G.ship.crew.some(o => o.owner==='p' && o.quirk==='romantic')) n *= 1.2; const before = heartsOf(c); c.hearts = clamp((c.hearts||0) + n, 0, 1000); const now = heartsOf(c);
   if(now > before){ if(now >= 8 && !c.hpBonusH){ c.hpBonusH = true; c.maxHp += 10; c.hp += 10; }
-    for(const lv of [4, 8]) if(before < lv && now >= lv && !(c.heartScenes||[]).includes(lv)){ (c.heartScenes = c.heartScenes || []).push(lv); G.later.push({ event:'m_heart' + lv, jumps:ri(1,3), star:c.id }); }
+    for(const lv of [4, 8, 10]) if(before < lv && now >= lv && !(c.heartScenes||[]).includes(lv)){ (c.heartScenes = c.heartScenes || []).push(lv); G.later.push({ event:'m_heart' + lv, jumps:ri(1,3), star:c.id }); }
     if(now===10) grant('home_bestie'); } }
 function giftReaction(c, id){
   const g = goodsDef(id); if(!g) return 0; const hates = GIFT_HATES[id];
@@ -110,9 +110,10 @@ const QUIRK_PERK_TEXT = {
 const NOPERK = {};
 function perkOf(c){
   if(!c || c.owner!=='p' || c.drone) return null; const q = QUIRK_PERKS[c.quirk], h = heartsOf(c), fed = G && G.fed > 0, ven = c.vengeT > 0;
-  if(!q && h < 6 && !fed) return null;
-  const k = h >= 10 ? 1.1 : h >= 6 ? 1.05 : 1, f = fed ? 1.1 : 1;
-  return { repair:(q && q.repair || 1)*k*f, dps:(q && q.dps || 1)*k*f, charge:(q && q.charge || 1)*f, speed:q && q.speed || 1, shield:q && q.shield || 1, evade:q && q.evade || 0, heal:q && q.heal || 0 };
+  const ip = typeof implantPerk==='function' ? implantPerk(c) : null;   // Doctor Oddly's handiwork (travellers.js)
+  if(!q && h < 6 && !fed && !ip) return null;
+  const k = h >= 10 ? 1.1 : h >= 6 ? 1.05 : 1, f = fed ? 1.1 : 1, I = ip || { repair:1, dps:1, charge:1, speed:1, shield:1, evade:0, heal:0 };
+  return { repair:(q && q.repair || 1)*k*f*I.repair, dps:(q && q.dps || 1)*k*f*I.dps, charge:(q && q.charge || 1)*f*I.charge, speed:(q && q.speed || 1)*I.speed, shield:(q && q.shield || 1)*I.shield, evade:(q && q.evade || 0) + I.evade, heal:(q && q.heal || 0) + I.heal };
 }
 function mergeTrait(t, p){ return { name:t.name, desc:t.desc, repair:(t.repair||1)*p.repair, dps:(t.dps||1)*p.dps, charge:(t.charge||1)*p.charge, speed:(t.speed||1)*p.speed, shield:(t.shield||1)*p.shield, hp:t.hp||0, evade:(t.evade||0) + p.evade, heal:(t.heal||0) + p.heal }; }
 
@@ -157,7 +158,7 @@ function queueMorning(){ if(typeof MORNINGS==='undefined' || G.later.some(l => M
 function homeAttention(){ if(!G || !G.ship) return null; if(G.garden && G.garden.plots.some(p => ripe(p))) return 'Crops are ready to harvest';
   const w = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.wish && goodsHave(c.wish) && c.giftJ!==G.stats.jumps); if(w) return `${w.name} wishes for something you have`; return null; }
 /* ---------------- hook: each jump (run.js arrive) ---------------- */
-function homeJump(){ gardenJump(); if(typeof wishJump==='function') wishJump();
+function homeJump(){ gardenJump(); if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function') travellersJump();
   if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
   // Rebuff space: patrols search ships, and illegal cargo goes
   if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Rebuff patrol found the smuggled cargo and took the lot.`); } }
@@ -187,7 +188,9 @@ function drawHoldTab(f, cx, y0){
     btn(cx+half-146, y+10, 132, 44, sel ? 'Cancel' : 'Give…', () => { UI.giftItem = sel ? null : id; }, { s:15, col:C.amber, fill:sel }); });
   if(pages > 1){ const py = y0 + 22 + per*72; btn(cx, py, 60, 40, '‹', () => { UI.holdPage = pg-1; }, { disabled:pg<=0 }); btn(cx+70, py, 60, 40, '›', () => { UI.holdPage = pg+1; }, { disabled:pg>=pages-1 }); }
   // delivery orders you have taken on
-  const ords = typeof orders==='function' ? orders() : []; if(ords.length){ const oy = y0 + 22 + Math.min(per, ids.length)*72 + (pages > 1 ? 52 : 10); label('Delivery orders', cx, oy+12, C.violet, 'left', 13);
+  const ords = typeof orders==='function' ? orders() : [];
+  if(G.bounty && typeof bountyText==='function'){ const by_ = y0 + 22 + Math.min(per, ids.length)*72 + (pages > 1 ? 52 : 10) + (ords.length ? 44 + ords.length*24 : 0); label('Bounty contract (Kestrel Jones)', cx, by_+12, C.hostile, 'left', 13); T(bountyText(G.bounty), cx, by_+36, { s:14, c:C.ink, max:half }); }
+  if(ords.length){ const oy = y0 + 22 + Math.min(per, ids.length)*72 + (pages > 1 ? 52 : 10); label('Delivery orders', cx, oy+12, C.violet, 'left', 13);
     ords.forEach((o, i) => { const g = goodsDef(o.id), ok = goodsHave(o.id) >= o.n; T(`${o.n} × ${g.name} for ${o.from} · ${o.pay} scrap · by sector ${o.by}${ok ? ' · ready to deliver at any store' : ` · you have ${goodsHave(o.id)}`}`, cx, oy + 36 + i*24, { s:14, c: ok ? C.good : C.ink, max:half }); }); }
   // the crew, their hearts, and what you know they love
   const qx = cx + half + 20, crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);

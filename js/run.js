@@ -160,8 +160,12 @@ function arrive_(i){
   if(node.x < G.fleetX - .02 && node.type!=='base'){
     startCombat('random', { harder:true, hail:'fleet' }); return; }
   if(typeof mpArrive==='function' && mpArrive(i, node, first)) return;
-  const due = G.later.find(l => --l.jumps <= 0); G.later = G.later.filter(l => l.jumps > 0);
-  if(due && DATA.events[due.event] && !['base'].includes(node.type) && !(DATA.events[due.event].moment && typeof momentOk==='function' && !momentOk(DATA.events[due.event]))){ startEvent(due.event, { star:due.star }); return; }
+  // scenes scheduled for later: every countdown ticks each jump; one that is due waits for a beacon where it fits (never a store, an exit or a quest)
+  for(const l of G.later) l.jumps--;
+  const free = ['event','combat','empty'].includes(node.type) && !node.quest && first;
+  const due = free ? G.later.find(l => l.jumps <= (node.type==='combat' ? -2 : 0) && DATA.events[l.event] && !(DATA.events[l.event].moment && typeof momentOk==='function' && !momentOk(DATA.events[l.event]))) : null;
+  G.later = G.later.filter(l => l!==due && (l.jumps > -12 || !DATA.events[l.event]?.moment));   // a scene that never found a beacon is dropped eventually
+  if(due){ startEvent(due.event, { star:due.star }); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
   if(!first){ toast(pick(['Familiar beacon: nothing new on sensors.', 'You have been here before. Still nothing here.', 'Same old beacon. Your crew waves at the scorch marks.'])); save(); return; }   // no box to close: going back somewhere empty should cost no taps
@@ -344,6 +348,7 @@ function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); els
 function closeResult(m){
   G.modal = null; const a = m.after || {};
   if(G.petNaming){ G.petNaming = false; if(typeof sagaNamePet==='function') sagaNamePet(); }
+  if(G.openClinic){ G.openClinic = false; G.modal = { type:'clinic' }; return; }   // Doctor Oddly (travellers.js)
   if(G.openMags){ G.openMags = false; G.modal = { type:'store', node:G.map.cur, mags:true }; UI.storeTab = 'goods'; return; }   // Mags's caravan (market.js)   // a new pet needs a name
   if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }
   if(a.begin){ if(G.enemy) taunt('start'); return; }
@@ -434,6 +439,7 @@ function finishCombat(kind, offer){
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   if(typeof homeFight==='function') homeFight();
+  if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
     text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : pick([].concat(VICTORY_LINES[e.faction]||VICTORY_LINES.generic)).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
   logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });

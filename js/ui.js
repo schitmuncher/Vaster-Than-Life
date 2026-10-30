@@ -483,6 +483,7 @@ const HELP_PAGES = [
     ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
     ['Trade goods', 'Goods live in your cargo hold (Ship → Hold & gifts). Each is cheap where it is made and dear where it is wanted. Request boards (Goods tab) pay extra for deliveries to any store. Mags Vetch, a travelling merchant, pays best for relics.'],
     ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights.'],
+    ['Travellers', 'Mags Vetch trades, Kestrel Jones pays bounties for kinds of ship (see Ship → Hold), Doctor Oddly fits implants. Each comes back if you treat them well.'],
     ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
@@ -1103,6 +1104,7 @@ function drawModal(){
         btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Continue', () => closeResult(m), { fill:true }); } else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'map': drawMapModal(); break;
     case 'swapcrew': drawSwapCrew(m); break;
+    case 'clinic': if(typeof drawClinic==='function') drawClinic(m); else G.modal = null; break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
     case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 600, 'Exit beacon', C.good);
@@ -1148,7 +1150,7 @@ function drawEventModal(m){
   ctx.drawImage(art, f.x+32, f.y+84); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.strokeRect(f.x+32, f.y+84, 1056, 150);
   // a scene about one of your crew shows who it is about
   { const sc = m.ctx && m.ctx.starId && typeof crewById==='function' ? crewById(m.ctx.starId) : null;
-    if(sc && !m.combat){ const px = f.x+32+78, py = f.y+84+68; ctx.beginPath(); ctx.arc(px, py, 50, 0, 7); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
+    if(sc && !m.combat && !(base && base.noStar)){ const px = f.x+32+78, py = f.y+84+68; ctx.beginPath(); ctx.arc(px, py, 50, 0, 7); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
       if(typeof ensureLook==='function') ensureLook(sc); drawPortrait(px, py, 40, sc, false);
       const tag = sc.name + (sc.quirk && typeof quirkName==='function' ? ' · ' + quirkName(sc) : ''); ctx.font = `700 15px ${FD}`; const tw = ctx.measureText(tag).width + 20;
       const tx = Math.max(f.x+40, px - tw/2); rr(tx, f.y+84+120, tw, 24, 12); ctx.fillStyle = 'rgba(6,9,18,.9)'; ctx.fill(); T(tag, tx + tw/2, f.y+84+137, { s:15, f:FD, w:700, a:'center', c:C.amber }); } }
