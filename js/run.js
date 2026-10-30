@@ -184,7 +184,7 @@ function arrive_(i){
         else if(fd.xp){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) gainXP(c, pick(['pilot','engines','shields','weapons','repair']), 2); text += ` ${fd.text}`; }
         break; } }
       if(!G.hazard && G.ship.hull < G.ship.maxHull && Math.random() < .6){ const n = Math.min(G.ship.maxHull - G.ship.hull, ri(1,3)); G.ship.hull += n; text += ` With nobody shooting at you, the crew bolt on spare plating. +${n} hull.`; }
-      G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof goFish==='function' && G.hazard!=='sun' ? [{ id:'fish', label:'🎣 Cast a line', fn:goFish }] : null }; save(); }
+      G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof startFishing==='function' && G.hazard!=='sun' ? [{ id:'fish', label:'🎣 Cast a line', fn:startFishing }] : null }; save(); }
   }
 }
 function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
@@ -243,6 +243,7 @@ function reqMet(q){
   if(q.race && !s.crew.some(c=>c.race===q.race && c.owner==='p')) return false;
   if(q.quirk && !s.crew.some(c=>c.quirk===q.quirk && c.owner==='p' && !c.drone)) return false;
   if(q.pet && !(G.pet && !G.pet.gone)) return false;
+  if(q.goodsKind && !Object.keys(G.bay || {}).some(id => (G.bay[id]||0) > 0 && typeof goodsDef==='function' && goodsDef(id)?.kind===q.goodsKind)) return false;   // needs a crop, a meal... in the hold
   if(q.system && (!s.systems[q.system] || s.systems[q.system].max < (q.level||1))) return false;
   if(q.weaponType && !s.weapons.some(w=>DATA.weapons[w.id]?.type===q.weaponType)) return false;
   if(q.drone && !s.drones.some(d=>d.id===q.drone || DATA.drones[d.id]?.kind===q.drone)) return false;
@@ -437,6 +438,7 @@ function finishCombat(kind, offer){
     L.push(...applyEffect(reward)); }); }
   }
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
+  { const pt = curDiff().patch || 0, sh = G.ship; if(pt && sh.hull < sh.maxHull){ const h = Math.min(pt, sh.maxHull - sh.hull); sh.hull += h; L.push(`Your crew patches ${h} hull from the wreckage`); } }   // Easy: a little mercy between fights
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   if(typeof homeFight==='function') homeFight();
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)

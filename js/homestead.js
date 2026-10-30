@@ -27,8 +27,10 @@ function gardener(){ return G && G.ship ? G.ship.crew.find(c => c.owner==='p' &&
 function plant(i, k){ const gd = garden(); if(gd.plots[i] || !SEEDS[k] || !(G.seeds && G.seeds[k] > 0)) return false; G.seeds[k]--; if(!G.seeds[k]) delete G.seeds[k]; gd.plots[i] = { seed:k, g:0 }; sfx('click'); return true; }
 function ripe(p){ return p && p.g >= SEEDS[p.seed].grow; }
 function harvest(i){ const gd = garden(), p = gd.plots[i]; if(!ripe(p)) return; const sd = SEEDS[p.seed]; let n = ri(sd.yield[0], sd.yield[1]); if(gardener()) n++;
+  const bumper = Math.random() < (gardener() ? .25 : .12); if(bumper){ n *= 2; G.bumpers = (G.bumpers||0) + 1; }   // now and then, a bumper crop
   const got = addGoods(sd.crop, n); if(!got){ toast('Your hold is full. Sell or eat something first.'); return; }
-  gd.plots[i] = null; sfx('buy'); toast(`Harvested ${got} ${goodsDef(sd.crop).name}${got < n ? ' (the rest would not fit)' : ''}.`);
+  gd.plots[i] = null; sfx('buy'); toast(`${bumper ? 'Bumper crop! ' : ''}Harvested ${got} ${goodsDef(sd.crop).name}${got < n ? ' (the rest would not fit)' : ''}.`);
+  if(bumper && typeof sagaNote==='function' && G.bumpers===1) sagaNote('garden', `The ship's garden produced a bumper crop of ${goodsDef(sd.crop).name.toLowerCase()} in sector ${G.sector}. Everyone had seconds.`);
   G.harvests = (G.harvests||0) + 1; if(G.harvests===1 && typeof sagaNote==='function') sagaNote('garden', `In sector ${G.sector} the crew brought in their first harvest from the ship's garden: ${got} ${goodsDef(sd.crop).name.toLowerCase()}.`);
   if(G.harvests >= 5) grant('home_harvest'); }
 /* each jump, the garden grows */
@@ -85,13 +87,14 @@ function giftReaction(c, id){
 function giveGift(c, id){
   if(!c || !goodsHave(id)) return; if(c.giftJ===G.stats.jumps){ toast(`You already gave ${c.name} something today. Give it a jump.`); return; }
   takeGoods(id, 1); c.giftJ = G.stats.jumps; const r = giftReaction(c, id), g = goodsDef(id);
-  addHearts(c, [-30, 20, 45, 85][r + 1]);
+  const bday = c.bday===G.stats.jumps; addHearts(c, [-30, 20, 45, 85][r + 1] * (bday && r >= 0 ? 3 : 1));
+  if(bday && r >= 0){ if(typeof sagaNote==='function') sagaNote('bday', `The captain remembered ${c.name}'s birthday, and gave them ${aN(g.name.toLowerCase())}.`); }
   if(c.wish===id){ c.wish = null; addHearts(c, 110); UI.toast = { text:`${c.name} has wanted ${g.name.toLowerCase()} for ages. They are over the moon. (+ lots of hearts)`, t:4 }; sfx('buy'); if(typeof sagaNote==='function') sagaNote('wish', `The captain found ${c.name} the ${g.name.toLowerCase()} they had been dreaming about.`); return; }
   const line = r===2 ? pick([`${g.name}! How did you know? I love this!`, `You remembered! This is my favourite thing in the galaxy.`, `Oh, captain. You shouldn't have. (You definitely should have.)`])
     : r===1 ? pick([`Thanks, captain. That's really nice.`, `For me? That's lovely.`]) : r===0 ? pick([`Oh. Thanks.`, `Huh. ${g.name}. Okay!`, `I'll... find a use for it.`])
     : pick([`...Why would you give me this?`, `Is this a joke? It's a joke, right?`, `I'm going to pretend this didn't happen.`]);
   G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:line, id:c.id, t:3.4 }); sfx(r > 0 ? 'buy' : 'click');
-  toast(`${c.name} ${['did not like', 'accepted', 'liked', 'loved'][r + 1]} the ${g.name.toLowerCase()}. ${'♥'.repeat(heartsOf(c))}${'♡'.repeat(10 - heartsOf(c))}`);
+  toast(`${bday && r >= 0 ? '🎂 Birthday present! ' : ''}${c.name} ${['did not like', 'accepted', 'liked', 'loved'][r + 1]} the ${g.name.toLowerCase()}${bday && r >= 0 ? ' (triple hearts)' : ''}. ${'♥'.repeat(heartsOf(c))}${'♡'.repeat(10 - heartsOf(c))}`);
 }
 
 /* ---------------- perks: personalities, hearts and good food ----------------
@@ -119,18 +122,49 @@ function mergeTrait(t, p){ return { name:t.name, desc:t.desc, repair:(t.repair||
 
 /* ---------------- fishing ---------------- */
 function canFish(node){ return node && !node.fished && !G.enemy; }
-function goFish(m){
-  const node = G.map.nodes[G.map.cur]; if(!canFish(node)) return; node.fished = true;
-  const neb = G.nebula, r = Math.random(); let text;
+/* what bites: decided when the line goes in (nebulas hold rarer things) */
+function rollBite(){ const neb = G.nebula, r = Math.random();
+  return r < (neb ? .3 : .4) ? 'fish' : r < .5 ? 'eel' : r < .66 ? 'junk' : r < .78 ? 'seeds' : r < .81 ? 'relic' : 'none'; }
+const BITES = { fish:{ zone:.26, speed:2.2, name:'Something small and quick' }, eel:{ zone:.13, speed:3.3, name:'Something big and angry' }, junk:{ zone:.34, speed:1.6, name:'Something heavy and lazy' },
+  seeds:{ zone:.3, speed:1.9, name:'Something light, drifting' }, relic:{ zone:.09, speed:3.7, name:'Something old, deep and very heavy' } };
+/* the catch itself; outcome: a bite, 'none' (nothing bit) or 'lost' (it got away) */
+function goFish(m, outcome){
+  const node = G.map.nodes[G.map.cur]; if(!canFish(node) && !outcome) return; node.fished = true;
+  if(!m || typeof m!=='object'){ m = { type:'msg', title:'Fishing', text:'' }; G.modal = m; }   // called without its beacon message (old save, or a mod)
+  const o = outcome || rollBite(); let text;
   const who = pick(G.ship.crew.filter(c => c.owner==='p' && !c.drone)) || { name:'You' };
-  if(r < (neb ? .3 : .4)){ const n = ri(1,3), got = addGoods('space_fish', n); text = got ? `${who.name} reels in ${got} space fish. They flap about in zero-g until someone catches them.` : 'You catch fish, but there is no room in the hold.'; }
-  else if(r < (neb ? .5 : .5)){ const got = addGoods('deep_eel', 1); text = got ? `Something huge takes the line. After an hour of shouting, ${who.name} lands a deep eel, glowing and furious.` : 'A deep eel! But your hold is full, so it gets away.'; }
-  else if(r < .66){ addGoods('junk', 1); text = pick([`${who.name} reels in a single boot. It is, somehow, still warm.`, `You catch a rubber duck. It squeaks at you, accusingly.`, `The line comes back with half a toaster on it. ${who.name} keeps it.`]); }
-  else if(r < .78){ const k = pick(Object.keys(SEEDS).filter(s => !SEEDS[s].only)); G.seeds = G.seeds || {}; G.seeds[k] = (G.seeds[k]||0) + 2; text = `The line snags a drifting seed pod: 2 ${SEEDS[k].name} seeds.`; }
-  else if(r < .81){ addGoods('relic', 1); text = `${who.name} hooks something heavy and old: an ancient relic, older than the Fedoration. Collectors will go mad for this.`; if(typeof sagaNote==='function') sagaNote('fish', `${who.name} fished an ancient relic out of empty space in sector ${G.sector}.`); }
+  if(o==='fish'){ const n = ri(1,3), got = addGoods('space_fish', n); text = got ? `${who.name} reels in ${got} space fish. They flap about in zero-g until someone catches them.` : 'You catch fish, but there is no room in the hold.'; }
+  else if(o==='eel'){ const got = addGoods('deep_eel', 1); text = got ? `Something huge takes the line. After an hour of shouting, ${who.name} lands a deep eel, glowing and furious.` : 'A deep eel! But your hold is full, so it gets away.'; }
+  else if(o==='junk'){ addGoods('junk', 1); text = pick([`${who.name} reels in a single boot. It is, somehow, still warm.`, `You catch a rubber duck. It squeaks at you, accusingly.`, `The line comes back with half a toaster on it. ${who.name} keeps it.`]); }
+  else if(o==='seeds'){ const k = pick(Object.keys(SEEDS).filter(s => !SEEDS[s].only)); G.seeds = G.seeds || {}; G.seeds[k] = (G.seeds[k]||0) + 2; text = `The line snags a drifting seed pod: 2 ${SEEDS[k].name} seeds.`; }
+  else if(o==='relic'){ addGoods('relic', 1); text = `${who.name} hooks something heavy and old: an ancient relic, older than the Fedoration. Collectors will go mad for this.`; grant('home_angler'); if(typeof sagaNote==='function') sagaNote('fish', `${who.name} fished an ancient relic out of empty space in sector ${G.sector}.`); }
+  else if(o==='lost') text = pick(['It got away. It was, everyone agrees, enormous.', `The line snaps. ${who.name} swears at the stars for a full minute.`, 'Whatever it was, it is still out there, laughing.']);
   else text = pick(['Nothing bites. It is peaceful, though.', `${who.name} falls asleep holding the rod. Nobody wakes them.`, 'A fish looks at the bait, looks at you, and swims away.']);
-  if(typeof addHearts==='function') addHearts(who, 10);
-  m.text = (m.text || '') + '\n\n' + text; m._skip = true; m.extra = (m.extra||[]).filter(x => x.id!=='fish'); sfx('click'); save();
+  if(typeof addHearts==='function' && who.id) addHearts(who, 10);
+  m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = (m.extra||[]).filter(x => x.id!=='fish'); sfx('click'); save();
+}
+/* fishing, the fun way: a marker sweeps the bar, reel in while it is inside the zone. Three tries. */
+function startFishing(m){ const node = G.map.nodes[G.map.cur]; if(!canFish(node)) return; const bite = rollBite();
+  if(bite==='none'){ goFish(m, 'none'); return; }
+  G.modal = { type:'fishing', back:m, bite, tries:3, zc:.25 + Math.random()*.5, t0:performance.now(), note:'' }; sfx('click'); }
+function fishPos(f){ const b = BITES[f.bite], t = (performance.now() - f.t0)/1000; return .5 + .5*Math.sin(t*b.speed + Math.sin(t*1.3)*.8); }
+function reel(f){ const b = BITES[f.bite], hit = Math.abs(fishPos(f) - f.zc) < b.zone/2;
+  if(hit){ G.modal = f.back; goFish(f.back, f.bite); haptic(.4, 40); G.fishCaught = (G.fishCaught||0) + 1; return; }
+  f.tries--; haptic(.2, 15); sfx('error');
+  if(f.tries <= 0){ G.modal = f.back; goFish(f.back, 'lost'); return; }
+  f.note = pick(['Too early! It is still on.', 'Missed! The line goes slack, then tight again.', 'Not yet... it is pulling hard.']); f.zc = .2 + Math.random()*.6; }
+function drawFishing(f){
+  const fr = mframe(900, 460, 'Fishing', C.cyan, f), b = BITES[f.bite];
+  T(`${b.name} is on the line! Reel in while the marker is in the green.`, fr.x+32, fr.y+110, { s:18, c:C.ink, max:fr.w-64 });
+  const bx = fr.x+60, by = fr.y+170, bw = fr.w-120, bh = 54, pos = fishPos(f);
+  rr(bx, by, bw, bh, 12); ctx.fillStyle = '#0d1630'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke();
+  rr(bx + bw*(f.zc - b.zone/2), by+4, bw*b.zone, bh-8, 8); ctx.fillStyle = hexA(C.good, .55); ctx.fill();
+  const mx = bx + bw*pos; ctx.fillStyle = C.amber; rr(mx-6, by-10, 12, bh+20, 6); ctx.fill();
+  T('🐟', mx, by+bh+42, { s:26, a:'center' });
+  T(`Tries left: ${'●'.repeat(f.tries)}${'○'.repeat(3 - f.tries)}`, fr.x+32, fr.y+fr.h-110, { s:16, c:C.muted }); if(f.note) T(f.note, fr.x+fr.w-32, fr.y+fr.h-110, { s:16, a:'right', c:C.warn });
+  region(bx, by-20, bw, bh+40, () => reel(f), 'reel bar');
+  btn(fr.x+fr.w/2-160, fr.y+fr.h-90, 320, 64, 'Reel in!', () => reel(f), { fill:true, col:C.cyan, s:22 });
+  btn(fr.x+fr.w-170, fr.y+fr.h-82, 140, 50, 'Give up', () => { G.modal = f.back; goFish(f.back, 'lost'); }, { s:15 });
 }
 
 /* ---------------- the bar: shore leave ---------------- */
@@ -156,9 +190,13 @@ function queueMorning(){ if(typeof MORNINGS==='undefined' || G.later.some(l => M
 
 /* something waiting for you on the Ship screen: ripe crops, or a wish you can grant now */
 function homeAttention(){ if(!G || !G.ship) return null; if(G.garden && G.garden.plots.some(p => ripe(p))) return 'Crops are ready to harvest';
-  const w = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.wish && goodsHave(c.wish) && c.giftJ!==G.stats.jumps); if(w) return `${w.name} wishes for something you have`; return null; }
+  const w = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.wish && goodsHave(c.wish) && c.giftJ!==G.stats.jumps); if(w) return `${w.name} wishes for something you have`;
+  const bd = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.bday===G.stats.jumps && c.giftJ!==G.stats.jumps); if(bd) return `It is ${bd.name}'s birthday`; return null; }
 /* ---------------- hook: each jump (run.js arrive) ---------------- */
-function homeJump(){ gardenJump(); if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function') travellersJump();
+function birthdays(){ if(!G || !G.ship) return; for(const c of G.ship.crew) if(c.owner==='p' && !c.drone){ if(c.bday==null) c.bday = G.stats.jumps + ri(4, 40);
+    if(c.bday===G.stats.jumps){ G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:pick(['It\'s my birthday! Not that anyone remembered.','Guess who\'s a year older today?','Birthday! Cake? Anyone? No?']), id:c.id, t:3.6 }); toast(`It's ${c.name}'s birthday! A gift today counts triple.`); } } }
+function homeJump(){ gardenJump(); birthdays();
+  if(G.sector >= 2 && !G.fairPlanned && !G.daily && !G.cup){ G.fairPlanned = true; if(Math.random() < .7) G.later.push({ event:'m_fair', jumps:ri(5, 12) }); }   // the Harvest Fair, once a run if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function') travellersJump();
   if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
   // Rebuff space: patrols search ships, and illegal cargo goes
   if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Rebuff patrol found the smuggled cargo and took the lot.`); } }
@@ -171,7 +209,8 @@ function homeFight(){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) 
 ACHIEVEMENTS.push(
   { id:'home_harvest', name:'Space Farmer',   desc:'Harvest five crops from your ship\'s garden in one run.' },
   { id:'home_bestie',  name:'Best Captain Ever', desc:'Reach ten hearts with a crew member.' },
-  { id:'market_mogul', name:'Merchant Prince', desc:'Earn 300 scrap from selling things in one run.' }
+  { id:'market_mogul', name:'Merchant Prince', desc:'Earn 300 scrap from selling things in one run.' },
+  { id:'home_angler',  name:'Deep Space Angler', desc:'Fish an ancient relic out of empty space.' }
 );
 
 /* ---------------- ship screen: the hold, gifts and hearts ---------------- */
@@ -199,7 +238,8 @@ function drawHoldTab(f, cx, y0){
     panel(qx, y, half, 64, 8); drawPortrait(qx+30, y+32, 20, c, false);
     T(c.name, qx+60, y+26, { s:17, f:FD, w:700, max:150 }); T('♥'.repeat(h) + '♡'.repeat(10-h), qx+220, y+26, { s:16, c:C.hostile });
     const known = (c.knownLoves||[]).map(id => goodsDef(id)?.name).filter(Boolean);
-    if(c.wish && goodsDef(c.wish)) T(`Wishes for ${goodsDef(c.wish).name.toLowerCase()}${goodsHave(c.wish) ? ' (you have some!)' : ''}`, qx+60, y+48, { s:12, c: goodsHave(c.wish) ? C.good : C.warn, max:half-250 });
+    if(c.bday===G.stats.jumps) T(`🎂 Birthday today! Gifts count triple${c.giftJ===G.stats.jumps ? ' (got one)' : ''}`, qx+60, y+48, { s:12, c:C.good, max:half-250 });
+    else if(c.wish && goodsDef(c.wish)) T(`Wishes for ${goodsDef(c.wish).name.toLowerCase()}${goodsHave(c.wish) ? ' (you have some!)' : ''}`, qx+60, y+48, { s:12, c: goodsHave(c.wish) ? C.good : C.warn, max:half-250 });
     else T(known.length ? `Loves: ${known.join(', ')}` : `${typeof quirkName==='function' ? quirkName(c) : ''}${h >= 6 ? ' · works harder for you' : ''}`, qx+60, y+48, { s:12, c:C.muted, max:half-250 });
     tip(qx, y, half-180, 64, `${c.name} · ${h} heart${h===1?'':'s'}`, `Hearts grow with gifts they like, meals eaten together, nights out and fights survived together. At 6 hearts they repair and fight 5% better (10% at 10); at 8 they get +10 health. At 4 and 8 hearts they open up to you.${known.length ? ' Known loves: ' + known.join(', ') + '.' : ''}`);
     if(UI.giftItem) btn(qx+half-170, y+10, 156, 44, today ? 'Had a gift today' : 'Give', () => { const id = UI.giftItem; giveGift(c, id); if(giftReaction(c, id)===2) (c.knownLoves = c.knownLoves || []).includes(id) || c.knownLoves.push(id); if(!goodsHave(id)) UI.giftItem = null; }, { s:14, disabled:today, col:C.amber, fill:!today }); });
@@ -238,3 +278,24 @@ function drawGardenTab(f, cx, y0){
     tip(x, y, w-140, 78, g.name, `${g.desc} Eating it heals the crew ${r.heal} and keeps them well fed for ${r.fed} fights (+10% repair, melee and weapon charge). Worth about ${g.base} at a store.`);
     btn(x+w-128, y+16, 114, 46, 'Cook', () => cookMeal(k), { disabled:!ok, fill:ok, col:C.good, s:15 }); });
 }
+
+/* ---------------- the Harvest Fair: once a run, a festival ---------------- */
+function bestOfKind(kind){ return Object.keys(G.bay || {}).filter(id => goodsHave(id) && goodsDef(id)?.kind===kind).sort((a, b) => goodsDef(b).base - goodsDef(a).base)[0] || null; }
+function fairEffect(e, L){
+  if(e.fairCrop){ const id = bestOfKind('crop'); if(!id) return; takeGoods(id, 1); const g = goodsDef(id);
+    if(g.base >= 30){ L.push(`First prize for your ${g.name.toLowerCase()}!`); G.scrap += 40; L.push('+40 scrap'); L.push(giveAugment('random')); grant('home_fair'); }
+    else if(g.base >= 12){ L.push(`Second prize for your ${g.name.toLowerCase()}`); G.scrap += 30; L.push('+30 scrap'); G.seeds = G.seeds || {}; G.seeds.moon_melon = (G.seeds.moon_melon||0) + 2; L.push('+2 Moon melon seeds'); }
+    else { L.push(`A "very enthusiastic" rosette for your ${g.name.toLowerCase()}`); G.scrap += 12; L.push('+12 scrap'); }
+    if(typeof sagaNote==='function') sagaNote('fair', `At the Harvest Fair in sector ${G.sector}, the crew showed their ${g.name.toLowerCase()}${g.base >= 30 ? ' and won first prize' : g.base >= 12 ? ' and came second' : ', which won a rosette for enthusiasm'}.`); }
+  if(e.fairStall){ let v = 0; for(const id of Object.keys(G.bay || {})) if(goodsDef(id)?.kind==='meal'){ const n = goodsHave(id); v += Math.round(goodsDef(id).base*1.8)*n; takeGoods(id, n); }
+    if(v){ G.scrap += v; G.earnedSelling = (G.earnedSelling||0) + v; L.push(`Food stall takings: +${v} scrap`); } }
+  if(e.fairDance){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) addHearts(c, 70); L.push('The whole crew had the best night of the voyage'); }
+}
+Object.assign(BASE.events, {
+  m_fair:{ title:'The Harvest Fair', moment:true, questOnly:true, noStar:true, art:'market', text:'Bunting, music and the smell of frying: the Harvest Fair, held every year on a farming moon and open to every passing crew. There is a crop show, a row of food stalls, a dance under paper lanterns, and a very competitive pie judge.', choices:[
+    { text:'Enter your best crop in the show.', req:{ goodsKind:'crop' }, effect:{ text:'The judges walk the tables in silence, tapping produce with little hammers. Then they come back to yours.', fairCrop:true, crewHeal:10 } },
+    { text:'Run a food stall with your meals.', req:{ goodsKind:'meal' }, effect:{ text:'The crowd queues around the block. Your crew sell out in an hour and spend the rest of the fair being congratulated.', fairStall:true } },
+    { text:'Dance with your crew under the lanterns.', effect:{ text:'Everyone dances, even the grump, even the Pebblekin, very carefully. It is the best night of the voyage.', fairDance:true, crewHeal:30, saga:'The crew danced under paper lanterns at the Harvest Fair.' } },
+    { text:'Try the pie contest.', chance:.4, success:{ text:'The pie judge takes one bite, closes her eyes, and gives you first prize: a year\'s supply of pie, which is two pies, and some scrap.', scrap:30, goods:{ berry_pie:2 } }, fail:{ text:'"Adequate," says the pie judge, which from her is high praise. You get a consolation pie.', goods:{ berry_pie:1 } } } ] }
+});
+ACHIEVEMENTS.push({ id:'home_fair', name:'Best in Show', desc:'Win first prize at the Harvest Fair.' });

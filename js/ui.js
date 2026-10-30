@@ -482,9 +482,9 @@ const HELP_PAGES = [
     ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
     ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
     ['Trade goods', 'Goods live in your cargo hold (Ship → Hold & gifts). Each is cheap where it is made and dear where it is wanted. Request boards (Goods tab) pay extra for deliveries to any store. Mags Vetch, a travelling merchant, pays best for relics.'],
-    ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights.'],
+    ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. Fish at quiet beacons: reel when the marker is in the green. From sector 2 a Harvest Fair may turn up, with prizes for your best crop.'],
     ['Travellers', 'Mags Vetch trades, Kestrel Jones pays bounties for kinds of ship (see Ship → Hold), Doctor Oddly fits implants. Each comes back if you treat them well.'],
-    ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
+    ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. Birthday gifts count three times. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
     ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
@@ -1105,6 +1105,7 @@ function drawModal(){
     case 'map': drawMapModal(); break;
     case 'swapcrew': drawSwapCrew(m); break;
     case 'clinic': if(typeof drawClinic==='function') drawClinic(m); else G.modal = null; break;
+    case 'fishing': if(typeof drawFishing==='function') drawFishing(m); else G.modal = m.back || null; break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
     case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 600, 'Exit beacon', C.good);
@@ -1138,7 +1139,7 @@ function drawModal(){
 function drawEventModal(m){
   const base = DATA.events[m.id]; const ev = m.inline || base; if(!ev){ G.modal = null; return; }
   const node = G.map?.nodes[G.map.cur];
-  const title = m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
+  const title = base?.title ? base.title : m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
   m.ctx = m.ctx || { crew:randomCrewName() }; m.who = m.who || {};
   const fullText = fillText(ev.text, m.ctx);
   const visChoices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));

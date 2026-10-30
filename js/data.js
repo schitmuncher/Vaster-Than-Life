@@ -364,7 +364,7 @@ const ACHIEVEMENTS = [
 ];
 
 const DIFFICULTY = {
-  easy:   { name:'Easy',   scrap:1.4, pace:.5,  startScrap:20,  enemyHull:-2, evade:10, bossPace:.62, ease:1, fleet:.85, bossShields:-2 },
+  easy:   { name:'Easy',   scrap:1.4, pace:.5,  startScrap:20,  enemyHull:-2, evade:10, bossPace:.62, ease:1, fleet:.85, bossShields:-2, patch:2 },
   normal: { name:'Normal', scrap:1,   pace:.7,  startScrap:0,   enemyHull:0,  bossPace:.82 },
   hard:   { name:'Hard',   scrap:.8,  pace:.85, startScrap:-10, enemyHull:2,  evade:-5, bossPace:1 }
 };

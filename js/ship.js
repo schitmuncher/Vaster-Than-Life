@@ -145,7 +145,9 @@ function scaledEnemySystems(def, sector){
   if(def.boss) return s;
   // shields grow with the sector, but stay within reach of a ship that has been upgrading: 1 layer early, 2 from sector 5, 3 only in the last sector
   const base = s.shields||0, cap = sector>=8 ? 6 : sector>=3 ? 4 : 2;
-  if(base>0 || sector>=6) s.shields = Math.min(Math.max(base, cap), base + (sector>=5 ? 2 : 0) + (sector>=8 ? 2 : 0));
+  // the second layer arrives gradually (some ships in sector 4, most in 5, all from 6) instead of on every ship at once
+  const extra = sector>=6 ? 2 : sector===5 ? (Math.random() < .55 ? 2 : 0) : sector===4 ? (Math.random() < .15 ? 2 : 0) : 0;
+  if(base>0 || sector>=6) s.shields = Math.min(Math.max(base, sector>=8 ? cap : sector>=4 && extra ? 4 : Math.min(cap, base)), base + extra + (sector>=8 ? 2 : 0));
   s.weapons = Math.min(8, (s.weapons||1) + Math.floor((sector-1)/2));
   s.engines = Math.min(8, (s.engines||1) + Math.floor((sector-1)/3));
   if(s.drones) s.drones = Math.min(8, s.drones + Math.floor((sector-1)/3));
@@ -184,7 +186,7 @@ function makeShip(def, side, o={}){
   if(enemy && !def.boss && typeof varyEnemyGuns==='function') wl = varyEnemyGuns(wl, sector);
   if(enemy && !def.boss){
     // extra guns come from the sector's tier and must fit the ship's weapon power, so late ships are dangerous without being one-shot machines
-    const want = Math.min(4, Math.max(wl.length, 1 + Math.floor((sector+1)/3)));
+    const want = Math.min(4, Math.max(wl.length, 1 + Math.floor((sector+1)/3) - (sector===5 && Math.random() < .5 ? 1 : 0)));   // the third gun eases in around sector 5
     const cap = sys.weapons || 1; let used = wl.reduce((t,id) => t + (DATA.weapons[id]?.power||1), 0);
     const pool = Object.values(DATA.weapons).filter(w => !w.heal && !w.noEnemy && (w.tier||1) <= 1 + Math.floor(sector/4));
     for(let tries=0; wl.length < want && tries < 20 && pool.length; tries++){ const w = pick(pool); if(used + (w.power||1) > cap + 1) continue; wl.push(w.id); used += w.power||1; }

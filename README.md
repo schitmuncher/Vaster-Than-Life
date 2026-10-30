@@ -160,11 +160,14 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **Trade goods:** 28 goods, each cheap where it is made and worth up to three times as much where it is wanted, carried in a 16-space cargo hold (racks add more). Smuggled goods pay best, but Rebuff patrols may confiscate them.
 
 **Home life aboard** (light touch, all optional)
-- **A hydroponic garden** (with Harvest all and Plant all): plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps.
+- **A hydroponic garden** (with Harvest all and Plant all): plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps. Now and then a crop comes up as a bumper harvest.
 - **The galley:** cook crops and fish into five meals. Eating together heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. A cook doubles every portion.
 - **Crew wishes:** now and then someone starts dreaming about something they love ("Captain. Captain. Void pepper. Think about it."). Bring it to them for a big jump in hearts. A dot on the Ship button tells you when crops are ripe or a wish can be granted.
 - **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. Close crew fight and repair better, get tougher, and tell you their story at 4 and 8 hearts. At 10 hearts they become devoted: once per run, when they should die, they refuse to.
-- **Fishing** at quiet beacons: space fish, rare deep eels, seeds, junk and, very rarely, an ancient relic.
+- **Fishing** at quiet beacons is a little timing game: wait for the bite, then reel when the marker is in the green. Space fish, rare deep eels, seeds, junk and, very rarely, an ancient relic.
+- **The Harvest Fair** turns up from sector 2: enter your best crop in the show, run a food stall, or take the crew for a night out.
+- **Birthdays:** each crew member has one. A gift on the day counts three times over.
+- **Home-life tips** explain the garden, trade goods and hearts the first time they matter.
 - **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Sloog, a ship renamed in a card game.
 - **Personality perks:** every personality now does something: tinkerers repair faster, daredevils dodge more at the helm, ex-pyrates hit harder, collectors sell for more, mystics glimpse the sector ahead, and more.
 
@@ -305,13 +308,13 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Mind control lasts a set time and then has a cooldown, so enemy Puppeteers can't keep one of your crew forever.
 - Enemy shields grow to 2 layers from sector 5 and 3 only in the last sector. Extra enemy guns come from the sector's weapon tier and must fit the ship's weapon power.
 - Weapons and drones that lose power to damage, ion or a power shuffle switch back on (and re-aim) when the power returns.
-- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. The Flaggship also fires slower on Normal.
+- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. After each fight you win on Easy, the crew patches 2 hull. The Flaggship also fires slower on Normal.
 
 **Mechanics tuned to FTL reference numbers**
 - Oxygen refills at 1.2 / 4.8 / 8.4 % per second by level and drains at 1.2 % per second when unpowered; breaches drain 8 % per second.
 - Ion damage locks a system for 5 seconds per hit, stacking up to 25 seconds.
 - Weapons use FTL's fire and breach chances, and a hit only rolls for a breach if it didn't start a fire.
-- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase (18 on Easy).
+- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase (18 on Easy). Enemy shields reach two layers gradually: a few ships in sector 4, about half in sector 5, all from sector 6. A nemesis met early gets fewer upgrades.
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**

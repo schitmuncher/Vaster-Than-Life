@@ -223,6 +223,7 @@ function marketEffect(e, L){
   if(e.hold){ G.holdBonus = (G.holdBonus||0) + e.hold; L.push(`+${e.hold} cargo hold space`); }
   if(typeof magsEffect==='function') magsEffect(e, L);
   if(typeof travellerEffect==='function') travellerEffect(e, L);
+  if(typeof fairEffect==='function') fairEffect(e, L);
 }
 /* a Rebuff patrol finds contraband in your hold */
 function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.keys(G.bay).filter(id => goodsDef(id)?.illegal); if(!bad.length) return null;

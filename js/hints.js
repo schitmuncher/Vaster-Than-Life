@@ -33,6 +33,10 @@ const HINTS = {
   outgunned: { title:'Their shields are too strong', text:'Your guns can\'t fire enough shots at once to get through. Use missiles or bombs on their Shields room, jump away when the drive is charged, and buy another weapon or upgrade Weapons power at the next store.', at:()=>RECT.armory },
   flee:      { title:'You can run', text:'Your VTL drive is charged. If a fight is going badly, open the Map and jump away. It costs fuel, and the enemy keeps its loot, but you keep your ship.', at:()=>RECT.map },
   upgrade:   { title:'Spend that scrap', text:'Scrap buys upgrades anywhere. Open Ship (C) > Systems. A second shield layer (Shields to 4) is the single best early upgrade, then engines and reactor power.', at:()=>RECT.ship },
+  garden:    { title:'Your garden', text:'You have seeds and empty hydroponic planters. Open Ship → Garden & galley and plant them: crops grow a little every jump, and you can sell, cook or gift them.', at:()=>RECT.ship },
+  harvest:   { title:'Crops are ready', text:'Something in your garden is ripe. A green dot on the Ship button means there is something to collect. Harvest it from Ship → Garden & galley.', at:()=>RECT.ship },
+  goods:     { title:'Trade goods', text:'You have goods in your hold. Each sells cheaply where it is made and for much more where it is wanted: check a store\'s Goods tab and its request board. Crew also love some of them as gifts.', at:()=>RECT.ship },
+  hearts:    { title:'Friendship', text:'Your crew like gifts, meals together and nights out. Give gifts from Ship → Hold & gifts: close friends work harder, get tougher, and have stories to tell you.', at:()=>RECT.ship },
   store:     { title:'At a store', text:'Good buys, in order: hull repairs if you\'re below about two thirds, fuel up to 6-8, then a weapon that fits your power. Keep some scrap for the next store.' },
   event:     { title:'Choices matter', text:'Some choices risk crew or hull. Options in blue need a particular crew race, system or weapon, and are usually the safest or best outcome.' },
   surrender: { title:'They\'re surrendering', text:'Accepting gives a guaranteed reward now. Refusing lets you keep fighting for the normal (usually bigger) salvage, if you can finish the job.' },
@@ -53,7 +57,7 @@ function hint(id, force){
   UI.hintQ.push(id); return true;
 }
 /* general advice waits a few seconds after the last tip, so tips don't arrive in a barrage; tips about what is on screen right now don't wait */
-const HINT_CALM = new Set(['skills','upgrade','power','shields2','fuel','fleet','sector','volley','missile','beam','medbay','hull','welcome']);
+const HINT_CALM = new Set(['garden','harvest','goods','hearts','skills','upgrade','power','shields2','fuel','fleet','sector','volley','missile','beam','medbay','hull','welcome']);
 function showNextHint(){
   if(UI.hint || !UI.hintQ || !UI.hintQ.length || !G) return;
   if(G.warp>0) return;
@@ -99,6 +103,10 @@ function checkHints(dt){
     if(!e && G.stats.kills>=1){ const sh = s.systems.shields; if(sh && sh.max < 8 && G.scrap >= upgradeCost('shields', sh.max)) hint('upgrade'); hint('skills'); }
     if(s.hull < s.maxHull*.4) hint('hull');
     if(G.fuel <= 3) hint('fuel');
+    if(!e && G.stats.jumps >= 2 && G.garden && G.garden.plots.some(p => !p) && Object.values(G.seeds||{}).some(n => n > 0)) hint('garden');   // home life (homestead.js)
+    if(!e && G.garden && typeof ripe==='function' && G.garden.plots.some(p => ripe(p))) hint('harvest');
+    if(!e && G.bay && Object.keys(G.bay).length && G.stats.jumps >= 3) hint('goods');
+    if(!e && (s.crew.some(c => c.wish) || G.stats.jumps >= 8)) hint('hearts');
     if(G.sector>=2 && !e) hint('sector');
     if(G.sector>=2 && (s.systems.shields?.max||0) < 4 && !e) hint('shields2');
     if(G.sector>=R.sectors && !e) hint('flagship');

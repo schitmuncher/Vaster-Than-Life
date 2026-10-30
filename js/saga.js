@@ -214,8 +214,9 @@ function sagaEnemyGotAway(e, how){
 }
 function sagaCombatStart(e, o){
   if(!G || !G.nemNext || !G.nemesis) return; G.nemNext = false; const n = G.nemesis;
-  e.nemesis = true; e.name = `${nemTitle(n)}'s ${n.ship}`; e.hull += 3*n.level; e.maxHull += 3*n.level;
-  for(const k of ['weapons','shields','engines']) if(e.systems[k] && Math.random() < .5 + n.level*.15){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; }
+  e.nemesis = true; e.name = `${nemTitle(n)}'s ${n.ship}`; const hb = (G.sector <= 2 ? 2 : 3)*n.level; e.hull += hb; e.maxHull += hb;
+  let ups = G.sector <= 2 ? 1 : G.sector <= 4 ? 2 : 3;   // an early grudge is a nuisance, not a run-ender
+  for(const k of shuffle(['weapons','shields','engines'])) if(ups > 0 && e.systems[k] && Math.random() < .5 + n.level*.15){ ups--; e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; }
   o.title = `${nemTitle(n)} is back`; o.text = `"${pick(NEM_TAUNTS)}" ${n.cap}'s ship has been patched, upgraded and painted with a picture of your ship on fire. This one is personal.`;
 }
 function sagaFightWon(kind, e, L){
