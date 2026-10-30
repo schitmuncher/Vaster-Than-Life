@@ -481,7 +481,7 @@ const HELP_PAGES = [
     ['The map', 'Each sector is a web of beacons. Stores, the exit, distress calls and quests are always marked; hostile ships (crosshair) and events (?) show once known, and Long-Range Scanners reveal everything. Your route so far is traced in amber.'],
     ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
     ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
-    ['Trade goods', 'Goods turn up in wrecks, at stores, in your garden and on a fishing line, and live in your cargo hold (Ship → Hold & gifts). Every good is cheap where it is made and worth much more where it is wanted: the Goods tab says which stores pay well. Illegal goods pay best, but Rebuff patrols may find them.'],
+    ['Trade goods', 'Goods live in your cargo hold (Ship → Hold & gifts). Each is cheap where it is made and dear where it is wanted. Request boards (Goods tab) pay extra for deliveries to any store. Mags Vetch, a travelling merchant, pays best for relics.'],
     ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights.'],
     ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
@@ -718,7 +718,8 @@ function drawTopBar(){
   const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber); if(charge>=1) glow(1258, 44, 16, C.good, .4);
   tip(1104, 14, 160, 44, 'VTL drive', 'Charges during combat while someone flies the ship. When full you can jump away from a fight.');
   btn(1268, 12, 104, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
-  btn(1380, 12, 92, 52, 'Ship', () => { G.modal = { type:'ship' }; UI.tab = UI.tab || 'systems'; });
+  btn(1380, 12, 92, 52, 'Ship', () => { const at = typeof homeAttention==='function' && homeAttention(); G.modal = { type:'ship' }; UI.tab = at ? (/Crops/.test(at) ? 'garden' : 'hold') : (UI.tab || 'systems'); });
+  { const at = typeof homeAttention==='function' && !G.enemy && homeAttention(); if(at){ ctx.beginPath(); ctx.arc(1466, 18, 8, 0, 7); ctx.fillStyle = C.good; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); tip(1380, 12, 92, 52, 'Ship', at + '.'); } }
   btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
   if((SET.speed||1)!==1) label(`Speed ${Math.round((SET.speed||1)*100)}%`, 1108, 66, C.cyan, 'left', 11);
 }
@@ -1327,7 +1328,7 @@ function storeAdvice(){ const v = volleyStats(G.ship), L = shieldsAhead(), pen =
 function vsShields(d){ if(d.type==='missile' || d.type==='bomb') return 'ignores shields'; if(d.type==='beam'){ const L = shieldsAhead(), pen = Math.max(0,(d.damage||0)-L); return !d.damage ? (d.crewDamage ? 'hurts crew, needs shields down' : d.fire ? 'starts fires, needs shields down' : 'needs shields down') : pen ? `${pen} per room through ${L} layer${L>1?'s':''}` : `needs shields down first (${L} layer${L>1?'s':''} here)`; } if(d.type==='ion') return 'strips a layer per hit'; return (d.shots||1) >= 3 ? 'strong vs shields' : (d.shots||1) === 2 ? 'fair vs shields' : 'weak vs shields'; }
 function drawStoreModal(m){
   const node = G.map.nodes[m.node], st = node.store; const s = G.ship;
-  if(!st.arena && typeof drawMarket==='function'){ drawMarket(m); return; }   // the full store (market.js); the duel arena keeps its own
+  if((m.mags || (st && !st.arena)) && typeof drawMarket==='function'){ drawMarket(m); return; }   // the full store (market.js); the duel arena keeps its own
   const f = mframe(1440, 880, 'Store', C.good);
   if(!m.greet) m.greet = pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian); T(m.greet, f.x+160, f.y+44, { s:16, c:C.muted });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });

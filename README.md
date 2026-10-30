@@ -152,11 +152,14 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **Haggle** once per store (a gambler, or an ex-pyrate at a black market, helps), and the **merchant guild card** knocks 5%, 8% then 12% off as you spend.
 - **Crew are worth what they are worth.** Hiring and selling prices depend on race, training, veterancy, health and the store: a trained veteran fetches several times a raw recruit, Mantlis arms pay extra for fighters, and black markets ask no questions. Two candidates per store. Selling someone's best friend or sibling will not be forgiven.
 - **Sell almost anything:** gear in cargo, augments, spare fuel, missiles and drone parts, and every trade good, crop, fish and meal.
+- **Request boards:** most stores want something (3 void peppers, 2 deep eels...) and pay far over the odds for it. Accept the order, grow, catch, cook or buy the goods, and deliver them at any store before the deadline. Deliveries count towards your guild card.
+- **Mags Vetch,** a travelling merchant, finds most crews in sector 2 or 3 and keeps turning up: rare seeds and weapons, the best prices anywhere for relics and curios, and personal orders that pay extra. Have tea with her, tell her about the voyage, and she may decide you are her favourite customer.
 - **Trade goods:** 28 goods, each cheap where it is made and worth up to three times as much where it is wanted, carried in a 16-space cargo hold (racks add more). Smuggled goods pay best, but Rebuff patrols may confiscate them.
 
 **Home life aboard** (light touch, all optional)
-- **A hydroponic garden:** plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps.
+- **A hydroponic garden** (with Harvest all and Plant all): plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps.
 - **The galley:** cook crops and fish into five meals. Eating together heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. A cook doubles every portion.
+- **Crew wishes:** now and then someone starts dreaming about something they love ("Captain. Captain. Void pepper. Think about it."). Bring it to them for a big jump in hearts. A dot on the Ship button tells you when crops are ripe or a wish can be granted.
 - **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. Close crew fight and repair better, get tougher, and tell you their story at 4 and 8 hearts.
 - **Fishing** at quiet beacons: space fish, rare deep eels, seeds, junk and, very rarely, an ancient relic.
 - **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Sloog, a ship renamed in a card game.

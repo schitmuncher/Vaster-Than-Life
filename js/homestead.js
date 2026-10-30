@@ -86,6 +86,7 @@ function giveGift(c, id){
   if(!c || !goodsHave(id)) return; if(c.giftJ===G.stats.jumps){ toast(`You already gave ${c.name} something today. Give it a jump.`); return; }
   takeGoods(id, 1); c.giftJ = G.stats.jumps; const r = giftReaction(c, id), g = goodsDef(id);
   addHearts(c, [-30, 20, 45, 85][r + 1]);
+  if(c.wish===id){ c.wish = null; addHearts(c, 110); UI.toast = { text:`${c.name} has wanted ${g.name.toLowerCase()} for ages. They are over the moon. (+ lots of hearts)`, t:4 }; sfx('buy'); if(typeof sagaNote==='function') sagaNote('wish', `The captain found ${c.name} the ${g.name.toLowerCase()} they had been dreaming about.`); return; }
   const line = r===2 ? pick([`${g.name}! How did you know? I love this!`, `You remembered! This is my favourite thing in the galaxy.`, `Oh, captain. You shouldn't have. (You definitely should have.)`])
     : r===1 ? pick([`Thanks, captain. That's really nice.`, `For me? That's lovely.`]) : r===0 ? pick([`Oh. Thanks.`, `Huh. ${g.name}. Okay!`, `I'll... find a use for it.`])
     : pick([`...Why would you give me this?`, `Is this a joke? It's a joke, right?`, `I'm going to pretend this didn't happen.`]);
@@ -152,8 +153,12 @@ function barAct(st, what){
 }
 function queueMorning(){ if(typeof MORNINGS==='undefined' || G.later.some(l => MORNINGS.includes(l.event))) return; const fresh = MORNINGS.filter(id => !G.seen[id]); G.later.push({ event:pick(fresh.length ? fresh : MORNINGS), jumps:1 }); }
 
+/* something waiting for you on the Ship screen: ripe crops, or a wish you can grant now */
+function homeAttention(){ if(!G || !G.ship) return null; if(G.garden && G.garden.plots.some(p => ripe(p))) return 'Crops are ready to harvest';
+  const w = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.wish && goodsHave(c.wish) && c.giftJ!==G.stats.jumps); if(w) return `${w.name} wishes for something you have`; return null; }
 /* ---------------- hook: each jump (run.js arrive) ---------------- */
-function homeJump(){ gardenJump();
+function homeJump(){ gardenJump(); if(typeof wishJump==='function') wishJump();
+  if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
   // Rebuff space: patrols search ships, and illegal cargo goes
   if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Rebuff patrol found the smuggled cargo and took the lot.`); } }
   if(G.bay) for(const id of Object.keys(G.bay)) if(goodsDef(id)?.kind==='fish' && Math.random() < .08){ G.bay[id]--; if(!G.bay[id]) delete G.bay[id]; }   // fish do not keep forever: cook them
@@ -181,6 +186,9 @@ function drawHoldTab(f, cx, y0){
     if(g.kind==='meal') btn(cx+half-284, y+10, 130, 44, 'Eat', () => eatMeal(id), { s:15, col:C.good });
     btn(cx+half-146, y+10, 132, 44, sel ? 'Cancel' : 'Give…', () => { UI.giftItem = sel ? null : id; }, { s:15, col:C.amber, fill:sel }); });
   if(pages > 1){ const py = y0 + 22 + per*72; btn(cx, py, 60, 40, '‹', () => { UI.holdPage = pg-1; }, { disabled:pg<=0 }); btn(cx+70, py, 60, 40, '›', () => { UI.holdPage = pg+1; }, { disabled:pg>=pages-1 }); }
+  // delivery orders you have taken on
+  const ords = typeof orders==='function' ? orders() : []; if(ords.length){ const oy = y0 + 22 + Math.min(per, ids.length)*72 + (pages > 1 ? 52 : 10); label('Delivery orders', cx, oy+12, C.violet, 'left', 13);
+    ords.forEach((o, i) => { const g = goodsDef(o.id), ok = goodsHave(o.id) >= o.n; T(`${o.n} × ${g.name} for ${o.from} · ${o.pay} scrap · by sector ${o.by}${ok ? ' · ready to deliver at any store' : ` · you have ${goodsHave(o.id)}`}`, cx, oy + 36 + i*24, { s:14, c: ok ? C.good : C.ink, max:half }); }); }
   // the crew, their hearts, and what you know they love
   const qx = cx + half + 20, crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);
   label(UI.giftItem ? `Give ${goodsDef(UI.giftItem)?.name.toLowerCase() || ''} to…` : 'Your crew', qx, y0+10, UI.giftItem ? C.amber : C.muted, 'left', 14);
@@ -188,7 +196,8 @@ function drawHoldTab(f, cx, y0){
     panel(qx, y, half, 64, 8); drawPortrait(qx+30, y+32, 20, c, false);
     T(c.name, qx+60, y+26, { s:17, f:FD, w:700, max:150 }); T('♥'.repeat(h) + '♡'.repeat(10-h), qx+220, y+26, { s:16, c:C.hostile });
     const known = (c.knownLoves||[]).map(id => goodsDef(id)?.name).filter(Boolean);
-    T(known.length ? `Loves: ${known.join(', ')}` : `${typeof quirkName==='function' ? quirkName(c) : ''}${h >= 6 ? ' · works harder for you' : ''}`, qx+60, y+48, { s:12, c:C.muted, max:half-250 });
+    if(c.wish && goodsDef(c.wish)) T(`Wishes for ${goodsDef(c.wish).name.toLowerCase()}${goodsHave(c.wish) ? ' (you have some!)' : ''}`, qx+60, y+48, { s:12, c: goodsHave(c.wish) ? C.good : C.warn, max:half-250 });
+    else T(known.length ? `Loves: ${known.join(', ')}` : `${typeof quirkName==='function' ? quirkName(c) : ''}${h >= 6 ? ' · works harder for you' : ''}`, qx+60, y+48, { s:12, c:C.muted, max:half-250 });
     tip(qx, y, half-180, 64, `${c.name} · ${h} heart${h===1?'':'s'}`, `Hearts grow with gifts they like, meals eaten together, nights out and fights survived together. At 6 hearts they repair and fight 5% better (10% at 10); at 8 they get +10 health. At 4 and 8 hearts they open up to you.${known.length ? ' Known loves: ' + known.join(', ') + '.' : ''}`);
     if(UI.giftItem) btn(qx+half-170, y+10, 156, 44, today ? 'Had a gift today' : 'Give', () => { const id = UI.giftItem; giveGift(c, id); if(giftReaction(c, id)===2) (c.knownLoves = c.knownLoves || []).includes(id) || c.knownLoves.push(id); if(!goodsHave(id)) UI.giftItem = null; }, { s:14, disabled:today, col:C.amber, fill:!today }); });
 }
@@ -196,6 +205,9 @@ function drawHoldTab(f, cx, y0){
 function drawGardenTab(f, cx, y0){
   const W2 = f.w - 64, gd = garden(), seeds = Object.keys(G.seeds || {}).filter(k => G.seeds[k] > 0 && SEEDS[k]);
   label(`Hydroponic garden · ${gd.plots.length} planter${gd.plots.length===1?'':'s'}`, cx, y0+10, C.muted, 'left', 14);
+  { const ready = gd.plots.filter(p => ripe(p)).length, empty = gd.plots.filter(p => !p).length;   // one tap for the whole garden
+    if(ready > 1) btn(cx+620, y0-12, 170, 36, `Harvest all (${ready})`, () => gd.plots.forEach((p, i) => { if(ripe(p)) harvest(i); }), { s:13, fill:true, col:C.good });
+    else if(empty > 1 && UI.seedSel && (G.seeds[UI.seedSel]||0) > 1) btn(cx+620, y0-12, 170, 36, 'Plant all', () => gd.plots.forEach((p, i) => { if(!p && UI.seedSel) plant(i, UI.seedSel); }), { s:13, col:C.good }); }
   T(gardener() ? `${gardener().name} tends the garden: crops grow faster and yield more.` : 'Crops grow a little every jump, faster under a sun. Ion storms stunt them.', cx+W2, y0+10, { s:13, a:'right', c:C.cyan });
   if(!seeds.includes(UI.seedSel)) UI.seedSel = seeds[0] || null;
   gd.plots.forEach((p, i) => { const x = cx + (i%3)*(W2/3 + 4), y = y0 + 24 + Math.floor(i/3)*150, w = W2/3 - 8;

@@ -343,7 +343,8 @@ function openSwap(cand, cost, done){ G.modal = { type:'swapcrew', cand, cost:cos
 function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); else save(); }
 function closeResult(m){
   G.modal = null; const a = m.after || {};
-  if(G.petNaming){ G.petNaming = false; if(typeof sagaNamePet==='function') sagaNamePet(); }   // a new pet needs a name
+  if(G.petNaming){ G.petNaming = false; if(typeof sagaNamePet==='function') sagaNamePet(); }
+  if(G.openMags){ G.openMags = false; G.modal = { type:'store', node:G.map.cur, mags:true }; UI.storeTab = 'goods'; return; }   // Mags's caravan (market.js)   // a new pet needs a name
   if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }
   if(a.begin){ if(G.enemy) taunt('start'); return; }
   if(a.dismiss){ leaveCombat(); save(); return; }

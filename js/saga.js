@@ -284,6 +284,7 @@ function sagaFill(t, cx){
     .replace(/\{nemsector\}/g, G && G.nemesis ? String(G.nemesis.s) : '1').replace(/\{nemfrom\}/g, G && G.nemesis && G.nemesis.from ? theName(G.nemesis.from) : 'your last ship')
     .replace(/\{legacy\}/g, cx.legacy ? cx.legacy.name : 'an old shipmate').replace(/\{legacyship\}/g, cx.legacy ? theName(cx.legacy.ship) : 'your last ship').replace(/\{legacywhy\}/g, cx.legacy ? cx.legacy.why : 'lost')
     .replace(/\{legacywords\}/g, cx.legacy ? cx.legacy.words : '...').replace(/\{legacyrace\}/g, cx.legacy ? ((DATA.races[cx.legacy.race]||{}).name || 'traveller') : 'traveller').replace(/\{kin\}/g, cx.kin || 'friend')
+    .replace(/\{magsline\}/g, () => typeof MAGS_LINES!=='undefined' ? pick(MAGS_LINES) : '')
     .replace(/\{story\}/g, () => { const c = cx.starId && crewById(cx.starId); return (c && HEART_STORY[c.quirk]) || 'They tell you about home, and about why they are really out here.'; })
     .replace(/\{heartgift\}/g, () => { const c = cx.starId && crewById(cx.starId); return (c && HEART_GIFT[c.quirk] && HEART_GIFT[c.quirk].text) || 'They give you a little carved model of the ship.'; });
 }

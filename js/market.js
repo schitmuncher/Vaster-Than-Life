@@ -127,7 +127,7 @@ function sellMult(st, kind){ const K = storeKind(st); let m = (K.pays && K.pays[
 function goodsPrice(id, st, selling){
   const g = goodsDef(id); if(!g) return 0; const kind = (st && st.kind) || G.sectorType;
   let p = g.base * (g.from.includes(kind) ? .6 : g.want.includes(kind) ? 1.65 : 1) * (1 + .02*((G.sector||1) - 1));
-  if(selling){ p *= .75 * sellMult(st, g.kind); return Math.max(1, Math.round(p)); }
+  if(selling){ p *= .75 * sellMult(st, g.kind) * sellMagsBonus(st, g.kind); return Math.max(1, Math.round(p)); }
   return Math.max(1, Math.round(p * (st ? marketMult(st, 'goods') : 1)));
 }
 
@@ -199,6 +199,7 @@ function openCrate(st){
 /* ---------------- what you can sell ---------------- */
 function sellables(st){
   const s = G.ship, L = [];
+  for(const o of orders()) if(goodsHave(o.id) >= o.n) L.push({ key:'o:' + o.id, name:`Order: ${o.n} × ${goodsDef(o.id).name}`, sub:`for ${o.from}`, v:o.pay, hot:true, sell:() => { deliver(o); return 'order'; } });
   (s.cargo||[]).forEach((c, i) => { const d = c.kind==='weapon' ? DATA.weapons[c.id] : DATA.drones[c.id]; L.push({ key:'c'+i, name:d?.name || c.id, sub:`${c.kind} in cargo`, v:Math.round(sellValue(c.kind, c.id) * sellMult(st, 'gear')), sell:() => { s.cargo.splice(i, 1); } }); });
   s.augments.forEach((a, i) => L.push({ key:'a'+i, name:DATA.augments[a]?.name || a, sub:'augment (installed)', v:Math.round(sellValue('augment', a) * sellMult(st, 'gear')), sell:() => { s.augments.splice(i, 1); } }));
   for(const id of Object.keys(G.bay || {})){ const g = goodsDef(id); if(!g || !goodsHave(id)) continue; if(g.illegal && storeKind(st).noIllegal) continue;
@@ -220,6 +221,7 @@ function marketEffect(e, L){
   if(e.seeds && typeof SEEDS!=='undefined'){ G.seeds = G.seeds || {}; const list = e.seeds==='random' ? { [pick(Object.keys(SEEDS))]:ri(2,3) } : e.seeds;
     for(const [k, n] of Object.entries(list)) if(SEEDS[k]){ G.seeds[k] = (G.seeds[k]||0) + n; L.push(`+${n} ${SEEDS[k].name} seeds`); } }
   if(e.hold){ G.holdBonus = (G.holdBonus||0) + e.hold; L.push(`+${e.hold} cargo hold space`); }
+  if(typeof magsEffect==='function') magsEffect(e, L);
 }
 /* a Rebuff patrol finds contraband in your hold */
 function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.keys(G.bay).filter(id => goodsDef(id)?.illegal); if(!bad.length) return null;
@@ -230,11 +232,11 @@ function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augm
 function spend(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
 function earn(v){ G.scrap += v; G.stats.scrap = G.stats.scrap; G.earnedSelling = (G.earnedSelling||0) + v; if(G.earnedSelling >= 300) grant('market_mogul'); }
 function drawMarket(m){
-  const node = G.map.nodes[m.node], st = node.store, s = G.ship;
+  const node = G.map.nodes[m.node], st = m.mags && G.magsShop ? G.magsShop : node.store, s = G.ship;
   if(!st.title) withSeed(`s${G.sector}n${m.node}market`, () => marketStock(st));   // a store from an older save
   const K = storeKind(st), k = st.keeper || { name:'The keeper', race:'human', mood:'cheerful' };
   const f = mframe(1440, 880, st.title, C.good);
-  if(!m.greet) m.greet = pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian);
+  if(!m.greet) m.greet = st.mags ? pick(MAGS_LINES) : pick(STORE_GREETS[G.sectorType] || STORE_GREETS.civilian);
   ctx.font = `700 24px ${FD}`; const tx = f.x + 32 + Math.min(520, ctx.measureText(st.title.toUpperCase()).width + 70);
   T(`${k.name}, ${(DATA.races[k.race]||{}).name || ''} keeper (${k.mood}): "${String(m.greet).replace(/^"|"$/g, '')}"`, tx, f.y+44, { s:15, c:C.muted, max:f.x+f.w-260-tx });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
@@ -335,7 +337,8 @@ function drawStoreGoods(st, cx, y0, W2){
     btn(qx+half-220, sy+12, 200, 46, `Buy 2 · ${p*2}`, () => spend(p*2, () => { G.seeds = G.seeds || {}; G.seeds[k2] = (G.seeds[k2]||0) + 2; toast(`+2 ${sd.name} seeds. Plant them from Ship → Garden.`); }), { s:15, disabled:G.scrap < p*2, col:C.good });
     sy += 78; }
   const wants = Object.keys(BASE.goods).filter(id => goodsDef(id).want.includes(st.kind)).map(id => goodsDef(id).name);
-  para(`${storeKind(st).title} pays well for: ${wants.length ? wants.slice(0, 6).join(', ') : 'nothing in particular'}.`, qx, sy + 14, half, { s:15, lh:20, c:C.cyan, max:3 });
+  para(st.mags ? 'Mags buys relics and curios for far more than anyone else.' : `${storeKind(st).title} pays well for: ${wants.length ? wants.slice(0, 6).join(', ') : 'nothing in particular'}.`, qx, sy + 14, half, { s:15, lh:20, c:C.cyan, max:2 });
+  drawRequestBoard(st, qx, sy + 70, half);
 }
 function drawStoreBar(st, cx, y0, W2){
   st.barName = st.barName || pick(BAR_NAMES);
@@ -355,6 +358,84 @@ function drawStoreSell(st, cx, y0, W2, f){
   L.slice(pg*per, pg*per + per).forEach((it, i) => { const x = cx + (i%2)*(half+20), y = y0 + 8 + Math.floor(i/2)*84;
     panel(x, y, half, 74, 8); T(it.name, x+18, y+30, { s:18, f:FD, w:700, c: it.hot ? C.good : C.ink, max:half-(it.more ? 380 : 250) }); T(it.sub, x+18, y+54, { s:13, c: it.hot ? C.good : C.muted, max:half-(it.more ? 380 : 250) });
     if(it.more) btn(x+half-366, y+14, 130, 46, `All · ${it.v * (goodsHave(it.key.slice(2)) || 1)}`, () => { const n = it.more(); earn(it.v*n); sfx('buy'); save(); }, { s:14, col:C.amber });
-    btn(x+half-226, y+14, 210, 46, `Sell · ${it.v}`, () => { it.sell(); earn(it.v); sfx('buy'); save(); }, { s:16, col:C.amber }); });
+    btn(x+half-226, y+14, 210, 46, it.key.startsWith('o:') ? `Deliver · ${it.v}` : `Sell · ${it.v}`, () => { if(it.sell()==='order') return; earn(it.v); sfx('buy'); save(); }, { s:16, col: it.key.startsWith('o:') ? C.violet : C.amber, fill:it.key.startsWith('o:') }); });
+  // one tap: sell every good that is in demand here
+  const hot = L.filter(it => it.hot && it.key.startsWith('g:')); if(hot.length > 1){ const tot = hot.reduce((t, it) => t + it.v*goodsHave(it.key.slice(2)), 0);
+    btn(cx+W2-330, y0 + 8 + 6*84, 330, 44, `Sell everything in demand · ${tot}`, () => { let v = 0; for(const it of hot){ const n = goodsHave(it.key.slice(2)); takeGoods(it.key.slice(2), n); v += it.v*n; } earn(v); sfx('buy'); save(); }, { s:15, col:C.good, fill:true }); }
   if(pages > 1){ const py = y0 + 8 + 6*84; btn(cx, py, 70, 44, '‹', () => { UI.storePage = pg-1; }, { disabled:pg<=0 }); T(`${pg+1} / ${pages}`, cx+110, py+30, { s:16, a:'center', c:C.muted }); btn(cx+150, py, 70, 44, '›', () => { UI.storePage = pg+1; }, { disabled:pg>=pages-1 }); }
 }
+
+/* =========================================================================
+   Requests, the travelling merchant, crew wishes
+   ========================================================================= */
+/* ---------------- request boards: deliver goods for good money ---------------- */
+function makeRequest(st){
+  const ids = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return g && !g.illegal && g.kind!=='curio' && !g.from.includes(st.kind) && (g.kind!=='meal' || G.sector >= 2); });
+  if(!ids.length) return null; const id = pick(ids), g = goodsDef(id), n = g.base >= 20 ? ri(1, 2) : ri(2, 4);
+  return { id, n, pay:Math.round(g.base * n * 1.9 + 10 + G.sector*3), by:Math.min(R.sectors, G.sector + 1), from:st.title, taken:false };
+}
+function orders(){ G.orders = (G.orders || []).filter(o => { if(o.by < G.sector){ toast(`The order for ${o.n} ${goodsDef(o.id)?.name.toLowerCase()} has expired.`); return false; } return true; }); return G.orders; }
+function deliver(o){ if(goodsHave(o.id) < o.n) return false; takeGoods(o.id, o.n); G.orders = (G.orders||[]).filter(x => x!==o); earn(o.pay); G.spent = (G.spent||0) + Math.round(o.pay/2);   // the guild counts deliveries too
+  G.delivered = (G.delivered||0) + 1; if(G.delivered >= 3) grant('market_courier'); sfx('buy'); toast(`Delivered ${o.n} ${goodsDef(o.id).name.toLowerCase()}: +${o.pay} scrap.`);
+  if(o.mags && G.mags){ G.mags.hearts = (G.mags.hearts||0) + 2; G.mags.done = (G.mags.done||0) + 1; }
+  if(typeof sagaNote==='function' && G.delivered===1) sagaNote('trade', `In sector ${G.sector} the crew filled their first delivery order: ${o.n} ${goodsDef(o.id).name.toLowerCase()} for ${o.pay} scrap.`);
+  save(); return true; }
+function drawRequestBoard(st, x, y, w){
+  if(st.request===undefined) st.request = withSeed(`s${G.sector}n${G.map.cur}req`, () => makeRequest(st));
+  const o = st.request; panel(x, y, w, 120, 8); label('Request board', x+18, y+28, C.violet, 'left', 13);
+  if(!o){ T('Nothing wanted today.', x+18, y+64, { s:16, c:C.muted }); return; }
+  const g = goodsDef(o.id), have = goodsHave(o.id);
+  T(`Wanted: ${o.n} × ${g.name}`, x+18, y+60, { s:19, f:FD, w:700, max:w-250 }); T(`Pays ${o.pay} scrap · deliver to any store by the end of sector ${o.by} · you have ${have}`, x+18, y+86, { s:12, c:C.muted, max:w-250 });
+  tip(x, y, w-230, 120, `${g.name} wanted`, `${g.desc} You can grow, catch, cook or buy it elsewhere, then deliver it at any store (the Sell tab) before you leave sector ${o.by}.`);
+  if(o.taken) T('Accepted', x+w-120, y+64, { s:16, a:'center', c:C.good });
+  else if(have >= o.n) btn(x+w-220, y+36, 200, 50, `Deliver now · ${o.pay}`, () => { o.taken = true; G.orders = G.orders || []; const ord = Object.assign({}, o); G.orders.push(ord); deliver(ord); }, { s:15, fill:true, col:C.violet });
+  else btn(x+w-220, y+36, 200, 50, (orders().length >= 4) ? 'Too many orders' : 'Accept', () => { o.taken = true; (G.orders = G.orders || []).push(Object.assign({}, o)); toast('Order accepted. Deliver it at any store.'); save(); }, { s:15, col:C.violet, disabled:orders().length >= 4 });
+}
+
+/* ---------------- Mags Vetch, travelling merchant ----------------
+   She turns up a few times a run with her caravan: odd stock, rare seeds, and a buyer for relics. Each visit she likes you a
+   little more; fill her orders and she likes you a lot more. */
+const MAGS_LINES = ['"Back again! I knew you\'d survive. I bet on it, in fact."', '"My favourite customer. Don\'t tell the others."', '"Look what the solar wind blew in."', '"You look terrible, love. Buy something, it\'ll cheer you up."'];
+function magsStore(){
+  const st = { arena:false, kind:'civilian', title:"Mags Vetch's caravan", keeper:{ name:'Mags Vetch', race:'human', mood:'cheerful' }, mags:true, sold:[], hired:[], crate:0, haggled:G.mags && G.mags.hearts >= 4 ? 'won' : null,
+    weapons:[], drones:[], augments:[], systems:[], crewRaces:[], cands:[], wob:{}, bar:false, moodMult:.95 };
+  const wp = Object.values(DATA.weapons).filter(w => !w.noLoot && (w.tier||1) >= 2).map(w => w.id); shuffle(wp); st.weapons = wp.slice(0, 2);
+  const ap = Object.keys(DATA.augments).filter(k => !G.ship.augments.includes(k)); shuffle(ap); st.augments = ap.slice(0, 2);
+  for(const id of [...st.weapons, ...st.augments]) st.wob[id] = .9;
+  st.goods = shuffle(Object.keys(BASE.goods).filter(id => ['trade','curio'].includes(goodsDef(id).kind) && !goodsDef(id).illegal)).slice(0, 4).map(id => ({ id, n:ri(1, 3) }));
+  st.seeds = ['glass_lily', 'moon_melon', 'nebula_bloom']; st.deal = st.weapons[0] ? 'w:' + st.weapons[0] : null;
+  st.request = makeRequest(st); if(st.request){ st.request.pay = Math.round(st.request.pay * 1.4); st.request.mags = true; st.request.by = Math.min(R.sectors, G.sector + 2); }
+  return st;
+}
+function sellMagsBonus(st, kind){ return st && st.mags && kind==='curio' ? 1.6 : 1; }   // Mags collects old things
+
+/* ---------------- crew wishes ---------------- */
+const WISH_LINES = ['I\'d give anything for some {good} right now.', 'Is it weird that I dream about {good}?', 'If anyone finds {good}, I\'m just saying, I wouldn\'t say no.', 'Captain. Captain. {good}. Think about it.'];
+function wishJump(){
+  if(!G || !G.ship || typeof GIFT_LOVES==='undefined') return; const crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);
+  for(const c of crew) if(c.wish && G.stats.jumps - (c.wishJ||0) > 12){ c.wish = null; }
+  if(Math.random() < .08){ const c = pick(crew.filter(c => !c.wish)); if(!c) return; const loves = [...(GIFT_LOVES[c.quirk]||[]), ...(RACE_LOVES[c.race]||[])].filter(id => goodsDef(id)); if(!loves.length) return;
+    c.wish = pick(loves); c.wishJ = G.stats.jumps; (c.knownLoves = c.knownLoves || []).includes(c.wish) || c.knownLoves.push(c.wish);
+    G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:pick(WISH_LINES).replace('{good}', goodsDef(c.wish).name.toLowerCase()), id:c.id, t:3.4 }); }
+}
+ACHIEVEMENTS.push({ id:'market_courier', name:'Special Delivery', desc:'Fill three delivery orders in one run.' }, { id:'market_mags', name:'Mags\'s Favourite', desc:'Become Mags Vetch\'s favourite customer.' });
+function magsEffect(e, L){
+  if(e.magsMeet){ G.mags = G.mags || { met:0, hearts:0 }; G.mags.met++; G.mags.hearts += e.magsMeet;
+    if(G.mags.met < 5 && !G.later.some(l => l.event==='m_mags_again')) G.later.push({ event:'m_mags_again', jumps:ri(5, 8) });
+    if(G.mags.hearts >= 6 && !G.mags.gifted && !G.later.some(l => l.event==='m_mags_gift')) G.later.push({ event:'m_mags_gift', jumps:ri(2, 4) });
+    if(G.mags.met===1 && typeof sagaNote==='function') sagaNote('mags', `In sector ${G.sector} the crew met Mags Vetch, a travelling merchant with a ship full of bells and opinions.`); }
+  if(e.magsStall){ G.magsShop = magsStore(); G.openMags = true; }
+  if(e.magsGift && G.mags){ G.mags.gifted = true; garden().plots.length < PLANTER_MAX && garden().plots.push(null); G.seeds = G.seeds || {}; G.seeds.glass_lily = (G.seeds.glass_lily||0) + 2; L.push('+1 hydroponic planter', '+2 Glass lily seeds'); L.push(giveAugment('random'));
+    grant('market_mags'); if(typeof sagaNote==='function') sagaNote('mags', `Mags Vetch called the captain her favourite customer, and meant it. She gave them her late husband's lucky charm.`); }
+}
+Object.assign(BASE.events, {
+  m_mags_meet:{ moment:true, star:'any', minSector:2, weight:1.4, art:'market', text:'A battered caravan ship covered in bells and bunting pulls alongside. On screen, a small grey-haired woman in welding goggles. "Mags Vetch, purveyor of fine and questionable goods. I\'ve got rare seeds, old relics, and I pay better than anyone for curios. Fancy a browse, love?"', choices:[
+    { text:'Browse her wares.', effect:{ text:'The airlock opens onto a cloud of incense and a lot of shelves.', magsMeet:1, magsStall:true } },
+    { text:'Invite her aboard for a cup of tea.', effect:{ text:'Mags drinks four cups, tells you three stories about her late husband and one about a pyrate king she "definitely did not marry", and draws you a map on a napkin before she goes.', magsMeet:2, reveal:true, crewHeal:10 } },
+    { text:'"Not today, thanks."', effect:{ text:'"Suit yourself. I\'ll find you again. I always do." The bells jingle as she goes.', magsMeet:0 } } ] },
+  m_mags_again:{ moment:true, questOnly:true, once:false, star:'any', art:'market', text:'Bells on the comms: Mags Vetch\'s caravan is back. {magsline}', choices:[
+    { text:'Browse her wares.', effect:{ text:'She has new stock, and as always, she remembers what you like.', magsMeet:1, magsStall:true } },
+    { text:'Tell her about the voyage.', effect:{ text:'She listens to all of it, laughs at the right bits, and goes quiet at the sad ones. She leaves a tin of biscuits for the crew.', magsMeet:2, crewHeal:15 } } ] },
+  m_mags_gift:{ moment:true, questOnly:true, star:'any', art:'market', text:'Mags Vetch\'s caravan, again, but she does not open her shop. She comes aboard with a box. "You lot are my favourite customers. Don\'t tell the others. This was my husband\'s lucky charm, and these are the best seeds I\'ve got. Go and win, alright?"', choices:[
+    { text:'Hug her.', effect:{ text:'She pretends to hate it. She does not hate it.', magsGift:true, crewHeal:20 } } ] }
+});
