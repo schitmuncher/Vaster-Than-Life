@@ -595,6 +595,7 @@ function tickShip(sh, dt, foe){
     if(sh.isEnemy && typeof alertLv==='function' && alertLv() >= 7) mult *= 1.06;   // Rebuff alert 7: drilled gunners   // the Flaggship fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
+    if(typeof refitMult==='function') mult *= refitMult(sh, w);   // Mk II / Mk III refits (expansion.js)
     w.charge = Math.min(d.charge, w.charge + dt*mult);
     if(w.charge >= d.charge){
       if(sh.isEnemy && w.target==null) w.target = w.cmdT!=null && foe.rooms[w.cmdT] ? w.cmdT : aiTargetRoom(foe, d);   // a fleet commander (multiplayer) can aim enemy guns

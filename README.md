@@ -95,6 +95,13 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 ## What's in the game
 
+**More on the road**
+- **Gun refits.** Every store's Weapons tab has a workshop: refit a gun you own to Mk II and Mk III, each charging 15% faster. No need to throw away a gun you like.
+- **Sector situations.** About half the routes at an exit come with a situation, shown on the card: a Rebuff crackdown (more patrols, cheaper stores), a salvage boom (richer wrecks, faster Fleet), storm season (double hazards, slower Fleet), festival season (fewer fights, the Harvest Fair), refugee convoys (distress calls everywhere) or a comms blackout (stores hidden until you're next to them).
+- **The Ghost Fleet.** A forty-year-old distress code leads, over three sectors, to Captain Ada Rourke in cold sleep and a hidden fleet. Wake it, and six old frigates join you at the Flaggship. Or strip them for parts.
+- **Lucky Vell's crate.** A smuggler pays you to carry a humming crate to a buyer in the next sector. Deliver it, open it, sell it to the Rebuff, or keep what's inside.
+- **New encounters**: a singing space whale, an auction drone, a quarantined hospital ship, a pyrate race, an old minefield, a vending machine in deep space, a library ship and a rival courier.
+
 **A career, not just a run**
 - **Admiralty ranks.** Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story. Ten ranks from Cadet to Admiral, shown on the title screen and in **Career**. A debrief after each run counts it up.
 - **Ship requisitions.** Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing.
@@ -422,6 +429,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
 | `js/market.js` | Store kinds and keepers, prices, haggling, deals, mystery crates, the guild card, crew worth, trade goods and the cargo hold, the store screen |
 | `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
+| `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, and new encounters |
 | `js/campaign.js` | Ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |
 | `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |

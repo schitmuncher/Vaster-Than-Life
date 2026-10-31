@@ -255,7 +255,8 @@ function drawMarket(m){
       st.weapons.forEach((id, i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id), c = Math.round(price(d.cost, st, 'weapon', id) * dealOff(st, 'w:'+id));
         row(i, d.name, `${d.type} · ${d.heal ? 'heals '+d.heal : d.type==='bomb' ? (d.sysDamage||0)+' system damage' : d.damage+' damage × '+(d.shots||1)} · ${d.power} power · ${d.charge}s${d.fire?' · fire':''}${d.breach?' · breach':''}${d.heal ? '' : ' · ' + vsShields(d)}${d.desc?' · '+d.desc:''}`, c,
           () => spend(c, () => { st.sold.push('w:'+id); toast(giveWeapon(id)); }), { soldTxt:sold ? 'Sold' : null, deal:st.deal==='w:'+id }); });
-      const adv = storeAdvice(); para(adv[0], cx, y0 + st.weapons.length*94 + 18, W2, { s:16, lh:22, c:adv[1], max:2 }); break; }
+      const adv = storeAdvice(); para(adv[0], cx, y0 + st.weapons.length*94 + 18, W2, { s:16, lh:22, c:adv[1], max:2 });
+      if(typeof drawRefits==='function' && !st.mags) drawRefits(st, cx, y0 + st.weapons.length*94 + 84, W2); break; }
     case 'drones':
       if(!s.systems.drones) T('Your ship has no Drone system yet. Install one from the Systems tab to use these.', cx, y0 + st.drones.length*94 + 30, { s:17, c:C.warn });
       st.drones.forEach((id, i) => { const d = DATA.drones[id]; if(!d) return; const sold = st.sold.includes('d:'+id), c = Math.round(price(d.cost, st, 'drone', id) * dealOff(st, 'd:'+id));

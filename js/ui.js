@@ -501,6 +501,7 @@ const HELP_PAGES = [
     ['The data core', 'The core in your hold wakes up in sector 2. Its name is Pip. How you treat Pip changes the last sector, the Flaggship fight and how a win ends. There are four endings to find.'],
     ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
     ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
+    ['Refits & situations', 'Store Weapons tabs have a workshop: refit a gun to Mk II and Mk III, each charging 15% faster. Exit cards can show a sector situation (a crackdown, a salvage boom, storms, a festival, refugees, a blackout) that changes what the sector is like.'],
     ['Rebuff alert', 'Win on Normal or Hard to unlock alert level 1. Each level adds one twist (tougher patrols, dearer stores, a faster fleet...) for more renown and score. Pick the level in the hangar. Dailies and challenges ignore it.'] ]],
   ['Controls', [
     ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
@@ -992,7 +993,7 @@ function drawArmory(){
     if(!wp){ rr(cx,cy,cw,ch,8); ctx.setLineDash([6,6]); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); T('Empty', cx+cw/2, cy+ch/2, { s:14, a:'center', c:C.muted }); continue; }
     const d = DATA.weapons[wp.id]; if(!d) continue; const sel = UI.selWeapon===i, ready = wp.on && wp.charge >= d.charge;
     rr(cx,cy,cw,ch,8); ctx.fillStyle = sel ? hexA(C.amber,.14) : C.panel2; ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : wp.on ? hexA(C.amber,.5) : C.line; ctx.stroke();
-    para(`${i+1} ${d.name}`, cx+8, cy+20, cw-14, { s:14, f:FD, w:700, lh:16, max:2, c: wp.on ? C.ink : C.muted });
+    para(`${i+1} ${typeof weaponLabel==='function' ? weaponLabel(wp) : d.name}`, cx+8, cy+20, cw-14, { s:14, f:FD, w:700, lh:16, max:2, c: wp.on ? C.ink : C.muted });
     tip(cx, cy, cw, 96, d.name, `${d.type}. ${d.heal ? 'Heals '+d.heal+' per crew.' : d.type==='bomb' ? (d.sysDamage||0)+' system damage, ignores shields.' : (d.damage||0)+' damage × '+(d.shots||1)+(d.type==='beam' ? ', hits '+(d.rooms||2)+' rooms' : '')+'.'} ${d.power} power, ${d.charge}s charge.${d.fire?' Can start fires.':''}${d.breach?' Can breach hulls.':''}${d.type==='missile'?' Ignores shields, uses a missile.':''}${d.type==='ion'?' Drains shields and systems.':''}${d.desc?' '+d.desc:''}`);
     const tc = d.type==='missile'||d.type==='bomb' ? '#ffffff' : d.type==='ion' ? C.cyan : d.type==='beam' ? C.violet : d.type==='flak' ? C.warn : C.amber;
     label(d.type, cx+8, cy+52, tc, 'left', 11);
@@ -1123,9 +1124,9 @@ function drawModal(){
     case 'fishing': if(typeof drawFishing==='function') drawFishing(m); else G.modal = m.back || null; break;
     case 'store': drawStoreModal(m); break;
     case 'ship': drawShipModal(); break;
-    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 600, 'Exit beacon', C.good);
+    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 680, 'Exit beacon', C.good);
       para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
-      const cw = (f.w-64-(opts.length-1)*20)/opts.length, ch = 330;
+      const cw = (f.w-64-(opts.length-1)*20)/opts.length, ch = 400;
       opts.forEach((t,i) => { const sd = DATA.sectors[t]; if(!sd) return; const bx = f.x+32 + i*(cw+20), by = f.y+150, col = sd.color||C.cyan;
         const art = eventArt(sd.secret ? 'glass' : sd.nebula>.3 ? 'nebula' : sd.final ? 'fleet' : 'planet', t, Math.floor(cw), 90);
         rr(bx, by, cw, ch, 10); ctx.fillStyle = C.panel2; ctx.fill(); ctx.save(); rr(bx, by, cw, 90, 10); ctx.clip(); ctx.drawImage(art, bx, by); ctx.restore(); ctx.strokeStyle = col; ctx.lineWidth = 2; rr(bx, by, cw, ch, 10); ctx.stroke();
@@ -1135,6 +1136,7 @@ function drawModal(){
         const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · ${sd.final ? 'No stores past command' : '2–3 stores'}`, bx+18, by+196, { s:13, c:C.muted, max:cw-36 });
         T(sd.secret ? 'Meet: the Glassborn' : sd.final ? 'Meet: the Flaggship and its escorts' : `Meet: ${sectorFoes(sd)}`, bx+18, by+218, { s:13, c:C.muted, max:cw-36 });
         T(sd.nebula>.3 ? 'Nebula: no sensors, the fleet is slower' : `Hazards: ${sectorHazards(sd)}`, bx+18, by+240, { s:13, c: sd.nebula>.3 ? C.violet : C.muted, max:cw-36 });
+        { const S = typeof situFor==='function' ? situFor(t) : null; if(S){ T('◆ ' + S.name, bx+18, by+272, { s:15, f:FD, w:700, c:S.col, max:cw-36 }); para(S.desc, bx+18, by+292, cw-36, { s:12, lh:16, c:C.ink, max:2 }); } }
         btn(bx+16, by+ch-62, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col, s:17 });
         tip(bx, by, cw, ch-70, sd.name, `${sd.blurb||''} ${sd.fleetMult && sd.fleetMult<1 ? 'The Rebuff Fleet moves slower here. ' : ''}Fights ${mix.combat||0}%, events ${mix.event||0}%, quiet beacons ${mix.empty||0}%.`); });
       btn(f.x+f.w-232, f.y+f.h-82, 200, 56, 'Stay here', () => { G.modal = null; }); break; }
@@ -1271,7 +1273,7 @@ function drawMapModal(){
   nodes.forEach((n,i) => {
     const x = mx(n), y = my(n), reach = reachSet.has(i), isCur = i===G.map.cur, hov = i===hovI;
     const flagHere = G.flag && G.flag.node===i, known = scan || n.revealed, taken = n.x < G.fleetX && !isCur, soon = !taken && !isCur && n.x < G.fleetX + step;
-    const kind = flagHere ? 'flag' : n.type==='store' ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.elite && !n.visited ? 'elite' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
+    const hideSt = typeof storeHidden==='function' && storeHidden(n, reach), kind = flagHere ? 'flag' : n.type==='store' && !hideSt ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.elite && !n.visited ? 'elite' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
     const col = { flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, elite:'#ff9f43', hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
     const r = hov ? 25 : 20;
     if(hov) glow(x, y, 48, col, .45); else if(reach && jumpable) glow(x, y, 34, col, .16 + .08*Math.sin(t*3 + i));
@@ -1285,7 +1287,7 @@ function drawMapModal(){
     const showHz = n.hazard && (scan || n.revealed || n.visited || reach);
     if(showHz){ const hc = HZCOL[n.hazard] || C.warn, hx = x + 19, hy = y - 19; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fillStyle = '#0b1122'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = hc; ctx.stroke(); mapIcon(n.hazard, hx, hy, 13, hc);
       if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
-    let tag = n.type==='store' ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
+    let tag = n.type==='store' && !hideSt ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
     if(flagHere) tag = 'FLAGGSHIP';
     if(tag) label(tag, x, y+48, col, 'center', 13);
     if(taken){ ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }

@@ -64,12 +64,12 @@ function loadSave(){
 /* ---------------- sectors & map ---------------- */
 function sectorDef(t){ return DATA.sectors[t || G.sectorType] || DATA.sectors.civilian || Object.values(DATA.sectors)[0]; }
 function genSector(n, type){ return withSeed(`sector${n}:${type}`, () => genSector_(n, type)); }
-function genSector_(n, type){ if(G) G.fleetFights = 0;
+function genSector_(n, type){ if(G) G.fleetFights = 0; if(typeof situEnter==='function' && G) situEnter(type);   // this sector's situation, chosen at the last exit (expansion.js)
   G.sector = n; G.sectorType = type; const sd = sectorDef(type); const final = !!sd.final; if(typeof sagaSector==='function') sagaSector(n, type);
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
   if(typeof challengeCheck==='function'){ challengeCheck(false); runAchCheck(); }
-  const cols = final ? 8 : 7, nodes = [], mix = sd.mix || { event:50, combat:30, store:10, empty:10 };
+  const cols = final ? 8 : 7, nodes = [], mix = (typeof situMix==='function' ? situMix : x => x)(sd.mix || { event:50, combat:30, store:10, empty:10 });
   for(let c=0;c<cols;c++){
     const count = (c===0 || c===cols-1) ? 1 : ri(2,3);
     for(let k=0;k<count;k++){
@@ -80,8 +80,8 @@ function genSector_(n, type){ if(G) G.fleetFights = 0;
       const node = { x, y, col:c, type, links:[], visited:c===0, store:null, hazard:null, nebula:false, distress:false, quest:null };
       if(c>0 && c<cols-1){
         if(Math.random() < (sd.nebula||0)) node.nebula = true;
-        const hz = sd.hazards || {}; for(const h in hz) if(!node.hazard && Math.random() < hz[h]) node.hazard = h;
-        if(type==='event' && Math.random()<.22) node.distress = true;
+        const hz = sd.hazards || {}, hm = typeof situHazard==='function' ? situHazard() : 1; for(const h in hz) if(!node.hazard && Math.random() < hz[h]*hm) node.hazard = h;
+        if(type==='event' && Math.random() < .22*(typeof situDistress==='function' ? situDistress() : 1)) node.distress = true;
       }
       nodes.push(node);
     }
@@ -194,7 +194,7 @@ function arrive_(i){
       G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof startFishing==='function' && G.hazard!=='sun' ? [{ id:'fish', label:'🎣 Cast a line', fn:startFishing }] : null }; save(); }
   }
 }
-function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
+function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (typeof situFleet==='function' ? situFleet() : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
   ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Rebuff Fleet is slower in here too.' }[h]; }
 function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
@@ -203,6 +203,7 @@ function sectorOptions_(){
   const types = Object.keys(DATA.sectors).filter(t => !DATA.sectors[t].final && !DATA.sectors[t].secret && t!=='civilian');
   shuffle(types); const opts = types.slice(0,2);
   if(G.flags.coords && !G.flags.glassDone && DATA.sectors.glass) opts.push('glass');
+  if(typeof pickSituations==='function') pickSituations(opts);   // a crackdown, a salvage boom... (expansion.js)
   return opts;
 }
 function nextSector(type){ if(typeof netGuestCmd==='function' && netGuestCmd({ c:'sector', v:type })){ SYNC.overlay = null; return; } G.modal = null; G.warp = 1; G.warpNode = 'sector:' + type; sfx('jump'); haptic(.4, 300); }
@@ -244,7 +245,7 @@ function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t:fi
 function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
   emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:(ev.moment && typeof sagaCtx==='function' && sagaCtx(ev, o.star)) || { crew:randomCrewName() } }; }
 function pickHail(tag){ if(typeof pickHailFresh==='function') return pickHailFresh(tag); const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
-function reqHidden(q){ return !!(q && (q.race || q.system || q.weaponType || q.drone || q.augment || q.quirk || q.pet)); }
+function reqHidden(q){ return !!(q && (q.hide || q.race || q.system || q.weaponType || q.drone || q.augment || q.quirk || q.pet)); }
 function reqMet(q){
   if(!q) return true; const s = G.ship;
   if(q.race && !s.crew.some(c=>c.race===q.race && c.owner==='p')) return false;
@@ -325,6 +326,7 @@ function applyEffect(e){
   if(typeof marketEffect==='function') marketEffect(e, L);
   if(typeof sagaEffect==='function') sagaEffect(e, L);
   if(typeof campaignEffect==='function') campaignEffect(e, L);
+  if(typeof expansionEffect==='function') expansionEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -396,7 +398,8 @@ function startCombat_(id, o={}){
   if(typeof sagaCombatStart==='function') sagaCombatStart(G.enemy, o);   // your nemesis, back for more
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
-  if(def.boss && typeof campaignBoss==='function') campaignBoss(G.enemy, o);   // Pip helps, Kross gloats (campaign.js)
+  if(def.boss && typeof campaignBoss==='function') campaignBoss(G.enemy, o);
+  if(def.boss && typeof expansionBoss==='function') expansionBoss(G.enemy, o);   // the ghost fleet keeps its promise   // Pip helps, Kross gloats (campaign.js)
   if(G.missiles > 0) G.ammoWarned = false;
   G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
@@ -443,7 +446,7 @@ function finishCombat(kind, offer){
   else {
     if(e.fleet){ L.push(...applyEffect({ scrap: ri(3,8) })); L.unshift('Fleet warships are stripped for war: there is almost nothing worth salvaging. Get ahead of the fleet!'); }
     else { withSeed(`s${G.sector}n${G.map?.cur}loot${G.fightsHere||0}`, () => {
-    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1) * (e.elite ? 1.5 : 1) * (typeof alertLv==='function' && alertLv() >= 4 ? .85 : 1)) };
+    const reward = { scrap: Math.round((ri(20,30) + G.sector*10) * (kind==='crew' ? 1.5 : 1) * (e.elite ? 1.5 : 1) * (typeof alertLv==='function' && alertLv() >= 4 ? .85 : 1) * (typeof situScrap==='function' ? situScrap() : 1)) };
     if(e.elite){ G.stats.vets = (G.stats.vets||0) + 1; if(G.stats.vets >= 3) grant('veteran3'); if(Math.random() < .5) reward.weapon = 'random'; else reward.augment = 'random'; grant('veteran'); }
     if(Math.random()<.6) reward.fuel = ri(1,3); if(Math.random()<.35) reward.missiles = ri(1,3); if(Math.random()<.3) reward.parts = ri(1,2);
     if(!reward.weapon && Math.random() < (kind==='crew' ? .35 : .2)) reward.weapon = 'random';
@@ -488,6 +491,7 @@ function recordRun(win, reason){
 function endRun(win, reason){
   if(typeof challengeCheck==='function') challengeCheck(win);
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason); if(typeof sagaRunEnd==='function') sagaRunEnd(win, reason);
+  if(win && G.flags && G.flags.ghostWake) grant('exp_ghostwin');
   if(typeof campaignRunEnd==='function') campaignRunEnd(win, reason);   // renown, ranks, endings, alert levels (campaign.js)
   if(win){ PROFILE.wins[G.shipDef] = (PROFILE.wins[G.shipDef]||0) + 1; grant('win'); UI.screen = 'win'; }
   else { grant('rebuffed'); UI.screen = 'over'; UI.overReason = reason || ''; }
@@ -523,7 +527,7 @@ function makeStore_(){
   const sp = Object.keys(INSTALL).filter(k => !s.systems[k] && !(k==='clonebay' && s.systems.medbay) && !(k==='medbay' && s.systems.clonebay)); shuffle(sp);
   return { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')), crewSold:false, discount:1 };
 }
-function price(v, st, cat, id){ return Math.max(1, Math.round(v * (st?.discount||1) * (typeof marketMult==='function' ? marketMult(st, cat, id) : 1) * (typeof alertLv==='function' && alertLv() >= 2 ? 1.1 : 1))); }   // store kind, sector, haggling, loyalty (market.js)
+function price(v, st, cat, id){ return Math.max(1, Math.round(v * (st?.discount||1) * (typeof marketMult==='function' ? marketMult(st, cat, id) : 1) * (typeof alertLv==='function' && alertLv() >= 2 ? 1.1 : 1) * (typeof situPrice==='function' ? situPrice() : 1))); }   // store kind, sector, haggling, loyalty (market.js)
 function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
 function upgradeCost(k, lv){ const c = UPCOST[k] || [25,15]; return c[0] + c[1]*lv; }
 function reactorCost(){ return Math.round(12 + G.ship.reactor*2.5); }
@@ -549,7 +553,7 @@ function updateGame(dt){
   if(G.warp>0){ G.warp -= dt;
     if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
       if(typeof n==='string' && n.startsWith('sector:')){ const t = n.slice(7); genSector(G.sector+1, t);
-        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.'), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
+        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.') + (typeof situLine==='function' ? situLine() : ''), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
       else arrive(n); } }
   const live = !G.paused && !blockingModal() && G.warp<=0 && !(typeof mpHold==='function' && mpHold());
   if(live){
