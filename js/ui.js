@@ -418,9 +418,7 @@ function drawSettings(){
       head('Challenge');
       choice('Difficulty', 'difficulty', Object.keys(DIFFICULTY).map(k => [k, DIFFICULTY[k].name]), 'normal', 'Easy: more dodge, scrap and weaker enemies. Applies to new runs.');
       choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down to have more time to think, aim and walk in VR. Applies straight away, mid-run too.');
-      choice('Ship experience', 'shipMode', [['full','Full 3D ship'],['classic','Classic cockpit']], 'full', 'Full: walk through your ship in VR and watch your crew work, fight fires and repel boarders, and beam over to enemy ships. Classic: just the cockpit, console and holotable, like before.', () => { if(inXR() && typeof applyPlayMode==='function'){ if(IN.aboard) beamCaptain(false, true); applyPlayMode(); } });
       head('Help');
-      onoff('Hands-on bonuses (VR)', 'handsOn', true, 'In the full 3D ship: hold the trigger with a hand near a fire, breach or damaged machine to fix it yourself a little faster than crew, and stand on a glowing floor pad to man a system nobody else is covering. Everything can still be done from the console.');
       onoff('Captain\'s tips', 'hints', true, 'Short tips the first time each mechanic comes up.');
       btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
@@ -509,7 +507,7 @@ const HELP_PAGES = [
     ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
     ['Meta Quest', 'Trigger selects, or touch buttons with the controller tip. Left stick walks (push fully to run), right stick turns, left stick click holds up your datapad. A or X pauses, B or Y opens the map. Grip grabs the screen or the extinguisher. Glance at your left wrist for the wrist menu.'],
     ['Your bridge in VR', 'Tactical and engineering stations flank the holotable. Point at the enemy ship outside and pull the trigger to aim every gun at that room. Grip the jump lever by your right hand and pull it back to open the star map on the holotable; point at a beacon and pull it again (or pull the trigger) to jump.'],
-    ['Your ship in VR', 'Walk through the bridge door into your ship. Hold the trigger near a fire, breach or broken machine to fix it, or spray fires with the extinguisher by the door. Stand on a glowing pad to man a station. Beam over from the teleporter to sabotage enemy systems.'],
+    ['Mixed reality', 'On a Quest with passthrough, the AR button floats the console and the holotable in your own room. Everything works the same as the flat screen: point and pull the trigger.'],
     ['Comfort', 'Settings has snap or smooth turning, teleport-only movement, a comfort vignette, seated and lying-down play, player height, game speed and bigger text.'],
     ['Saving', 'The run saves itself between fights. Record, on the title screen, can save a backup file of everything to load on another device.'],
     ['Game controller', 'D-pad jumps between buttons and rooms, left stick moves a cursor, A selects, B backs out, Start pauses. X hold fire · Y map · LB/RB weapons · LT stations · RT autofire · View ship. Arrow keys and Enter work the same way.'] ]],
@@ -543,7 +541,7 @@ function drawEnd(){
   const win = UI.screen==='win', last = UI.lastRun;
   label(win ? 'Mission complete' : 'Run over', W/2, 172, win ? C.good : C.hostile, 'center', 22);
   T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
-  { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const ls = lines(txt, 1100, `400 21px ${FM}`); ls.slice(0,2).forEach((l,i) => T(l, W/2, 312 + i*28, { s:21, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
+  { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const big = lines(txt, 1100, `400 21px ${FM}`).length <= 2, ls = lines(txt, 1180, `400 ${big ? 21 : 17}px ${FM}`); ls.slice(0,3).forEach((l,i) => T(l, W/2, (big ? 312 : 302) + i*(big ? 28 : 23), { s:big ? 21 : 17, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
   if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap found', G.stats.scrap], ['Jumps', G.stats.jumps], ['Score', last ? last.score : runScore(win)]];
     panel(W/2-640, 380, 1280, 150, 12);
     st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
@@ -1001,7 +999,7 @@ function drawArmory(){
     T(d.heal ? `heal ${d.heal}` : d.type==='bomb' ? `${d.sysDamage||0} sys` : `${d.damage}×${d.shots||1}`, cx+cw-8, cy+52, { s:12, a:'right', c:C.muted });
     for(let p=0;p<d.power;p++){ rr(cx+8+p*16, cy+58, 13, 9, 2); ctx.fillStyle = wp.on ? C.amber : C.line; ctx.fill(); }
     bar(cx+8, cy+72, cw-16, 9, wp.charge/d.charge, ready ? C.good : C.amber);
-    T(!wp.on ? 'Off' : ready ? (wp.target==null ? 'Ready' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+8, cy+96, { s:12, c: ready ? C.good : C.muted });
+    { const noAmmo = (d.type==='missile' || d.type==='bomb') && G.missiles<=0; T(!wp.on ? 'Off' : noAmmo ? 'No missiles' : ready ? (wp.target==null ? 'Ready' : G.hold ? 'Holding' : 'Firing') : `${(d.charge-wp.charge).toFixed(1)}s`, cx+8, cy+96, { s:12, c: wp.on && noAmmo ? C.hostile : ready ? C.good : C.muted }); }
     // the whole card is a big target to press (handy on a phone): it powers the weapon if needed and picks it for aiming
     region(cx, cy, cw, 100, () => { if(!wp.on){ weaponToggle(i); if(!wp.on) return; } if(UI.selWeapon===i){ UI.selWeapon = null; UI.mode = null; } else if((G.enemy && !G.enemy.dead) || d.heal){ UI.selWeapon = i; UI.mode = null; UI.selCrew = null; } }, 'card:' + i);
     const pwrL = wp.on ? 'Power off' : 'Power on', aimL = wp.target!=null ? 'Clear' : (sel ? 'Pick room' : 'Target');
@@ -1417,6 +1415,33 @@ function drawStoreModal(m){
 function sysDesc(k){ return { shields:'Every 2 power gives one shield layer that blocks a shot and recharges.', engines:'More power means more evasion. Needs a pilot at the helm.', oxygen:'Keeps the air breathable in every room.', weapons:'Powers your weapons. Each weapon needs its own power.', piloting:'Someone must sit at the helm to dodge and to charge the jump drive. Higher levels add an autopilot.', drones:'Power drones that fight, defend, repair or board.', teleporter:'Send up to 4 crew to the enemy ship and bring them back.', cloaking:'Vanish: +60% evasion and enemy weapons stop charging.',
   hacking:'Attach a drone to an enemy system, then pulse it to shut it down.', mindcontrol:'Turn an enemy crew member to your side for a while.', medbay:'Heals crew standing inside it.', clonebay:'Brings dead crew back after a short delay.',
   battery:'A backup battery that adds temporary reactor power.', sensors:'See inside enemy ships: damage at level 1, crew at 2, weapon charge at 3.', doors:'Lets you open and close doors. Stronger doors slow boarders.' }[k] || ''; }
+/* what the next level of a system does (and a warning flag when it matters) */
+function sysNext(s, k, n){ const wNeed = s.weapons.reduce((t,w) => t + (DATA.weapons[w.id]?.power||0), 0), dNeed = s.drones.reduce((t,d) => t + (DATA.drones[d.id]?.power||0), 0);
+  switch(k){
+    case 'engines': return [`next: dodge +5%`, false];
+    case 'weapons': return wNeed > s.systems.weapons.max ? [`your guns need ${wNeed} bars`, true] : [`next: ${n} bars for guns`, false];
+    case 'drones': return dNeed > s.systems.drones.max ? [`your drones need ${dNeed} bars`, true] : [`next: ${n} bars for drones`, false];
+    case 'oxygen': return ['next: air refills faster', false];
+    case 'medbay': return ['next: heals crew faster', false];
+    case 'clonebay': return ['next: clones crew faster', false];
+    case 'teleporter': return ['next: recharges faster', false];
+    case 'cloaking': return ['next: cloak lasts longer', false];
+    case 'hacking': return ['next: hack pulse lasts longer', false];
+    case 'mindcontrol': return ['next: control lasts longer', false];
+    case 'piloting': return [n===2 ? 'next: autopilot can dodge' : 'next: better autopilot', false];
+    case 'sensors': return [n===2 ? 'next: see enemy crew' : 'next: see enemy weapon charge', false];
+    case 'doors': return ['next: tougher doors vs boarders', false];
+    case 'battery': return ['next: more backup power', false];
+  } return null; }
+/* one plain piece of advice for the upgrade screen */
+function shipAdvice(s){ const y = k => s.systems[k]?.max || 0, wNeed = s.weapons.reduce((t,w) => t + (DATA.weapons[w.id]?.power||0), 0), need = MAIN.reduce((t,k) => t + y(k), 0);
+  if(s.systems.shields && y('shields') < 4) return 'A second shield layer (Shields level 4) is the best early upgrade: it stops most single shots.';
+  if(s.systems.weapons && wNeed > y('weapons')) return `Your guns need ${wNeed} weapon bars but the system has ${y('weapons')}. Upgrade Weapons, or some guns stay off.`;
+  if(need > s.reactor + 1) return `Your systems could use ${need} bars, but the reactor gives ${s.reactor}. Some will always be unpowered: think about the reactor.`;
+  if(y('engines') < 3) return 'Engines level 3 makes you much harder to hit. Cheap, and it adds up.';
+  if(G.sector >= 4 && y('shields') < 6) return 'From sector 5 enemies carry more guns: a third shield layer (Shields level 6) helps a lot.';
+  if(G.missiles < 3 && s.weapons.some(w => ['missile','bomb'].includes(DATA.weapons[w.id]?.type))) return 'You are low on missiles. Stores sell them: missiles go straight through shields.';
+  return null; }
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
@@ -1427,14 +1452,18 @@ function drawShipModal(){
       T(SYSN[k], x, y+30, { s:20, f:FD, w:700, c:SYSC[k] });
       for(let b=0;b<capL;b++){ rr(x+170+b*24, y+12, 19, 24, 3); ctx.fillStyle = b<sy.max ? SYSC[k] : C.panel2; ctx.fill(); }
       btn(x+380, y+6, 170, 44, sy.max>=capL ? 'Maxed' : `+1 · ${cost}`, () => buy(cost, () => { sy.max++; if(SUB.includes(k)) {} }), { disabled: sy.max>=capL || G.scrap<cost, s:16 });
-      if(k==='shields' && sy.max<capL) T(sy.max%2 ? 'next level adds a layer' : `layer ${Math.floor(sy.max/2)+1} at level ${sy.max+2}`, x+170, y+52, { s:12, c: sy.max%2 ? C.good : C.muted }); };
+      if(k==='shields' && sy.max<capL) T(sy.max%2 ? 'next level adds a layer' : `layer ${Math.floor(sy.max/2)+1} at level ${sy.max+2}`, x+170, y+52, { s:12, c: sy.max%2 ? C.good : C.muted });
+      else if(sy.max<capL){ const nx = sysNext(s, k, sy.max+1); if(nx) T(nx[0], x+170, y+52, { s:12, c:nx[1] ? C.warn : C.muted, max:200 }); } };
     const main = MAIN.filter(k=>s.systems[k]), sub = SUB.filter(k=>s.systems[k]);
     label('Main systems', cx, y0+10, C.muted, 'left', 14); main.forEach((k,i) => sysRow(k, cx, y0+20 + i*58));
     const rx = f.x+740; label('Subsystems (no reactor power)', rx, y0+10, C.muted, 'left', 14); sub.forEach((k,i) => sysRow(k, rx, y0+20 + i*58));
     const ry = y0+40 + Math.max(sub.length,1)*58; const rc = reactorCost();
     T('Reactor', rx, ry+30, { s:20, f:FD, w:700, c:C.good }); T(`${s.reactor} bars`, rx+170, ry+30, { s:18 });
     btn(rx+380, ry+6, 170, 44, s.reactor>=25 ? 'Maxed' : `+1 · ${rc}`, () => buy(rc, () => { s.reactor++; }), { disabled: s.reactor>=25 || G.scrap<rc, s:16 });
-    T('New systems can be installed at stores.', rx, ry+100, { s:15, c:C.muted });
+    { const need = MAIN.reduce((t,k) => t + (s.systems[k]?.max||0), 0); T(need > s.reactor ? `Your systems can use ${need} bars: ${need - s.reactor} more than the reactor gives` : `Enough to power every system (${need} bars)`, rx, ry+70, { s:14, c: need > s.reactor ? C.warn : C.muted, max:560 }); }
+    T("New systems can be installed at stores.", rx, ry+104, { s:15, c:C.muted });
+    { const adv = shipAdvice(s); if(adv){ rr(cx, f.y+f.h-110, 1060, 64, 10); ctx.fillStyle = hexA(C.cyan,.08); ctx.fill(); ctx.strokeStyle = hexA(C.cyan,.4); ctx.lineWidth = 1.5; ctx.stroke();
+      label('Quartermaster says', cx+20, f.y+f.h-84, C.cyan, 'left', 12); T(adv, cx+20, f.y+f.h-60, { s:16, max:1020 }); } }
   } else if(UI.tab==='crew'){
     const crew = []; for(const sh of [G.ship, G.enemy]) if(sh) for(const c of sh.crew) if(c.owner==='p' && !c.drone) crew.push(c);
     crew.forEach((c,i) => { const x = cx + (i%2)*690, y = y0 + Math.floor(i/2)*150, race = DATA.races[c.race]||{};

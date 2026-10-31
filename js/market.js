@@ -423,7 +423,7 @@ function wishJump(){
 ACHIEVEMENTS.push({ id:'market_courier', name:'Special Delivery', desc:'Fill three delivery orders in one run.' }, { id:'market_mags', name:'Mags\'s Favourite', desc:'Become Mags Vetch\'s favourite customer.' });
 function magsEffect(e, L){
   if(e.magsMeet){ G.mags = G.mags || { met:0, hearts:0 }; G.mags.met++; G.mags.hearts += e.magsMeet;
-    if(G.mags.met < 5 && !G.later.some(l => l.event==='m_mags_again')) G.later.push({ event:'m_mags_again', jumps:ri(5, 8) });
+    if(G.mags.met < 3 && !G.later.some(l => l.event==='m_mags_again')) G.later.push({ event:'m_mags_again', jumps:ri(9, 13) });   // she turns up now and then, not every sector
     if(G.mags.hearts >= 6 && !G.mags.gifted && !G.later.some(l => l.event==='m_mags_gift')) G.later.push({ event:'m_mags_gift', jumps:ri(2, 4) });
     if(G.mags.met===1 && typeof sagaNote==='function') sagaNote('mags', `In sector ${G.sector} the crew met Mags Vetch, a travelling merchant with a ship full of bells and opinions.`); }
   if(e.magsStall){ G.magsShop = magsStore(); G.openMags = true; }
@@ -437,7 +437,8 @@ Object.assign(BASE.events, {
     { text:'"Not today, thanks."', effect:{ text:'"Suit yourself. I\'ll find you again. I always do." The bells jingle as she goes.', magsMeet:0 } } ] },
   m_mags_again:{ moment:true, noStar:true, questOnly:true, once:false, star:'any', art:'market', text:'Bells on the comms: Mags Vetch\'s caravan is back. {magsline}', choices:[
     { text:'Browse her wares.', effect:{ text:'She has new stock, and as always, she remembers what you like.', magsMeet:1, magsStall:true } },
-    { text:'Tell her about the voyage.', effect:{ text:'She listens to all of it, laughs at the right bits, and goes quiet at the sad ones. She leaves a tin of biscuits for the crew.', magsMeet:2, crewHeal:15 } } ] },
+    { text:'Tell her about the voyage.', effect:{ text:'She listens to all of it, laughs at the right bits, and goes quiet at the sad ones. She leaves a tin of biscuits for the crew.', magsMeet:2, crewHeal:15 } },
+    { text:'Wave her on: no time today.', effect:{ text:'"Busy busy. I\'ll catch you later, love." The bells fade into the dark.', magsMeet:0 } } ] },
   m_mags_gift:{ moment:true, noStar:true, questOnly:true, star:'any', art:'market', text:'Mags Vetch\'s caravan, again, but she does not open her shop. She comes aboard with a box. "You lot are my favourite customers. Don\'t tell the others. This was my husband\'s lucky charm, and these are the best seeds I\'ve got. Go and win, alright?"', choices:[
     { text:'Hug her.', effect:{ text:'She pretends to hate it. She does not hate it.', magsGift:true, crewHeal:20 } } ] }
 });

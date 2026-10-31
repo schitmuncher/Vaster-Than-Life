@@ -51,16 +51,10 @@ function vuiInitWrist(){
     c = cell(5); vuiBtn(Wd, c.x, c.y, bw, bh, 'POSE: ' + ({ standing:'STAND', seated:'SEAT', lying:'LIE' }[SET.vrPose||'standing']), () => { const o = ['standing','seated','lying']; setPlayPose(o[(o.indexOf(SET.vrPose||'standing')+1)%3]); }, { s:24 });
     c = cell(6); vuiBtn(Wd, c.x, c.y, bw, bh, SET.vrRunMode==='off' ? 'RUN: OFF' : 'RUN: ON', () => { SET.vrRunMode = SET.vrRunMode==='off' ? 'push' : 'off'; saveProfile(); }, { s:26, fill:SET.vrRunMode!=='off', col:VCOL.good });
     c = cell(7); vuiBtn(Wd, c.x, c.y, bw, bh, 'SCREEN HERE', () => { bringConsole(); }, { s:22, col:VCOL.cyan });
-    const aboard = typeof IN!=='undefined' && IN.aboard, canGo = typeof IN!=='undefined' && IN.foe && G && G.enemy && !G.enemy.dead;
-    c = cell(8); vuiBtn(Wd, c.x, c.y, bw, bh, aboard ? 'BEAM BACK' : 'BEAM OVER', () => { if(aboard) beamCaptain(false); else if(canGo) beamCaptain(true); else toast('No ship to board right now.'); }, { s:24, col:'#b48cff', disabled:!aboard && !canGo });
-    const nAl = typeof alertRooms==='function' ? alertRooms().length : 0, inShip = typeof IN!=='undefined' && IN.own && IN.own.group.visible;
-    c = cell(9); vuiBtn(Wd, c.x, c.y, bw, bh, nAl ? `ALERT ×${nAl}` : 'NO ALERTS', () => goToAlert(), { s:24, col:VCOL.bad, fill:nAl>0 && (Math.floor(VUI.t*2)%2===0), disabled:!nAl || !!aboard });
-    c = cell(10); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO BRIDGE', () => goToBridge(), { s:24, col:VCOL.amber, disabled:!!aboard });
-    c = cell(11); vuiBtn(Wd, c.x, c.y, bw, bh, 'TO TELEPORT', () => goToRoomSys('teleporter'), { s:22, col:'#b48cff', disabled:!inShip || !!aboard });
     const sp = SET.speed || 1;
-    c = cell(12); vuiBtn(Wd, c.x, c.y, bw, bh, `SPEED ${Math.round(sp*100)}%`, () => { const L = [.5,.75,1,1.25]; SET.speed = L[(L.indexOf(sp)+1) % L.length]; saveProfile(); }, { s:22, col:VCOL.cyan, fill:sp!==1 });
-    c = cell(13); vuiBtn(Wd, c.x, c.y, bw, bh, G && G.autofire ? 'AUTOFIRE' : 'FIRE: HOLD', () => { if(G) G.autofire = !G.autofire; }, { s:22, col:VCOL.bad, fill:!!(G && G.autofire), disabled:!G });
-    c = cell(14); vuiBtn(Wd, c.x, c.y, bw, bh, 'STATIONS', () => { if(G){ returnToStations(G.ship); toast('Crew back to stations.'); } }, { s:22, col:VCOL.good, disabled:!G });
+    c = cell(8); vuiBtn(Wd, c.x, c.y, bw, bh, `SPEED ${Math.round(sp*100)}%`, () => { const L = [.5,.75,1,1.25]; SET.speed = L[(L.indexOf(sp)+1) % L.length]; saveProfile(); }, { s:22, col:VCOL.cyan, fill:sp!==1 });
+    c = cell(9); vuiBtn(Wd, c.x, c.y, bw, bh, G && G.autofire ? 'AUTOFIRE' : 'FIRE: HOLD', () => { if(G) G.autofire = !G.autofire; }, { s:22, col:VCOL.bad, fill:!!(G && G.autofire), disabled:!G });
+    c = cell(10); vuiBtn(Wd, c.x, c.y, bw, bh, 'STATIONS', () => { if(G){ returnToStations(G.ship); toast('Crew back to stations.'); } }, { s:22, col:VCOL.good, disabled:!G });
     g.font = "500 22px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText(`height ${h>0?'+':''}${h} cm`, 618, 46);
   });
   W_.mesh.visible = false; VUI.wrist = W_;
@@ -110,7 +104,6 @@ function vuiRoomConsole(I, R){
     else if(k==='doors'){ vuiBtn(Wd, ax, by, 96, bh, 'OPEN', () => { for(const d of sh.doors) if(d.b>=0){ d.open = true; d.broken = 0; } }, { s:22, col:VCOL.good }); vuiBtn(Wd, ax + 104, by, 96, bh, 'SHUT', () => { for(const d of sh.doors) if(d.b>=0) d.open = false; }, { s:22, col:VCOL.bad }); }
     else if(k==='cloaking'){ const on = sh.cloak && sh.cloak.t > 0; vuiBtn(Wd, ax, by, aw, bh, on ? 'CLOAKED' : 'CLOAK', () => { if(!activateCloak(sh)) toast('Cloak not ready.'); }, { s:24, fill:on, col:'#9fe8ff' }); }
     else if(k==='piloting'){ vuiBtn(Wd, ax, by, aw, bh, G.crewAuto ? 'AUTO CREW ON' : 'AUTO CREW OFF', () => { G.crewAuto = !G.crewAuto; }, { s:20, fill:G.crewAuto, col:VCOL.good }); }
-    else if(k==='teleporter'){ const can = IN.foe && G.enemy && !G.enemy.dead; vuiBtn(Wd, ax, by, aw, bh, 'BEAM OVER', () => beamCaptain(true), { s:24, col:'#b48cff', disabled:!can }); }
     else { g.font = "500 20px 'IBM Plex Mono', monospace"; g.fillStyle = VCOL.muted; g.textAlign = 'left'; const t = { shields:`${Math.floor(s.power/2)} shield layers`, engines:`Evade ${Math.round(typeof evasion==='function' ? evasion(sh) : 0)}%`, medbay:'Heals crew in this room', sensors:'Shows enemy rooms', battery:'Backup power', drones:'Drones need parts' }[k] || 'Power it to use it'; g.fillText(t, ax, by + 42); }
     if(k==='weapons'){ // aim each gun at an enemy system from here: each press picks the next target
       const e = G.enemy && !G.enemy.dead ? G.enemy : null; const ws = sh.weapons.slice(0, 4), bw = 112;

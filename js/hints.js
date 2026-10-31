@@ -80,7 +80,7 @@ function checkHints(dt){
   const s = G.ship, e = G.enemy && !G.enemy.dead ? G.enemy : null, m = G.modal;
   if(!m && G.stats.jumps===0 && !G.enemy) hint('welcome');
   if(m?.type==='map'){ hint('map'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
-  if(typeof inXR==='function' && inXR()){ hint('vr'); if(SET.shipMode!=='classic' && UI.hintQ && !UI.hintQ.includes('vr') && UI.hint?.id!=='vr') hint('interior'); }
+  if(typeof inXR==='function' && inXR()){ hint('vr'); }
   if(m?.type==='store'){ hint('store'); if(s.hull < s.maxHull*.6) hint('hull'); }
   if(m?.type==='event') hint('event');
   if(m?.type==='surrender') hint('surrender');

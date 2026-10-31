@@ -5,7 +5,9 @@
    ========================================================================= */
 let G = null;
 const UI = { screen:'title', selCrew:null, selCrews:[], selWeapon:null, mode:null, page:0, selShip:null, toast:null, tab:'systems', storeTab:'weapons', overReason:'', modsPage:0 };
-function toast(t){ UI.toast = { text:t, t:2.6 }; }
+/* ship names often start with "The": "the The Pestrel" reads badly, so it becomes "The Pestrel" */
+function fixThe(t){ return typeof t==='string' ? t.replace(/\b([Tt]he) (The )/g, '$2') : t; }
+function toast(t){ UI.toast = { text:fixThe(t), t:2.6 }; }
 
 /* ---------------- seeds ----------------
    Every run has a seed. The same seed gives the same sector maps, beacon events,
@@ -121,7 +123,8 @@ function jumpTo(i){
   if(G.fuel<=0){ G.modal = { type:'stranded' }; return; }
   if(G.enemy && !G.enemy.dead && typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(G.enemy, 'when the crew fled the fight');
   if(G.enemy && !G.enemy.dead){ const aboard = G.enemy.crew.filter(c=>c.owner==='p' && !c.drone); if(aboard.length){ for(const c of aboard) killCrew(G.enemy, c); toast('Crew left aboard the enemy ship are lost.'); } }
-  G.fuel--; G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump'); haptic(.4, 300); if(Math.random()<.35) say('jump');
+  G.fuel--; if(G.fuel <= 2 && G.fuelWarn!==G.sector){ G.fuelWarn = G.sector; setTimeout(() => toast(G.fuel ? `Fuel low: ${G.fuel} jump${G.fuel===1?'':'s'} left. Stores sell fuel for 3 scrap.` : 'Out of fuel! You can only wait for help, and the Fleet.'), 1200); }
+  G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump'); haptic(.4, 300); if(Math.random()<.35) say('jump');
 }
 function leaveCombat(){
   if(G.enemy){ for(const c of [...G.ship.crew]) if(c.owner==='e' && c.drone) G.ship.crew.splice(G.ship.crew.indexOf(c),1); }
@@ -235,9 +238,9 @@ function pickEvent(node){
 function noteGain(k){ if(!G) return; (G.gains = G.gains || {})[k] = G.stats?.jumps || 0; }
 function randomCrewName(race){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && (!race || c.race===race)); return l.length ? pick(l).name : 'Someone'; }
 function fillText(t, cx={}){ const out = String(t||'').replace(/\{crew\}/g, cx.crew||'Your crew').replace(/\{who\}/g, cx.who||cx.crew||'Your crew').replace(/\{ship\}/g, G?.ship?.name||'your ship')
-  .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); return typeof sagaFill==='function' ? sagaFill(out, cx) : out; }
+  .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); return fixThe(typeof sagaFill==='function' ? sagaFill(out, cx) : out); }
 function quirkCrewName(q){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && c.quirk===q); return l.length ? pick(l).name : 'Someone'; }
-function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t }); if(G.log.length>80) G.log.shift(); }
+function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t:fixThe(t) }); if(G.log.length>80) G.log.shift(); }
 function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
   emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:(ev.moment && typeof sagaCtx==='function' && sagaCtx(ev, o.star)) || { crew:randomCrewName() } }; }
 function pickHail(tag){ if(typeof pickHailFresh==='function') return pickHailFresh(tag); const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
@@ -267,7 +270,8 @@ function reqLabel(q){ if(!q) return '';
 function costLabel(c, text){ if(!c) return ''; if(text && /\d+\s*(scrap|fuel|missile|drone part)/i.test(text)) return ''; const p=[]; for(const k of ['scrap','fuel','missiles','parts']) if(c[k]) p.push(`${c[k]} ${k==='parts'?'drone parts':k}`); return p.length ? ` (costs ${p.join(', ')})` : ''; }
 function chooseOption(ch){
   const prev = G.modal || {}; const cx = Object.assign({}, prev.ctx||{ crew:randomCrewName() });
-  cx.who = ch.req?.race ? randomCrewName(ch.req.race) : ch.req?.quirk ? quirkCrewName(ch.req.quirk) : cx.crew;
+  const rk = ch.req?.race || (ch.req?.quirk ? 'q:' + ch.req.quirk : '_');
+  cx.who = (prev.who && prev.who[rk]) || (ch.req?.race ? randomCrewName(ch.req.race) : ch.req?.quirk ? quirkCrewName(ch.req.quirk) : cx.crew);   // the same person the choice named
   if(ch.cost){ G.scrap -= ch.cost.scrap||0; G.fuel -= ch.cost.fuel||0; G.missiles -= ch.cost.missiles||0; G.parts -= ch.cost.parts||0; }
   const ck = `s${G.sector}n${G.map?.cur}c${hashStr(ch.text||'')}`;
   let e = ch.effect || {};
@@ -286,9 +290,9 @@ function applyEffect(e){
   const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1) * (1 + augFx(s,'scrap')) * (G.chScrap || 1);
   if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
-  if(e.missiles){ G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
+  if(e.missiles){ if(e.missiles > 0) G.ammoWarned = false; G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
-  if(e.hull){ s.hull = clamp(s.hull + e.hull, 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }
+  if(e.hull){ s.hull = clamp(s.hull + e.hull, e.hull < 0 && !G.enemy ? Math.min(1, s.hull) : 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }   // an event can hurt badly, but never ends the run on its own
   if(e.crew){ noteGain('crew'); const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
     if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); if(typeof sagaJoined==='function') sagaJoined(c); L.push(`${c.name} the ${DATA.races[c.race].name}${c.quirk && typeof quirkName==='function' ? ' (' + quirkName(c).toLowerCase() + ')' : ''} joins your crew`); checkCrewAch(); }
     else { const cand = newCrew(race, 'p'); G.recruitOffer = cand; L.push(`${cand.name} the ${DATA.races[cand.race].name} wants to join, but every bunk is full. You can swap someone out next`); } }
@@ -393,6 +397,7 @@ function startCombat_(id, o={}){
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
   if(def.boss && typeof campaignBoss==='function') campaignBoss(G.enemy, o);   // Pip helps, Kross gloats (campaign.js)
+  if(G.missiles > 0) G.ammoWarned = false;
   G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
   const s = G.ship; s.hacked = null; s.hackLaunched = false;
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
@@ -420,7 +425,11 @@ function finishCombat(kind, offer){
   if(kind!=='fled') for(const c of [...G.ship.crew]) if(c.owner==='e') G.ship.crew.splice(G.ship.crew.indexOf(c),1);
   leaveCombat();
   for(const c of G.dna){ c.hp = c.maxHp; c.path = []; c.mcT = 0; G.ship.crew.push(c); placeCrew(G.ship, c, c.station ?? 0); } G.dna = [];
-  if(kind==='fled'){ const lf = []; if(typeof sagaFightLines==='function') sagaFightLines(lf); G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.${lf.length ? ' ' + lf.join(' ') : ''}` }; if(typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(e, 'by jumping out before the crew could finish them'); save(); return; }
+  if(kind==='fled'){ const lf = []; if(typeof sagaFightLines==='function') sagaFightLines(lf);
+    let extra = '';
+    if(e.stalemate){ extra = ' Your guns could not get through their shields. More shots in one volley (another laser, or Hold fire then Fire volley), a missile, or an ion weapon would.';
+      if(G.scrap < 15){ const v = ri(8, 14) + G.sector*2; G.scrap += v; G.stats.scrap += v; extra += ` As they go, your crew nets some drifting debris: +${v} scrap.`; } }   // a little mercy for a ship that is stuck and broke
+    G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.${extra}${lf.length ? ' ' + lf.join(' ') : ''}` }; if(typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(e, 'by jumping out before the crew could finish them'); save(); return; }
   if(wasBoss){ flagDefeated(); return; }
   G.stats.kills++; PROFILE.kills++; saveProfile(); if(PROFILE.kills>=25) grant('kills25'); if(PROFILE.kills>=100) grant('kills100');
   if(kind!=='surrender' && (G.combatT||0) < 20) grant('quickdraw');
@@ -458,7 +467,8 @@ function flagDefeated(){
   const f = G.flag; grant('phase1'); if(typeof sagaNote==='function') sagaNote('boss', f && f.phase >= 2 ? 'At Fedoration command, the Flaggship finally broke apart.' : `They beat the Flaggship${f && f.phase ? ' a second time' : ''}, and it ran.`);
   if(!f || f.phase >= 2){ endRun(true); return; }
   f.phase++; f.step = 1; moveFlagship();
-  G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command. Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
+  const bp = curDiff().bossPatch || 0, sh = G.ship, got = Math.min(bp, sh.maxHull - sh.hull); if(got > 0) sh.hull += got;   // Easy: a Fedoration repair tender catches up between phases
+  G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command.${got > 0 ? ` A Fedoration repair tender catches up and patches ${got} hull.` : ''} Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
   save();
 }
 function runScore(win){ return Math.round(((win ? 10000 : 0) + G.sector*1000 + G.stats.kills*40 + Math.round(G.stats.scrap/5) + (G.flag ? G.flag.phase*500 : 0)) * (1 + .1*(G.alert||0))); }

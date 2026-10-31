@@ -104,6 +104,10 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Veteran beacons** are marked on the map from sector 2: harder ships that always carry a weapon or an augment.
 - **Rebuff alert.** Win on Normal or Hard to unlock alert levels 1 to 8, each adding a twist for more renown and score.
 - **The killing blow** lands in slow motion with a banner.
+- **Upgrade advice.** The Ship screen says what the next level of each system does, warns when your guns need more Weapons power or your systems want more reactor than you have, and the quartermaster suggests one upgrade.
+- **Clearer fights.** Missile weapons say "No missiles" when you run dry (with a one-time warning), and when an enemy gives up because neither ship can land a blow, you're told why and what would help. A broke ship nets a little debris as they go.
+- **Fairer events.** An event on its own can hurt you badly but never ends the run: it leaves at least 1 hull.
+- **Less repetition.** Your nemesis changes what they say as the feud goes on, and outrunning them only works once. Mags Vetch visits a few times a run, not every sector.
 - **Fairer power.** Weapons and Drones only hold the bars their powered weapons and drones use: turning one off hands its power back to the reactor, and + powers the next one in line.
 
 **Ships and crew**
@@ -232,39 +236,16 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **Shoot at the real ship.** Point at the enemy ship outside the canopy and pull the trigger: every powered gun locks onto the room you pointed at, with numbered crosshairs on its hull. With a weapon or crew member selected, it aims that weapon or sends the crew, just like the main screen.
 - **3D star map.** Open the map and the holotable becomes a star chart of the sector: beacons, routes, your trail, the fleet's front and the exit. Point at a beacon to read about it, and pull the trigger to jump.
 - **Jump lever.** A lever by your right hand shows the drive's charge and glows when it's ready. Grip it and pull it back: the star map opens. Point at a beacon with your other hand and pull it again to jump.
-- **Fight fires yourself.** Take the extinguisher from the rack on the rear wall and spray it at fires anywhere on the ship.
-- **Captain's sidearm.** Point at a boarder on your ship and pull the trigger to shoot it with your blaster (6 damage, short cooldown). Take one down for a medal.
 - **Hits you can feel.** Sparks shower the bridge when the hull is hit.
 - **Guided tour.** New captains get a short tour of the deck the first time they enter VR. Replay it from Settings > VR console.
 - Grab the holotable to move and turn it, or scale it up with two hands. Point at a room on a 3D ship and pull the trigger to target it or move crew there, exactly like the main screen.
 
-**Your whole ship, in 3D (VR)**
-- The bridge is your cockpit. Walk through the door at the back, down the corridor and into the ship: every room, door, airlock and window is built from your real ship layout, with a working machine for each system (spinning shield rings, glowing engine coils, weapon racks with live charge bars, oxygen tanks and fans, medbay beds, a teleporter pad, a cloaking crystal and more) and a label showing its power, damage and air.
-- Your crew walk the corridors as life-size people of every race: humans of every look, Pebblekin, Enjinn, Voltans, Sloogs, Mantlis, Glassborn and drones. They really do their jobs: manning stations, repairing with sparks flying, putting out fires with extinguishers, healing in the medbay, and brawling with boarders, who arrive in red. Nameplates show each one's name, job and health.
-- Everything you see is the simulation: fires burn and smoke, breaches suck air out of the room, low oxygen hazes red, damaged machines spark and smoke, ion hits arc blue, lights flicker when a room is hit, doors slide open for crew and for you, airlocks vent, broken doors spark.
-- You're the captain: you give orders, the crew do the work. Point at a crew member and pull the trigger to select them, point at a floor to send them there, point at a door to open or close it. Your datapad and pop-out windows go everywhere with you, and SCREEN HERE on the wrist menu brings the main screen over.
-- In a fight, stand by your teleporter and press **Beam me over** to visit the enemy ship and watch your away team (or the enemy crew) up close; **Beam me back** returns you. You come home automatically if the fight ends.
-- Settings > Gameplay > Ship experience switches between **Full 3D ship** and **Classic cockpit** (just the bridge, console and holotable).
-
-**VR ship overhaul: space, height, running and interaction**
-- The interior is roomier and brighter: 2 m cells, 3.4 m ceilings, 1.5 m wide and 2.55 m tall doorways, a 1.8 m wide corridor, lighter paint, lit ceiling panels, wall light strips, large hull windows with a low sill, and skylights open to space. The bridge door is wider too.
-- **Player height** slider in Settings > VR & comfort (-60 to +60 cm, with -/+ buttons) applies live, in the pause screen too. Seated and lying modes keep their own pose.
-- **Walking and running**: push the left stick to walk (speed set in Settings, 0.8 to 2.4 m/s); push it fully forward to run (up to 5 m/s, Running can be set to Off). Speed eases in and out, footsteps sound and tick the controller, and the vignette tightens while you run. **Comfort presets** (Comfortable, Balanced, Free) set turning, vignette and speed in one go.
-- **Wrist menu**: glance at your left wrist for pause, settings, height, comfort, datapad, screen-here and beam buttons you poke with the right ray.
-- **Room consoles**: a small panel on the wall of each room shows power, damage, oxygen and crew, with buttons to add or remove power, send help and open or close doors.
-- **Smart orders**: point at a burning, breached or damaged room with nobody selected and the nearest free crew member goes to deal with it.
-- **Hands-on play** (Settings > Gameplay, on by default; everything can still be done from the console):
-  - **Fix it yourself**: a burning, breached or damaged room shows a glowing marker. Hold a hand near it and the trigger to put out the fire, patch the breach or repair the machine, at the same speed as a crew member. The edge is being there at once (the wrist menu's ALERT button jumps you to the nearest emergency), not working faster.
-  - **Captain's station**: rooms with piloting, engines, weapons, shields, sensors, doors, oxygen or medbay have a floor pad. Stand on it for a second to man that system when no crew member does. Step off to stand down.
-  - **Sabotage**: when you beam over to an enemy ship, red markers appear at its power systems. Hold a hand near one with the trigger to lock that system down for 10 seconds. You can't be hurt aboard, so it is safe.
-  - **Salvage**: destroy an enemy and a crate appears in a room of your ship. Hold the trigger near it for a little bonus scrap.
-- **Quick travel and alerts**: the wrist menu has ALERT (jump to the nearest fire, breach or damaged system), TO BRIDGE and TO TELEPORT. You get a small buzz when a new emergency starts. Pointing at a crew member, floor spot or door shows a highlight.
-- **Living crew**: idle crew turn to look at you and follow you with their heads, say hello, shout when they fight fires or boarders, and thank you when you fix something or cover a post, in speech bubbles.
-- **Better metal**: panelled, weathered hull plating with vents, machines with panel seams, rivets and caution stripes, brushed trim, and enemy ships with a panel-and-rivet hull, a pointed nose and a faction look (spiked pirates, blade-winged rebels, crested aliens).
+**VR and mixed reality**
+- The walkable full-scale 3D ship has been retired for now, so work can focus on the flat-screen game. VR keeps the bridge, the holotable, the tactical and engineering stations, the datapad, the jump lever and pop-out windows. The old walkable ship is in the git history.
+- **Mixed reality**: on a Quest with passthrough, the AR button floats the console and the holotable in your own room.
+- **Player height**, seated and lying-down modes, snap or smooth turning, and a comfort vignette are in Settings > VR & comfort.
+- **Wrist menu**: pause, settings, height, pose, running, screen-here, game speed, autofire and "crew back to stations".
 - **Medal wall**: the achievements you've earned light up on the bridge wall.
-- **Weapons console**: the panel in the weapons room has a button per gun. Each press aims that gun at the next enemy system (shields, weapons, helm, engines, oxygen and so on) or clears it.
-- **Wrist menu** extras: game speed, autofire and "crew back to stations".
-- Planned next: door panels.
 
 **A living sky**
 - Shooting stars, a new planet at every beacon, purple nebula clouds, ion-storm lightning, a blazing nearby sun, pulsar pulses, an asteroid belt, and red alert tints in combat and at low hull.
@@ -319,7 +300,7 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Mind control lasts a set time and then has a cooldown, so enemy Puppeteers can't keep one of your crew forever.
 - Enemy shields grow to 2 layers from sector 5 and 3 only in the last sector. Extra enemy guns come from the sector's weapon tier and must fit the ship's weapon power.
 - Weapons and drones that lose power to damage, ion or a power shuffle switch back on (and re-aim) when the power returns.
-- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. After each fight you win on Easy, the crew patches 2 hull. The Flaggship also fires slower on Normal.
+- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. After each fight you win on Easy, the crew patches 2 hull; enemy boarders hit a quarter softer; and a repair tender patches 10 hull between Flaggship phases. The Flaggship also fires slower on Normal.
 
 **Mechanics tuned to FTL reference numbers**
 - Oxygen refills at 1.2 / 4.8 / 8.4 % per second by level and drains at 1.2 % per second when unpowered; breaches drain 8 % per second.
@@ -455,7 +436,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
 | `js/audio.js` | Synthesised sound effects, ambience and adaptive music |
 | `js/crewui.js` | Crew jobs, job icons and the crew detail card |
-| `js/interior.js` | The walkable 3D ship: rooms, machines, doors, hazards, beaming, walking and pointing |
+| `js/interior.js` | Stubs left by the retired walkable 3D ship (kept so the VR code still loads) |
 | `js/crew3d.js` | Life-size 3D crew for every race, animation and nameplates |
 | `js/skyfx.js` | Living sky, hyperspace tunnel and battle effects in VR |
 | `js/vrgrab.js` | Grab, move and resize the console and holotable; holotable picking |
@@ -463,7 +444,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/hints.js` | Contextual captain's tips and their triggers |
 | `js/vrnav.js` | VR walking, teleport, snap turn, vignette, magnifier, controller labels |
 | `js/vrui.js` | VR widgets: wrist menu and wall-mounted room consoles |
-| `js/handson.js` | VR hands-on bonuses: fixing hazards, captain's station pads, enemy sabotage, salvage crates |
+| `js/handson.js` | The captain's crew slot and the medal wall (its walkable-ship bonuses are dormant) |
 | `js/vrdeck.js` | VR command deck: datapad, pop-out windows, touch presses, bridge stations, aiming at the enemy ship, 3D star map, jump lever, extinguisher, sidearm, hit sparks, guided tour |
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/keyboard.js` | The on-screen QWERTY keyboard every text box uses (VR, touch, mouse and physical keys) |

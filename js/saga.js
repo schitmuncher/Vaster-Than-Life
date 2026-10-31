@@ -199,6 +199,12 @@ const PET_IDLE = ['{pet} is asleep on the warm reactor housing.','{pet} has been
 /* ---------------- the nemesis ---------------- */
 const NEM_SURNAMES = ['Voss','Grint','Krell','Sable','Thrace','Quell','Rook','Drabble','Mordaunt','Vane-Smith','Kettleby','Grudgewell','Harrow','Blight'];
 const NEM_TAUNTS = ['You again!','I have thought about this moment every night.','I had your ship\'s name tattooed. Spelt wrong, but still.','No running this time!','My crew have heard about you. They are not impressed.','I repaired every dent you gave me. Now I return the favour.'];
+/* what your nemesis says when they turn up again: it changes as the feud goes on */
+function nemGreet(n){ if(!n) return '"Remember me?"'; const f = G.flags || {};
+  if(f.nemOutrun) return pick(['"Running again? Not this time. I had the engines tuned. Just for you."', '"You can\'t outrun me twice. I checked. I did the maths. On a napkin."']);
+  if((n.met||1) >= 3) return pick([`"Meeting number ${n.met}. I\'ve had a commemorative mug made."`, '"Every time I close my eyes, I see your ship. It\'s ruining my sleep."']);
+  if((n.met||1) >= 2) return pick(['"Did you miss me? I missed you. With every gun I own."', '"I\'ve been practising. Have you been practising? You should have been practising."']);
+  return `"Remember me? Sector ${n.s || G.sector}. I remember you."`; }
 function nemTitle(n){ return !n ? '' : n.level >= 3 ? `${n.cap} the Unkillable` : n.level >= 2 ? `${n.cap} the Persistent` : n.cap; }
 function sagaEnemyGotAway(e, how){
   if(!G || !e || e.boss || e.fleet || e.auto || !DATA.enemies[e.id]) return;
@@ -260,7 +266,7 @@ function sagaEffect(e, L){
   if(e.shipName && G.ship){ const old = G.ship.name; G.ship.name = e.shipName; L.push(`The ship is now called the ${e.shipName}`); sagaNote('name', `In sector ${G.sector} the ${old} was renamed the ${e.shipName}, for reasons nobody will explain.`); }
   if(e.nemFight){ G.nemNext = true; }
   if(e.nemEnd && G.nemesis && !G.nemesis.done){ G.nemesis.done = true; G.nemesis.peace = true; G.later = G.later.filter(l => l.event!=='nem_return' && l.event!=='nem_old'); sagaNote('nemesis', fillText(e.nemEnd, cx)); }
-  if(e.nemAgain && G.nemesis && !G.nemesis.done){ G.later.push({ event:'nem_return', jumps:ri(3,5) }); }
+  if(e.nemAgain && G.nemesis && !G.nemesis.done){ G.later.push({ event:'nem_return', jumps:ri(5,8) }); }
 }
 /* who a saga event is about, picked when it starts */
 function sagaCtx(ev, forced){
@@ -282,7 +288,7 @@ function sagaCtx(ev, forced){
 function sagaFill(t, cx){
   return t.replace(/\{friend\}/g, cx.friend || 'their friend').replace(/\{fallen\}/g, cx.fallen || (G && G.fallen && G.fallen[0] ? G.fallen[0].name : 'an old friend'))
     .replace(/\{pet\}/g, G && G.pet ? G.pet.name : 'the pet').replace(/\{petkind\}/g, G && G.pet ? PET_KINDS[G.pet.kind] : 'creature')
-    .replace(/\{nemesis\}/g, G && G.nemesis ? nemTitle(G.nemesis) : 'your nemesis').replace(/\{nemship\}/g, G && G.nemesis ? G.nemesis.ship : 'their ship')
+    .replace(/\{nemesis\}/g, G && G.nemesis ? nemTitle(G.nemesis) : 'your nemesis').replace(/\{nemship\}/g, G && G.nemesis ? G.nemesis.ship : 'their ship').replace(/\{nemgreet\}/g, () => nemGreet(G && G.nemesis))
     .replace(/\{nemsector\}/g, G && G.nemesis ? String(G.nemesis.s) : '1').replace(/\{nemfrom\}/g, G && G.nemesis && G.nemesis.from ? theName(G.nemesis.from) : 'your last ship')
     .replace(/\{legacy\}/g, cx.legacy ? cx.legacy.name : 'an old shipmate').replace(/\{legacyship\}/g, cx.legacy ? theName(cx.legacy.ship) : 'your last ship').replace(/\{legacywhy\}/g, cx.legacy ? cx.legacy.why : 'lost')
     .replace(/\{legacywords\}/g, cx.legacy ? cx.legacy.words : '...').replace(/\{legacyrace\}/g, cx.legacy ? ((DATA.races[cx.legacy.race]||{}).name || 'traveller') : 'traveller').replace(/\{kin\}/g, cx.kin || 'friend')
@@ -539,11 +545,11 @@ const SAGA_EVENTS = {
     { text:'Close the airlock door on him.', effect:{ text:'He keeps talking through the glass for a while, then leaves a leaflet under the door. It is a coupon for 2 drone parts.', parts:2 } } ] },
 
   /* --- the nemesis --- */
-  nem_return:{ moment:true, questOnly:true, nem:true, once:false, art:'fleet', text:'A ship drops out of hyperspace right on top of you: the {nemship}, patched up and painted with a picture of your ship on fire. On screen, {nemesis}. "Remember me? Sector {nemsector}. I remember you."', choices:[
+  nem_return:{ moment:true, questOnly:true, nem:true, once:false, art:'fleet', text:'A ship drops out of hyperspace right on top of you: the {nemship}, patched up and painted with a picture of your ship on fire. On screen, {nemesis}. {nemgreet}', choices:[
     { text:'"Not really, no."', effect:{ text:'{nemesis} goes very red. The guns come out.', nemFight:true, saga:'{nemesis} came back for revenge, and the crew pretended not to remember them.' } },
     { text:'Fight it out. This ends now.', effect:{ text:'Both ships power their weapons at the same moment.', nemFight:true } },
     { text:'Offer to settle it with a drink instead.', chance:.25, success:{ text:'{nemesis} is so surprised that nobody has offered before that they agree. Several drinks later, it is all forgotten and they leave you a crate.', scrap:25, nemEnd:'{nemesis} and your crew settled their feud over drinks, and parted friends.' }, fail:{ text:'"A DRINK?!" {nemesis} throws the glass at the screen. Their guns warm up.', nemFight:true } },
-    { text:'Outrun them again.', req:{ system:'engines', level:3 }, effect:{ text:'You burn hard and leave them in your wake. {nemesis} screams something about "next time". There will be a next time.', nemAgain:true, dismiss:true } } ] },
+    { text:'Outrun them again.', req:{ system:'engines', level:3, noFlag:'nemOutrun' }, effect:{ text:'You burn hard and leave them in your wake. {nemesis} screams something about "next time". They have seen your engines now: it won\'t work twice.', nemAgain:true, setFlag:'nemOutrun', dismiss:true } } ] },
   /* --- people finding each other (two crew with no bond yet) --- */
   m_romance:{ moment:true, pair:true, minSector:2, text:'{crew} and {friend} have been "accidentally" scheduled on the same night shift for the fifth time running. The rest of the crew have started a betting pool.', choices:[
     { text:'Keep scheduling them together.', chance:.65, success:{ text:'By the end of the week they are holding hands on the bridge and pretending they are not. The betting pool pays out to the cook, who had "this week".', bondFix:'sweethearts', crewHeal:15, saga:'{crew} and {friend} fell for each other on the night shift.' }, fail:{ text:'It turns out they just both really like the night shift. They become firm friends instead.', bondFix:'friends' } },

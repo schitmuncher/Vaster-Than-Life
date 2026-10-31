@@ -418,7 +418,7 @@ function moveCrewStep(sh, c, dt){
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps')); }
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps'))*(c.owner==='e' ? (curDiff().foeMelee || 1) : 1); }   // Easy: enemy boarders hit softer
 function killCrew(sh, c){
   if(c && c.hp <= 0 && typeof devotedSave==='function' && devotedSave(c)) return;   // ten hearts: they refuse to die, once (travellers.js)
   const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
@@ -605,6 +605,7 @@ function tickShip(sh, dt, foe){
       }
       w.hold = 0;
       if(w.target!=null && !(sh.side==='p' && G.hold) && !((d.type==='missile'||d.type==='bomb') && sh.side==='p' && G.missiles<=0)) fireWeapon(sh, w, foe);
+      else if(sh.side==='p' && w.target!=null && (d.type==='missile'||d.type==='bomb') && G.missiles<=0 && !G.ammoWarned){ G.ammoWarned = true; toast(`Out of missiles: the ${d.name} can't fire. Turn it off to free its power, and buy missiles at a store.`); }
     }
   }
   if(sh.surge && foe && !foe.dead){ sh.surgeT -= dt; if(sh.surgeT<=0){ sh.surgeT = sh.surge; toast('POWER SURGE! The Flaggship fires everything.'); sfx('alarm');

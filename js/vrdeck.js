@@ -451,8 +451,7 @@ const TOUR = [
   { t:'Engineering station', b:'Route reactor power with + and −. Open and shut doors, vent the airlocks and send crew to their stations. Touch the buttons or point and click.', at:() => DECK.st[1] && DECK.st[1].head.getWorldPosition(_dv()), local:false },
   { t:'Holotable', b:'Both ships, live. Open the map (B or Y) and it becomes a 3D star map: point at a beacon and pull the trigger to jump.', at:() => holo && holo.group.getWorldPosition(_dv()).add(new THREE.Vector3(0, .3, 0)), local:false },
   { t:'Jump lever', b:'Grip the lever and pull it back towards you to engage the drive: the star map opens. Point at a beacon with your other hand and pull it again to jump.', at:() => DECK.lever && DECK.lever.knob.getWorldPosition(_dv()), local:false },
-  { t:'Datapad and windows', b:'Click the left stick for a datapad in your hand with the full game screen. Events, stores and maps pop up in front of you wherever you are.', at:() => new THREE.Vector3(0, 1.4, -1.0) },
-  { t:'Your ship', b:'Walk through the rear door into your ship. Grab the extinguisher by the door for fires, stand on pads to man stations, and beam over to enemy ships.', at:() => new THREE.Vector3(0, 1.6, 3.6) } ];
+  { t:'Datapad and windows', b:'Click the left stick for a datapad in your hand with the full game screen. Events, stores and maps pop up in front of you wherever you are.', at:() => new THREE.Vector3(0, 1.4, -1.0) } ];
 function deckTourStart(force){
   if(DECK.tour || (!force && PROFILE.vrTourDone)) return;
   const W_ = vuiMake(.62, .3, 800, 388, (Wd) => { const T_ = DECK.tour, s = TOUR[T_.step], g = Wd.g; vuiFrame(Wd, s.t.toUpperCase(), VCOL.amber);
