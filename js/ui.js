@@ -174,7 +174,7 @@ function drawTitle(){
 function hangarThumb(id){ UI._thumbs = UI._thumbs || {}; if(id in UI._thumbs) return UI._thumbs[id]; let sh = null; try{ sh = makeShip(DATA.ships[id], 'p', {}); sh.crew = []; }catch(e){ sh = null; } return UI._thumbs[id] = sh; }
 /* leaving Settings or the Manual: back to the run, the multiplayer room, or the title */
 function backFromOptions(){ const inSession = typeof NET!=='undefined' && NET.on && NET.mode; UI.screen = UI.setFrom==='game' && G ? 'game' : inSession ? 'mp' : 'title'; UI.setFrom = null; UI.confirmReset = false; if(typeof SYNC!=='undefined' && SYNC.guest) syncScreen(); }
-function openHangar(){ applyMods(); UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
+function openHangar(){ if(typeof campDefFor==='function') CAMP = SET.campaign && campDefFor(SET.campaign) ? SET.campaign : null; applyMods(); UI._thumbs = {}; UI.selShip = UI.selShip && DATA.ships[UI.selShip] ? UI.selShip : 'pestrel'; UI.shipName = null; UI._prev = null; UI.seed = null; UI.screen = 'select'; }
 function dailyStreak(){ let n = 0; const d = new Date(); for(let i=0;i<60;i++){ const k = todayKey(d); if(PROFILE.daily?.[k]) n++; else if(i>0) break; d.setDate(d.getDate()-1); } return n; }
 function fmtNum(n){ return Math.round(n).toLocaleString('en-GB'); }
 /* the right-hand column of the title: today's daily challenge, your last run and your record */
@@ -208,17 +208,19 @@ function drawTitleCards(t){
   [['Runs', PROFILE.runs], ['Wins', wins], ['Best sector', PROFILE.maxSector], ['Ships beaten', PROFILE.kills]].forEach((r,i) => { const cx = x+24 + i*128; label(r[0], cx, 852, C.muted, 'left', 12); T(fmtNum(r[1]||0), cx, 892, { s:28, f:FD, w:700 }); });
 }
 function classGroups(){
-  const groups = {}; for(const id in DATA.ships){ const s = DATA.ships[id]; const k = s.cls || s.name; (groups[k] = groups[k] || []).push(id); }
+  const C = typeof campHangarDef==='function' ? campHangarDef() : null, only = C && Array.isArray(C.ships) ? C.ships.filter(id => DATA.ships[id]) : null;
+  const groups = {}; for(const id in DATA.ships){ if(only && only.length && !only.includes(id)) continue; const s = DATA.ships[id]; const k = s.cls || s.name; (groups[k] = groups[k] || []).push(id); }
   for(const k in groups) groups[k].sort((a,b) => (DATA.ships[a].layout||'A').localeCompare(DATA.ships[b].layout||'A'));
   return groups;
 }
 function drawHangar(){
   label('Choose your ship', 60, 70, C.cyan, 'left', 18);
+  if(typeof drawCampaignPicker==='function' && !NET.on) drawCampaignPicker(760, 64);
   T('Hangar', 60, 122, { s:50, f:FD, w:700 });
   const groups = classGroups(), names = Object.keys(groups);
   const per = 8; const pages = Math.max(1, Math.ceil(names.length/per)); UI.page = clamp(UI.page, 0, pages-1);
   const show = names.slice(UI.page*per, UI.page*per+per);
-  const sel = DATA.ships[UI.selShip] ? UI.selShip : groups[names[0]][0];
+  const all_ = Object.values(groups).flat(), sel = DATA.ships[UI.selShip] && all_.includes(UI.selShip) ? UI.selShip : groups[names[0]][0]; UI.selShip = sel;
   const selCls = DATA.ships[sel].cls || DATA.ships[sel].name;
   show.forEach((cls, i) => {
     const x = 60 + (i%4)*372, y = 150 + Math.floor(i/4)*112, w = 356, h = 100, ids = groups[cls], cur = cls===selCls;
@@ -251,7 +253,7 @@ function drawHangar(){
       ['Drones', temp.drones.map(d=>DATA.drones[d.id].name).join(', ')||'None'], ['Systems', Object.keys(temp.systems).filter(k=>!SUB.includes(k)).map(k=>SYSN[k]).join(', ')],
       ['Crew', hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
     rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, k===5 && open ? 380 : 520, { s:15, lh:18, max:1 }); });
-    if(open && !NET.on) btn(600, y0+232+5*30-24, 140, 32, 'Name crew', () => { UI.crewPanel = true; }, { s:14, col:C.amber });
+    if(open && !NET.on && !(typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew)) btn(600, y0+232+5*30-24, 140, 32, 'Name crew', () => { UI.crewPanel = true; }, { s:14, col:C.amber });
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
@@ -299,8 +301,8 @@ function drawModsScreen(){
   else {
     const flt = UI.libKind || 'all', list = LIBRARY.mods.filter(m => flt==='all' || (m.kind||'content')===flt);
     T(`${list.length} mod${list.length===1?'':'s'}`, lx+460, 266, { s:14, a:'right', c:C.muted });
-    [['all','All'],['content','Content'],['ships','Ships'],['challenges','Trials'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
-      btn(lx+20 + i*74, 282, 70, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:12, fill:flt===k }));
+    [['all','All'],['campaign','Stories'],['content','Content'],['ships','Ships'],['challenges','Trials'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
+      btn(lx+20 + i*63, 282, 60, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:12, fill:flt===k }));
     const per = 6, pages = Math.max(1, Math.ceil(list.length/per)); UI.libPage = clamp(UI.libPage||0, 0, pages-1);
     list.slice(UI.libPage*per, UI.libPage*per+per).forEach((m,i) => { const y = 326 + i*82; const have = MODS.some(x=>x.name===m.name);
       T(m.name, lx+20, y+24, { s:18, f:FD, w:700, max:310 }); para(m.desc||'', lx+20, y+46, 310, { s:13, lh:17, c:C.muted, max:2 });
@@ -488,9 +490,9 @@ const HELP_PAGES = [
     ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
     ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
     ['Trade goods', 'Goods live in your cargo hold (Ship → Hold & gifts). Each is cheap where it is made and dear where it is wanted. Request boards (Goods tab) pay extra for deliveries to any store. Mags Vetch, a travelling merchant, pays best for relics.'],
-    ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook: a meal heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. Fish at quiet beacons: reel when the marker is in the green. From sector 2 a Harvest Fair may turn up, with prizes for your best crop.'],
+    ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook. Each meal gives an edge for three fights (spicy hash: melee; fish supper: guns; star stew: repairs; berry pie: dodging). The medbay does the healing. Fishing needs a rod, and only works at fishing spots. From sector 2 a Harvest Fair may turn up, with prizes for your best crop.'],
     ['Travellers', 'Mags Vetch trades, Kestrel Jones pays bounties for kinds of ship (see Ship → Hold), Doctor Oddly fits implants. Each comes back if you treat them well.'],
-    ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. Birthday gifts count three times. At 6 hearts they work harder for you, at 8 they get tougher, and at 4 and 8 hearts they open up to you.'],
+    ['Friendship', 'Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend loses them. Birthdays last two jumps: a present then counts triple and makes them better at their job; forget, and they sulk for three fights. A gift they love gives them a burst of practice. 3 hearts: 5% better; 6: 10%; 8: +10 health; 10: devoted.'],
     ['Hazards', 'Asteroids hit both ships. Suns start fires. Ion storms halve your reactor. Pulsars knock out shields and systems. Nebulas blind sensors but slow the fleet. Hazards hurt the enemy too.'],
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
     ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
@@ -501,6 +503,7 @@ const HELP_PAGES = [
     ['The data core', 'The core in your hold wakes up in sector 2. Its name is Pip. How you treat Pip changes the last sector, the Flaggship fight and how a win ends. There are four endings to find.'],
     ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
     ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
+    ['Campaign mods', 'A campaign mod is a whole new story: its own ships, crew, sectors, villain and ending. Turn it on in Mods, then pick it with the Campaign arrows at the top of the hangar. Try Red Dwarf: Three Million Years Late in the mod library.'],
     ['Refits & situations', 'Store Weapons tabs have a workshop: refit a gun to Mk II and Mk III, each charging 15% faster. Exit cards can show a sector situation (a crackdown, a salvage boom, storms, a festival, refugees, a blackout) that changes what the sector is like.'],
     ['Rebuff alert', 'Win on Normal or Hard to unlock alert level 1. Each level adds one twist (tougher patrols, dearer stores, a faster fleet...) for more renown and score. Pick the level in the hangar. Dailies and challenges ignore it.'] ]],
   ['Controls', [
@@ -569,7 +572,8 @@ function drawEnd(){
 function hangarCrew(sel, temp){
   let hc = UI.hangarCrew; if(hc && hc.ship===sel && hc.names.length===temp.crew.length) return hc;
   const used = []; const quirks = temp.crew.map(c => { const q = typeof rollQuirk==='function' ? rollQuirk(used) : null; used.push(q); return q; });
-  hc = UI.hangarCrew = { ship:sel, names:temp.crew.map(c => c.name), quirks }; return hc;
+  const CC = typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew;
+  hc = UI.hangarCrew = { ship:sel, names:temp.crew.map((c, i) => CC && CC[i] && CC[i].name || c.name), quirks:quirks.map((q, i) => CC && CC[i] && CC[i].quirk || q) }; return hc;
 }
 function drawCrewNaming(sel, temp){
   const hc = hangarCrew(sel, temp), n = temp.crew.length, rowH = 76, w = 1080, h = 236 + n*rowH, x = (W-w)/2, y = Math.max(40, (H-h)/2);
@@ -658,7 +662,7 @@ function drawGame(){
   drawTopBar();
   const zoomed = svBegin();   // zoomed into the ships: only this part is magnified
   ctx.save(); if(G.shake>0 && SET.shake!==false && !inXR()) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
-  drawShip(G.ship, PBOX, 1, false, false); ctx.restore();
+  drawShip(G.ship, PBOX, 1, false, false); if(typeof drawPet==='function') drawPet(); ctx.restore();
   if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else if(G.brawl && typeof drawBrawlSide==='function') drawBrawlSide(); else drawQuiet();
   drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
   svEnd();
@@ -994,7 +998,7 @@ function drawArmory(){
     const d = DATA.weapons[wp.id]; if(!d) continue; const sel = UI.selWeapon===i, ready = wp.on && wp.charge >= d.charge;
     rr(cx,cy,cw,ch,8); ctx.fillStyle = sel ? hexA(C.amber,.14) : C.panel2; ctx.fill(); ctx.lineWidth = sel?3:1.5; ctx.strokeStyle = sel ? C.amber : wp.on ? hexA(C.amber,.5) : C.line; ctx.stroke();
     para(`${i+1} ${typeof weaponLabel==='function' ? weaponLabel(wp) : d.name}`, cx+8, cy+20, cw-14, { s:14, f:FD, w:700, lh:16, max:2, c: wp.on ? C.ink : C.muted });
-    tip(cx, cy, cw, 96, d.name, `${d.type}. ${d.heal ? 'Heals '+d.heal+' per crew.' : d.type==='bomb' ? (d.sysDamage||0)+' system damage, ignores shields.' : (d.damage||0)+' damage × '+(d.shots||1)+(d.type==='beam' ? ', hits '+(d.rooms||2)+' rooms' : '')+'.'} ${d.power} power, ${d.charge}s charge.${d.fire?' Can start fires.':''}${d.breach?' Can breach hulls.':''}${d.type==='missile'?' Ignores shields, uses a missile.':''}${d.type==='ion'?' Drains shields and systems.':''}${d.desc?' '+d.desc:''}`);
+    tip(cx, cy, cw, 96, d.name + (wp.mk ? MK_NAMES[wp.mk] : ''), `${weaponStats(d)}. ${weaponRole(d)}${wp.mk ? ` Refitted: charges ${Math.round(MK_SPEED*wp.mk*100)}% faster.` : ''}${d.desc ? ' ' + d.desc : ''}`);
     const tc = d.type==='missile'||d.type==='bomb' ? '#ffffff' : d.type==='ion' ? C.cyan : d.type==='beam' ? C.violet : d.type==='flak' ? C.warn : C.amber;
     label(d.type, cx+8, cy+52, tc, 'left', 11);
     T(d.heal ? `heal ${d.heal}` : d.type==='bomb' ? `${d.sysDamage||0} sys` : `${d.damage}×${d.shots||1}`, cx+cw-8, cy+52, { s:12, a:'right', c:C.muted });
@@ -1096,7 +1100,7 @@ function drawFX(){
 }
 
 /* ---------------- modals ---------------- */
-function mframe(w,h,title,col=C.amber,m){
+function mframe(w,h,title,col=C.amber,m){ if(typeof fixThe==='function') title = fixThe(title);
   ctx.fillStyle = 'rgba(4,6,12,.74)'; ctx.fillRect(0,0,W,H); region(0,0,W,H,() => { if(m) m._skip = true; }, 'skip');
   const x = (W-w)/2, y = (H-h)/2; rr(x,y,w,h,14); const g = ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,'#131b36'); g.addColorStop(1,'#090e1d'); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
   ctx.save(); rr(x,y,w,h,14); ctx.clip(); const hg = ctx.createLinearGradient(x,0,x+w,0); hg.addColorStop(0,hexA(col,.25)); hg.addColorStop(1,hexA(col,0)); ctx.fillStyle = hg; ctx.fillRect(x,y,w,68); ctx.fillStyle = hexA(col,.5); ctx.fillRect(x,y+68,w,1.5); ctx.restore();
@@ -1156,7 +1160,7 @@ function drawModal(){
 function drawEventModal(m){
   const base = DATA.events[m.id]; const ev = m.inline || base; if(!ev){ G.modal = null; return; }
   const node = G.map?.nodes[G.map.cur];
-  const title = base?.title ? base.title : m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
+  const title = m.title ? m.title : base?.title ? base.title : m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
   m.ctx = m.ctx || { crew:randomCrewName() }; m.who = m.who || {};
   const fullText = fillText(ev.text, m.ctx);
   const visChoices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));
@@ -1287,6 +1291,7 @@ function drawMapModal(){
     const showHz = n.hazard && (scan || n.revealed || n.visited || reach);
     if(showHz){ const hc = HZCOL[n.hazard] || C.warn, hx = x + 19, hy = y - 19; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fillStyle = '#0b1122'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = hc; ctx.stroke(); mapIcon(n.hazard, hx, hy, 13, hc);
       if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
+    if(n.fishy && (known || n.visited || reach)){ T('🐟', x - 21, y - 14, { s:15, a:'center' }); }
     let tag = n.type==='store' && !hideSt ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
     if(flagHere) tag = 'FLAGGSHIP';
     if(tag) label(tag, x, y+48, col, 'center', 13);
@@ -1294,14 +1299,14 @@ function drawMapModal(){
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
     { const name = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
       const ahead = (n.x - G.fleetX)/step; const bits = [];
-      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.');
+      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.'); if(n.fishy) bits.push(G.rod ? 'A fishing spot.' : 'A fishing spot (you need a rod).');
       if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
       bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
       tip(x-26, y-26, 52, 52, name, bits.join(' ')); }
   });
   if(typeof mpMapOverlay==='function' && NET.on) mpMapOverlay(mx, my, nodes, f);
-  if(fleetPx > ax + 4) label('Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
+  if(fleetPx > ax + 4) label(typeof camText==='function' ? camText('Rebuff Fleet') : 'Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
   // legend in the header
@@ -1483,7 +1488,7 @@ function drawShipModal(){
   } else if(UI.tab==='gear'){
     const lock = !!G.enemy;
     label(`Mounted weapons (${s.weapons.length}/${R.weaponSlots})`, cx, y0+10, C.muted, 'left', 14);
-    s.weapons.forEach((w,i) => { const d = DATA.weapons[w.id], y = y0+24 + i*58; T(`${i+1}. ${d?.name||w.id}`, cx, y+30, { s:18 });
+    s.weapons.forEach((w,i) => { const d = DATA.weapons[w.id], y = y0+24 + i*58; T(`${i+1}. ${typeof weaponLabel==='function' ? weaponLabel(w) : d?.name||w.id}`, cx, y+24, { s:18, max:320 }); if(d) T(weaponStats(d), cx, y+44, { s:12, c:C.muted, max:320 }); if(d) tip(cx, y, 330, 52, d.name, weaponRole(d));
       if(i>0) btn(cx+340, y+4, 50, 42, '↑', () => { [s.weapons[i-1], s.weapons[i]] = [s.weapons[i], s.weapons[i-1]]; }, { s:16, disabled:lock });
       btn(cx+400, y+4, 170, 42, 'To cargo', () => { s.weapons.splice(i,1); (s.cargo = s.cargo||[]).push({ kind:'weapon', id:w.id }); UI.selWeapon = null; }, { disabled:lock, s:15 }); });
     const dy = y0+24 + R.weaponSlots*58 + 20; label(`Mounted drones (${s.drones.length}/${R.droneSlots})`, cx, dy, C.muted, 'left', 14);
@@ -1492,7 +1497,7 @@ function drawShipModal(){
     const rx = f.x+740; label('Cargo', rx, y0+10, C.muted, 'left', 14);
     if(!(s.cargo||[]).length) T('Empty', rx, y0+50, { s:18, c:C.muted });
     (s.cargo||[]).slice(0,9).forEach((it,i) => { const d = it.kind==='weapon' ? DATA.weapons[it.id] : DATA.drones[it.id]; const y = y0+24 + i*58;
-      T(`${d?.name||it.id}`, rx, y+30, { s:18 }); T(it.kind, rx+330, y+30, { s:13, c:C.muted });
+      T(`${d?.name||it.id}`, rx, y+30, { s:18 }); T(it.kind, rx+330, y+30, { s:13, c:C.muted }); if(it.kind==='weapon' && d) tip(rx, y, 440, 52, d.name, `${weaponStats(d)}. ${weaponRole(d)}`);
       const full = it.kind==='weapon' ? s.weapons.length>=R.weaponSlots : s.drones.length>=R.droneSlots;
       btn(rx+460, y+4, 170, 42, 'Mount', () => { s.cargo.splice(i,1); if(it.kind==='weapon') s.weapons.push({ id:it.id, charge:0, on:false, target:null }); else s.drones.push({ id:it.id, on:false, unit:null }); }, { disabled: full || lock, s:15 }); });
     if(lock) T('Gear cannot be swapped mid-fight.', cx, f.y+f.h-40, { s:16, c:C.warn });

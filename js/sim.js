@@ -74,7 +74,7 @@ function evasion(sh){
       const ec = mannedCrew(sh,'engines'); if(ec && base>0) base += [5,7,10][skillLvl(ec,'engines')]; }
   }
   if(sh.cloak.t>0) base += 60;
-  if(hasAug(sh,'stealth')) base += 5; base += augFx(sh,'evade');
+  if(hasAug(sh,'stealth')) base += 5; base += augFx(sh,'evade'); if(typeof petEvade==='function') base += petEvade(sh);
   if(sh.side==='p' && base>0) base += (curDiff().evade || 0);
   return clamp(Math.round(base), 0, 95);
 }

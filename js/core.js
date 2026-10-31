@@ -74,12 +74,13 @@ function applyMods(baseOnly){
   for(const k of KINDS) for(const id in DATA[k]) DATA[k][id].id = id;
   for(const m of MODS){
     if(!m.enabled || baseOnly) continue; const d = m.data || {};
+    if(d.campaign && (typeof CAMP==='undefined' || !CAMP || d.campaign.id !== CAMP)) continue;   // a campaign mod only loads when its campaign is picked
     if(d.rules && typeof d.rules==='object') Object.assign(DATA.rules, d.rules);
     for(const k of KINDS){ const mp = toMap(d[k]); for(const id in mp) DATA[k][id] = Object.assign({}, DATA[k][id]||{}, mp[id], { id }); }
     if(d.remove && typeof d.remove==='object') for(const k in d.remove) if(DATA[k] && Array.isArray(d.remove[k])) d.remove[k].forEach(id => delete DATA[k][id]);
   }
   R = DATA.rules;
-  if(SET.allowScripts && !baseOnly){ for(const m of MODS){ if(!m.enabled || typeof m.data?.script!=='string') continue;
+  if(SET.allowScripts && !baseOnly){ for(const m of MODS){ if(!m.enabled || typeof m.data?.script!=='string' || (m.data.campaign && (typeof CAMP==='undefined' || m.data.campaign.id !== CAMP))) continue;
     try{ new Function('VTL', m.data.script)(modAPI()); }catch(e){ if(typeof toast==='function') toast(`Script in ${m.name} failed: ${e.message}`); } } }
 }
 function modAPI(){
@@ -101,6 +102,7 @@ function validateMod(d){
     if(typeof x.power!=='number') E.push(`Drone "${id}": "power" must be a number.`); }
   const Rm = toMap(d.races); for(const id in Rm){ if(typeof Rm[id].hp!=='number') E.push(`Race "${id}": "hp" must be a number.`); }
   for(const [k,label] of [['ships','Ship'],['enemies','Enemy']]){ const M = toMap(d[k]); for(const id in M){ const s = M[id];
+    if(typeof BASE!=='undefined' && BASE[k] && BASE[k][id]) continue;   // changing a game ship or enemy (renaming the Flaggship, say) only needs the fields you change
     if(typeof s.hull!=='number') E.push(`${label} "${id}": "hull" must be a number.`);
     if(!s.systems || typeof s.systems!=='object') E.push(`${label} "${id}": add a "systems" object, e.g. {"shields":2}.`);
     if(s.rooms && !Array.isArray(s.rooms)) E.push(`${label} "${id}": "rooms" must be a list.`); } }

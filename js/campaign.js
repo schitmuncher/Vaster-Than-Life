@@ -9,6 +9,43 @@
    - Rebuff alert: harder runs, unlocked one level at a time by winning.
    ========================================================================= */
 
+
+/* ---------------- campaign mods ----------------
+   A mod with a "campaign" object is a whole alternative story: its own ships, named crew, briefing, sectors,
+   story beats, villain and ending. It is only loaded when picked in the hangar (or while its run is in progress). */
+let CAMP = null;   // id of the campaign whose mod data applyMods should load (null: the standard game)
+function campaignMods(){ return (typeof MODS!=='undefined' ? MODS : []).filter(m => m.enabled && m.data && m.data.campaign && m.data.campaign.id); }
+function campDefFor(id){ const m = campaignMods().find(m => m.data.campaign.id===id); return m ? m.data.campaign : null; }
+function campDef(){ return G && G.campaign ? (G.campDef || (G.campDef = campDefFor(G.campaign))) : null; }
+function campHangarDef(){ return SET.campaign ? campDefFor(SET.campaign) : null; }
+function campReplace(t, C){ if(!C || typeof t!=='string') return t;
+  if(C.fleet) t = t.replace(/[Tt]he Rebuff Fleet/g, C.fleet.replace(/^the /, 'the ')).replace(/Rebuff Fleet/g, C.fleet.replace(/^the /i, ''));
+  if(C.boss) t = t.replace(/[Tt]he Flaggship/g, C.boss).replace(/Flaggship/g, C.boss.replace(/^the /i, ''));
+  if(C.foe) t = t.replace(/\bRebuff\b/g, C.foe);
+  if(C.command) t = t.replace(/Fedoration command/g, C.command).replace(/Fedoration Command/g, C.command);
+  return t.replace(/(^|[.!?]\s+)the /g, (m, a) => a + 'The '); }
+function camText(t){ const C = campDef(); return C ? campReplace(t, C) : t; }
+/* the hangar picker: Standard, or any campaign mod you have turned on */
+function drawCampaignPicker(x, y){ const list = campaignMods(); if(!list.length) return false;
+  const ids = [null, ...list.map(m => m.data.campaign.id)], cur = ids.includes(SET.campaign||null) ? (SET.campaign||null) : null, C = cur ? campDefFor(cur) : null;
+  const set = id => { SET.campaign = id; saveProfile(); CAMP = id; applyMods(); UI._thumbs = {}; UI._prev = null; UI.hangarCrew = null; const D = campDefFor(id); UI.selShip = D && D.ships && D.ships[0] && DATA.ships[D.ships[0]] ? D.ships[0] : 'pestrel'; };
+  label('Campaign', x, y+18, C ? (C.color || '#ff5a7a') : '#5fd3e6', 'left', 13);
+  const i = ids.indexOf(cur);
+  btn(x+100, y, 40, 34, '‹', () => set(ids[(i - 1 + ids.length) % ids.length]), { s:18 });
+  T(C ? C.title : 'Standard: the Fedoration courier', x+150, y+24, { s:17, f:FD, w:700, c: C ? (C.color || C_AMBER()) : '#e8eef9', max:320 });
+  btn(x+480, y, 40, 34, '›', () => set(ids[(i + 1) % ids.length]), { s:18 });
+  tip(x, y, 520, 34, C ? C.title : 'Standard campaign', C ? (C.blurb || 'A campaign mod.') + ' (A mod: change it with the arrows.)' : 'The Fedoration courier, Pip, Director Kross and the Flaggship. Campaign mods you turn on in Mods appear here.');
+  return true; }
+function C_AMBER(){ return '#ffb547'; }
+/* start of a campaign run: named crew, its own briefing */
+function campaignStart(){ const C = campDef(); if(!C) return;
+  const crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);
+  (C.crew||[]).forEach((cc, i) => { const c = crew[i]; if(!c || !cc) return; if(cc.name) c.name = String(cc.name).slice(0, 16); if(cc.quirk){ c.quirk = cc.quirk; c.quirkSet = true; }
+    if(cc.skills) for(const k in cc.skills) if(SKILLT[k]) c.sk[k] = cc.skills[k] >= 2 ? SKILLT[k][1] : cc.skills[k] >= 1 ? SKILLT[k][0] : 0;
+    if(cc.hp){ c.maxHp = cc.hp; c.hp = cc.hp; } if(cc.title) c.title = cc.title; });
+  if(C.scrap != null) G.scrap = C.scrap; if(C.fuel != null) G.fuel = C.fuel;
+  logEntry(`Campaign: ${C.title}.`); }
+
 /* ---------------- ranks & renown ---------------- */
 const RANKS = [
   { name:'Cadet',                at:0 },
@@ -59,6 +96,7 @@ const SENDOFF = [
   { id:'parts',   t:1, text:'A crate of drone parts and missiles.', fx:{ parts:4, missiles:2 } },
   { id:'charts',  t:1, text:'Star charts: every beacon in the first two sectors, marked.', fx:{ reveal:true, cmp:{ charts:1 } } },
   { id:'seeds',   t:1, text:'Rare seed packets and a third planter for the garden.', fx:{ seeds:{ moon_melon:2, void_pepper:2 }, cmp:{ planter:true } } },
+  { id:'tackle',  t:1, text:'A good fishing rod, and a tin of bait that smells awful.', fx:{ cmp:{ rod:true }, goods:{ space_fish:2 } } },
   { id:'head',    t:1, text:'A head start: the Rebuff Fleet begins further back.', fx:{ fleetPush:-.14 } },
   { id:'weapon',  t:2, text:'A weapon from the armoury.', fx:{ weapon:'random' } },
   { id:'recruit', t:2, text:'A volunteer for your crew.', fx:{ crew:'random' } },
@@ -106,7 +144,9 @@ function haleGreeting(){
 function campaignSendOff(){
   const picks = sendoffPicks(), choices = picks.map(giftChoice);
   if(rankIdx() >= 5){ const again = sendoffPicks('again').filter(g => !picks.some(p => p.id===g.id)); if(again.length) choices.push({ text:'Ask the quartermaster for something else.', effect:{ text:'Hale sighs, and sends the quartermaster back down to stores. "Last chance, Captain."', choices:again.map(giftChoice) } }); }
-  G.modal = { type:'event', id:'c_sendoff', inline:{ text:haleGreeting(), choices, art:'station' }, ctx:{ crew:randomCrewName() } };
+  const C = campDef(), intro = C && C.intro ? C.intro + (C.gifts===false ? '' : ' ' + (C.giftLine || '"Before you go: pick something from the stores."')) : haleGreeting();
+  if(C && C.gifts===false){ G.modal = { type:'msg', title:C.host || C.title, text:C.intro || '', btn:'Open map', then:openMap }; return true; }
+  G.modal = { type:'event', id:'c_sendoff', title: C ? (C.host || C.title) : null, inline:{ text:intro, choices, art: C && C.introArt || 'station' }, ctx:{ crew:randomCrewName() } };
   return true;
 }
 
@@ -117,6 +157,7 @@ const PIP_BEATS = ['pip_wake', 'pip_window', 'kross_offer', 'pip_song', 'pip_fea
 /* entering a sector: maybe a story scene. Returns true when one starts. */
 function campaignSector(){
   if(!G || !campaignSolo() || G.noStory) return false; const P = pipState(), sd = sectorDef();
+  const C = campDef(); if(C){ const id = (C.beats||{})[sd.final ? 'final' : String(G.sector)]; if(id && DATA.events[id] && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
   if(sd.final){ const id = P.sold ? 'kross_final' : P.free ? 'pip_beacons' : P.met ? (P.trust >= 3 ? 'pip_ready_hi' : 'pip_ready_lo') : null;
     if(id && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
   if(G.sector < 2 || sd.secret) return false;
@@ -127,6 +168,7 @@ function campaignSector(){
 const PIP_CHATTER = ['That star looks like a potato. A good potato.', 'I counted the jumps. That\'s {n}. I like {n}.', '{crew} is my favourite. Don\'t tell the others.', 'Is it always this dark out here? I like it.', 'The Fleet is behind us. I can feel them. Like an itch, in the maths.',
   'I made up a new constellation. It\'s called "the ship". It\'s us.', 'If anyone needs anything calculated, I\'m right here. In the box. Calculating.', 'Your coffee machine and I are friends now. It\'s a bit shy.'];
 function campaignArrive(node, first){
+  const C = campDef(); if(C){ if(first && !G.enemy && C.chatter && C.chatter.length && Math.random() < .07) toast(fillText(pick(C.chatter), { crew:randomCrewName() })); return; }
   if(!pipAboard() || !first || G.enemy) return; const P = G.pip;
   if(Math.random() < (P.trust >= 1 ? .08 : .03)){ const line = P.trust >= 1 ? pick(PIP_CHATTER).replace(/\{n\}/g, G.stats.jumps).replace('{crew}', randomCrewName()) : 'Pip is humming, very quietly, to itself.';
     if(P.trust >= 1) toast(`Pip: ${line}`); else toast(line); }
@@ -137,6 +179,7 @@ function campaignEffect(e, L){
   const c = e && e.cmp; if(!c || !G) return; const s = G.ship;
   if(c.scrap){ G.scrap += c.scrap; G.stats.scrap += c.scrap; L.push(`+${c.scrap} scrap`); }
   if(c.charts){ G.charts = 1; }   // the next sector's map comes pre-marked too
+  if(c.rod){ G.rod = true; L.push('+1 fishing rod'); }
   if(c.planter){ G.garden = G.garden || { plots:[] }; if(G.garden.plots.length < 4){ G.garden.plots.push(null); L.push('+1 garden planter'); } }
   if(c.drill){ const posts = { piloting:'pilot', engines:'engines', shields:'shields', weapons:'weapons' };
     for(const cr of mineAlive()){ const st = Object.keys(posts).find(k => cr.station!=null && s.rooms[cr.station] && s.rooms[cr.station].sys===k); const sk = st ? posts[st] : pick(['repair','combat']);
@@ -164,6 +207,7 @@ function campaignEffect(e, L){
 const KROSS_FIRST = ['"Courier. Director Kross. We meet in person, more or less. I do hope you\'ve enjoyed the trip."', '"Director Kross, Rebuff Intelligence. You have been a great deal of paperwork."'];
 function campaignBoss(e, o){
   if(!G || !campaignSolo()) return; const P = pipState(), ph = o.phase||0;
+  { const C = campDef(); if(C){ const L = C.bossLines || []; if(L.length) o.text = (o.text ? o.text + ' ' : '') + L[Math.min(ph, L.length-1)]; if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; } return; } }
   if(ph===0){ PROFILE.krossMet = (PROFILE.krossMet||0) + 1; saveProfile(); }
   const met = PROFILE.krossMet||1, bits = [];
   if(ph===0) bits.push(met > 1 ? `Director Kross is on the bridge of the Flaggship. "You again. That makes ${met} times now. I've started a file. It's thicker than the war."` : `Director Kross is on the bridge of the Flaggship. ${pick(KROSS_FIRST)}`);
@@ -187,7 +231,7 @@ function campaignSectorGen(n){ if(G && G.charts && G.map){ for(const nd of G.map
 
 /* ---------------- run start & end ---------------- */
 function campaignRunStart(o){
-  if(!G) return; pipState();
+  if(!G) return; pipState(); if(G.campaign) campaignStart();
   G.alert = campaignPure() ? clamp(SET.alert||0, 0, PROFILE.alert||0) : 0;
   if(G.alert >= 6){ G.scrap = Math.max(0, G.scrap - 10); G.fuel = Math.max(4, G.fuel - 3); }
   if(G.alert) logEntry(`Rebuff alert level ${G.alert}.`);
@@ -199,8 +243,8 @@ const ENDINGS = {
   free:   { title:'Ghost in the Beacons', text:'The Flaggship burns, and the war turns without its codes. Out in the relay network, something small and bright is having the time of its life. Some nights, every beacon in the sector blinks twice: hello.' },
   sold:   { title:'Thirty Pieces of Scrap', text:'You won, in the end, without it. Somewhere in a Rebuff archive, a beige box hums a song your crew taught it, very quietly, to nobody.' }
 };
-function endingFor(){ const P = G && G.pip; if(!P || !P.met) return null; return P.sold ? 'sold' : P.free ? 'free' : P.trust >= 3 ? 'trusted' : 'cold'; }
-function campaignEndText(win){ if(!win) return null; const k = endingFor(); return k ? ENDINGS[k].text : null; }
+function endingFor(){ if(campDef()) return null; const P = G && G.pip; if(!P || !P.met) return null; return P.sold ? 'sold' : P.free ? 'free' : P.trust >= 3 ? 'trusted' : 'cold'; }
+function campaignEndText(win){ const C = campDef(); if(C){ return win ? (C.win && C.win.text) || null : (C.lose || null); } if(!win) return null; const k = endingFor(); return k ? ENDINGS[k].text : null; }
 function campaignRunEnd(win, reason){
   if(!G) return; const P = pipState(), lines = [], st = G.stats;
   PROFILE.lastFallen = campaignPure() ? (G.lost||[]).slice(0, 4) : PROFILE.lastFallen;

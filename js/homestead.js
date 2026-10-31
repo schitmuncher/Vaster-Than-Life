@@ -4,7 +4,7 @@
    farming games, kept light so the run stays a run).
    - A hydroponic garden: plant seeds, crops grow as you jump (faster under
      a sun, not at all in an ion storm), harvest them into the hold.
-   - The galley: cook crops and fish into meals. A meal heals the crew and
+   - The galley: cook crops and fish into meals. Each meal gives the crew a different edge in fights, and
      leaves them well fed for the next fights.
    - Friendship hearts: give crew gifts they love, eat together, survive
      together. Close crew work a little harder, and open up to you.
@@ -44,23 +44,27 @@ function gardenJump(){
 }
 
 /* ---------------- the galley ---------------- */
+/* meals don't heal (that is the medbay's job): each one gives the crew a different edge for the next few fights */
 const RECIPES = {
-  spicy_hash:  { need:{ star_potato:1, void_pepper:1 }, heal:35, fed:2 },
-  fish_supper: { need:{ space_fish:2, star_potato:1 }, heal:30, fed:2 },
-  star_stew:   { need:{ star_potato:1, space_fish:1 }, heal:30, fed:2 },
-  berry_pie:   { need:{ ion_berry:2, rations:1 },     heal:25, fed:2 },
-  melon_sorbet:{ need:{ moon_melon:1, ion_berry:1 },  heal:50, fed:3 }
+  spicy_hash:  { need:{ star_potato:1, void_pepper:1 }, fed:3, buff:'fired',  name:'Fired up',   text:'+30% damage in hand-to-hand fights' },
+  fish_supper: { need:{ space_fish:2, star_potato:1 }, fed:3, buff:'sharp',  name:'Sharp eyes', text:'weapons charge 12% faster' },
+  star_stew:   { need:{ star_potato:1, space_fish:1 }, fed:3, buff:'hearty', name:'Hearty',     text:'+30% repair speed, +15 health each' },
+  berry_pie:   { need:{ ion_berry:2, rations:1 },     fed:3, buff:'sugar',  name:'Sugar rush', text:'+5% evasion and crew move 15% faster' },
+  melon_sorbet:{ need:{ moon_melon:1, ion_berry:1 },  fed:3, buff:'feast',  name:'Feast',      text:'a bit of everything: +12% damage, repair and charge, +3% evasion' }
 };
+const FEAST = { fired:{ dps:1.3 }, sharp:{ charge:1.12 }, hearty:{ repair:1.3 }, sugar:{ evade:5, speed:1.15 }, feast:{ dps:1.12, repair:1.12, charge:1.12, evade:3 } };
+function feastNow(){ return G && G.feast && G.feast.n > 0 ? G.feast : null; }
 function cook(){ return G && G.ship ? G.ship.crew.find(c => c.owner==='p' && !c.drone && c.quirk==='cook') : null; }
 function canCook(k){ const r = RECIPES[k]; return r && Object.entries(r.need).every(([id, n]) => goodsHave(id) >= n); }
 function cookMeal(k){ if(!canCook(k)) return; const r = RECIPES[k]; for(const [id, n] of Object.entries(r.need)) takeGoods(id, n);
   const n = cook() ? 2 : 1; addGoods(k, n) || (G.bay[k] = (G.bay[k]||0) + n); sfx('buy');
   toast(`${cook() ? cook().name + ' cooks' : 'You cook'} ${n > 1 ? n + ' portions of ' : ''}${goodsDef(k).name.toLowerCase()}.`); }
-/* eat together: heals, makes everyone a bit fonder of you, and they fight better while well fed */
-function eatMeal(k){ const r = RECIPES[k]; if(!r || !takeGoods(k, 1)) return; const ck = cook(), mult = ck ? 1.5 : 1;
-  for(const c of G.ship.crew) if(c.owner==='p' && !c.drone){ c.hp = Math.min(c.maxHp, c.hp + r.heal*mult); addHearts(c, 15); }
-  G.fed = Math.max(G.fed||0, r.fed + (ck ? 1 : 0)); sfx('buy');
-  toast(`The crew eat ${goodsDef(k).name.toLowerCase()} together. Well fed for the next ${G.fed} fights: +10% repair, melee and weapon charge.`); }
+/* eat together: everyone a bit fonder of you, and an edge for the next fights that depends on the meal */
+function eatMeal(k){ const r = RECIPES[k]; if(!r || !takeGoods(k, 1)) return; const ck = cook();
+  for(const c of G.ship.crew) if(c.owner==='p' && !c.drone){ addHearts(c, 15); if(r.buff==='hearty' && !c.feastHp){ c.feastHp = 15; c.maxHp += 15; c.hp += 15; } }
+  G.feast = { buff:r.buff, n:r.fed + (ck ? 1 : 0), name:r.name }; G.fed = G.feast.n; sfx('buy');
+  UI.toast = { text:`The crew eat ${goodsDef(k).name.toLowerCase()} together. ${r.name} for the next ${G.feast.n} fights: ${r.text}.`, t:4.5 }; }
+function feastEnd(){ for(const c of G.ship.crew) if(c.feastHp){ c.maxHp -= c.feastHp; c.hp = Math.min(c.hp, c.maxHp); c.feastHp = 0; } G.feast = null; G.fed = 0; }
 
 /* ---------------- friendship hearts ---------------- */
 const GIFT_LOVES = {
@@ -78,6 +82,16 @@ function addHearts(c, n){ if(!c || c.drone || c.owner!=='p') return; if(n > 0 &&
   if(now > before){ if(now >= 8 && !c.hpBonusH){ c.hpBonusH = true; c.maxHp += 10; c.hp += 10; }
     for(const lv of [4, 8, 10]) if(before < lv && now >= lv && !(c.heartScenes||[]).includes(lv)){ (c.heartScenes = c.heartScenes || []).push(lv); G.later.push({ event:'m_heart' + lv, jumps:ri(1,3), star:c.id }); }
     if(now===10) grant('home_bestie'); } }
+function heartPerkText(c){ const h = heartsOf(c);
+  const now = h >= 10 ? 'Devoted: works 15% better, +10 health, and will cheat death once for you.' : h >= 8 ? 'Works 10% better and has +10 health.' : h >= 6 ? 'Works 10% better for you.' : h >= 3 ? 'Works 5% better for you.' : 'No bonus yet.';
+  const next = h < 3 ? 'At 3 hearts: works 5% better.' : h < 6 ? 'At 6 hearts: 10% better.' : h < 8 ? 'At 8 hearts: +10 health.' : h < 10 ? 'At 10 hearts: devoted.' : '';
+  return `${now} ${next}${c.sulkF > 0 ? ` Sulking about their birthday: 10% worse for ${c.sulkF} more fight${c.sulkF===1?'':'s'}.` : ''} Hearts come from gifts they like, meals together, nights out and fights survived.`; }
+/* a loved gift fires them up: a burst of practice at whatever they do */
+function giftInspire(c){ const posts = { piloting:'pilot', engines:'engines', shields:'shields', weapons:'weapons' }, room = G.ship.rooms[c.station], sk = room && posts[room.sys] || 'repair';
+  const t = SKILLT[sk]; c.sk[sk] = Math.max(c.sk[sk]||0, Math.min((c.sk[sk]||0) + t[0]*.6, t[1])); return SKILLN[sk]; }
+/* birthday present: they get properly good at their job */
+function birthdayBoost(c){ const posts = { piloting:'pilot', engines:'engines', shields:'shields', weapons:'weapons' }, room = G.ship.rooms[c.station], sk = room && posts[room.sys] || 'repair', t = SKILLT[sk], v = c.sk[sk]||0;
+  c.sk[sk] = v < t[0] ? t[0] : t[1]; return SKILLN[sk]; }
 function giftReaction(c, id){
   const g = goodsDef(id); if(!g) return 0; const hates = GIFT_HATES[id];
   if((GIFT_LOVES[c.quirk]||[]).includes(id) || (RACE_LOVES[c.race]||[]).includes(id)) return 2;
@@ -87,14 +101,16 @@ function giftReaction(c, id){
 function giveGift(c, id){
   if(!c || !goodsHave(id)) return; if(c.giftJ===G.stats.jumps){ toast(`You already gave ${c.name} something today. Give it a jump.`); return; }
   takeGoods(id, 1); c.giftJ = G.stats.jumps; const r = giftReaction(c, id), g = goodsDef(id);
-  const bday = c.bday===G.stats.jumps; addHearts(c, [-30, 20, 45, 85][r + 1] * (bday && r >= 0 ? 3 : 1));
-  if(bday && r >= 0){ if(typeof sagaNote==='function') sagaNote('bday', `The captain remembered ${c.name}'s birthday, and gave them ${aN(g.name.toLowerCase())}.`); }
+  const bday = isBirthday(c) && !c.bdayDone; addHearts(c, [-30, 20, 45, 85][r + 1] * (bday && r >= 0 ? 3 : 1));
+  let extra = '';
+  if(bday && r >= 0){ c.bdayDone = true; extra = ` Birthday present! They get properly good at ${birthdayBoost(c).toLowerCase()}.`; if(typeof sagaNote==='function') sagaNote('bday', `The captain remembered ${c.name}'s birthday, and gave them ${aN(g.name.toLowerCase())}.`); }
+  else if(r===2) extra = ` Inspired: a burst of practice at ${giftInspire(c).toLowerCase()}.`;
   if(c.wish===id){ c.wish = null; addHearts(c, 110); UI.toast = { text:`${c.name} has wanted ${g.name.toLowerCase()} for ages. They are over the moon. (+ lots of hearts)`, t:4 }; sfx('buy'); if(typeof sagaNote==='function') sagaNote('wish', `The captain found ${c.name} the ${g.name.toLowerCase()} they had been dreaming about.`); return; }
   const line = r===2 ? pick([`${g.name}! How did you know? I love this!`, `You remembered! This is my favourite thing in the galaxy.`, `Oh, captain. You shouldn't have. (You definitely should have.)`])
     : r===1 ? pick([`Thanks, captain. That's really nice.`, `For me? That's lovely.`]) : r===0 ? pick([`Oh. Thanks.`, `Huh. ${g.name}. Okay!`, `I'll... find a use for it.`])
     : pick([`...Why would you give me this?`, `Is this a joke? It's a joke, right?`, `I'm going to pretend this didn't happen.`]);
   G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:line, id:c.id, t:3.4 }); sfx(r > 0 ? 'buy' : 'click');
-  toast(`${bday && r >= 0 ? '🎂 Birthday present! ' : ''}${c.name} ${['did not like', 'accepted', 'liked', 'loved'][r + 1]} the ${g.name.toLowerCase()}${bday && r >= 0 ? ' (triple hearts)' : ''}. ${'♥'.repeat(heartsOf(c))}${'♡'.repeat(10 - heartsOf(c))}`);
+  UI.toast = { text:`${bday && r >= 0 ? '🎂 ' : ''}${c.name} ${['did not like', 'accepted', 'liked', 'loved'][r + 1]} the ${g.name.toLowerCase()}.${extra} ${'♥'.repeat(heartsOf(c))}${'♡'.repeat(10 - heartsOf(c))}`, t:4 };
 }
 
 /* ---------------- perks: personalities, hearts and good food ----------------
@@ -112,24 +128,42 @@ const QUIRK_PERK_TEXT = {
 };
 const NOPERK = {};
 function perkOf(c){
-  if(!c || c.owner!=='p' || c.drone) return null; const q = QUIRK_PERKS[c.quirk], h = heartsOf(c), fed = G && G.fed > 0, ven = c.vengeT > 0;
+  if(!c || c.owner!=='p' || c.drone) return null; const q = QUIRK_PERKS[c.quirk], h = heartsOf(c);
   const ip = typeof implantPerk==='function' ? implantPerk(c) : null;   // Doctor Oddly's handiwork (travellers.js)
-  if(!q && h < 6 && !fed && !ip) return null;
-  const k = h >= 10 ? 1.1 : h >= 6 ? 1.05 : 1, f = fed ? 1.1 : 1, I = ip || { repair:1, dps:1, charge:1, speed:1, shield:1, evade:0, heal:0 };
-  return { repair:(q && q.repair || 1)*k*f*I.repair, dps:(q && q.dps || 1)*k*f*I.dps, charge:(q && q.charge || 1)*f*I.charge, speed:(q && q.speed || 1)*I.speed, shield:(q && q.shield || 1)*I.shield, evade:(q && q.evade || 0) + I.evade, heal:(q && q.heal || 0) + I.heal };
+  const fs = feastNow(), F = fs ? FEAST[fs.buff] || {} : {}, sulk = c.sulkF > 0 ? .9 : 1;
+  if(!q && h < 3 && !fs && !ip && sulk===1) return null;
+  const k = (h >= 10 ? 1.15 : h >= 6 ? 1.1 : h >= 3 ? 1.05 : 1)*sulk, I = ip || { repair:1, dps:1, charge:1, speed:1, shield:1, evade:0, heal:0 };
+  return { repair:(q && q.repair || 1)*k*(F.repair||1)*I.repair, dps:(q && q.dps || 1)*k*(F.dps||1)*I.dps, charge:(q && q.charge || 1)*k*(F.charge||1)*I.charge, speed:(q && q.speed || 1)*(F.speed||1)*I.speed, shield:(q && q.shield || 1)*I.shield, evade:(q && q.evade || 0) + (F.evade||0) + I.evade, heal:(q && q.heal || 0) + I.heal };
 }
 function mergeTrait(t, p){ return { name:t.name, desc:t.desc, repair:(t.repair||1)*p.repair, dps:(t.dps||1)*p.dps, charge:(t.charge||1)*p.charge, speed:(t.speed||1)*p.speed, shield:(t.shield||1)*p.shield, hp:t.hp||0, evade:(t.evade||0) + p.evade, heal:(t.heal||0) + p.heal }; }
 
 /* ---------------- fishing ---------------- */
-function canFish(node){ return node && !node.fished && !G.enemy; }
-/* what bites: decided when the line goes in (nebulas hold rarer things) */
-function rollBite(){ const neb = G.nebula, r = Math.random();
-  return r < (neb ? .3 : .4) ? 'fish' : r < .5 ? 'eel' : r < .66 ? 'junk' : r < .78 ? 'seeds' : r < .81 ? 'relic' : 'none'; }
-const BITES = { fish:{ zone:.26, speed:2.2, name:'Something small and quick' }, eel:{ zone:.13, speed:3.3, name:'Something big and angry' }, junk:{ zone:.34, speed:1.6, name:'Something heavy and lazy' },
-  seeds:{ zone:.3, speed:1.9, name:'Something light, drifting' }, relic:{ zone:.09, speed:3.7, name:'Something old, deep and very heavy' } };
+/* fishing needs a rod (stores, Mags) and a fishing spot: nebulas, asteroid fields, and quiet beacons marked with a fish on the map.
+   You can keep casting, but every cast at the same spot is riskier than the last. */
+function fishSpot(node){ return !!(node && (node.nebula || node.hazard==='asteroid' || node.fishy)); }
+function canFish(node){ return !!(node && G.rod && fishSpot(node) && !G.enemy); }
+function fishRisk(node){ return Math.min(.7, .06 + .13*((node && node.casts) || 0)); }
+function fishButton(node){ if(!fishSpot(node) || G.enemy) return null;
+  if(!G.rod) return { id:'fish', label:'🎣 Fishing spot (you need a rod)', fn:() => toast('You need a fishing rod. Stores sell them in Supplies, and Mags always has one.') };
+  const k = node.casts||0; return { id:'fish', label: k ? `🎣 Cast again · ${Math.round(fishRisk(node)*100)}% risk` : '🎣 Cast a line', fn:startFishing }; }
+/* what bites: deeper casts reach rarer things */
+function rollBite(){ const node = G.map.nodes[G.map.cur], deep = Math.min(3, (node && node.casts) || 0), neb = G.nebula, r = Math.random();
+  return r < (neb ? .3 : .38) - deep*.05 ? 'fish' : r < .5 ? 'eel' : r < .64 ? 'junk' : r < .76 ? 'seeds' : r < .79 + deep*.02 ? 'relic' : 'none'; }
+const BITES = { fish:{ zone:.2, speed:2.6, name:'Something small and quick' }, eel:{ zone:.1, speed:3.8, name:'Something big and angry' }, junk:{ zone:.26, speed:2, name:'Something heavy and lazy' },
+  seeds:{ zone:.22, speed:2.3, name:'Something light, drifting' }, relic:{ zone:.07, speed:4.3, name:'Something old, deep and very heavy' } };
+const FISH_TROUBLE = ['snag','bite','rod','noise','spark'];
+/* trouble: the risk you take for one more cast */
+function fishTrouble(m){ const node = G.map.nodes[G.map.cur], who = pick(G.ship.crew.filter(c => c.owner==='p' && !c.drone)) || { name:'Someone' }; let t = pick(FISH_TROUBLE), text;
+  if(t==='snag'){ G.ship.hull = Math.max(1, G.ship.hull - 2); text = 'The hook snags a tumbling rock, and the line yanks it straight into your hull. -2 hull.'; }
+  else if(t==='bite'){ if(who.hp) who.hp = Math.max(5, who.hp - 30); text = `Something with far too many teeth comes up the line and bites ${who.name}. -30 health.`; }
+  else if(t==='rod'){ G.rod = false; text = `The line goes tight, then the rod snaps clean in half. ${who.name} looks at the stump for a long time. You'll need a new rod.`; }
+  else if(t==='spark'){ if(typeof igniteRoom==='function') igniteRoom(G.ship, Math.floor(Math.random()*G.ship.rooms.length)); text = 'You reel in a live power cell. It is very much alive. Fire on board!'; }
+  else { text = 'All the splashing has been noticed. A patrol is coming to see what the noise is about.'; G.fishFight = true; }
+  node.casts = (node.casts||0) + 1; m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = [fishButton(node)].filter(Boolean); sfx('alarm'); save();
+  if(G.fishFight){ G.fishFight = false; m.btn = 'Battle stations'; m.then = () => startCombat('random', {}); } }
 /* the catch itself; outcome: a bite, 'none' (nothing bit) or 'lost' (it got away) */
 function goFish(m, outcome){
-  const node = G.map.nodes[G.map.cur]; if(!canFish(node) && !outcome) return; node.fished = true;
+  const node = G.map.nodes[G.map.cur]; if(!canFish(node) && !outcome) return;
   if(!m || typeof m!=='object'){ m = { type:'msg', title:'Fishing', text:'' }; G.modal = m; }   // called without its beacon message (old save, or a mod)
   const o = outcome || rollBite(); let text;
   const who = pick(G.ship.crew.filter(c => c.owner==='p' && !c.drone)) || { name:'You' };
@@ -138,21 +172,25 @@ function goFish(m, outcome){
   else if(o==='junk'){ addGoods('junk', 1); text = pick([`${who.name} reels in a single boot. It is, somehow, still warm.`, `You catch a rubber duck. It squeaks at you, accusingly.`, `The line comes back with half a toaster on it. ${who.name} keeps it.`]); }
   else if(o==='seeds'){ const k = pick(Object.keys(SEEDS).filter(s => !SEEDS[s].only)); G.seeds = G.seeds || {}; G.seeds[k] = (G.seeds[k]||0) + 2; text = `The line snags a drifting seed pod: 2 ${SEEDS[k].name} seeds.`; }
   else if(o==='relic'){ addGoods('relic', 1); text = `${who.name} hooks something heavy and old: an ancient relic, older than the Fedoration. Collectors will go mad for this.`; grant('home_angler'); if(typeof sagaNote==='function') sagaNote('fish', `${who.name} fished an ancient relic out of empty space in sector ${G.sector}.`); }
-  else if(o==='lost') text = pick(['It got away. It was, everyone agrees, enormous.', `The line snaps. ${who.name} swears at the stars for a full minute.`, 'Whatever it was, it is still out there, laughing.']);
+  else if(o==='lost') text = pick(['It got away. It was, everyone agrees, enormous.', `The line snaps back empty. ${who.name} swears at the stars for a full minute.`, 'Whatever it was, it is still out there, laughing.']);
   else text = pick(['Nothing bites. It is peaceful, though.', `${who.name} falls asleep holding the rod. Nobody wakes them.`, 'A fish looks at the bait, looks at you, and swims away.']);
-  if(typeof addHearts==='function' && who.id) addHearts(who, 10);
-  m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = (m.extra||[]).filter(x => x.id!=='fish'); sfx('click'); save();
+  if(typeof addHearts==='function' && who.id) addHearts(who, 6);
+  node.casts = (node.casts||0) + 1;
+  m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = [fishButton(node)].filter(Boolean); sfx('click'); save();
 }
-/* fishing, the fun way: a marker sweeps the bar, reel in while it is inside the zone. Three tries. */
-function startFishing(m){ const node = G.map.nodes[G.map.cur]; if(!canFish(node)) return; const bite = rollBite();
-  if(bite==='none'){ goFish(m, 'none'); return; }
-  G.modal = { type:'fishing', back:m, bite, tries:3, zc:.25 + Math.random()*.5, t0:performance.now(), note:'' }; sfx('click'); }
-function fishPos(f){ const b = BITES[f.bite], t = (performance.now() - f.t0)/1000; return .5 + .5*Math.sin(t*b.speed + Math.sin(t*1.3)*.8); }
+/* fishing, the hard way: a marker sweeps the bar, reel in while it is inside the zone. Two tries. Every cast risks trouble first. */
+function startFishing(m){ const node = G.map.nodes[G.map.cur]; if(!canFish(node)) return;
+  if(Math.random() < fishRisk(node)){ fishTrouble(m); return; }
+  const bite = rollBite(); if(bite==='none'){ goFish(m, 'none'); return; }
+  G.modal = { type:'fishing', back:m, bite, tries:2, zc:.25 + Math.random()*.5, t0:performance.now(), note:'' }; sfx('click'); }
+function fishPos(f){ const b = BITES[f.bite], t = (performance.now() - f.t0)/1000; return .5 + .5*Math.sin(t*b.speed + Math.sin(t*1.7)*1.1); }
 function reel(f){ const b = BITES[f.bite], hit = Math.abs(fishPos(f) - f.zc) < b.zone/2;
   if(hit){ G.modal = f.back; goFish(f.back, f.bite); haptic(.4, 40); G.fishCaught = (G.fishCaught||0) + 1; return; }
   f.tries--; haptic(.2, 15); sfx('error');
   if(f.tries <= 0){ G.modal = f.back; goFish(f.back, 'lost'); return; }
-  f.note = pick(['Too early! It is still on.', 'Missed! The line goes slack, then tight again.', 'Not yet... it is pulling hard.']); f.zc = .2 + Math.random()*.6; }
+  f.note = pick(['Too early! It is still on.', 'Missed! The line goes slack, then tight again.', 'Not yet... it is pulling hard.']); f.zc = .2 + Math.random()*.6; f.t0 -= Math.random()*2000; }
+/* fishing spots: some quiet beacons in each sector */
+function fishSpots(nodes){ for(const nd of nodes) if(nd.col > 0 && nd.type==='empty' && !nd.quest && Math.random() < .6) nd.fishy = true; }
 function drawFishing(f){
   const fr = mframe(900, 460, 'Fishing', C.cyan, f), b = BITES[f.bite];
   T(`${b.name} is on the line! Reel in while the marker is in the green.`, fr.x+32, fr.y+110, { s:18, c:C.ink, max:fr.w-64 });
@@ -161,7 +199,7 @@ function drawFishing(f){
   rr(bx + bw*(f.zc - b.zone/2), by+4, bw*b.zone, bh-8, 8); ctx.fillStyle = hexA(C.good, .55); ctx.fill();
   const mx = bx + bw*pos; ctx.fillStyle = C.amber; rr(mx-6, by-10, 12, bh+20, 6); ctx.fill();
   T('🐟', mx, by+bh+42, { s:26, a:'center' });
-  T(`Tries left: ${'●'.repeat(f.tries)}${'○'.repeat(3 - f.tries)}`, fr.x+32, fr.y+fr.h-110, { s:16, c:C.muted }); if(f.note) T(f.note, fr.x+fr.w-32, fr.y+fr.h-110, { s:16, a:'right', c:C.warn });
+  T(`Tries left: ${'●'.repeat(f.tries)}${'○'.repeat(2 - f.tries)}`, fr.x+32, fr.y+fr.h-110, { s:16, c:C.muted }); if(f.note) T(f.note, fr.x+fr.w-32, fr.y+fr.h-110, { s:16, a:'right', c:C.warn });
   region(bx, by-20, bw, bh+40, () => reel(f), 'reel bar');
   btn(fr.x+fr.w/2-160, fr.y+fr.h-90, 320, 64, 'Reel in!', () => reel(f), { fill:true, col:C.cyan, s:22 });
   btn(fr.x+fr.w-170, fr.y+fr.h-82, 140, 50, 'Give up', () => { G.modal = f.back; goFish(f.back, 'lost'); }, { s:15 });
@@ -189,21 +227,24 @@ function barAct(st, what){
 function queueMorning(){ if(typeof MORNINGS==='undefined' || G.later.some(l => MORNINGS.includes(l.event))) return; const fresh = MORNINGS.filter(id => !G.seen[id]); G.later.push({ event:pick(fresh.length ? fresh : MORNINGS), jumps:1 }); }
 
 /* something waiting for you on the Ship screen: ripe crops, or a wish you can grant now */
-function homeAttention(){ if(!G || !G.ship) return null; if(G.garden && G.garden.plots.some(p => ripe(p))) return 'Crops are ready to harvest';
+function homeAttention(){ if(!G || !G.ship) return null; { const b = G.ship.crew.find(c => c.owner==='p' && !c.drone && isBirthday(c) && !c.bdayDone); if(b) return `It's ${b.name}'s birthday: give them a gift`; } if(G.garden && G.garden.plots.some(p => ripe(p))) return 'Crops are ready to harvest';
   const w = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.wish && goodsHave(c.wish) && c.giftJ!==G.stats.jumps); if(w) return `${w.name} wishes for something you have`;
   const bd = G.ship.crew.find(c => c.owner==='p' && !c.drone && c.bday===G.stats.jumps && c.giftJ!==G.stats.jumps); if(bd) return `It is ${bd.name}'s birthday`; return null; }
 /* ---------------- hook: each jump (run.js arrive) ---------------- */
+function isBirthday(c){ return c && c.bday!=null && G.stats.jumps >= c.bday && G.stats.jumps <= c.bday + 1; }
 function birthdays(){ if(!G || !G.ship) return; for(const c of G.ship.crew) if(c.owner==='p' && !c.drone){ if(c.bday==null) c.bday = G.stats.jumps + ri(4, 40);
-    if(c.bday===G.stats.jumps){ G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:pick(['It\'s my birthday! Not that anyone remembered.','Guess who\'s a year older today?','Birthday! Cake? Anyone? No?']), id:c.id, t:3.6 }); toast(`It's ${c.name}'s birthday! A gift today counts triple.`); } } }
-function homeJump(){ gardenJump(); birthdays();
-  if(G.sector >= 2 && !G.fairPlanned && !G.daily && !G.cup){ G.fairPlanned = true; if(Math.random() < .7) G.later.push({ event:'m_fair', jumps:ri(5, 12) }); }   // the Harvest Fair, once a run if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function') travellersJump();
-  if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
+    if(c.bday + 2===G.stats.jumps && !c.bdayDone){ c.bdayDone = true; c.sulkF = 3; addHearts(c, -40); G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:pick(['Nobody remembered. Fine. FINE.','Another year older, and not even a card.','I\'m not upset. I\'m just going to be quiet for a while.']), id:c.id, t:3.6 }); toast(`${c.name}'s birthday came and went without a present. They're sulking: 10% worse for 3 fights.`); }
+    if(c.bday===G.stats.jumps){ G.chat = (G.chat||[]).filter(x => x.t>0).slice(-2); G.chat.push({ text:pick(['It\'s my birthday! Not that anyone remembered.','Guess who\'s a year older today?','Birthday! Cake? Anyone? No?']), id:c.id, t:3.6 }); UI.toast = { text:`🎂 It's ${c.name}'s birthday! Give them a gift in the next two jumps (Ship → Hold & gifts): it counts triple and makes them better at their job. Forget, and they sulk.`, t:5 }; } } }
+function homeJump(){ const noTrav = typeof campDef==='function' && campDef() && campDef().noTravellers; gardenJump(); birthdays();
+  if(G.sector >= 2 && !G.fairPlanned && !G.daily && !G.cup){ G.fairPlanned = true; if(Math.random() < .7) G.later.push({ event:'m_fair', jumps:ri(5, 12) }); }   // the Harvest Fair, once a run
+  if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function' && !noTrav) travellersJump();
+  if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup && !noTrav){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
   // Rebuff space: patrols search ships, and illegal cargo goes
   if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Rebuff patrol found the smuggled cargo and took the lot.`); } }
   if(G.bay) for(const id of Object.keys(G.bay)) if(goodsDef(id)?.kind==='fish' && Math.random() < .08){ G.bay[id]--; if(!G.bay[id]) delete G.bay[id]; }   // fish do not keep forever: cook them
 }
 /* each fight won: the crew grow closer, and a full belly wears off */
-function homeFight(){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) addHearts(c, 6); if(G.fed > 0) G.fed--; }
+function homeFight(){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone){ addHearts(c, 6); if(c.sulkF > 0) c.sulkF--; } if(G.feast){ G.feast.n--; G.fed = G.feast.n; if(G.feast.n <= 0){ feastEnd(); toast('The meal has worn off.'); } } else if(G.fed > 0) G.fed--; }
 
 /* ---------------- medals ---------------- */
 ACHIEVEMENTS.push(
@@ -216,13 +257,13 @@ ACHIEVEMENTS.push(
 /* ---------------- ship screen: the hold, gifts and hearts ---------------- */
 function drawHoldTab(f, cx, y0){
   const W2 = f.w - 64, half = W2/2 - 10, ids = Object.keys(G.bay || {}).filter(id => goodsHave(id) && goodsDef(id));
-  label(`Cargo hold · ${holdUsed()}/${holdCap()}`, cx, y0+10, C.muted, 'left', 14); T(G.fed > 0 ? `Well fed: ${G.fed} more fight${G.fed===1?'':'s'}` : '', cx+half, y0+10, { s:14, a:'right', c:C.good });
+  label(`Cargo hold · ${holdUsed()}/${holdCap()}`, cx, y0+10, C.muted, 'left', 14); { const fs = feastNow(); T(fs ? `${fs.name}: ${fs.n} more fight${fs.n===1?'':'s'}` : '', cx+half, y0+10, { s:14, a:'right', c:C.good }); }
   if(!ids.length) para('Empty. Goods turn up in wrecks, at stores, from your garden and on the end of a fishing line. Sell them where they are wanted, cook them, or give them as gifts.', cx, y0+46, half, { s:16, lh:22, c:C.muted });
   const per = 8, pages = Math.max(1, Math.ceil(ids.length/per)), pg = clamp(UI.holdPage||0, 0, pages-1);
   ids.slice(pg*per, pg*per + per).forEach((id, i) => { const g = goodsDef(id), y = y0 + 22 + i*72, sel = UI.giftItem===id;
     panel(cx, y, half, 64, 8); if(sel){ rr(cx, y, half, 64, 8); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); }
     T(`${g.name} ×${goodsHave(id)}`, cx+16, y+26, { s:17, f:FD, w:700, c: g.illegal ? C.hostile : C.ink, max:half-300 }); T(`${g.kind} · worth about ${g.base}${g.want.length ? ' · wanted in ' + g.want.slice(0,2).map(w => (STORE_KINDS[w]||{}).title || w).join(', ') : ''}`, cx+16, y+48, { s:12, c:C.muted, max:half-300 });
-    tip(cx, y, half-280, 64, g.name, g.desc);
+    tip(cx, y, half-280, 64, g.name, g.desc + (RECIPES[id] ? ` Eat it together: ${RECIPES[id].name} for ${RECIPES[id].fed} fights (${RECIPES[id].text}).` : ''));
     if(g.kind==='meal') btn(cx+half-284, y+10, 130, 44, 'Eat', () => eatMeal(id), { s:15, col:C.good });
     btn(cx+half-146, y+10, 132, 44, sel ? 'Cancel' : 'Give…', () => { UI.giftItem = sel ? null : id; }, { s:15, col:C.amber, fill:sel }); });
   if(pages > 1){ const py = y0 + 22 + per*72; btn(cx, py, 60, 40, '‹', () => { UI.holdPage = pg-1; }, { disabled:pg<=0 }); btn(cx+70, py, 60, 40, '›', () => { UI.holdPage = pg+1; }, { disabled:pg>=pages-1 }); }
@@ -238,10 +279,11 @@ function drawHoldTab(f, cx, y0){
     panel(qx, y, half, 64, 8); drawPortrait(qx+30, y+32, 20, c, false);
     T(c.name, qx+60, y+26, { s:17, f:FD, w:700, max:150 }); T('♥'.repeat(h) + '♡'.repeat(10-h), qx+220, y+26, { s:16, c:C.hostile });
     const known = (c.knownLoves||[]).map(id => goodsDef(id)?.name).filter(Boolean);
-    if(c.bday===G.stats.jumps) T(`🎂 Birthday today! Gifts count triple${c.giftJ===G.stats.jumps ? ' (got one)' : ''}`, qx+60, y+48, { s:12, c:C.good, max:half-250 });
+    if(isBirthday(c) && !c.bdayDone) T(`🎂 Birthday! A gift now counts triple and trains them up`, qx+60, y+48, { s:12, c:C.good, max:half-250 });
+    else if(c.sulkF > 0) T(`Sulking (forgot their birthday): ${c.sulkF} fights`, qx+60, y+48, { s:12, c:C.hostile, max:half-250 });
     else if(c.wish && goodsDef(c.wish)) T(`Wishes for ${goodsDef(c.wish).name.toLowerCase()}${goodsHave(c.wish) ? ' (you have some!)' : ''}`, qx+60, y+48, { s:12, c: goodsHave(c.wish) ? C.good : C.warn, max:half-250 });
     else T(known.length ? `Loves: ${known.join(', ')}` : `${typeof quirkName==='function' ? quirkName(c) : ''}${h >= 6 ? ' · works harder for you' : ''}`, qx+60, y+48, { s:12, c:C.muted, max:half-250 });
-    tip(qx, y, half-180, 64, `${c.name} · ${h} heart${h===1?'':'s'}`, `Hearts grow with gifts they like, meals eaten together, nights out and fights survived together. At 6 hearts they repair and fight 5% better (10% at 10); at 8 they get +10 health. At 4 and 8 hearts they open up to you.${known.length ? ' Known loves: ' + known.join(', ') + '.' : ''}`);
+    tip(qx, y, half-180, 64, `${c.name} · ${h} heart${h===1?'':'s'}`, `Hearts grow with gifts they like, meals eaten together, nights out and fights survived together. ${heartPerkText(c)} At 4 and 8 hearts they open up to you. A gift they love also gives them a burst of practice.${known.length ? ' Known loves: ' + known.join(', ') + '.' : ''}`);
     if(UI.giftItem) btn(qx+half-170, y+10, 156, 44, today ? 'Had a gift today' : 'Give', () => { const id = UI.giftItem; giveGift(c, id); if(giftReaction(c, id)===2) (c.knownLoves = c.knownLoves || []).includes(id) || c.knownLoves.push(id); if(!goodsHave(id)) UI.giftItem = null; }, { s:14, disabled:today, col:C.amber, fill:!today }); });
 }
 /* ---------------- ship screen: the garden and the galley ---------------- */

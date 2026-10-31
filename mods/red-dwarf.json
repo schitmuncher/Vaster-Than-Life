@@ -1,0 +1,150 @@
+{
+  "name": "Red Dwarf: Three Million Years Late",
+  "version": "1.0",
+  "author": "Vaster Than Life team (unofficial fan campaign)",
+  "campaign": {
+    "id": "reddwarf",
+    "title": "Red Dwarf: Three Million Years Late",
+    "blurb": "Unofficial fan campaign. Red Dwarf has been towed away by Simulants. The last human alive, a hologram, a cat and a mechanoid chase it across deep space in a shuttle. Red Dwarf belongs to its creators.",
+    "color": "#ff6a5a",
+    "ships": ["rd_starbug"],
+    "crew": [
+      { "name": "Lister", "quirk": "optimist", "skills": { "weapons": 1 } },
+      { "name": "Rimmer", "quirk": "grump", "skills": { "pilot": 1 } },
+      { "name": "Cat", "quirk": "daredevil", "skills": { "pilot": 2, "combat": 1 } },
+      { "name": "Kryten", "quirk": "worrier", "skills": { "repair": 2, "engines": 1 } }
+    ],
+    "host": "Holly",
+    "introArt": "ship",
+    "intro": "Holly's face fills the shuttle's screen, looking as if she has just been woken up. \"Bit of news. Red Dwarf's gone. A Simulant battle group hooked a tow line on her while you lot were asleep, and they're dragging her off to their Death Ship to strip her for parts. I'm still aboard, sort of, on the emergency backup. You'll want to follow the tow beacon. Eight sectors. Probably. I've rounded down.\"",
+    "giftLine": "\"Kryten has packed a few things for the trip. You can take one. He'll be inconsolable about the rest.\"",
+    "fleet": "the Simulant battle group",
+    "foe": "Simulant",
+    "boss": "the Death Ship",
+    "command": "Red Dwarf",
+    "start": "rd_drift",
+    "sectors": ["rd_gelf", "rd_psi", "rd_simulant", "rd_waxworks", "rd_backwards"],
+    "noTravellers": true,
+    "eventBias": 6,
+    "beats": {
+      "2": "rd_curry",
+      "3": "rd_exam",
+      "4": "rd_mirror",
+      "5": "rd_guilt",
+      "6": "rd_holly",
+      "7": "rd_skutters",
+      "final": "rd_final"
+    },
+    "bossLines": [
+      "The Death Ship's commander appears on screen, all chrome and contempt. \"Organics. In a shuttle. Chasing a battle group. I shall enjoy cataloguing your remains.\"",
+      "\"You again. I have upgraded my hatred of you. It is now military grade.\"",
+      "\"Every gun. Every drone. Every last ounce of spite. FIRE.\""
+    ],
+    "chatter": [
+      "Lister: Anyone seen the last poppadom? It was right here. It had a name.",
+      "Rimmer: I'd like it noted in the log that I was right. About everything. Generally.",
+      "Cat: Hold on. I need to check my hair before we jump. Okay. Perfect. Again.",
+      "Kryten: I've ironed the emergency blankets, sir. And the emergency. It was creased.",
+      "Holly: I've been thinking. Then I stopped. It's quieter.",
+      "Lister: Three million years from Earth and the vending machine still eats my coins.",
+      "Rimmer: I've drawn up a rota for the rota. It's colour-coded. Nobody's read it.",
+      "Cat: Something smells funny. Oh. It's Lister."
+    ],
+    "win": { "title": "RED DWARF RECOVERED", "text": "The Death Ship breaks apart, and the tow line goes slack. Red Dwarf is yours again: battered, empty and three million years from anywhere. Lister puts the kettle on. Rimmer starts writing a report about his own heroism. The Cat finds a new mirror. Kryten starts on the washing up. Holly says something nobody quite follows. Earth is still a very long way off." },
+    "lose": "Starbug drifts, silent. Somewhere far ahead, Red Dwarf keeps going without them, and Holly counts the stars for company."
+  },
+  "races": [
+    { "id": "rd_hologram", "name": "Hologram", "color": "#9fd6ff", "hp": 80, "repair": 0.7, "combat": 0.5, "speed": 1, "fireproof": true, "noAir": true, "desc": "Made of light. Fire and vacuum can't touch him. Neither can a spanner, or a punch, very well." },
+    { "id": "rd_felis", "name": "Felis sapiens", "color": "#e7c35a", "hp": 100, "repair": 0.6, "combat": 1.3, "speed": 1.4, "desc": "Evolved from house cats. Very fast, very good in a fight, and very busy looking at himself." },
+    { "id": "rd_mechanoid", "name": "Mechanoid", "color": "#c8d0dc", "hp": 120, "repair": 1.8, "combat": 0.8, "speed": 0.9, "noAir": true, "desc": "A service mechanoid. Repairs anything, needs no air, and apologises for both." }
+  ],
+  "ships": [
+    { "id": "rd_starbug", "name": "Starbug 1", "layout": "A", "cls": "Mining shuttle", "color": "#7fbf6a", "pattern": "TABAN", "hull": 30, "reactor": 8, "fuel": 16, "missiles": 8, "parts": 2,
+      "desc": "A battered mining shuttle with a crew of four and a smell of curry that no air filter has ever beaten.",
+      "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 },
+      "reserve": ["drones", "teleporter", "cloaking"], "weapons": ["bust1", "arty"], "drones": [], "crew": ["human", "rd_hologram", "rd_felis", "rd_mechanoid"] }
+  ],
+  "enemies": [
+    { "id": "rd_sim_hunter", "name": "Simulant Hunter", "tags": ["rdsim"], "onlyTagged": true, "hull": 10, "sectors": [1, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 1 }, "weapons": ["basic", "heavy1"], "crew": ["mantlis", "mantlis", "human"] },
+    { "id": "rd_sim_cruiser", "name": "Simulant Battle Cruiser", "tags": ["rdsim"], "onlyTagged": true, "hull": 14, "sectors": [4, 8], "systems": { "shields": 4, "engines": 2, "weapons": 4, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 1 }, "weapons": ["bust1", "hermies"], "crew": ["mantlis", "mantlis", "mantlis", "human"] },
+    { "id": "rd_gelf_raider", "name": "GELF War Canoe", "tags": ["rdgelf"], "onlyTagged": true, "hull": 11, "sectors": [1, 8], "systems": { "shields": 2, "engines": 3, "weapons": 2, "teleporter": 1, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["basic", "lego"], "crew": ["pebblekin", "pebblekin", "sloog"] },
+    { "id": "rd_agonoid", "name": "Agonoid Scrap Barge", "tags": ["rdagon"], "onlyTagged": true, "auto": true, "hull": 12, "sectors": [3, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "drones": 2, "piloting": 1 }, "weapons": ["bust1", "ion"], "drones": ["combat1"], "crew": [] },
+    { "id": "rd_wax", "name": "Waxworks Gunboat", "tags": ["rdwax"], "onlyTagged": true, "auto": true, "hull": 9, "sectors": [1, 8], "systems": { "shields": 2, "engines": 2, "weapons": 2, "piloting": 1 }, "weapons": ["basic", "basic"], "crew": [] },
+    { "id": "flaggship", "name": "The Death Ship" }
+  ],
+  "sectors": [
+    { "id": "rd_drift", "name": "Deep Space", "blurb": "Three million years from Earth and nothing for light years in every direction. Except trouble.", "color": "#7fbf6a", "mix": { "event": 48, "combat": 38, "empty": 14 }, "tags": ["rd"], "enemyTags": ["rdgelf", "rdwax"], "hazards": { "asteroid": 0.06, "sun": 0.04 }, "nebula": 0, "intro": ["Starbug's engines cough, then catch. The tow beacon blinks somewhere ahead. Lister puts his feet up on the console. Rimmer tells him to take them down."] },
+    { "id": "rd_gelf", "name": "GELF Territory", "blurb": "Genetically engineered lifeforms, all of them armed and most of them cross.", "color": "#c98a4a", "mix": { "event": 42, "combat": 46, "empty": 12 }, "tags": ["rd"], "enemyTags": ["rdgelf"], "hazards": { "asteroid": 0.1 }, "nebula": 0, "intro": ["Kryten warns that GELF tribes trade in everything, including visitors. The Cat checks his cufflinks, just in case."] },
+    { "id": "rd_psi", "name": "Psi-Moon Belt", "blurb": "Moons that read your mind and reshape themselves to match it. Bring a calm mind. Or any mind.", "color": "#b48cff", "mix": { "event": 52, "combat": 34, "empty": 14 }, "tags": ["rd"], "enemyTags": ["rdagon", "rdgelf"], "hazards": { "pulsar": 0.08, "ionstorm": 0.06 }, "nebula": 0.2, "intro": ["The moons here shift as you pass, turning into whatever whoever is on watch is thinking about. Right now, apparently, a giant curry."] },
+    { "id": "rd_simulant", "name": "Simulant Hunting Grounds", "blurb": "The battle group's own backyard. Heavy patrols, heavy guns, and no sense of humour.", "color": "#ff5a7a", "mix": { "event": 30, "combat": 58, "empty": 12 }, "tags": ["rd"], "enemyTags": ["rdsim"], "hazards": { "asteroid": 0.05, "sun": 0.05 }, "nebula": 0.05, "intro": ["Simulant patrol codes crackle on every channel. Rimmer suggests hiding. Nobody can find a reason to disagree."] },
+    { "id": "rd_waxworks", "name": "The Waxworks Drift", "blurb": "Abandoned theme-park planets, their wax droids still fighting a war nobody remembers starting.", "color": "#ffd166", "mix": { "event": 46, "combat": 42, "empty": 12 }, "tags": ["rd"], "enemyTags": ["rdwax", "rdagon"], "hazards": { "sun": 0.08 }, "nebula": 0, "intro": ["Old theme-park beacons still play their welcome jingles to nobody. Lister finds them oddly comforting. Rimmer finds them tacky."] },
+    { "id": "rd_backwards", "name": "The Backwards Reach", "blurb": "A region where time flows the wrong way. It ends well. Or begins well. Hard to say.", "color": "#5fd3e6", "mix": { "event": 50, "combat": 38, "empty": 12 }, "tags": ["rd"], "enemyTags": ["rdsim", "rdgelf"], "hazards": { "ionstorm": 0.08, "pulsar": 0.05 }, "nebula": 0.1, "intro": ["The chronometer starts counting down instead of up. Kryten finds this deeply upsetting. Lister finds it means breakfast comes after dinner, and is delighted."] },
+    { "id": "laststand", "name": "The Death Ship's Wake", "blurb": "Red Dwarf, on the end of a tow line, and the Death Ship dragging her towards the breakers.", "tags": ["rd"], "enemyTags": ["rdsim"], "intro": ["There she is: Red Dwarf, five miles of red metal, helpless on the end of a tow line. Ahead of her, the Death Ship. Holly's voice crackles through: \"Oh good, you came. I was starting to talk to myself. Well. More.\""] }
+  ],
+  "events": [
+    { "id": "rd_curry", "questOnly": true, "once": true, "art": "ship", "text": "Lister has found the last chicken vindaloo in the galley freezer, and is holding it like a holy relic. \"It's the last one, man. The last curry in the universe.\" Everyone is looking at it.", "choices": [
+      { "text": "Share it out, one spoonful each.", "effect": { "text": "It is the best spoonful of food anyone has had in years. Even Kryten, who doesn't eat, has a little sniff. Morale soars.", "crewHeal": 40 } },
+      { "text": "It's Lister's. Let him have it.", "effect": { "text": "Lister eats it slowly, with his eyes closed. He is unbearably cheerful for the rest of the sector.", "xp": { "skill": "weapons", "amt": 20 } } },
+      { "text": "Freeze it again for an emergency.", "effect": { "text": "Kryten labels it EMERGENCY CURRY and puts it behind the reactor shielding. It will not be safe there. Nothing is safe from Lister.", "scrap": 10 } } ] },
+    { "id": "rd_exam", "questOnly": true, "once": true, "art": "station", "text": "Rimmer has found an automated exam station and is going to sit his astronavigation exam. Again. He has sat it more times than anyone can count, and failed it every time. He has brought a revision timetable. It is longer than the exam.", "choices": [
+      { "text": "Help him revise.", "chance": 0.45, "success": { "text": "Against all known science, he passes. He frames the certificate and hangs it on the bridge, and is genuinely a better pilot for it.", "xp": { "skill": "pilot", "amt": 60 } }, "fail": { "text": "He panics, writes his name wrong, and faints. The exam station gives him a participation sticker. He wears it.", "scrap": 5 } },
+      { "text": "Sit it for him, disguised.", "effect": { "text": "Kryten sits it in a Rimmer mask and scores full marks. The station is suspicious. Rimmer is delighted, then furious, then delighted again.", "fleetPush": -0.05 } },
+      { "text": "Keep flying. The tow beacon won't wait.", "effect": { "text": "Rimmer sulks for six jumps. It is very restful.", "fuel": 1 } } ] },
+    { "id": "rd_mirror", "questOnly": true, "once": true, "art": "planet", "text": "The Cat has found a moon of polished crystal, a perfect mirror half a mile wide, and he will not leave. \"I have finally found something worthy of looking at me.\"", "choices": [
+      { "text": "Give him an hour.", "effect": { "text": "He comes back glowing with confidence. In the next fight, nobody has ever dodged so stylishly.", "xp": { "skill": "pilot", "amt": 30 } } },
+      { "text": "Mine the crystal.", "effect": { "text": "The Cat is horrified, but the crystal sells beautifully.", "scrap": 50, "goods": { "nebula_crystal": 2 } } },
+      { "text": "Drag him back aboard.", "effect": { "text": "He fights it all the way. He has never looked better doing it.", "crewHeal": 10 } } ] },
+    { "id": "rd_guilt", "questOnly": true, "once": true, "art": "ship", "text": "Kryten has something to confess. He has been running a hidden program for months: a list of everything he has ever done wrong. It is very long. Item one is ironing Lister's lucky socks.", "choices": [
+      { "text": "Forgive him. All of it.", "effect": { "text": "Kryten is so relieved he cleans the entire ship in one night, including several things that were meant to be dirty.", "xp": { "skill": "repair", "amt": 30 } } },
+      { "text": "Teach him to lie a little.", "chance": 0.5, "success": { "text": "\"The Simulants are... very handsome?\" It's a start. He feels lighter, and so does the ship's software: he deletes a lot of nonsense along with the list.", "reactor": 1 }, "fail": { "text": "He tries to lie to the ship's computer, short-circuits, and spends a day thinking he is a toaster.", "damageSystem": "random" } },
+      { "text": "Add your own items to the list.", "effect": { "text": "Kryten is overjoyed. A longer list means more to feel bad about. Some people are just built differently.", "scrap": 5 } } ] },
+    { "id": "rd_holly", "questOnly": true, "once": true, "art": "nebula", "text": "Holly comes through on the backup line. \"I've worked out a shortcut. Straight through that black hole. I've done the maths. Twice. Got two different answers, so I averaged them.\"", "choices": [
+      { "text": "Trust Holly.", "chance": 0.6, "success": { "text": "You come out the other side half a sector ahead, slightly younger, and all wearing each other's socks.", "fleetPush": -0.2, "fuel": 2 }, "fail": { "text": "You come out the other side exactly where you went in, an hour later, and someone has been at the curry.", "fuel": -2, "fleetPush": 0.08 } },
+      { "text": "Go the long way.", "effect": { "text": "Holly sulks. Holly sulking is mostly indistinguishable from Holly not sulking.", "fuel": -1 } },
+      { "text": "Rimmer recalculates.", "effect": { "text": "Rimmer recalculates for four hours and arrives at the same two answers. He averages them. You go round anyway.", "xp": { "skill": "pilot", "amt": 15 } } } ] },
+    { "id": "rd_skutters", "questOnly": true, "once": true, "art": "ship", "text": "The skutters, the little cleaning robots, have been busy. They have built an enormous model of Red Dwarf out of spare parts, mostly from the engines. They seem very proud.", "choices": [
+      { "text": "Admire it, then take the parts back.", "effect": { "text": "The skutters look crestfallen, but your engines work again.", "scrap": 25 } },
+      { "text": "Let them keep it. It's a tribute.", "effect": { "text": "They follow everyone around for days, beeping happily. The crew feel very much at home.", "crewHeal": 30 } },
+      { "text": "Fit it with guns.", "effect": { "text": "The model turns out to be surprisingly well armed. It becomes your newest weapon.", "weapon": "random" } } ] },
+    { "id": "rd_final", "questOnly": true, "once": true, "art": "fleet", "text": "Red Dwarf hangs on the tow line ahead, and the Death Ship ahead of her. Everyone looks at Lister. He looks at them. \"Right. We go in, we cut her loose, we bring her home. Anyone got a better plan?\"", "choices": [
+      { "text": "Lister's plan.", "effect": { "text": "It isn't a plan, exactly, but everyone cheers anyway.", "crewHeal": 100 } },
+      { "text": "Rimmer's 400-page tactical manual.", "effect": { "text": "Page 211 turns out to be genuinely useful. Everyone else is mostly asleep by then.", "xp": { "skill": "weapons", "amt": 40 } } },
+      { "text": "The Cat's plan: look good, win.", "effect": { "text": "It's not a bad plan. It has always worked for him.", "xp": { "skill": "pilot", "amt": 40 } } } ] },
+    { "id": "rd_toaster", "tags": ["rd"], "weight": 1.2, "once": true, "art": "space", "text": "A talking toaster is floating in space, broadcasting on every channel. \"Would anybody like any toast? Muffins? A crumpet? I do a very nice bagel.\" It will not stop.", "choices": [
+      { "text": "Bring it aboard.", "effect": { "text": "It asks everyone if they want toast, every four minutes, forever. The crew are well fed and slowly going mad.", "crewHeal": 25, "goods": { "rations": 3 } } },
+      { "text": "Lister wants it for the galley.", "effect": { "text": "Lister and the toaster become best friends. Nobody else is allowed in the galley.", "xp": { "skill": "repair", "amt": 10 }, "goods": { "berry_pie": 1 } } },
+      { "text": "Use it for target practice.", "effect": { "text": "It asks if you'd like toast all the way down.", "scrap": 8 } } ] },
+    { "id": "rd_gelf_bride", "tags": ["rd"], "weight": 1, "once": true, "art": "planet", "text": "A GELF chieftain hails you. She has seen Lister on the long-range scanner and would like to marry him. Today. It is a great honour. Refusing is a great insult, and insults are settled with harpoons.", "choices": [
+      { "text": "Lister says yes, then you run.", "chance": 0.6, "success": { "text": "The wedding is lovely. The escape is better. Lister keeps the wedding gifts.", "scrap": 60, "goods": { "space_wine": 2 } }, "fail": { "text": "She notices you running. Harpoons follow.", "hull": -6 } },
+      { "text": "Offer Rimmer instead.", "effect": { "text": "She takes one look at Rimmer and laughs for eleven minutes. You use the time to leave.", "fleetPush": -0.05 } },
+      { "text": "Kryten negotiates.", "chance": 0.7, "success": { "text": "Kryten talks her into a trade deal instead. Everyone is relieved, except possibly Lister.", "scrap": 40 }, "fail": { "text": "Kryten apologises so much that she declares war on politeness.", "fight": "rd_gelf_raider" } } ] },
+    { "id": "rd_polymorph", "tags": ["rd"], "weight": 1, "once": true, "art": "creature", "text": "Something has crept aboard: a shape-shifter that feeds on emotions. It has already eaten Rimmer's bad temper (he is now unbearably nice) and is eyeing the Cat's vanity.", "choices": [
+      { "text": "Corner it and flush it out of the airlock.", "chance": 0.6, "success": { "text": "Out it goes. Everyone gets their feelings back, which is a mixed blessing.", "crewHeal": 15 }, "fail": { "text": "It turns into a fire extinguisher, then a fire. A real one.", "fire": true, "crewHurt": 15 } },
+      { "text": "Let it eat the fear first.", "effect": { "text": "With no fear left, the crew fight like lunatics for a while.", "xp": { "skill": "combat", "amt": 15 } } },
+      { "text": "Offer it Rimmer's revision timetable.", "effect": { "text": "It starves to death halfway down the first page.", "scrap": 15 } } ] },
+    { "id": "rd_psimoon", "tags": ["rd"], "weight": 1, "once": true, "art": "planet", "text": "A psi-moon has locked onto the ship and is reshaping itself around whoever is on watch. It is Rimmer. The moon is now a swamp of self-doubt, with a bog of regret.", "choices": [
+      { "text": "Send the Cat down instead.", "effect": { "text": "The moon becomes a gigantic, flattering mirror. The Cat finds a fortune in reflective crystal while he admires himself.", "scrap": 45 } },
+      { "text": "Fight your way through Rimmer's mind.", "chance": 0.5, "success": { "text": "You find his self-confidence, tiny and hiding behind a filing cabinet. He is briefly bearable.", "xp": { "skill": "pilot", "amt": 25 } }, "fail": { "text": "The bog of regret claims a hull plate.", "hull": -4 } },
+      { "text": "Leave orbit, fast.", "effect": { "text": "The moon waves you off, looking hurt.", "fuel": -1 } } ] },
+    { "id": "rd_backwards", "tags": ["rd"], "weight": 0.9, "once": true, "art": "planet", "text": "A planet where time runs backwards. A bar there will pay you to un-drink their drinks, and the local hospital is full of people getting worse.", "choices": [
+      { "text": "Take bar work.", "effect": { "text": "You end the shift sober and richer than you started.", "scrap": 40 } },
+      { "text": "Un-damage the ship.", "effect": { "text": "Your hull slowly un-dents as you sit in orbit.", "hull": 6 } },
+      { "text": "Leave before you un-meet each other.", "effect": { "text": "Wise. Kryten had already started un-cleaning.", "fuel": 1 } } ] },
+    { "id": "rd_vending", "tags": ["rd"], "weight": 0.8, "once": true, "art": "station", "text": "A derelict station's vending machine has developed a personality, and the personality is rude. It will dispense missiles, but only to people it likes.", "choices": [
+      { "text": "Lister charms it.", "chance": 0.5, "success": { "text": "It likes Lister. Everybody's machines like Lister. It hands over a whole rack.", "missiles": 4 }, "fail": { "text": "It calls Lister several very rude names and keeps his money.", "scrap": -10 } },
+      { "text": "Kryten repairs its manners.", "effect": { "text": "A polite vending machine is a generous one.", "missiles": 3, "parts": 2 } },
+      { "text": "Walk away.", "effect": { "text": "It shouts after you for a long time." } } ] },
+    { "id": "rd_wax", "tags": ["rd"], "weight": 0.9, "once": true, "art": "planet", "text": "A theme park planet where wax droids of history's heroes and villains are still at war. Both sides want to recruit you. Both sides have a lot of guns.", "choices": [
+      { "text": "Join the heroes.", "chance": 0.55, "success": { "text": "You help win a battle that has run for centuries. The grateful heroes give you their armoury.", "weapon": "random" }, "fail": { "text": "The heroes turn out to be terrible at war. You barely get out.", "hull": -5 } },
+      { "text": "Melt the lot and sell the wax.", "effect": { "text": "Very profitable. Slightly upsetting.", "scrap": 55 } },
+      { "text": "Stay well out of it.", "effect": { "text": "Distant wax cannons boom as you leave." } } ] },
+    { "id": "rd_sim_hail", "hail": "rdsim", "text": "\"Organic vermin. You will surrender the vessel and submit to cataloguing.\" The Simulant sounds almost bored.", "choices": [
+      { "text": "Fire everything.", "effect": { "begin": true } },
+      { "text": "Rimmer surrenders first, on everyone's behalf.", "chance": 0.3, "success": { "text": "The Simulant is so disgusted by Rimmer's grovelling that it leaves.", "dismiss": true }, "fail": { "text": "\"Pathetic.\" The guns warm up anyway.", "begin": true } } ] },
+    { "id": "rd_sim_hail2", "hail": "rdsim", "text": "\"Your life signs are pitiful. Your ship is pitiful. Your hair, organic, is pitiful.\" The Cat is very offended.", "choices": [
+      { "text": "The Cat answers.", "effect": { "text": "The Cat answers with a lot of guns.", "begin": true, "primeWeapons": true } } ] },
+    { "id": "rd_gelf_hail", "hail": "rdgelf", "text": "A GELF war canoe pulls alongside. Its crew bangs on the hull, which is how GELFs say hello. Or goodbye. It is hard to tell.", "choices": [
+      { "text": "Bang back, then fire.", "effect": { "begin": true } },
+      { "text": "Trade them the emergency curry.", "chance": 0.7, "success": { "text": "They are delighted. Curry is very rare out here. They leave you alone, and a little richer.", "scrap": 20, "dismiss": true }, "fail": { "text": "They eat it, and then attack anyway, now with more energy.", "begin": true } } ] }
+  ]
+}

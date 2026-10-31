@@ -1,6 +1,12 @@
 {
  "mods": [
   {
+   "file": "red-dwarf.json",
+   "name": "Red Dwarf: Three Million Years Late",
+   "desc": "Campaign. Unofficial fan campaign: chase the stolen Red Dwarf in a shuttle with Lister, Rimmer, Cat and Kryten. Pick it in the hangar.",
+   "kind": "campaign"
+  },
+  {
    "file": "space-pirates.json",
    "name": "Space Pirates Ahoy",
    "desc": "A pirate ship, a parrot race, a broadside cannon and buried treasure.",

@@ -220,6 +220,39 @@ Good events offer a real decision: a safe small reward, a risky bigger one, and 
 | `scrapMult` | Scrap rewards multiplier, e.g. 0.6 |
 | `goal` | `{"sector":5}` or `{"win":true}` |
 
+### campaign (optional object: a whole new story)
+
+A mod with a `campaign` object is a complete alternative campaign. It only loads when the player picks it with the **Campaign** arrows in the hangar, so it can freely rename the Flaggship, replace the last sector and so on without touching the normal game. Put its ships, races, enemies, sectors and events in the usual lists of the same file.
+
+```json
+"campaign": {
+  "id": "px_story",                     // unique id
+  "title": "Shown in the hangar",
+  "blurb": "One or two sentences for the hangar tooltip.",
+  "color": "#ff6a5a",
+  "ships": ["px_ship"],                 // only these ships can be flown (ids from "ships")
+  "crew": [ { "name": "Ada", "quirk": "optimist", "skills": { "pilot": 1 } } ],   // names the starting crew in order; skills 1 = skilled, 2 = expert
+  "host": "Who sends you off",          // title of the opening scene
+  "intro": "The opening briefing (2-5 sentences).",
+  "giftLine": "One line inviting the player to pick a send-off gift.",
+  "gifts": true,                        // false: no gift choice, just the briefing
+  "fleet": "the pursuing fleet",        // replaces "the Rebuff Fleet" in game text
+  "foe": "Enemy faction word",          // replaces "Rebuff"
+  "boss": "the final enemy",            // replaces "the Flaggship"
+  "command": "what the boss is attacking",   // replaces "Fedoration command"
+  "start": "px_first_sector",           // sector id for sector 1
+  "sectors": ["px_a", "px_b", "px_c"],  // the only sector types offered at exits (at least 2)
+  "noTravellers": true,                 // no Mags, Kestrel or Doctor Oddly
+  "eventBias": 6,                       // how much more often events tagged for your sectors come up
+  "beats": { "2": "px_scene2", "3": "px_scene3", "final": "px_last" },   // a story event on entering each sector (questOnly events)
+  "bossLines": ["Said at phase 1", "Phase 2", "Phase 3"],
+  "chatter": ["Short lines that pop up now and then while travelling."],
+  "win": { "title": "WIN TITLE", "text": "The ending, 2-5 sentences." },
+  "lose": "One or two sentences shown when the run is lost."
+}
+```
+(JSON allows no comments: leave them out of your file.) To rename the final boss or the last sector, add an entry with the game's own id (`"flaggship"` in enemies, `"laststand"` in sectors) holding only the fields you change, such as `{ "id": "flaggship", "name": "The Death Ship" }`. Give your sectors their own `tags` and `enemyTags`, and tag your events and enemies to match: a campaign meets its own enemies wherever it has them.
+
 ### remove
 `{"events":["id"], "weapons":["id"]}` removes base content by id.
 

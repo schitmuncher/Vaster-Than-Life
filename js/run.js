@@ -6,7 +6,7 @@
 let G = null;
 const UI = { screen:'title', selCrew:null, selCrews:[], selWeapon:null, mode:null, page:0, selShip:null, toast:null, tab:'systems', storeTab:'weapons', overReason:'', modsPage:0 };
 /* ship names often start with "The": "the The Pestrel" reads badly, so it becomes "The Pestrel" */
-function fixThe(t){ return typeof t==='string' ? t.replace(/\b([Tt]he) (The )/g, '$2') : t; }
+function fixThe(t){ if(typeof t!=='string') return t; if(typeof camText==='function') t = camText(t); return t.replace(/\b([Tt]he) (The )/g, '$2'); }
 function toast(t){ UI.toast = { text:fixThe(t), t:2.6 }; }
 
 /* ---------------- seeds ----------------
@@ -23,6 +23,7 @@ function withSeed(key, fn){ if(!G || !G.seed) return fn(); const prev = Math.ran
 function startDaily(){ const k = todayKey(); newRun(dailyShip(k), null, { seed:'DAILY-' + k, daily:k }); }
 
 function newRun(shipId, name, o={}){
+  if(typeof campDefFor==='function'){ CAMP = (!o.daily && !o.cup && !o.challenge && !o.seedDuel && !o.par && !o.keepData && SET.campaign && campDefFor(SET.campaign)) ? SET.campaign : null; }   // a campaign mod picked in the hangar
   if(!o.keepData) applyMods(!!(o.daily || o.cup));   // multiplayer races keep the host's game data
   const ch = o.challenge && typeof challengeDef==='function' ? challengeDef(o.challenge) : null; if(ch) challengeRules(ch);
   const def = DATA.ships[shipId] || Object.values(DATA.ships)[0];
@@ -33,10 +34,11 @@ function newRun(shipId, name, o={}){
     hazard:null, hzT:6, hzWarn:false, nebula:false, autofire:true, combatT:0, time:0, afterWin:null, flag:null, questQueue:[],
     stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true,
     bay:{}, seeds:{ star_potato:3, ion_berry:2 }, garden:{ plots:[null, null] }, spent:0, fed:0 };
+  G.campaign = (typeof CAMP!=='undefined' && CAMP) || null;
   G.ship = withSeed('start', () => makeShip(def,'p',{ name }));
   if(ch) challengeLoadout(ch);
   if(!o.daily && !o.cup && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
-  genSector(1, 'civilian');
+  { const C = typeof campDef==='function' ? campDef() : null; genSector(1, C && C.start && DATA.sectors[C.start] ? C.start : 'civilian'); }
   if(o.crewNames || o.crewQuirks){ G.ship.crew.filter(c => c.owner==='p' && !c.drone).forEach((c, i) => {   // the crew you named in the hangar
     if(o.crewNames && o.crewNames[i]) c.name = String(o.crewNames[i]).slice(0, 16); if(o.crewQuirks && o.crewQuirks[i]){ c.quirk = o.crewQuirks[i]; c.quirkSet = true; } }); }
   if(typeof sagaRunStart==='function') sagaRunStart();
@@ -54,7 +56,7 @@ function save(){ if(!G || G.enemy || UI.screen!=='game' || (typeof SYNC!=='undef
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({ G:Object.assign({}, G, { proj:[], fx:[], units:[], warp:0, warpNode:null }), DATA }, saveReplacer)); }catch(e){} }
 function loadSave(){
   const s = LS.get(SAVE_KEY, null); if(!s || !s.G || !s.DATA) return false;
-  DATA = s.DATA; R = DATA.rules; G = s.G; G.modal = null; G.fx = []; G.proj = []; G.units = [];
+  DATA = s.DATA; R = DATA.rules; G = s.G; if(typeof CAMP!=='undefined') CAMP = G.campaign || null; G.campDef = null; G.modal = null; G.fx = []; G.proj = []; G.units = [];
   if(G.crewAuto===undefined) G.crewAuto = true; G.flags = G.flags||{}; G.seen = G.seen||{}; G.later = G.later||[]; G.log = G.log||[]; G.chat = []; G.mapPieces = G.mapPieces||0;
   buildGraph(G.ship); if(typeof sagaRunStart==='function') sagaRunStart(true); UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null;
   if(typeof mpRunStarted==='function') mpRunStarted({ loaded:true });
@@ -99,7 +101,8 @@ function genSector_(n, type){ if(G) G.fleetFights = 0; if(typeof situEnter==='fu
   G.map = { nodes, cur:0, trail:[0] }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   if(G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='mystic') && Math.random() < .6){ const hid = nodes.filter(nd => !nd.revealed); shuffle(hid); for(const nd of hid.slice(0, 4)) nd.revealed = true; G.mysticSaw = true; }   // a mystic dreams the way ahead
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
-  if(typeof campaignElites==='function') campaignElites(nodes, n, final, sd);   // veteran beacons, marked on the map
+  if(typeof campaignElites==='function') campaignElites(nodes, n, final, sd);
+  if(typeof fishSpots==='function' && !final) fishSpots(nodes);   // fishing spots (homestead.js)   // veteran beacons, marked on the map
   if(typeof campaignSectorGen==='function') campaignSectorGen(n);
   G.flag = null;
   if(sd.secret){ G.flags.glassDone = true; grant('glasswork'); placeQuest('glass_welcome'); }
@@ -160,7 +163,8 @@ function arrive_(i){
   if(G.ship.systems.clonebay && eff(G.ship,'clonebay')>0) for(const c of G.ship.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + 20);
   const first = !node.visited; node.visited = true;
   if(typeof homeJump==='function') homeJump();   // the garden grows (homestead.js)
-  if(typeof campaignArrive==='function') campaignArrive(node, first);   // Pip has opinions (campaign.js)
+  if(typeof campaignArrive==='function') campaignArrive(node, first);
+  if(typeof petJump==='function') petJump();   // Pip has opinions (campaign.js)
   emit('arrive', node);
   if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
@@ -175,6 +179,7 @@ function arrive_(i){
   if(due){ startEvent(due.event, { star:due.star }); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
+  if(!first && typeof fishButton==='function' && G.rod && fishSpot(node) && node.type==='empty' && !G.hazard){ G.modal = { type:'msg', title:'Back at the fishing spot', text:'The same quiet patch of space. The fish here have heard about you.', extra:[fishButton(node)].filter(Boolean) }; save(); return; }
   if(!first){ toast(pick(['Familiar beacon: nothing new on sensors.', 'You have been here before. Still nothing here.', 'Same old beacon. Your crew waves at the scorch marks.'])); save(); return; }   // no box to close: going back somewhere empty should cost no taps
   if(node.quest){ startEvent(node.quest); return; }
   switch(node.type){
@@ -191,7 +196,7 @@ function arrive_(i){
         else if(fd.xp){ for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) gainXP(c, pick(['pilot','engines','shields','weapons','repair']), 2); text += ` ${fd.text}`; }
         break; } }
       if(!G.hazard && G.ship.hull < G.ship.maxHull && Math.random() < .6){ const n = Math.min(G.ship.maxHull - G.ship.hull, ri(1,3)); G.ship.hull += n; text += ` With nobody shooting at you, the crew bolt on spare plating. +${n} hull.`; }
-      G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof startFishing==='function' && G.hazard!=='sun' ? [{ id:'fish', label:'🎣 Cast a line', fn:startFishing }] : null }; save(); }
+      G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof fishButton==='function' && G.hazard!=='sun' ? [fishButton(node)].filter(Boolean) : null }; save(); }
   }
 }
 function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (typeof situFleet==='function' ? situFleet() : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
@@ -200,7 +205,8 @@ function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. 
 function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
 function sectorOptions_(){
   if(G.sector+1 >= R.sectors) return ['laststand'];
-  const types = Object.keys(DATA.sectors).filter(t => !DATA.sectors[t].final && !DATA.sectors[t].secret && t!=='civilian');
+  let types = Object.keys(DATA.sectors).filter(t => !DATA.sectors[t].final && !DATA.sectors[t].secret && t!=='civilian');
+  { const C = typeof campDef==='function' ? campDef() : null; if(C && Array.isArray(C.sectors)){ const own = C.sectors.filter(t => DATA.sectors[t] && !DATA.sectors[t].final); if(own.length >= 2) types = own; } }   // a campaign's own sectors
   shuffle(types); const opts = types.slice(0,2);
   if(G.flags.coords && !G.flags.glassDone && DATA.sectors.glass) opts.push('glass');
   if(typeof pickSituations==='function') pickSituations(opts);   // a crackdown, a salvage boom... (expansion.js)
@@ -234,7 +240,8 @@ function pickEvent(node){
     if(K.has('weapon') && since('weapon') < 3) m *= .5;
     if(K.has('drone') && since('drone') < 3) m *= .6;
     return m; };
-  return wpick(list, e => (e.weight ?? 1) * (e.tags && e.tags.some(t => tags.includes(t)) ? 1.5 : 1) * (e.nebula ? 2 : 1) * damp(e)).id;
+  const C_ = typeof campDef==='function' ? campDef() : null, cb = C_ ? (C_.eventBias || 5) : 1.5;   // a campaign's own events come up far more often
+  return wpick(list, e => (e.weight ?? 1) * (e.tags && e.tags.some(t => tags.includes(t) && t) ? cb : 1) * (e.nebula ? 2 : 1) * damp(e)).id;
 }
 function noteGain(k){ if(!G) return; (G.gains = G.gains || {})[k] = G.stats?.jumps || 0; }
 function randomCrewName(race){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && (!race || c.race===race)); return l.length ? pick(l).name : 'Someone'; }
@@ -376,6 +383,7 @@ function closeResult(m){
 function pickEnemy(n){
   const sd = sectorDef(); const bias = sd.enemyTags || []; n = Math.min(n, 8);   // longer runs (Marathon rules) keep meeting late-game ships
   let pool = Object.values(DATA.enemies).filter(e => !e.boss && !e.eventOnly && (!e.onlyTagged || (e.tags||[]).some(t=>bias.includes(t))) && (!e.sectors || (e.sectors[0]<=n && e.sectors[1]>=n)));
+  { const C = typeof campDef==='function' ? campDef() : null; if(C && bias.length){ const own = pool.filter(e => (e.tags||[]).some(t => bias.includes(t))); if(own.length) pool = own; } }   // a campaign meets its own enemies
   if(!pool.length) pool = Object.values(DATA.enemies).filter(e => !e.boss && !e.eventOnly);
   return wpick(pool, e => (e.tags||[]).some(t=>bias.includes(t)) ? 4 : 1);
 }
@@ -461,6 +469,7 @@ function finishCombat(kind, offer){
   { const pt = curDiff().patch || 0, sh = G.ship; if(pt && sh.hull < sh.maxHull){ const h = Math.min(pt, sh.maxHull - sh.hull); sh.hull += h; L.push(`Your crew patches ${h} hull from the wreckage`); } }   // Easy: a little mercy between fights
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   if(typeof homeFight==='function') homeFight();
+  if(typeof petAfterFight==='function') petAfterFight(L);
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
     text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : pick([].concat(VICTORY_LINES[e.faction]||VICTORY_LINES.generic)).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
@@ -562,7 +571,7 @@ function updateGame(dt){
     G.time += dt;
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null;
     if(foe) G.combatT += dt;
-    tickShip(G.ship, dt, foe);
+    tickShip(G.ship, dt, foe); if(typeof petTick==='function') petTick(dt);   // the ship's pet at work (expansion.js)
     if(foe && !G.duel){ tickShip(foe, dt, G.ship); enemyBrain(foe, G.ship, dt); }   // a duel opponent's ship runs in their own game
     deployDrones(G.ship, foe); if(foe && !G.duel) deployDrones(foe, G.ship);
     tickUnits(dt);

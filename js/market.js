@@ -247,14 +247,15 @@ function drawMarket(m){
   tabs(f.x+32, f.y+76, list, UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; UI.storeMsg = null; UI.confirmTrade = null; }, tw);
   const y0 = f.y+146, cx = f.x+32, W2 = f.w-64;
   const row = (i, name, sub, cost, onBuy, o={}) => { const y = y0 + i*94; panel(cx, y, W2, 84, 8);
-    T(name, cx+20, y+34, { s:21, f:FD, w:700, c: o.soldTxt ? C.muted : C.ink, max:W2-360 }); para(sub, cx+20, y+60, W2-380, { s:14, lh:18, c:C.muted, max:1 });
+    T(name, cx+20, y+28, { s:21, f:FD, w:700, c: o.soldTxt ? C.muted : C.ink, max:W2-360 }); if(o.stats) T(o.stats, cx+20 + Math.min(W2-760, ctx.measureText(name).width + 16), y+28, { s:13, c:C.cyan });
+    para(sub, cx+20, y+50, W2-460, { s:14, lh:17, c:C.muted, max:o.stats ? 2 : 1 }); if(o.tipT) tip(cx, y, W2-320, 84, name, o.tipT);
     if(o.deal){ rr(cx+W2-430, y+24, 104, 34, 17); ctx.fillStyle = hexA(C.good,.2); ctx.fill(); T('DEAL −30%', cx+W2-378, y+47, { s:13, f:FD, w:700, a:'center', c:C.good }); }
     btn(cx+W2-300, y+16, 280, 52, o.soldTxt || `Buy · ${cost}`, onBuy, { disabled: !!o.soldTxt || o.disabled || G.scrap < cost, fill:!o.soldTxt && !o.disabled && G.scrap>=cost, col:C.good }); };
   switch(UI.storeTab){
     case 'weapons': {
       st.weapons.forEach((id, i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id), c = Math.round(price(d.cost, st, 'weapon', id) * dealOff(st, 'w:'+id));
-        row(i, d.name, `${d.type} · ${d.heal ? 'heals '+d.heal : d.type==='bomb' ? (d.sysDamage||0)+' system damage' : d.damage+' damage × '+(d.shots||1)} · ${d.power} power · ${d.charge}s${d.fire?' · fire':''}${d.breach?' · breach':''}${d.heal ? '' : ' · ' + vsShields(d)}${d.desc?' · '+d.desc:''}`, c,
-          () => spend(c, () => { st.sold.push('w:'+id); toast(giveWeapon(id)); }), { soldTxt:sold ? 'Sold' : null, deal:st.deal==='w:'+id }); });
+        row(i, d.name, weaponRole(d), c,
+          () => spend(c, () => { st.sold.push('w:'+id); toast(giveWeapon(id)); }), { soldTxt:sold ? 'Sold' : null, deal:st.deal==='w:'+id, stats:weaponStats(d) + (d.heal ? '' : ' · ' + vsShields(d)), tipT:weaponRole(d) + (d.desc ? ' ' + d.desc : '') }); });
       const adv = storeAdvice(); para(adv[0], cx, y0 + st.weapons.length*94 + 18, W2, { s:16, lh:22, c:adv[1], max:2 });
       if(typeof drawRefits==='function' && !st.mags) drawRefits(st, cx, y0 + st.weapons.length*94 + 84, W2); break; }
     case 'drones':
@@ -291,6 +292,7 @@ function drawStoreSupplies(st, cx, y0, W2){
   const s = G.ship, rep = 2 + Math.floor((G.sector-1)/3), miss = s.crew.filter(c => c.owner==='p' && !c.drone).reduce((t, c) => t + Math.max(0, c.maxHp - c.hp), 0);
   const rows = [ ['Fuel cell', `One jump's worth. You have ${G.fuel}.`, price(3, st, 'fuel'), () => G.fuel++], ['Missile', `Ammo for missiles and bombs. You have ${G.missiles}.`, price(6, st, 'missile'), () => G.missiles++],
     ['Drone part', `For drones and hacking. You have ${G.parts}.`, price(8, st, 'part'), () => G.parts++],
+    ...(G.rod ? [] : [['Fishing rod', 'For fishing spots (🐟 on the map), nebulas and asteroid fields.', price(18, st, 'supply'), () => { G.rod = true; toast('Fishing rod bought. Look for 🐟 on the map.'); }]]),
     ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, price(rep, st, 'repair'), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull],
     ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, price(5*rep - 1, st, 'repair'), () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull],
     ['Medical care', miss ? `Heal every crew member fully (${Math.round(miss)} health missing).` : 'Your crew are all healthy.', price(Math.max(3, Math.ceil(miss/14)), st, 'supply'), () => { for(const c of s.crew) if(c.owner==='p') c.hp = c.maxHp; }, miss < 1],

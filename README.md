@@ -95,6 +95,14 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 ## What's in the game
 
+**Campaign mods**
+- A mod can be a whole **campaign**: its own ships, named crew, opening briefing, sectors, enemies, a story scene for each sector, its own villain and a final ending. Turn one on in Mods, then pick it with the **Campaign** arrows in the hangar. It only loads while it's picked, so it never leaks into the normal game, dailies or challenges.
+- **Example: Red Dwarf: Three Million Years Late** (unofficial fan campaign, in the mod library under Stories). Red Dwarf has been towed away by a Simulant battle group. Chase it in Starbug 1 with Lister, Rimmer (a hologram: fire and vacuum can't hurt him), the Cat (very fast, very vain) and Kryten (repairs anything, apologises for everything), with Holly on the backup line. Six sectors of its own, GELFs, Simulants, agonoids and wax droids, a story scene in every sector, a talking toaster, and the Death Ship at the end. All the writing is original; Red Dwarf belongs to its creators.
+
+**Better information**
+- **The crew card** is now a slim strip under your ship, so it never covers the rooms. Tap ⓘ for the full card.
+- **Weapons** are described in plain words everywhere (stores, weapon cards, the Ship screen): what they do, how shields affect them, and what they're good for.
+
 **More on the road**
 - **Gun refits.** Every store's Weapons tab has a workshop: refit a gun you own to Mk II and Mk III, each charging 15% faster. No need to throw away a gun you like.
 - **Sector situations.** About half the routes at an exit come with a situation, shown on the card: a Rebuff crackdown (more patrols, cheaper stores), a salvage boom (richer wrecks, faster Fleet), storm season (double hazards, slower Fleet), festival season (fewer fights, the Harvest Fair), refugee convoys (distress calls everywhere) or a comms blackout (stores hidden until you're next to them).
@@ -164,6 +172,7 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **Veterans.** Crew who beat five enemies hand to hand become veterans, with extra health.
 - **Crew moments.** Two or three times a run, a beacon is a short scene starring one of your crew, with their portrait: a snail race, an epic poem broadcast to the whole sector, a mystery stew, a black comet, a sleepwalker at the airlock button, a cursed statue, a double of someone after a bad jump. Some come back later in the run: a lost bet, a curse, a pyrate sweetheart, a statue that wakes up.
 - **The ship's pet.** Hatch an egg, take in a stray or keep a lost Biscuit, and name it yourself. Pets get up to things between beacons, learn tricks, grow, fall ill, rescue the ship, and sometimes go home.
+- **Pets have jobs.** You can see your pet walking from room to room, and tap it for a fuss (crew hearts, once a jump). A void kitten claws boarders, a hull slug seals breaches and patches hull after fights, a star moth beats out fires, a space goat headbutts boarders and eats junk for scrap, and a pocket nebula adds 3% evasion and soothes the wounded.
 - **A nemesis.** An enemy captain who gets away (or whom you run from) may swear revenge and come back a few jumps later with a named, upgraded ship. They return angrier each time until you finish them, make peace, or they vanish for good. Beating one pays well. A nemesis who is still at large when your run ends may turn up in a later run, remembering your old ship.
 - **More strange days:** your evil twins from a mirror universe, an alien baby called Squib left in the airlock, a crew band ("and the Hull Breaches") that gets a gig, a Rebuff health inspection of your garden, a love triangle with a handsome Pebblekin insurance salesman, and an ex-pyrate's eleven-step casino heist.
 - **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run. In later runs a relative or friend of someone you lost may come looking for you, wanting to finish what they started. **Record → Memorial** lists everyone you've lost, across every voyage.
@@ -183,12 +192,12 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 
 **Home life aboard** (light touch, all optional)
 - **A hydroponic garden** (with Harvest all and Plant all): plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps. Now and then a crop comes up as a bumper harvest.
-- **The galley:** cook crops and fish into five meals. Eating together heals the crew and keeps them well fed (+10% repair, melee and weapon charge) for the next fights. A cook doubles every portion.
+- **The galley:** cook crops and fish into five meals. Meals don't heal (the medbay does that): each gives the crew a different edge for three fights. Spicy hash hits harder in a brawl, fish supper charges guns faster, star stew repairs faster (and +15 health), berry pie dodges better, and melon sorbet is a bit of everything. A cook makes two portions and makes the edge last a fight longer.
 - **Crew wishes:** now and then someone starts dreaming about something they love ("Captain. Captain. Void pepper. Think about it."). Bring it to them for a big jump in hearts. A dot on the Ship button tells you when crops are ripe or a wish can be granted.
-- **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. Close crew fight and repair better, get tougher, and tell you their story at 4 and 8 hearts. At 10 hearts they become devoted: once per run, when they should die, they refuse to.
-- **Fishing** at quiet beacons is a little timing game: wait for the bite, then reel when the marker is in the green. Space fish, rare deep eels, seeds, junk and, very rarely, an ancient relic.
+- **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. 3 hearts: works 5% better; 6: 10%; 8: +10 health; 10: devoted, and will cheat death once. A gift they love also gives them a burst of practice at their job. The crew card shows what their hearts do.
+- **Fishing** needs a rod (stores sell them in Supplies, and it's one of Hale's send-off gifts) and a fishing spot: 🐟 beacons on the map, nebulas and asteroid fields. Cast as often as you like, but every cast at the same spot risks trouble first: a snagged rock in your hull, a bite, a snapped rod, a live power cell, or a patrol that heard the splashing. The deeper you fish, the rarer the catch. The reeling game is harder too: two tries, smaller zones.
 - **The Harvest Fair** turns up from sector 2: enter your best crop in the show, run a food stall, or take the crew for a night out.
-- **Birthdays:** each crew member has one. A gift on the day counts three times over.
+- **Birthdays** last two jumps. A present then counts three times over and makes them properly good at their job. Forget, and they sulk: 10% worse for three fights. The Ship button lights up when a birthday is on.
 - **Home-life tips** explain the garden, trade goods and hearts the first time they matter.
 - **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Sloog, a ship renamed in a card game.
 - **Personality perks:** every personality now does something: tinkerers repair faster, daredevils dodge more at the helm, ex-pyrates hit harder, collectors sell for more, mystics glimpse the sector ahead, and more.
@@ -429,8 +438,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/tales.js` | More events: distress calls, everyday oddities, short quest chains, follow-ups that remember your choices, beacons for each sector |
 | `js/market.js` | Store kinds and keepers, prices, haggling, deals, mystery crates, the guild card, crew worth, trade goods and the cargo hold, the store screen |
 | `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
-| `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, and new encounters |
-| `js/campaign.js` | Ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
+| `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, new encounters, plain-language weapon descriptions, and the ship's pet (jobs and sprite) |
+| `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |
 | `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |
 | `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |

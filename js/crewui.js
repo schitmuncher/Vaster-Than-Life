@@ -61,13 +61,32 @@ function raceTraits(r){
 }
 function skillProgress(c, k){ const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; return lv>=2 ? 1 : lv===1 ? (v-t[0])/(t[1]-t[0]) : v/t[0]; }
 
+/* the small card: one strip below your ship, so it never covers the rooms */
+function drawCrewStrip(c, sh, race, job){
+  const x = 24, y = 472, w = 440, h = 66;
+  rr(x, y, w, h, 10); ctx.fillStyle = 'rgba(9,14,28,.93)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.amber; ctx.stroke();
+  region(x, y, w, h, () => {});
+  drawPortrait(x+30, y+33, 22, c, false);
+  T(c.name, x+60, y+24, { s:18, f:FD, w:700, max:150 });
+  const fr = clamp(c.hp/c.maxHp, 0, 1); bar(x+60, y+32, 150, 7, fr, fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile);
+  drawJobIcon(x+66, y+52, job, 6); T(job.text, x+78, y+56, { s:12, c:JOB_COL[job.k] || C.ink, max:140 });
+  // skills as six letters with pips
+  SKILLS.forEach((k, i) => { const sx = x+226 + (i%3)*48, sy = y+12 + Math.floor(i/3)*24, lv = skillLvl(c,k);
+    T(SKILLN[k].slice(0,3).toUpperCase(), sx, sy+12, { s:10, f:FD, w:700, c: lv ? C.amber : C.muted });
+    for(let p=0;p<2;p++){ ctx.beginPath(); ctx.arc(sx+30+p*8, sy+8, 3, 0, 7); ctx.fillStyle = p < lv ? C.amber : '#1d2742'; ctx.fill(); }
+    tip(sx-2, sy-2, 46, 22, `${SKILLN[k]} · ${['untrained','skilled','expert'][lv]}`, `${SKILL_FX[k][lv]}.`); });
+  if(typeof heartsOf==='function' && c.owner==='p'){ const hh = heartsOf(c); T(`♥${hh}`, x+w-66, y+58, { s:12, c:C.hostile }); tip(x+w-72, y+44, 34, 20, `${hh} hearts`, typeof heartPerkText==='function' ? heartPerkText(c) : 'Friendship with the captain.'); }
+  btn(x+w-38, y+6, 30, 26, '×', () => { UI.selCrew = null; }, { s:14 });
+  btn(x+w-38, y+36, 30, 24, 'ⓘ', () => { UI.crewMore = true; }, { s:13 }); tip(x+w-38, y+36, 30, 24, 'More', 'Full details: traits, personality, post and orders.');
+}
 /* detail card for the selected crew member (flat and VR) */
 function drawCrewCard(){
   const id = UI.selCrew; if(!id || !G || (UI.selCrews||[]).length>1) return;
   let c = null, sh = null; for(const s of [G.ship, G.enemy]) if(s){ const f = s.crew.find(o=>o.id===id); if(f){ c = f; sh = s; } }
   if(!c || c.drone) return;
   const race = DATA.races[c.race] || {}, job = crewJob(c, sh);
-  const w = 440, h = 236, x = 24, y = 330;
+  if(!UI.crewMore){ drawCrewStrip(c, sh, race, job); return; }   // compact by default: the ship stays in view
+  const w = 440, h = 236, x = 24, y = 560;
   rr(x, y, w, h, 12); ctx.fillStyle = 'rgba(9,14,28,.95)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.amber; ctx.stroke();
   region(x, y, w, h, () => {});   // swallow clicks on the card itself
   drawPortrait(x+44, y+48, 30, c, false);
@@ -81,6 +100,7 @@ function drawCrewCard(){
     if(typeof heartsOf==='function' && c.owner==='p'){ const hh = heartsOf(c); T('♥'.repeat(hh) + '♡'.repeat(10-hh), x+w-24, y+105, { s:12, a:'right', c:C.hostile }); }
     if(q) tip(x+86, y+18, w-150, 44, q.name + (c.vengeT > 0 ? ' · out for revenge' : ''), q.desc + (typeof QUIRK_PERK_TEXT!=='undefined' && QUIRK_PERK_TEXT[c.quirk] ? ' ' + QUIRK_PERK_TEXT[c.quirk] : '') + (b ? ` ${c.name} and ${b.other.name} are ${BOND_KINDS[b.kind]}.` : lostB ? ' They lost someone close to them on this voyage.' : '') + (c.vengeT > 0 ? ' Grief has made them furious: they hit 30% harder for a while.' : '')); }
   btn(x+w-46, y+10, 34, 30, '×', () => { UI.selCrew = null; }, { s:16 });
+  btn(x+w-88, y+10, 36, 30, '▴', () => { UI.crewMore = false; }, { s:14 }); tip(x+w-88, y+10, 36, 30, 'Less', 'Back to the small card under your ship.');
   const fr = clamp(c.hp/c.maxHp, 0, 1); bar(x+86, y+68, w-110, 10, fr, fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile); T(`${Math.ceil(c.hp)}/${c.maxHp} HP`, x+w-24, y+64, { s:12, a:'right', c:C.muted });
   drawJobIcon(x+24, y+100, job, 9); T(job.text, x+42, y+105, { s:15, c:JOB_COL[job.k] || C.ink, max:w-180 });
   const post = c.station!=null && sh.rooms[c.station] ? (SYSN[sh.rooms[c.station].sys] || 'a corridor') : 'none';
