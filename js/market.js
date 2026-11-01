@@ -230,7 +230,7 @@ function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.key
   const n = bad.reduce((t, id) => t + goodsHave(id), 0); for(const id of bad) delete G.bay[id]; return `Rebuff inspectors find your illegal cargo (${n} crates) and confiscate the lot.`; }
 
 /* ---------------- the store screen ---------------- */
-function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['crew','Crew'],['goods','Goods'], ...(st.bar ? [['bar','Bar']] : []), ['sell','Sell']]; }
+function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['crew','Crew'],['arms','Armoury'],['tonics','Tonics'],['goods','Goods'], ...(st.bar ? [['bar','Bar']] : []), ['sell','Sell']]; }
 function spend(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
 function earn(v){ G.scrap += v; G.stats.scrap = G.stats.scrap; G.earnedSelling = (G.earnedSelling||0) + v; if(G.earnedSelling >= 300) grant('market_mogul'); }
 function drawMarket(m){
@@ -252,6 +252,8 @@ function drawMarket(m){
     if(o.deal){ rr(cx+W2-430, y+24, 104, 34, 17); ctx.fillStyle = hexA(C.good,.2); ctx.fill(); T('DEAL −30%', cx+W2-378, y+47, { s:13, f:FD, w:700, a:'center', c:C.good }); }
     btn(cx+W2-300, y+16, 280, 52, o.soldTxt || `Buy · ${cost}`, onBuy, { disabled: !!o.soldTxt || o.disabled || G.scrap < cost, fill:!o.soldTxt && !o.disabled && G.scrap>=cost, col:C.good }); };
   switch(UI.storeTab){
+    case 'arms': if(typeof drawStoreArms==='function') drawStoreArms(st, cx, y0, W2, row); break;
+    case 'tonics': if(typeof drawStoreTonics==='function') drawStoreTonics(st, cx, y0, W2, row); break;
     case 'weapons': {
       st.weapons.forEach((id, i) => { const d = DATA.weapons[id]; if(!d) return; const sold = st.sold.includes('w:'+id), c = Math.round(price(d.cost, st, 'weapon', id) * dealOff(st, 'w:'+id));
         row(i, d.name, weaponRole(d), c,

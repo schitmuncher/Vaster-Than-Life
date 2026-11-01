@@ -63,7 +63,7 @@ function unlockText(u){
 let MODS = LS.get(MOD_KEY, []);
 if(typeof PACK_NAMES!=='undefined'){ const n = MODS.length; MODS = MODS.filter(m => !PACK_NAMES.has(m.name)); if(MODS.length !== n) LS.set(MOD_KEY, MODS); }   // packs that are built in now (packs.js)
 let DATA = null, R = null;
-const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges'];
+const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges','arms','items'];
 const NOTRAIT = {};
 function traitOf(c){ const t = (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; const p = typeof perkOf==='function' ? perkOf(c) : null; return p ? mergeTrait(t, p) : t; }   // personalities, friendship and good food (homestead.js)
 let HOOKS = {};
@@ -118,7 +118,7 @@ function validateMod(d){
 // gentle warnings for fields the game never reads, so a typo like "damge" doesn't fail silently
 const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire breach sysDamage crewDamage ion stun pierce rooms radius heal desc warm homing pin splash bounce crit wild salvage gas fear toast decoy drain color',
   drones:'name kind power cost rate shot targets role heal desc', races:'name color hp repair combat speed power heal fireproof telepathic mindImmune deathBurst learn armor noAir desc',
-  augments:'name cost desc fx', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
+  augments:'name cost desc fx', arms:'name kind dmg dur cost tier stun bleed knock reach fear laugh leech heal repair fire armor vac medpack noLoot desc', items:'name kind cost tier hp dmg rep spd xp skill heal buff fights hearts cure noLoot desc', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
   enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases', ships:'name cls layout desc hull reactor color image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',
   events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices',
   challenges:'name desc tier ship difficulty rules start scrapMult goal' };

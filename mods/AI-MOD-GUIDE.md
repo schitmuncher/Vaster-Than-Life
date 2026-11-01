@@ -234,6 +234,18 @@ Good events offer a real decision: a safe small reward, a risky bigger one, and 
 | `scrapMult` | Scrap rewards multiplier, e.g. 0.6 |
 | `goal` | `{"sector":5}` or `{"win":true}` |
 
+### arms (personal weapons and armour for crew)
+```json
+{ "id": "px_blade", "name": "Ion Sabre", "kind": "blade", "dmg": 1.5, "dur": 60, "cost": 50, "tier": 2, "bleed": 3, "desc": "One line." }
+```
+`kind`: blunt, blade, gun, weird or suit. `dmg` multiplies melee damage (1.0 = bare hands, 2.0 = very strong). `dur` is how many seconds of fighting before it breaks. Tricks (pick one or two): `stun` (0–1 chance per second), `bleed` (damage per second for 4s), `knock` (chance to throw the foe out of the room), `reach` (0–1, guns: share of damage dealt to foes in neighbouring rooms), `fear`, `laugh`, `leech` (share of damage that heals the wielder), `heal` (heals friends in the room per second), `repair` and `fire` (multipliers on repairs and firefighting). Suits: `armor` (0–0.5, share of melee damage stopped), `vac` (breathe without air), `medpack` (heals that much once). Events can give kit with `"arm": "id"` or `"random"`.
+
+### items (tonics and treats for one crew member)
+```json
+{ "id": "px_tonic", "name": "Star Tonic", "kind": "perm", "cost": 40, "tier": 1, "dmg": 0.06, "desc": "One line." }
+```
+`kind`: perm (permanent `hp`, `dmg`, `rep`, `spd`, capped per person), train (`skill` and `xp`), buff (`buff`: {dmg, spd, rep} for `fights` fights), heal (`heal`, `cure`), treat (`hearts`). Events can give them with `"item": "id"` or `"random"`.
+
 ### campaign (optional object: a whole new story)
 
 A mod with a `campaign` object is a complete alternative campaign. It only loads when the player picks it with the **Campaign** arrows in the hangar, so it can freely rename the Flaggship, replace the last sector and so on without touching the normal game. Put its ships, races, enemies, sectors and events in the usual lists of the same file.

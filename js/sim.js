@@ -415,16 +415,16 @@ function moveCrewStep(sh, c, dt){
       } else d.passT = Math.max(d.passT, .5);
     }
   }
-  const sp = 1.7 * (raceOf(c).speed||1) * (traitOf(c).speed||1) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * (1 + augFx(sh.side===c.owner ? sh : shipBySide(c.owner), 'speed')) * dt;
+  const sp = 1.7 * (raceOf(c).speed||1) * (traitOf(c).speed||1) * (1 + ((c.bonus && c.bonus.spd)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'spd') : 0)) * (hasAug(sh.side===c.owner ? sh : shipBySide(c.owner), 'pheromones') ? 1.25 : 1) * (1 + augFx(sh.side===c.owner ? sh : shipBySide(c.owner), 'speed')) * dt;
   const dx = nx - c.x, dy = ny - c.y, dist = Math.hypot(dx, dy);
   if(dist <= sp){ c.x = nx; c.y = ny; c.path.shift(); }
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps'))*(c.owner==='e' ? (curDiff().foeMelee || 1) : 1); }   // Easy: enemy boarders hit softer
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(1 + ((c.bonus && c.bonus.dmg)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'dmg') : 0))*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps'))*(c.owner==='e' ? (curDiff().foeMelee || 1) : 1); }   // Easy: enemy boarders hit softer
 function killCrew(sh, c){
   if(c && c.hp <= 0 && typeof devotedSave==='function' && devotedSave(c)) return;   // ten hearts: they refuse to die, once (travellers.js)
-  const i = sh.crew.indexOf(c); if(i<0) return; sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
+  const i = sh.crew.indexOf(c); if(i<0) return; if(typeof armDrop==='function') armDrop(c); sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
   if(G.duel && c.netCtl && typeof duelDied==='function'){ duelDied(c); return; }
   const race = DATA.races[c.race];
   if(race?.deathBurst) for(const o of sh.crew) if(o.room===c.room && crewSide(o)!==crewSide(c)) o.hp -= race.deathBurst;
@@ -464,6 +464,7 @@ function planDefense(sh){
 
 /* ---------------- per-ship tick ---------------- */
 function tickShip(sh, dt, foe){
+  if(typeof armsTick==='function') armsTick(sh, dt);   // bleeding, medpacks, guns firing next door (arms.js)
   for(const k in sh.systems){ const s = sh.systems[k]; if(s.ionT>0){ s.ionT -= dt; if(s.ionT<=0){ s.ion = 0; s.ionT = 0; } } }
   if(sh.cloak.t>0){ sh.cloak.t -= dt; if(sh.cloak.t<=0 || eff(sh,'cloaking')<=0){ sh.cloak.t = 0; sh.cloak.cd = 20; } } else if(sh.cloak.cd>0) sh.cloak.cd -= dt;
   if(sh.battery.t>0){ sh.battery.t -= dt; if(sh.battery.t<=0){ sh.battery.t = 0; sh.battery.cd = 20; } } else if(sh.battery.cd>0) sh.battery.cd -= dt;
@@ -529,7 +530,7 @@ function tickShip(sh, dt, foe){
     const race = raceOf(c), r = sh.rooms[c.room];
     if(r){
       if(r.fire>0 && !race.fireproof) c.hp -= Math.min(6, 2*r.fire)*dt;
-      if(r.o2 < 5 && !race.noAir) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
+      if(r.o2 < 5 && !race.noAir && !(typeof armVac==='function' && armVac(c))) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
     }
     if((G.brawl ? c.mcT<=0 && !c.drone : c.owner===sh.side && crewSide(c)===sh.side) && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
     if(medHack && c.room===medR && crewSide(c)===sh.side) c.hp -= 8*dt;
@@ -546,20 +547,20 @@ function tickShip(sh, dt, foe){
     const friends = grp.filter(c => crewSide(c)===sh.side), foes = grp.filter(c => crewSide(c)!==sh.side);
     const r = sh.rooms[i];
     if(friends.length && foes.length){
-      for(const a of grp){ if(a.stunT>0) continue; const dps = crewDps(a); if(dps<=0) continue;
+      for(const a of grp){ if(a.stunT>0) continue; const dps = crewDps(a) * (typeof armMult==='function' ? armMult(a) : 1); if(dps<=0) continue;
         const opp = crewSide(a)===sh.side ? foes : friends; let tgt = null; for(const o of opp) if(o.hp>0 && (!tgt || o.hp < tgt.hp)) tgt = o;
         if(!tgt) continue;
         // shipmates pull their punches on a mind-controlled friend: they restrain, they don't kill
         if(tgt.owner===a.owner && (tgt.mcT>0 || a.mcT>0)){ tgt.hp = Math.max(Math.min(tgt.hp, 12), tgt.hp - dps*dt*.4); continue; }
-        tgt.hp -= dps*dt; tgt.lastByCrew = a.id; if(a.owner==='p' && sh.isEnemy) tgt.killedByBoarder = true;
+        const dealt = dps*dt*(typeof armTake==='function' ? armTake(tgt) : 1); tgt.hp -= dealt; tgt.lastByCrew = a.id; if(typeof armHit==='function') armHit(a, tgt, dt, dealt, sh, i); if(a.owner==='p' && sh.isEnemy) tgt.killedByBoarder = true;
         if(tgt.hp<=0 && !tgt._counted){ tgt._counted = true; a.kills++; gainXP(a,'combat',1); }
         if(Math.random()<dt*.6 && (sh.side==='p' || a.owner==='p')) sfx('punch'); }
     } else if(G.brawl){ return;
     } else if(friends.length){
       const workers = friends.filter(c => c.stunT<=0 && raceOf(c).repair>0 && !(c.drone && DATA.drones[c.drone]?.role!=='repair'));
       if(!workers.length) return;
-      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1), 0) * R.repairRate * dt * (1 + augFx(shipBySide(workers[0].owner) || sh, 'repair'));
-      if(r.fire>0){ r.fireP += rate*2.6*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
+      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1)*(typeof armRepair==='function' ? armRepair(c) : 1)*(1 + ((c.bonus && c.bonus.rep)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'rep') : 0)), 0) * R.repairRate * dt * (1 + augFx(shipBySide(workers[0].owner) || sh, 'repair'));
+      if(r.fire>0){ r.fireP += rate*2.6*(typeof armFire==='function' ? Math.max(...workers.map(armFire)) : 1)*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
       else if(r.breach>0){ r.breachP += rate; if(r.breachP>=1){ r.breachP = 0; r.breach--; workers.forEach(c=>gainXP(c,'repair',1)); } }
       else if(r.sys && sh.systems[r.sys] && sh.systems[r.sys].dmg>0){ const s = sh.systems[r.sys]; s.rep += rate;
         if(s.rep>=1){ s.rep = 0; s.dmg--; workers.forEach(c=>gainXP(c,'repair',1)); if(sh.side==='p' && Math.random()<.25) say('repair', { crew:workers[0] });

@@ -155,6 +155,14 @@
     "rd_stasis",
     "rd_guitar",
     "rd_holo_shield"
+   ],
+   "arms": [
+    "rd_hand_bazookoid",
+    "rd_spare_arm",
+    "rd_claws",
+    "rd_directives_book",
+    "rd_curry_ladle",
+    "rd_lightbee_suit"
    ]
   },
   "recruits": [
@@ -3301,6 +3309,112 @@
    "fx": {
     "superShield": 3
    }
+  }
+ ],
+ "arms": [
+  {
+   "id": "rd_hand_bazookoid",
+   "name": "Hand Bazookoid",
+   "kind": "gun",
+   "dmg": 1.8,
+   "dur": 35,
+   "cost": 60,
+   "tier": 2,
+   "reach": 0.5,
+   "desc": "A mining bazookoid, carried by hand. Clears corridors, and the rooms either side of them."
+  },
+  {
+   "id": "rd_spare_arm",
+   "name": "Kryten's Spare Arm",
+   "kind": "blunt",
+   "dmg": 1.3,
+   "dur": 70,
+   "cost": 25,
+   "tier": 1,
+   "stun": 0.15,
+   "repair": 1.2,
+   "desc": "Detachable. Still twitches. Makes a decent club and a better spanner."
+  },
+  {
+   "id": "rd_claws",
+   "name": "Cat's Claws",
+   "kind": "blade",
+   "dmg": 1.5,
+   "dur": 60,
+   "cost": 40,
+   "tier": 1,
+   "bleed": 4,
+   "desc": "Polished, sharpened and colour-coordinated."
+  },
+  {
+   "id": "rd_directives_book",
+   "name": "Space Corps Directives (Hardback)",
+   "kind": "blunt",
+   "dmg": 1.1,
+   "dur": 90,
+   "cost": 20,
+   "tier": 1,
+   "laugh": 0.12,
+   "stun": 0.15,
+   "desc": "Rimmer reads one out mid-swing. Opponents are stunned, mostly by the directive."
+  },
+  {
+   "id": "rd_curry_ladle",
+   "name": "Vindaloo Ladle",
+   "kind": "weird",
+   "dmg": 1.0,
+   "dur": 50,
+   "cost": 30,
+   "tier": 1,
+   "fear": 0.2,
+   "bleed": 2,
+   "desc": "Still dripping. The smell alone sends boarders running."
+  },
+  {
+   "id": "rd_lightbee_suit",
+   "name": "Hard-Light Overcoat",
+   "kind": "suit",
+   "armor": 0.3,
+   "vac": true,
+   "dur": 80,
+   "cost": 55,
+   "tier": 2,
+   "desc": "A hologram trick: blows go straight through it, mostly. Needs no air."
+  }
+ ],
+ "items": [
+  {
+   "id": "rd_lager",
+   "name": "Lister's Lager",
+   "kind": "buff",
+   "cost": 15,
+   "tier": 1,
+   "buff": {
+    "dmg": 0.25,
+    "spd": -0.05
+   },
+   "fights": 2,
+   "desc": "Two fights of extra courage and slightly worse walking."
+  },
+  {
+   "id": "rd_vindaloo_cold",
+   "name": "Cold Chicken Vindaloo",
+   "kind": "perm",
+   "cost": 30,
+   "tier": 1,
+   "dmg": 0.05,
+   "hp": 5,
+   "desc": "Eaten straight from the fridge at four in the morning. Builds character, and muscle."
+  },
+  {
+   "id": "rd_holly_pills",
+   "name": "Holly's IQ Pills",
+   "kind": "train",
+   "cost": 30,
+   "tier": 1,
+   "skill": "pilot",
+   "xp": 60,
+   "desc": "Holly swears they work. They work, a bit."
   }
  ]
 }

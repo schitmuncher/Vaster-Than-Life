@@ -530,6 +530,7 @@ const HELP_PAGES = [
   ['Tactics', [
     ['Break the shields', 'Shots that arrive together count: fire a volley so the first shots strip layers and the rest hit. Missiles and bombs ignore shields, so aim them at the enemy shield room first.'],
     ['Pick targets', 'Shields first, then weapons. Hitting the helm or engines stops them dodging and escaping. Ion shots lock a system for a few seconds per hit.'],
+    ['Hand to hand', 'Arm your crew in Ship → Armoury: blunt weapons stun, blades make foes bleed, guns also shoot into the next room, armour soaks damage. Kit wears out and breaks; repair it with a drone part or at a store. Beaten boarders drop theirs. Tonics in the same tab make one person permanently tougher.'],
     ['Boarders', 'Fight in groups, never one by one. The crew autopilot gathers defenders, or rallies in the Medbay to fight while healing. Venting airlocks starves boarders of air.'],
     ['Keep crew alive', 'Send hurt crew to the Medbay. Keep Oxygen powered. Fireproof Pebblekin and air-free drones are good firefighters and boarders.'],
     ['Spend scrap well', 'An early second weapon and two shield layers carry you far. Then engines for dodge, a bigger reactor and better guns. Do not hoard: scrap only helps once it is spent.'],
@@ -685,7 +686,7 @@ function drawGame(){
   ctx.save(); if(G.shake>0 && SET.shake!==false && !inXR()) ctx.translate(rand(-1,1)*G.shake*9, rand(-1,1)*G.shake*9);
   drawShip(G.ship, PBOX, 1, false, false); if(typeof drawPet==='function') drawPet(); ctx.restore();
   if(G.enemy) drawShip(G.enemy, EBOX, -1, true, false); else if(G.brawl && typeof drawBrawlSide==='function') drawBrawlSide(); else drawQuiet();
-  drawUnits(); drawProjectiles(); drawFX(); drawBubbles();
+  drawUnits(); drawProjectiles(); if(typeof drawArmShots==='function') drawArmShots(); drawFX(); drawBubbles();
   svEnd();
   if(zoomed){   // how far in you are, and a way back out
     const zx = BF.x + BF.w - 196, zy = BF.y + 10; panel(zx, zy, 186, 46, 10); T(`${SV.z.toFixed(1)}×`, zx + 16, zy + 31, { s:18, f:FD, w:700, c:C.cyan });
@@ -870,6 +871,7 @@ function drawShip(sh, box, facing, isEnemy, mini){
     const face = c._sx!=null && Math.abs(px - c._sx) > .05 ? Math.sign(px - c._sx) : (c._face || (isEnemy ? -1 : 1)); c._face = face; c._sx = px; c._sy = py;
     if(!mini && (UI.selCrew===c.id || (UI.selCrews||[]).includes(c.id))){ ctx.beginPath(); ctx.ellipse(px, py+rad*.95, rad*1.25, rad*.45, 0, 0, 7); ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.stroke(); glow(px, py+rad*.9, rad*1.3, C.amber, .3); }
     drawCrewSprite(px, py, rad, c, { hostile: c.owner==='e' && !mini, face, ship: sh });
+    if(!mini && typeof drawArmIcon==='function') drawArmIcon(px, py, rad, c, face);
     if(!mini){
       const hw = rad*1.9, fr = clamp(c.hp/c.maxHp,0,1); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(px-hw/2-1, py-rad*2.6-1, hw+2, 5); ctx.fillStyle = fr>.5 ? C.good : fr>.25 ? C.warn : C.hostile; ctx.fillRect(px-hw/2, py-rad*2.6, hw*fr, 3);
       if(c.mcT>0){ ctx.beginPath(); ctx.arc(px,py,rad+7,0,7); ctx.strokeStyle = C.violet; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); }
@@ -1474,7 +1476,7 @@ function shipAdvice(s){ const y = k => s.systems[k]?.max || 0, wNeed = s.weapons
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['augments','Augments'],['hold','Hold & gifts'],['garden','Garden & galley'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 188);
+  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['arms','Armoury'],['augments','Augments'],['hold','Hold & gifts'],['garden','Garden & galley'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 164);
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
@@ -1523,6 +1525,7 @@ function drawShipModal(){
       const full = it.kind==='weapon' ? s.weapons.length>=R.weaponSlots : s.drones.length>=R.droneSlots;
       btn(rx+460, y+4, 170, 42, 'Mount', () => { s.cargo.splice(i,1); if(it.kind==='weapon') s.weapons.push({ id:it.id, charge:0, on:false, target:null }); else s.drones.push({ id:it.id, on:false, unit:null }); }, { disabled: full || lock, s:15 }); });
     if(lock) T('Gear cannot be swapped mid-fight.', cx, f.y+f.h-40, { s:16, c:C.warn });
+  } else if(UI.tab==='arms' && typeof drawArmouryTab==='function'){ drawArmouryTab(f, cx, y0);
   } else if(UI.tab==='hold' && typeof drawHoldTab==='function'){ drawHoldTab(f, cx, y0);
   } else if(UI.tab==='garden' && typeof drawGardenTab==='function'){ drawGardenTab(f, cx, y0);
   } else if(UI.tab==='log'){

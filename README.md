@@ -99,6 +99,12 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Flight school**, on the title screen. **Guided practice** is a real fight against a training target, one step at a time, with each control lit up as you need it: power, aiming, pausing, a fire, a hull breach, a boarder, the medbay, doors, crew autopilot, volleys, salvage, the map, a jump, a store and an upgrade. Your ship can't be lost, and it never touches your saved run.
 - **Lessons**: 12 illustrated chapters, 45 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
 
+**Hand-to-hand combat**
+- **Personal weapons and armour.** Every crew member has a weapon slot and an armour slot (Ship → **Armoury**). 22 kinds of kit: blunt (wrench, stun baton, gravity hammer that throws foes out of the room), blades (knife, cutlass, fire axe, plasma torch, monofilament sword: cuts bleed), guns (laser pistol, boarding shotgun, pulse rifle: they also shoot into neighbouring rooms) and weird ones (freeze ray, spore pistol, tentacle whip, life-leech glove, mender's staff, a rubber chicken that makes the whole room stop to laugh). Armour: flak vest, boarding plate, void suit (breathe without air), personal shield, auto-medpack.
+- Kit **wears out** with use and **breaks** at zero: repair it with a drone part in the Armoury, at any store's repair shop, or strip it for parts. Tools double up: the fire axe fights fires faster, the torch and wrench repair faster.
+- **Enemy crews carry kit too**, more and better as you go deeper, and beaten boarders often drop it. You can see who is armed: weapons show in their hands, armour as a ring.
+- **Tonics and treats** (inspired by sim-management games where you raise a favourite hero): give one crew member a Muscle Tonic, Iron Biscuit, Nimble Gum or Tinker's Tea for a permanent boost (capped per person), a skill chip to train them fast, a Battle Stim or Berserker Brew for the next fights, a medkit mid-battle, or cookies for hearts. Crops and fish can be eaten raw for small permanent gains, so you can build a champion. Stores have Armoury and Tonics tabs, and events can give both.
+
 **Twenty-four stories**
 - Every run follows one story, a scene per sector, with its own help (or harm) at the Flaggship and its own endings. Most stories roll a **hidden twist** at the start of the run, so the same story can go a different way next time (who the stowaway really is, who the saboteur is, what the ghost is, whether the prophecy is true...):
   - **The Data Core**: Pip, the frightened data core in your hold, and Director Kross who wants it back (four endings).
@@ -488,6 +494,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Flaggship help, endings and the hangar story picker |
 | `js/arcs2.js` | Twenty more stories, each with a hidden twist rolled per run, their scenes, Flaggship effects and endings |
 | `js/tricks.js` | Weapon tricks any weapon or mod can use: warm-up, homing, pinning, splash, ricochet, crits, salvage, gas, panic, toast, decoys, power drain |
+| `js/arms.js` | Personal weapons and armour: kit data, melee effects, wear and repair, enemy kit and drops, the Armoury tab and store |
+| `js/items.js` | Tonics and treats: permanent per-crew boosts, skill chips, boosts, healing, eating raw crops, the Tonics view and store tab |
 | `js/packs.js` | The built-in content packs (generated from `mods/` by `tools/build-packs.js`) |
 | `js/tutorial.js` | Flight school: the guided practice fight and the illustrated lessons |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |

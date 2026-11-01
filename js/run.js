@@ -335,6 +335,8 @@ function applyEffect(e){
   if(typeof sagaEffect==='function') sagaEffect(e, L);
   if(typeof campaignEffect==='function') campaignEffect(e, L);
   if(typeof expansionEffect==='function') expansionEffect(e, L);
+  if(typeof armsEffect==='function') armsEffect(e, L);
+  if(typeof itemsEffect==='function') itemsEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -408,6 +410,7 @@ function startCombat_(id, o={}){
   if(def.boss && G.flags.intel){ G.enemy.hull = G.enemy.maxHull = Math.max(10, G.enemy.maxHull - 6); }
   if(def.boss && G.flags.sabotage && G.enemy.weapons.length>1) G.enemy.weapons.pop();
   if(def.boss && typeof campaignBoss==='function') campaignBoss(G.enemy, o);
+  if(typeof armEnemyKit==='function') armEnemyKit(G.enemy);   // enemy crews carry personal kit (arms.js)
   if(def.boss && typeof expansionBoss==='function') expansionBoss(G.enemy, o);   // the ghost fleet keeps its promise   // Pip helps, Kross gloats (campaign.js)
   if(G.missiles > 0) G.ammoWarned = false;
   G.hull0 = G.ship.hull; G.boss = !!def.boss; G.proj = []; G.units = []; G.ftl = 0; G.dieT = 0; G.combatT = 0; G.stT = 0; G.stSig = null; G.stProg = null; G.afterWin = o.afterWin || null;
@@ -449,6 +452,7 @@ function finishCombat(kind, offer){
   if(kind==='crew') grant('boardkill'); if(kind==='surrender') grant('surrender');
   if(typeof mpFightWon==='function') mpFightWon(kind, e);
   if(G.ship.hull<=3) grant('hullbreadth');
+  if(typeof itemsCombatEnd==='function') itemsCombatEnd();
   emit('combatEnd', { kind, enemy:e });
   const L = [];
   if(kind==='surrender') L.push(...applyEffect(offer));
