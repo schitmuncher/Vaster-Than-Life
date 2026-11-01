@@ -162,6 +162,16 @@ async function installLibraryMod(m){
   try{ const r = await fetch('mods/' + m.file, { cache:'no-store' }); if(!r.ok) throw new Error('HTTP ' + r.status); const res = addModText(await r.text(), m.name || m.file); toast(res.ok ? `Installed ${m.name}.` : `Could not install ${m.name}.`); if(typeof renderModList==='function') renderModList(); }
   catch(e){ toast(`Could not download ${m.name}.`); }
 }
+/* mods installed from the library keep themselves up to date: when the library has a newer version, it replaces the saved copy (on or off as before) */
+async function updateLibraryMods(){
+  await loadLibrary(); if(LIBRARY.state!=='ready') return; const done = [];
+  for(const m of LIBRARY.mods){ const i = MODS.findIndex(x => x.name===m.name); if(i < 0) continue;
+    try{ const r = await fetch('mods/' + m.file, { cache:'no-store' }); if(!r.ok) continue; const txt = await r.text(), d = JSON.parse(txt);
+      if(String(d.version||'') === String(MODS[i].version||'')) continue; const on = MODS[i].enabled;
+      const res = addModText(txt, m.name); if(res.ok){ const j = MODS.findIndex(x => x.name===d.name.trim()); if(j >= 0){ MODS[j].enabled = on; saveMods(); } done.push(`${d.name} ${d.version||''}`.trim()); } }catch(e){} }
+  if(done.length){ if(typeof applyMods==='function' && !(typeof G!=='undefined' && G)) applyMods(); if(typeof toast==='function') toast('Updated: ' + done.join(', ')); if(typeof renderModList==='function') renderModList(); }
+}
+if(typeof location!=='undefined' && /^https?:/.test(location.protocol)) setTimeout(() => updateLibraryMods().catch(() => {}), 1200);
 const IMG = {};
 function getImg(src){ if(!src) return null; if(!IMG[src]){ const im = new Image(); im.src = src; IMG[src] = im; } const im = IMG[src]; return im.complete && im.naturalWidth ? im : null; }
 /* audio lives in audio.js */
