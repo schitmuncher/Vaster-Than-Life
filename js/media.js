@@ -69,7 +69,7 @@ function mediaWant(){
 function mediaActive(){ return !!AC && SET.musicSrc !== 'synth' && !MEDIA.fail && SET.music > 0 && !!MEDIA.cur; }
 function mediaTick(){
   if(!AC) return;
-  if(SET.musicSrc === 'synth' || MEDIA.fail || SET.music <= 0){ for(const k in MEDIA.t){ const t = MEDIA.t[k]; if(t.vis){ t.g?.gain.setTargetAtTime(0, AC.currentTime, .2); setTimeout(() => t.el.pause(), 800); t.vis = false; } } MEDIA.cur = null; return; }
+  if(SET.musicSrc === 'synth' || MEDIA.fail || SET.music <= 0 || (typeof midiActive==='function' && midiActive())){ for(const k in MEDIA.t){ const t = MEDIA.t[k]; if(t.vis){ t.g?.gain.setTargetAtTime(0, AC.currentTime, .2); setTimeout(() => t.el.pause(), 800); t.vis = false; } } MEDIA.cur = null; return; }
   const want = mediaWant();
   if(want !== MEDIA.cur){
     const prev = MEDIA.cur && MEDIA.t[MEDIA.cur];

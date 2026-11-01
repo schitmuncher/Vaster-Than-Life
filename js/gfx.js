@@ -119,7 +119,9 @@ function nacelles(b){
 }
 function shipArt(sh, mini){
   const b = sh._b; if(!b) return null;
-  const key = [sh.id, sh.rooms.length, sh.rooms.map(r=>r.sys+(sh.systems[r.sys]?1:0)).join(','), (b.x1-b.x0)|0, (b.y1-b.y0)|0, (b.cell*10)|0, b.facing, mini?1:0, sh.color, sh.weapons.length].join('|');
+  if(typeof shipStyle==='function'){ b.style = shipStyle(sh); b.seed = sh.id + sh.name; }
+  const st = typeof hstyle==='function' ? hstyle(b) : null;
+  const key = [sh.id, b.style, sh.rooms.length, sh.rooms.map(r=>r.sys+(sh.systems[r.sys]?1:0)).join(','), (b.x1-b.x0)|0, (b.y1-b.y0)|0, (b.cell*10)|0, b.facing, mini?1:0, sh.color, sh.weapons.length].join('|');
   if(sh._art && sh._artKey===key && sh._art.c && typeof sh._art.c.getContext==='function') return sh._art;
   const pad = 70, ox = Math.min(b.x0, b.x0 - b.nose) - pad, oy = b.y0 - pad;
   const w = (b.x1 - b.x0) + 2*b.nose + 2*pad, h = (b.y1 - b.y0) + 2*pad;
@@ -130,7 +132,8 @@ function shipArt(sh, mini){
   // shadow
   g.save(); g.translate(8,12); hullShape(g, b); g.fillStyle = 'rgba(0,0,0,.35)'; g.fill(); g.restore();
   // nacelles
-  for(const n of nacelles(b)){
+  if(st){ hullBehind(g, b, col, st, X, rnd); for(const n of nacelles(b)) drawNacelle(g, n, col, st); drawFins(g, b, col, st, X); }
+  else for(const n of nacelles(b)){
     const xa = Math.min(n.x0,n.x1), xb = Math.max(n.x0,n.x1);
     g.beginPath(); if(g.roundRect) g.roundRect(xa, n.y, xb-xa, n.h, n.h/2); else g.rect(xa, n.y, xb-xa, n.h);
     const ng = g.createLinearGradient(0,n.y,0,n.y+n.h); ng.addColorStop(0,'#4a5577'); ng.addColorStop(.5,'#2a3150'); ng.addColorStop(1,'#151a2c'); g.fillStyle = ng; g.fill();
@@ -139,16 +142,16 @@ function shipArt(sh, mini){
     const tx = facing>0 ? xa : xb; g.fillStyle = '#0a0d18'; g.beginPath(); g.ellipse(tx, n.y+n.h/2, 5, n.h*.42, 0, 0, 7); g.fill();
   }
   // fins
-  for(const top of [true,false]){ const y = top ? y0 : y1, d = top ? -1 : 1, fh = Math.max(12, (y1-y0)*.1);
+  if(!st) for(const top of [true,false]){ const y = top ? y0 : y1, d = top ? -1 : 1, fh = Math.max(12, (y1-y0)*.1);
     g.beginPath(); g.moveTo(X(x0+L*.5), y); g.lineTo(X(x0+L*.6), y + d*fh); g.lineTo(X(x0+L*.68), y + d*fh); g.lineTo(X(x0+L*.66), y); g.closePath();
     const fg = g.createLinearGradient(0, y, 0, y + d*fh); fg.addColorStop(0, '#2b3456'); fg.addColorStop(1, '#3d4870'); g.fillStyle = fg; g.fill(); g.strokeStyle = hexA(col,.7); g.lineWidth = 1.5; g.stroke(); }
   // hull body
   hullShape(g, b);
-  const hg = g.createLinearGradient(0,y0,0,y1); hg.addColorStop(0,'#46527a'); hg.addColorStop(.35,'#2b3456'); hg.addColorStop(1,'#121729'); g.fillStyle = hg; g.fill();
+  const pal = st ? st.pal : ['#46527a','#2b3456','#121729']; const hg = g.createLinearGradient(0,y0,0,y1); hg.addColorStop(0,pal[0]); hg.addColorStop(.35,pal[1]); hg.addColorStop(1,pal[2]); g.fillStyle = hg; g.fill();
   g.save(); hullShape(g, b); g.clip();
-  g.globalAlpha = .16; g.fillStyle = col; g.fillRect(ox, oy, w, h); g.globalAlpha = 1;
+  g.globalAlpha = st ? (sh.isEnemy ? .06 : .1) : .16; g.fillStyle = col; g.fillRect(ox, oy, w, h); g.globalAlpha = 1;
   const rowH = Math.max(18, (y1-y0)/7);
-  for(let yy = y0 - 6, row = 0; yy < y1 + 6; yy += rowH, row++){ let xx = x0 - 40 - (row%2)*40; while(xx < x1 + b.nose){ const pw = 90 + rnd()*120;
+  if(!st || !['rock','organic','crystal'].includes(st.plate)) for(let yy = y0 - 6, row = 0; yy < y1 + 6; yy += rowH, row++){ let xx = x0 - 40 - (row%2)*40; while(xx < x1 + b.nose){ const pw = 90 + rnd()*120;
       const px = X(xx) - (facing>0?0:pw);
       const pg = g.createLinearGradient(0, yy, 0, yy+rowH); const tone = rnd()*.06; pg.addColorStop(0, `rgba(255,255,255,${.03+tone})`); pg.addColorStop(1, `rgba(0,0,0,${.06+tone})`); g.fillStyle = pg; g.fillRect(px, yy, pw, rowH);
       g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(px, yy, pw, 1); g.fillRect(px + (facing>0?0:pw-1), yy, 1, rowH);
@@ -156,6 +159,7 @@ function shipArt(sh, mini){
       if(rnd()<.25){ g.fillStyle = 'rgba(0,0,0,.25)'; for(let v=0; v<4; v++) g.fillRect(px + 10 + v*6, yy + rowH*.3, 3, rowH*.4); }
       xx += pw; } }
   for(let i=0;i<60;i++){ g.fillStyle = `rgba(0,0,0,${rnd()*.15})`; g.fillRect(ox + rnd()*w, oy + rnd()*h, 2 + rnd()*20, 1); }
+  if(st) hullFront(g, b, col, st, X, rnd, ox, oy, w, h);
   g.fillStyle = hexA(col,.75); g.fillRect(ox, y0 + (y1-y0)*.07, w, 4); g.fillStyle = hexA(col,.35); g.fillRect(ox, y1 - (y1-y0)*.07 - 3, w, 2);
   g.fillStyle = 'rgba(255,255,255,.25)'; for(let xx = x0+20; xx < x1; xx += 13){ g.fillRect(X(xx), y0+5, 1.6, 1.6); g.fillRect(X(xx), y1-6, 1.6, 1.6); }
   const sh_ = g.createLinearGradient(0,y0,0,y1); sh_.addColorStop(0,'rgba(255,255,255,.12)'); sh_.addColorStop(.2,'rgba(255,255,255,0)'); sh_.addColorStop(.85,'rgba(0,0,0,0)'); sh_.addColorStop(1,'rgba(0,0,0,.35)'); g.fillStyle = sh_; g.fillRect(ox,oy,w,h);
@@ -163,9 +167,9 @@ function shipArt(sh, mini){
   hullShape(g, b); g.lineWidth = mini ? 2 : 3; g.strokeStyle = shade(col,.05); g.stroke();
   // cockpit glass on nose
   const nx = x1 + b.nose*.12, ny = cy; const gw = Math.max(10, b.nose*.5), gh = Math.max(4, (y1-y0)*.045);
-  g.beginPath(); g.moveTo(X(nx - gw*.4), ny - gh*2.2); g.lineTo(X(nx + gw*.45), ny - gh*.6); g.lineTo(X(nx + gw*.45), ny - gh*.1); g.lineTo(X(nx - gw*.4), ny - gh*.9); g.closePath();
+  if(st) drawCockpit(g, b, col, st, X); else { g.beginPath(); g.moveTo(X(nx - gw*.4), ny - gh*2.2); g.lineTo(X(nx + gw*.45), ny - gh*.6); g.lineTo(X(nx + gw*.45), ny - gh*.1); g.lineTo(X(nx - gw*.4), ny - gh*.9); g.closePath();
   g.moveTo(X(nx - gw*.4), ny + gh*2.2); g.lineTo(X(nx + gw*.45), ny + gh*.6); g.lineTo(X(nx + gw*.45), ny + gh*.1); g.lineTo(X(nx - gw*.4), ny + gh*.9); g.closePath();
-  const gg = g.createLinearGradient(0, ny-gh, 0, ny+gh); gg.addColorStop(0,'#bff4ff'); gg.addColorStop(.3,'#3fa8c4'); gg.addColorStop(1,'#0c2a3a'); g.fillStyle = gg; g.fill(); g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1; g.stroke();
+  const gg = g.createLinearGradient(0, ny-gh, 0, ny+gh); gg.addColorStop(0,'#bff4ff'); gg.addColorStop(.3,'#3fa8c4'); gg.addColorStop(1,'#0c2a3a'); g.fillStyle = gg; g.fill(); g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1; g.stroke(); }
   // weapon hardpoints
   const nW = Math.min(4, sh.weapons.length);
   for(let i=0;i<nW;i++){ const top = i%2===0; const xx = X(x0 + L*(.55 + .1*Math.floor(i/2))), yy = top ? y0 : y1;
@@ -173,7 +177,7 @@ function shipArt(sh, mini){
     g.strokeStyle = '#8a95b8'; g.lineWidth = mini?2:3; g.beginPath(); g.moveTo(xx, yy); g.lineTo(xx + facing*(mini?8:16), yy + (top?-2:2)); g.stroke(); }
   // antenna & greebles
   for(let i=0;i<6;i++){ const xx = X(x0 + 30 + rnd()*(L-60)), top = rnd()<.5; g.fillStyle = '#39436a'; g.fillRect(xx-4, (top?y0-5:y1+1), 8, 4); }
-  g.strokeStyle = '#8a95b8'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(X(x0+L*.2), y0); g.lineTo(X(x0+L*.18), y0-18); g.stroke(); g.fillStyle = C.hostile; g.fillRect(X(x0+L*.18)-1.5, y0-20, 3, 3);
+  if(!st || st.decor==null){ g.strokeStyle = '#8a95b8'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(X(x0+L*.2), y0); g.lineTo(X(x0+L*.18), y0-18); g.stroke(); g.fillStyle = C.hostile; g.fillRect(X(x0+L*.18)-1.5, y0-20, 3, 3); }
   // rooms
   const pat = g.createPattern ? g.createPattern(floorTile(), 'repeat') : null;
   sh.rooms.forEach((r,i) => { const q = sh._rects[i]; if(!q) return;

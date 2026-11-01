@@ -148,6 +148,7 @@ Give a weapon one special trick, two at most, so it feels different from the bas
 | `hull` | Required: 20–35 |
 | `reactor` | Reactor power, 6–10 |
 | `color` | Hull tint "#rrggbb" |
+| `style` | Optional look: `fed`, `rebuff`, `enjinn`, `pebble`, `voltan`, `sloog`, `mantlis`, `stealth`, `glass`, `pyrate`, `auto`, `flag`, `hive` or `bug`. Leave it out and the game guesses from the name and class. Enemies can have one too |
 | `systems` | Required: system id → level, e.g. `{"shields":2,"engines":2,"oxygen":1,"weapons":3,"medbay":1,"piloting":1,"sensors":1,"doors":1}` |
 | `reserve` | Systems with an empty room ready to be bought later, e.g. `["drones","teleporter"]` |
 | `weapons`, `drones`, `augments` | Starting gear (ids) |
@@ -275,6 +276,7 @@ A mod with a `campaign` object is a complete alternative campaign. It only loads
   "chatter": ["Short lines that pop up now and then while travelling."],
   "gear": { "weapons": ["px_gun"], "drones": [], "augments": ["px_aug"] },   // your own gear: stores always stock some, half of all loot comes from it
   "recruits": ["human", "px_people"],   // the only peoples stores and events offer as crew
+  "music": { "file": "px-theme.mid", "strange": ["px_b"], "cues": { "hangar": "lounge", "start": "rock", "explore": "musicbox", "strange": "eerie", "combat": "battle", "boss": "boss", "win": "victory" } },   // optional: a MIDI file in mods/ played in a different arrangement at each moment (styles: lounge, rock, musicbox, eerie, battle, boss, victory)
   "win": { "title": "WIN TITLE", "text": "The ending, 2-5 sentences." },
   "lose": "One or two sentences shown when the run is lost."
 }

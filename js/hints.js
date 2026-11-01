@@ -44,6 +44,9 @@ const HINTS = {
   fuel:      { title:'Fuel is low', text:'Each jump burns 1 fuel. Buy fuel at stores (3 scrap each) and pick up loot. Run dry and you\'re stuck waiting for the fleet.' },
   shields2:  { title:'Only one shield layer', text:'Enemies from here on fire several shots at once. Upgrade Shields to 4 (two layers) soon: open Ship (C) > Systems.', at:()=>RECT.ship },
   skills:    { title:'Crew learn on the job', text:'Crew who stay on a station (Helm, Engines, Shields, Weapons) gain skill and boost it. Use "Stations" to send everyone back to their posts.' },
+  arms:      { title:'Arm your crew', text:'You have personal weapons or armour in the locker. Open Ship (S) → Armoury, pick a crew member\'s slot, then something from the locker. Armed crew win boarding fights far faster.', at:()=>RECT.ship },
+  armbroken: { title:'Broken kit', text:'Someone\'s weapon or armour has broken and does nothing now. Repair it in Ship → Armoury with a drone part, or at a store\'s repair shop.', at:()=>RECT.ship },
+  tonics:    { title:'Tonics and treats', text:'You have something to give a crew member. Ship → Armoury → Tonics & treats: permanent boosts, skill chips, stims and medkits, given to one person at a time.', at:()=>RECT.ship },
   hull:      { title:'Hull is getting low', text:'Hull repairs cost a few scrap each at stores, and quiet beacons sometimes let your crew patch it. Avoid optional fights until you\'ve repaired.', at:()=>RECT.hull },
   sector:    { title:'New sector', text:'Each sector is a little harder. Visit stores to repair and upgrade, and take blue options when you can.' },
   flagship:  { title:'The final sector', text:'The Flaggship is heading for Fedoration command. It has 3 phases: boarders, then drones with a super shield, then power surges. Arrive repaired, with missiles and fuel. You have to beat it three times.' },
@@ -102,6 +105,9 @@ function checkHints(dt){
     if(G.stats.jumps>=1 && reactorFree(s) > 0 && Object.values(s.systems).some(y => y.power < y.max - y.dmg)) hint('power');
     if(!e && G.stats.kills>=1){ const sh = s.systems.shields; if(sh && sh.max < 8 && G.scrap >= upgradeCost('shields', sh.max)) hint('upgrade'); hint('skills'); }
     if(s.hull < s.maxHull*.4) hint('hull');
+    if(!e && (G.arms||[]).length && s.crew.some(c => c.owner==='p' && !c.drone && !c.arm)) hint('arms');
+    if(!e && s.crew.some(c => c.owner==='p' && ((c.arm && c.arm.dur <= 0) || (c.suit && c.suit.dur <= 0 && !(DATA.arms[c.suit.id]||{}).medpack)))) hint('armbroken');
+    if(!e && Object.keys(G.items||{}).length) hint('tonics');
     if(G.fuel <= 3) hint('fuel');
     if(!e && G.stats.jumps >= 2 && G.garden && G.garden.plots.some(p => !p) && Object.values(G.seeds||{}).some(n => n > 0)) hint('garden');   // home life (homestead.js)
     if(!e && G.garden && typeof ripe==='function' && G.garden.plots.some(p => ripe(p))) hint('harvest');

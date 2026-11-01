@@ -368,6 +368,8 @@ function drawSettings(){
       slider('Sound effects', 0, `${Math.round(SET.sfx*100)}%`, ...vol('sfx'), 'Weapons, impacts, doors, alarms, UI.');
       slider('Ship ambience', 0, `${Math.round((SET.amb ?? .5)*100)}%`, ...vol('amb'), 'Engine hum, fire crackle, breach hiss, low-hull warnings.');
       onoff('Crew voices', 'voices', true, 'Crew and enemy captains babble a few syllables when they talk, pitched for each race.');
+      choice('Spoken voices', 'tts', [['off','Off'],['dialogue','Dialogue'],['full','Full story']], 'off', 'Your device reads the story aloud, with a different voice for each character (Admiral Hale, Pip, Kross, Vance, Holly, Rimmer...). Dialogue speaks only what people say; Full story reads the narration and crew chatter too. Uses the voices installed on your device, so it sounds different on each.', v => { if(v==='off' && typeof ttsStop==='function') ttsStop(); else if(typeof ttsSay==='function') ttsSay([{ t:'Voices on. Welcome aboard, Captain.', v:{ key:'Hale', g:'f', p:.9, r:.95 } }], true); });
+      if((SET.tts||'off')!=='off') bar_('Voice speed', 'ttsRate', .7, 1.4, .05, 1, v => `${Math.round(v*100)}%`, 'How fast the voices talk.');
       choice('Music source', 'musicSrc', [['ftl','Soundtrack'],['synth','Generated']], 'ftl', 'Soundtrack plays the licensed FTL tracks by Ben Prunty: title theme, exploration and three battle themes. Generated is the adaptive synth music made in the game.');
       btn(X, y+10, 220, 46, 'Test sounds', () => { ensureAudio(); ['laser','ion','missile','shield','hit','explode'].forEach((n,i) => setTimeout(() => sfx(n), i*260)); });
       break;

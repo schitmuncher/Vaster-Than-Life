@@ -65,7 +65,8 @@ const TUT_LESSONS = [
   { id:'controls', icon:'🎮', name:'Controls', pages:[
     { h:'Mouse and keyboard', pts:['Click to act. Hover anything for details.', 'Space pause · M map · S ship · 1-4 pick a weapon · V hold fire · F autofire · C cloak · H crew to stations · + and − game speed · Esc cancel.'] },
     { h:'Touch', pts:['Tap to act. Press and hold for details.', 'Pinch or double-tap to zoom, drag to look around. Two-finger tap pauses.', 'Turn your phone sideways, and use Full screen (or install the game) for the most room.'] },
-    { h:'Game controller', pts:['D-pad jumps between buttons and rooms. Left stick moves a cursor. A selects, B backs out, Start pauses.', 'X hold fire · Y map · LB/RB weapons · LT stations · RT autofire · View ship.'] } ] }
+    { h:'Game controller', pts:['D-pad jumps between buttons and rooms. Left stick moves a cursor. A selects, B backs out, Start pauses.', 'X hold fire · Y map · LB/RB weapons · LT stations · RT autofire · View ship.'] },
+    { h:'Sound and voices', pts:['Settings → Audio has separate volumes for effects, music and ambience.', 'Spoken voices (off at first) reads the story aloud with your device\'s voices. Dialogue: only what characters say, each in their own voice. Full story: a narrator too, plus crew chatter.', 'Voice speed sets how fast they talk. Campaigns can bring their own theme music, arranged differently for fights, quiet beacons and strange places.'] } ] }
 ];
 const TUT_PAGES = TUT_LESSONS.reduce((t, l) => t + l.pages.length, 0);
 function tutSeen(){ return (PROFILE.tut = PROFILE.tut || {}); }

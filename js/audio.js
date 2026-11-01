@@ -155,6 +155,7 @@ function musicTick(){
   const fighting = inGame && G.enemy && !G.enemy.dead; const boss = fighting && G.boss;
   MUS.combat += ((fighting ? 1 : 0) - MUS.combat) * .04; MUS.boss += ((boss ? 1 : 0) - MUS.boss) * .04;
   MUS.mood = currentMood();
+  if(typeof midiTick==='function'){ midiTick(); if(midiActive()){ MUS.next = now() + .1; return; } }   // a campaign's own theme (midi.js)
   const M = MOODS[MUS.mood]; const step = M.tempo * (1 - .12*MUS.combat);
   if(typeof mediaActive==='function' && mediaActive()){ MUS.next = now() + .1; return; }   // the soundtrack is playing instead of the synth
   while(MUS.next < now() + .3){ playStep(MUS.step, MUS.next, M, step); MUS.next += step; MUS.step++; }

@@ -171,7 +171,25 @@
    "rd_felis",
    "rd_mechanoid",
    "rd_gelf"
-  ]
+  ],
+  "music": {
+   "file": "red-dwarf-theme.mid",
+   "strange": [
+    "rd_psi",
+    "rd_timedrift",
+    "rd_backwards",
+    "rd_waxworks"
+   ],
+   "cues": {
+    "hangar": "lounge",
+    "start": "rock",
+    "explore": "musicbox",
+    "strange": "eerie",
+    "combat": "battle",
+    "boss": "boss",
+    "win": "victory"
+   }
+  }
  },
  "races": [
   {
@@ -373,7 +391,8 @@
      "w": 1,
      "h": 2
     }
-   ]
+   ],
+   "style": "bug"
   },
   {
    "id": "rd_bluemidget",
@@ -418,7 +437,8 @@
    ],
    "augments": [
     "rd_holly"
-   ]
+   ],
+   "style": "bug"
   }
  ],
  "enemies": [
@@ -451,7 +471,8 @@
     "rd_simulant",
     "rd_simulant",
     "rd_simulant"
-   ]
+   ],
+   "style": "rebuff"
   },
   {
    "id": "rd_sim_cruiser",
@@ -484,7 +505,8 @@
     "rd_simulant",
     "rd_simulant",
     "rd_agonoid"
-   ]
+   ],
+   "style": "rebuff"
   },
   {
    "id": "rd_gelf_raider",
@@ -515,7 +537,8 @@
     "rd_gelf",
     "rd_gelf",
     "rd_gelf"
-   ]
+   ],
+   "style": "mantlis"
   },
   {
    "id": "rd_agonoid",
@@ -544,7 +567,8 @@
    "drones": [
     "combat1"
    ],
-   "crew": []
+   "crew": [],
+   "style": "auto"
   },
   {
    "id": "rd_wax",
@@ -571,7 +595,8 @@
    "crew": [
     "rd_waxdroid",
     "rd_waxdroid"
-   ]
+   ],
+   "style": "pebble"
   },
   {
    "id": "flaggship",
@@ -604,7 +629,8 @@
    "crew": [
     "rd_simulant",
     "rd_simulant"
-   ]
+   ],
+   "style": "stealth"
   },
   {
    "id": "rd_gelf_chief",
@@ -637,7 +663,8 @@
     "rd_gelf",
     "rd_gelf",
     "rd_gelf"
-   ]
+   ],
+   "style": "sloog"
   },
   {
    "id": "rd_psiren",
@@ -666,7 +693,8 @@
    "crew": [
     "rd_gelf",
     "rd_gelf"
-   ]
+   ],
+   "style": "sloog"
   },
   {
    "id": "rd_probe",
@@ -688,7 +716,8 @@
     "ion",
     "rd_bazookoid2"
    ],
-   "crew": []
+   "crew": [],
+   "style": "auto"
   },
   {
    "id": "rd_inquisitor",
@@ -715,7 +744,8 @@
    "crew": [
     "rd_mechanoid",
     "rd_mechanoid"
-   ]
+   ],
+   "style": "glass"
   },
   {
    "id": "rd_hogey",
@@ -739,7 +769,8 @@
    ],
    "crew": [
     "human"
-   ]
+   ],
+   "style": "pyrate"
   },
   {
    "id": "rd_sim_dread",
@@ -776,7 +807,8 @@
     "rd_simulant",
     "rd_simulant",
     "rd_agonoid"
-   ]
+   ],
+   "style": "flag"
   },
   {
    "id": "rd_trash_crawler",
@@ -801,7 +833,8 @@
     "rd_rivet_gun",
     "basic"
    ],
-   "crew": []
+   "crew": [],
+   "style": "hive"
   }
  ],
  "sectors": [

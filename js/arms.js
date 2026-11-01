@@ -148,9 +148,10 @@ function drawArmouryTab(f, cx, y0){
     slot(c, 'arm', cx+214, y, 270); slot(c, 'suit', cx+494, y, 230); });
   // the locker
   const lx = cx+760, lw = 616; panel(lx, y0+24, lw, 560, 10);
-  label(`Locker (${L.length})`, lx+20, y0+56, C.amber, 'left', 15); T(`Drone parts: ${G.parts}`, lx+lw-20, y0+56, { s:14, a:'right', c:C.muted });
+  label(`Locker (${L.length})`, lx+20, y0+56, C.amber, 'left', 15); T(`Drone parts: ${G.parts}`, lx+200, y0+56, { s:14, c:C.muted });
   if(!L.length) para('Empty. Buy kit at a store (Armoury tab), take it from beaten boarders, or find it on the way.', lx+20, y0+92, lw-40, { s:15, lh:21, c:C.muted });
-  L.slice(0, 7).forEach((it, i) => { const d = armDef(it); if(!d) return; const y = y0+76 + i*70, kind = ARM_KIND[d.kind] || ARM_KIND.weird;
+  const per = 7, pages = Math.max(1, Math.ceil(L.length/per)); UI.armPage = clamp(UI.armPage||0, 0, pages-1);
+  L.slice(UI.armPage*per, UI.armPage*per + per).forEach((it, i) => { const d = armDef(it); if(!d) return; const y = y0+76 + i*70, kind = ARM_KIND[d.kind] || ARM_KIND.weird;
     rr(lx+14, y, lw-28, 62, 8); ctx.fillStyle = C.panel2; ctx.fill();
     T(d.name, lx+30, y+24, { s:16, f:FD, w:700, c: it.dur > 0 ? C.ink : C.hostile, max:220 }); T(kind[0].toUpperCase(), lx+30, y+46, { s:11, f:FD, w:700, c:kind[1] });
     bar(lx+90, y+40, 140, 7, armFrac(it), it.dur <= 0 ? C.hostile : C.good); tip(lx+14, y, 240, 62, d.name, `${d.desc} ${armStatLine(d)}`);
@@ -158,7 +159,7 @@ function drawArmouryTab(f, cx, y0){
     btn(lx+262, y+12, 110, 38, 'Equip', () => { const c = s.crew.find(x => x.id===sel.c); if(!c) return; const old = c[sel.k]; c[sel.k] = it; L.splice(L.indexOf(it), 1); if(old) L.push(old); sfx('click'); }, { s:14, disabled:!want, fill:!!want });
     btn(lx+380, y+12, 110, 38, 'Repair · 1 part', () => armRepairItem(it), { s:12, disabled:it.dur >= d.dur || G.parts < 1 });
     btn(lx+498, y+12, 92, 38, 'Strip', () => { L.splice(L.indexOf(it), 1); G.parts += 1; toast(`Stripped the ${d.name} for a drone part.`); }, { s:13, col:C.hostile }); });
-  if(L.length > 7) T(`+${L.length - 7} more in the locker`, lx+20, y0+580, { s:13, c:C.muted });
+  if(pages > 1){ btn(lx+lw-200, y0+38, 44, 30, '‹', () => UI.armPage--, { s:14, disabled:UI.armPage<=0 }); T(`${UI.armPage+1}/${pages}`, lx+lw-130, y0+59, { s:13, a:'center', c:C.muted }); btn(lx+lw-108, y0+38, 44, 30, '›', () => UI.armPage++, { s:14, disabled:UI.armPage>=pages-1 }); }
   // the selected slot
   if(sel){ const c = s.crew.find(x => x.id===sel.c), it = c && c[sel.k];
     if(c && it){ const by = y0+600; btn(lx, by, 200, 44, 'Take it off', () => { L.push(it); c[sel.k] = null; UI.armSel = null; }, { s:14 }); btn(lx+210, by, 200, 44, 'Repair · 1 part', () => armRepairItem(it), { s:14, disabled:it.dur >= armDef(it).dur || G.parts < 1 }); } }
