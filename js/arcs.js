@@ -45,6 +45,7 @@ function pickArc(){
 }
 function arcRunStart(){
   if(!G || G.campaign) return; G.arc = pickArc(); G.arcS = { v:0, n:0, f:{}, beat:0, beats:0 };
+  const A = ARCS[G.arc]; if(A && A.roll){ const r = srng(hashStr(String(G.seed||'') + '|twist|' + G.arc) || 7); A.roll(G.arcS, r, G); }   // the hidden twist: the same story can go a different way each run
   if(typeof campaignPure==='function' && campaignPure()){ PROFILE.arcs = PROFILE.arcs || {}; PROFILE.arcs[G.arc] = (PROFILE.arcs[G.arc]||0) + 1; saveProfile(); }
 }
 /* entering a sector: the next scene of a non-Pip story (campaignSector calls this) */
@@ -63,7 +64,8 @@ function arcArrive(first){
 function arcEffect(a, L){
   const S = arcState();
   if(a.v){ S.v += a.v; const who = arcDef().who; L.push(a.v > 0 ? `${who} remembers that` : `${who} remembers that, too`); }
-  if(a.n){ S.n += a.n; if(arcId()==='flotilla') L.push(`Harrow shuttles saved: ${S.n}`); }
+  if(a.n){ S.n += a.n; const cl = arcId()==='flotilla' ? 'Harrow shuttles saved' : arcDef().count; if(cl) L.push(`${cl}: ${S.n}`); }
+  if(a.t != null) S.t = a.t;
   for(const f of [].concat(a.f || [])) S.f[f] = true;
   if(a.gone) S.f.gone = true;
   if(a.note && typeof sagaNote==='function') sagaNote(arcId(), fillText(a.note, G.evCtx || {}));
@@ -82,6 +84,16 @@ function arcBoss(e, ph){
     if(ph===0 || (ph===1 && S.v >= 4)){ ionizeAll(e, 'weapons', 4); out.push(ph ? 'Harte loops in front of the Flaggship again, shouting rude things on every channel. It fires at her first. Again.' : 'Harte\'s ship screams in front of you, every light blazing. The Flaggship\'s opening salvo goes after her instead of you.'); }
     if(F.behind || S.v >= 4) hurt(ph===2 ? 4 : 2, 'Harte empties her missile racks into the Flaggship\'s hull.');
   }
+  const A = arcDef(); if(A.boss){ const H = {
+      hurt:(k, why) => hurt(k, why),
+      ion:(sys, secs, why) => { ionizeAll(e, sys, secs); if(sys==='shields') e.shield = 0; out.push(why); },
+      buff:(k, why) => { e.hull += k; e.maxHull += k; out.push(why); },
+      mine:(sys, secs, why) => { ionizeAll(G.ship, sys, secs); out.push(why); },
+      heal:(k, why) => { const s = G.ship, n = Math.min(k, s.maxHull - s.hull); s.hull += n; out.push(n > 0 ? `${why} +${n} hull.` : why); },
+      shield:(k, why) => { G.ship.super = Math.max(G.ship.super||0, k); out.push(why); },
+      crew:(why) => { for(const c of G.ship.crew) if(c.owner==='p') c.hp = c.maxHp; out.push(why); },
+      say:(why) => out.push(why) };
+    A.boss(e, ph, S, H); }
   return out.join(' ');
 }
 const ARC_ENDINGS = {
@@ -214,5 +226,5 @@ ACHIEVEMENTS.push(
   { id:'end_fl_few',        name:'A Few Lights',         desc:'Win having saved some of Harrow Reach.' },
   { id:'end_harte_wing',    name:'Wingmates',            desc:'Win with Captain Harte as your closest friend.' },
   { id:'end_harte_rivals',  name:'Friendly Rivals',      desc:'Win with Captain Harte flying escort.' },
-  { id:'arcs_all',          name:'Every Story',          desc:'Win once with each of the four stories.' }
+  { id:'arcs_all',          name:'Every Story',          desc:'Win with ten different stories.' }
 );

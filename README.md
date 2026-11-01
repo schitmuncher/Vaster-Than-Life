@@ -99,13 +99,33 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Flight school**, on the title screen. **Guided practice** is a real fight against a training target, one step at a time, with each control lit up as you need it: power, aiming, pausing, a fire, a hull breach, a boarder, the medbay, doors, crew autopilot, volleys, salvage, the map, a jump, a store and an upgrade. Your ship can't be lost, and it never touches your saved run.
 - **Lessons**: 12 illustrated chapters, 45 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
 
-**Four stories**
-- Every run follows one story, a scene per sector, with its own help (or harm) at the Flaggship and its own endings:
+**Twenty-four stories**
+- Every run follows one story, a scene per sector, with its own help (or harm) at the Flaggship and its own endings. Most stories roll a **hidden twist** at the start of the run, so the same story can go a different way next time (who the stowaway really is, who the saboteur is, what the ghost is, whether the prophecy is true...):
   - **The Data Core**: Pip, the frightened data core in your hold, and Director Kross who wants it back (four endings).
   - **The Defector**: Commander Ilsa Vance, a Rebuff officer who wants to change sides, a tracker in her uniform, a brother on a Rebuff colony, and a plan to lock the Flaggship's gunners out of their own guns (four endings).
   - **The Lost Flotilla**: forty shuttles fleeing the Rebuff, scattered along your route. Save them from pyrates, comets and fever, and Old Marrow, a retired mining tug, comes to the Flaggship with you (three endings).
   - **The Rival**: Captain Juno Harte, flying the decoy run on your route. Races, a missile cache, an ambush, cards or a rescue, and someone to draw the Flaggship's fire (three endings).
-- Pick one in the hangar, or leave it on **Surprise me** to get the one you've seen least. Endings are collected under Career, and winning with all four earns a medal.
+  - **The Stowaway**: a twelve-year-old in your cargo, who may be a runaway heir, a Rebuff cadet or just a dockyard kid.
+  - **The Cure**: collect samples so a doctor can cure the Sloog blight. Unless it's a bioweapon.
+  - **The Heist**: help a pyrate rob the Rebuff payroll barge. Someone double-crosses someone.
+  - **The Haunting**: cold spots and coffee nobody made. A dead captain, a stowaway in the vents, or a Rebuff worm.
+  - **The Old Debt**: pay off your loan shark one sector at a time, or find out who she's really working for.
+  - **The Prophecy**: an oracle says you are the Starbreaker. She might be right. She might be running a con.
+  - **Wanted**: framed for murder, hunted by the Widow Sable, with three possible culprits.
+  - **The Lost Expedition**: follow a fifty-year-old trail to the Cradle: a weapon, a garden, or the explorer herself.
+  - **Mutiny**: a charismatic bosun, a grumbling crew and a secret in the cargo.
+  - **The Wedding**: one of your own crew is getting married, rings, cake, in-laws and all (sometimes the in-laws are pyrates).
+  - **The Star-Wyrm**: a baby dragon hatches in your hold and grows every sector.
+  - **The Gunnery Cup**: a shooting tournament along your route, with a rival who may be cheating.
+  - **Messages from Tomorrow**: warnings in your own voice from nine days ahead. Or a Rebuff trick.
+  - **The Saboteur**: three passengers, one saboteur, clues every sector, and a different culprit every time.
+  - **The Long Lights**: relight a dying beacon network. Some lights were put out for a reason.
+  - **The Duke of Dice**: cards with a gambler who owns four planets, for ever-higher stakes.
+  - **The Lantern**: help a resistance cell inside Rebuff space, and find their informant, if there is one.
+  - **The Inheritance**: a great-uncle has left you a tiny, falling-apart space station.
+  - **The Double**: someone with your face is one beacon ahead: a shape-shifter, a Rebuff clone, or you from another universe.
+  - **The Song in the Static**: one of your crew hears a song nobody else can. Where it leads changes every run.
+- Pick one in the hangar, or leave it on **Surprise me** to get the one you've seen least. Endings (75 of them) are collected under Career, with a medal for each story's best ending and one for winning ten different stories.
 
 **Built-in content packs**
 - What used to be 32 optional content and ship mods is now part of the game: 41 ships, 76 weapons, dozens of drones and augments, 20 peoples, new enemies and sectors, and over 400 events. Rule sets, scripts, challenge packs and campaign mods stay optional in the Mods library. New hulls from the packs are unlocked by playing, like the rest.
@@ -464,6 +484,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, new encounters, plain-language weapon descriptions, and the ship's pet (jobs and sprite) |
 | `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
 | `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Flaggship help, endings and the hangar story picker |
+| `js/arcs2.js` | Twenty more stories, each with a hidden twist rolled per run, their scenes, Flaggship effects and endings |
 | `js/packs.js` | The built-in content packs (generated from `mods/` by `tools/build-packs.js`) |
 | `js/tutorial.js` | Flight school: the guided practice fight and the illustrated lessons |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |

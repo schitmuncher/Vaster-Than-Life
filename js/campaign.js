@@ -275,7 +275,7 @@ function campaignRunEnd(win, reason){
   let ending = null; const ek = win ? endingFor() : null;
   if(ek && endingDef(ek)){ PROFILE.endings = PROFILE.endings || {}; const first = !PROFILE.endings[ek]; if(first){ PROFILE.endings[ek] = Date.now(); add(`New ending: ${endingDef(ek).title}`, 60); }
     ending = Object.assign({ id:ek, first }, endingDef(ek)); grant('end_' + ek); if(Object.keys(ENDINGS).every(k => PROFILE.endings[k])) grant('end_all');
-    if(campaignPure()){ PROFILE.arcWins = PROFILE.arcWins || {}; PROFILE.arcWins[arcId()] = 1; if(ARC_IDS.every(k => PROFILE.arcWins[k])) grant('arcs_all'); } }
+    if(campaignPure()){ PROFILE.arcWins = PROFILE.arcWins || {}; PROFILE.arcWins[arcId()] = 1; if(ARC_IDS.filter(k => PROFILE.arcWins[k]).length >= 10) grant('arcs_all'); } }
   const dm = { easy:.75, normal:1, hard:1.5 }[G.diff] || 1, am = 1 + .15*alertLv();
   const base = lines.reduce((t, l) => t + l[1], 0), total = Math.max(5, Math.round(base * dm * am));
   const mults = []; if(dm !== 1) mults.push([`${(DIFFICULTY[G.diff]||{}).name || G.diff} difficulty`, `×${dm}`]); if(am !== 1) mults.push([`Rebuff alert ${alertLv()}`, `×${am.toFixed(2).replace(/0$/, '')}`]);
@@ -340,8 +340,11 @@ function drawCareer(){
   // the stories and their endings
   panel(800, 186, 740, 330, 12); label('Stories', 824, 224, C.amber, 'left', 16);
   const E = PROFILE.endings || {}, ids = typeof ARC_IDS!=='undefined' ? ARC_IDS : ['pip'], sel = ids.includes(UI.careerArc) ? UI.careerArc : ids[0];
-  ids.forEach((a, i) => btn(930 + i*150, 200, 142, 36, ARCS[a].name.replace(/^The /, ''), () => { UI.careerArc = a; }, { s:13, fill:a===sel, col:ARCS[a].color }));
-  const keys = arcEndings(sel); T(`${keys.filter(k => E[k]).length} of ${keys.length} endings found. ${ARCS[sel].blurb}`, 824, 256, { s:14, c:C.muted, max:690 });
+  { const k = ids.indexOf(sel); btn(1000, 200, 44, 38, '‹', () => { UI.careerArc = ids[(k - 1 + ids.length) % ids.length]; }, { s:18 });
+    rr(1052, 200, 380, 38, 8); ctx.fillStyle = 'rgba(6,9,18,.7)'; ctx.fill(); T(`${ARCS[sel].name}  ·  ${k+1}/${ids.length}`, 1242, 226, { s:16, f:FD, w:700, a:'center', c:ARCS[sel].color, max:370 });
+    btn(1440, 200, 44, 38, '›', () => { UI.careerArc = ids[(k + 1) % ids.length]; }, { s:18 });
+    const found = ids.filter(a => arcEndings(a).some(e => E[e])).length; T(`${found}/${ids.length} stories finished`, 1516, 504, { s:12, a:'right', c:C.muted }); }
+  const keys = arcEndings(sel); T(`${keys.filter(k => E[k]).length} of ${keys.length} endings found. ${ARCS[sel].blurb}`, 824, 256, { s:14, c:C.muted, max:560 });
   keys.forEach((k, i) => { const cx = 824 + (i%2)*352, cy = 272 + Math.floor(i/2)*116, got = !!E[k], d = endingDef(k);
     rr(cx, cy, 340, 104, 10); ctx.fillStyle = got ? hexA(C.amber,.08) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 1.5; ctx.stroke();
     T(got ? d.title : '???', cx+16, cy+32, { s:19, f:FD, w:700, c: got ? C.amber : C.muted, max:310 });
