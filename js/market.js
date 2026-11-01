@@ -92,7 +92,7 @@ function marketStock(st){
   // today's deal: one thing at 30% off
   const pool = [...st.weapons.map(id => 'w:' + id), ...st.drones.map(id => 'd:' + id), ...st.augments.map(id => 'a:' + id)]; st.deal = pool.length ? pick(pool) : null;
   // two crew looking for work, of different races
-  const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass'); shuffle(races); st.crewRaces = races.slice(0, 2); st.crewRace = st.crewRaces[0]; st.hired = [];
+  const races = (typeof campRecruits==='function' ? campRecruits : x => x)(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')); shuffle(races); st.crewRaces = races.slice(0, 2); st.crewRace = st.crewRaces[0]; st.hired = [];
   // goods: some of what this sector makes, a couple of other things, and seeds
   const here = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return g.kind!=='meal' && g.kind!=='curio' && g.kind!=='fish' && (!g.illegal || K.shady) && g.from.includes(kind); });
   const other = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return (g.kind==='trade') && !g.from.includes(kind) && (!g.illegal || K.shady); }); shuffle(other);

@@ -36,6 +36,14 @@ function drawCampaignPicker(x, y){ const list = campaignMods(); if(!list.length)
   btn(x+480, y, 40, 34, '›', () => set(ids[(i + 1) % ids.length]), { s:18 });
   tip(x, y, 520, 34, C ? C.title : 'Standard campaign', C ? (C.blurb || 'A campaign mod.') + ' (A mod: change it with the arrows.)' : 'The Fedoration courier, Pip, Director Kross and the Flaggship. Campaign mods you turn on in Mods appear here.');
   return true; }
+/* a campaign's own gear: stores always stock some of it, and half of all loot comes from it */
+function campGear(kind){ const C = campDef(); const g = C && C.gear && C.gear[kind]; return Array.isArray(g) ? g.filter(id => DATA[kind] && DATA[kind][id]) : []; }
+function campGearPool(kind, pool){ const own = campGear(kind); if(!own.length || Math.random() < .5) return pool; const set = new Set(own), mine = pool.filter(o => set.has(o.id)); return mine.length ? mine : pool; }
+function campStoreGear(st){ const C = campDef(); if(!C || !C.gear) return;
+  const put = (kind, n) => { const own = shuffle(campGear(kind).filter(id => kind!=='augments' || !G.ship.augments.includes(id))).slice(0, n); if(!own.length) return; const rest = st[kind].filter(id => !own.includes(id)); st[kind] = [...own, ...rest].slice(0, Math.max(st[kind].length, own.length)); };
+  put('weapons', 2); put('drones', 1); put('augments', 1); }
+/* who you can recruit in a campaign (its own peoples, not the standard game's) */
+function campRecruits(list){ const C = typeof campDef==='function' ? campDef() : null; if(!C || !Array.isArray(C.recruits)) return list; const own = C.recruits.filter(k => DATA.races[k]); return own.length ? own : list; }
 function C_AMBER(){ return '#ffb547'; }
 /* start of a campaign run: named crew, its own briefing */
 function campaignStart(){ const C = campDef(); if(!C) return;
@@ -136,7 +144,8 @@ function haleGreeting(){
   else if(last && (PROFILE.lastFallen||[]).length) out.push(`"We lost ${listText(PROFILE.lastFallen.slice(0,2))} last time." Hale is quiet for a moment. "Bring this lot home, ${rk}."`);
   else if(last) out.push(pick([`"Sector ${last.sector} last time, ${rk}. I've written sector ${Math.min(R.sectors, last.sector+1)} in the plan. In pen."`, `"Back again, ${rk}? Good. The core is loaded, the Fleet is gathering, and the coffee is terrible. Off you go."`]));
   if(promoted) out.push(`"Oh, and congratulations on the promotion, ${rk}. It suits you."`);
-  if(PROFILE.endings && PROFILE.endings.trusted) out.push(pick(['"And be nice to Pip. You know what I mean."', '"The core is humming already. I think it remembers you."']));
+  if(arcPure()){ if(arcDef().hale) out.push(arcDef().hale); }
+  else if(PROFILE.endings && PROFILE.endings.trusted) out.push(pick(['"And be nice to Pip. You know what I mean."', '"The core is humming already. I think it remembers you."']));
   else if(PROFILE.endings && PROFILE.endings.sold) out.push('"And this time, the core stays with you. Understood?"');
   out.push('"The quartermaster has a few things for you. Pick one."');
   return out.join(' ');
@@ -158,6 +167,7 @@ const PIP_BEATS = ['pip_wake', 'pip_window', 'kross_offer', 'pip_song', 'pip_fea
 function campaignSector(){
   if(!G || !campaignSolo() || G.noStory) return false; const P = pipState(), sd = sectorDef();
   const C = campDef(); if(C){ const id = (C.beats||{})[sd.final ? 'final' : String(G.sector)]; if(id && DATA.events[id] && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
+  if(typeof arcPure==='function' && arcPure()) return arcSector();   // another story this run (arcs.js)
   if(sd.final){ const id = P.sold ? 'kross_final' : P.free ? 'pip_beacons' : P.met ? (P.trust >= 3 ? 'pip_ready_hi' : 'pip_ready_lo') : null;
     if(id && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
   if(G.sector < 2 || sd.secret) return false;
@@ -169,6 +179,7 @@ const PIP_CHATTER = ['That star looks like a potato. A good potato.', 'I counted
   'I made up a new constellation. It\'s called "the ship". It\'s us.', 'If anyone needs anything calculated, I\'m right here. In the box. Calculating.', 'Your coffee machine and I are friends now. It\'s a bit shy.'];
 function campaignArrive(node, first){
   const C = campDef(); if(C){ if(first && !G.enemy && C.chatter && C.chatter.length && Math.random() < .07) toast(fillText(pick(C.chatter), { crew:randomCrewName() })); return; }
+  if(typeof arcPure==='function' && arcPure()){ arcArrive(first); return; }
   if(!pipAboard() || !first || G.enemy) return; const P = G.pip;
   if(Math.random() < (P.trust >= 1 ? .08 : .03)){ const line = P.trust >= 1 ? pick(PIP_CHATTER).replace(/\{n\}/g, G.stats.jumps).replace('{crew}', randomCrewName()) : 'Pip is humming, very quietly, to itself.';
     if(P.trust >= 1) toast(`Pip: ${line}`); else toast(line); }
@@ -180,6 +191,7 @@ function campaignEffect(e, L){
   if(c.scrap){ G.scrap += c.scrap; G.stats.scrap += c.scrap; L.push(`+${c.scrap} scrap`); }
   if(c.charts){ G.charts = 1; }   // the next sector's map comes pre-marked too
   if(c.rod){ G.rod = true; L.push('+1 fishing rod'); }
+  if(c.join && DATA.races[c.join.race]){ const s_ = G.ship; if(s_.crew.filter(x => x.owner==='p' && !x.drone).length < R.maxCrew){ const cr = addCrew(s_, c.join.race, 'p', c.join.name); if(c.join.quirk){ cr.quirk = c.join.quirk; cr.quirkSet = true; } if(c.join.sk) Object.assign(cr.sk, c.join.sk); if(typeof sagaJoined==='function') sagaJoined(cr); L.push(`${cr.name} joins your crew`); } else L.push(`${c.join.name} would join, but every bunk is full`); }   // someone by name
   if(c.planter){ G.garden = G.garden || { plots:[] }; if(G.garden.plots.length < 4){ G.garden.plots.push(null); L.push('+1 garden planter'); } }
   if(c.drill){ const posts = { piloting:'pilot', engines:'engines', shields:'shields', weapons:'weapons' };
     for(const cr of mineAlive()){ const st = Object.keys(posts).find(k => cr.station!=null && s.rooms[cr.station] && s.rooms[cr.station].sys===k); const sk = st ? posts[st] : pick(['repair','combat']);
@@ -189,6 +201,8 @@ function campaignEffect(e, L){
   if(c.grumpy){ const m = mineAlive().slice(-1)[0]; if(m && !m.quirkSet){ m.quirk = 'grump'; m.quirkSet = true; } }
   if(c.gift){ G.gift = c.gift; if(typeof sagaNote==='function'){ const g = SENDOFF.find(x => x.id===c.gift); if(g) sagaNote('start', `Admiral Hale saw them off with a parting gift: ${g.text.charAt(0).toLowerCase() + g.text.slice(1).replace(/\.$/, '')}.`); } }
   if(c.thenMap) G.thenMap = true;
+  if(c.arc && typeof arcEffect==='function') arcEffect(c.arc, L);   // the other stories (arcs.js)
+  if(c.beat && typeof arcPure==='function' && arcPure()){ arcState().beats++; return; }
   // Pip
   const P = pipState();
   if(c.pipMet){ P.met = true; if(typeof sagaNote==='function') sagaNote('pip', `In sector ${G.sector}, the data core in the hold woke up and said its name was Pip.`); }
@@ -208,6 +222,7 @@ const KROSS_FIRST = ['"Courier. Director Kross. We meet in person, more or less.
 function campaignBoss(e, o){
   if(!G || !campaignSolo()) return; const P = pipState(), ph = o.phase||0;
   { const C = campDef(); if(C){ const L = C.bossLines || []; if(L.length) o.text = (o.text ? o.text + ' ' : '') + L[Math.min(ph, L.length-1)]; if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; } return; } }
+  if(typeof arcPure==='function' && arcPure()){ const t = arcBoss(e, ph); if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; } if(t) o.text = (o.text ? o.text + ' ' : '') + t; return; }
   if(ph===0){ PROFILE.krossMet = (PROFILE.krossMet||0) + 1; saveProfile(); }
   const met = PROFILE.krossMet||1, bits = [];
   if(ph===0) bits.push(met > 1 ? `Director Kross is on the bridge of the Flaggship. "You again. That makes ${met} times now. I've started a file. It's thicker than the war."` : `Director Kross is on the bridge of the Flaggship. ${pick(KROSS_FIRST)}`);
@@ -231,7 +246,7 @@ function campaignSectorGen(n){ if(G && G.charts && G.map){ for(const nd of G.map
 
 /* ---------------- run start & end ---------------- */
 function campaignRunStart(o){
-  if(!G) return; pipState(); if(G.campaign) campaignStart();
+  if(!G) return; pipState(); if(G.campaign) campaignStart(); else if(typeof arcRunStart==='function') arcRunStart();
   G.alert = campaignPure() ? clamp(SET.alert||0, 0, PROFILE.alert||0) : 0;
   if(G.alert >= 6){ G.scrap = Math.max(0, G.scrap - 10); G.fuel = Math.max(4, G.fuel - 3); }
   if(G.alert) logEntry(`Rebuff alert level ${G.alert}.`);
@@ -243,12 +258,12 @@ const ENDINGS = {
   free:   { title:'Ghost in the Beacons', text:'The Flaggship burns, and the war turns without its codes. Out in the relay network, something small and bright is having the time of its life. Some nights, every beacon in the sector blinks twice: hello.' },
   sold:   { title:'Thirty Pieces of Scrap', text:'You won, in the end, without it. Somewhere in a Rebuff archive, a beige box hums a song your crew taught it, very quietly, to nobody.' }
 };
-function endingFor(){ if(campDef()) return null; const P = G && G.pip; if(!P || !P.met) return null; return P.sold ? 'sold' : P.free ? 'free' : P.trust >= 3 ? 'trusted' : 'cold'; }
-function campaignEndText(win){ const C = campDef(); if(C){ return win ? (C.win && C.win.text) || null : (C.lose || null); } if(!win) return null; const k = endingFor(); return k ? ENDINGS[k].text : null; }
+function endingFor(){ if(campDef()) return null; if(typeof arcPure==='function' && arcPure()) return arcEndingKey(); const P = G && G.pip; if(!P || !P.met) return null; return P.sold ? 'sold' : P.free ? 'free' : P.trust >= 3 ? 'trusted' : 'cold'; }
+function campaignEndText(win){ const C = campDef(); if(C){ return win ? (C.win && C.win.text) || null : (C.lose || null); } if(!win) return null; const k = endingFor(), d = k && endingDef(k); return d ? d.text : null; }
 function campaignRunEnd(win, reason){
   if(!G) return; const P = pipState(), lines = [], st = G.stats;
   PROFILE.lastFallen = campaignPure() ? (G.lost||[]).slice(0, 4) : PROFILE.lastFallen;
-  if(!win && pipAboard() && typeof sagaNote==='function') sagaNote('pip', P.trust >= 1 ? 'Pip was still humming when the ship went dark.' : 'The data core was never recovered.');
+  if(!win && !arcPure() && pipAboard() && typeof sagaNote==='function') sagaNote('pip', P.trust >= 1 ? 'Pip was still humming when the ship went dark.' : 'The data core was never recovered.');
   const phases = win ? 3 : (G.flag ? G.flag.phase : 0), alive = mineAlive().length;
   const add = (l, v) => { if(v > 0) lines.push([l, Math.round(v)]); };
   add(`Sectors crossed (${Math.max(0, G.sector-1)})`, Math.max(0, G.sector-1)*15);
@@ -256,10 +271,11 @@ function campaignRunEnd(win, reason){
   add('Flaggship beaten' + (phases > 1 ? ` ×${phases}` : ''), phases*30);
   if(win) add('Mission complete', 150);
   if(win) add(`Crew brought home (${alive})`, alive*4);
-  add('Pip\'s story', P.beats*5);
+  add(arcPure() ? `${arcDef().name}` : 'Pip\'s story', (arcPure() ? arcState().beats : P.beats)*5);
   let ending = null; const ek = win ? endingFor() : null;
-  if(ek){ PROFILE.endings = PROFILE.endings || {}; const first = !PROFILE.endings[ek]; if(first){ PROFILE.endings[ek] = Date.now(); add(`New ending: ${ENDINGS[ek].title}`, 60); }
-    ending = Object.assign({ id:ek, first }, ENDINGS[ek]); grant('end_' + ek); if(Object.keys(ENDINGS).every(k => PROFILE.endings[k])) grant('end_all'); }
+  if(ek && endingDef(ek)){ PROFILE.endings = PROFILE.endings || {}; const first = !PROFILE.endings[ek]; if(first){ PROFILE.endings[ek] = Date.now(); add(`New ending: ${endingDef(ek).title}`, 60); }
+    ending = Object.assign({ id:ek, first }, endingDef(ek)); grant('end_' + ek); if(Object.keys(ENDINGS).every(k => PROFILE.endings[k])) grant('end_all');
+    if(campaignPure()){ PROFILE.arcWins = PROFILE.arcWins || {}; PROFILE.arcWins[arcId()] = 1; if(ARC_IDS.every(k => PROFILE.arcWins[k])) grant('arcs_all'); } }
   const dm = { easy:.75, normal:1, hard:1.5 }[G.diff] || 1, am = 1 + .15*alertLv();
   const base = lines.reduce((t, l) => t + l[1], 0), total = Math.max(5, Math.round(base * dm * am));
   const mults = []; if(dm !== 1) mults.push([`${(DIFFICULTY[G.diff]||{}).name || G.diff} difficulty`, `×${dm}`]); if(am !== 1) mults.push([`Rebuff alert ${alertLv()}`, `×${am.toFixed(2).replace(/0$/, '')}`]);
@@ -321,14 +337,16 @@ function drawCareer(){
     T(got ? '✓' : '·', 96, yy+24, { s:20, c: got ? C.good : C.muted, a:'center' });
     T(k.name, 120, yy+18, { s:19, f:FD, w:700, c: got ? C.ink : C.muted, max:300 }); T(`${fmtNum(k.at)}`, 750, yy+18, { s:15, a:'right', c:C.muted });
     T(k.reward || 'Where everyone starts.', 120, yy+40, { s:13, c: got ? C.good : C.muted, max:620 }); });
-  // endings
-  panel(800, 186, 740, 330, 12); label('The data core', 824, 224, C.amber, 'left', 16);
-  const E = PROFILE.endings || {}; T(`${Object.keys(ENDINGS).filter(k => E[k]).length} of ${Object.keys(ENDINGS).length} endings found. How you treat Pip decides how a win ends.`, 824, 252, { s:14, c:C.muted, max:690 });
-  Object.keys(ENDINGS).forEach((k, i) => { const cx = 824 + (i%2)*352, cy = 272 + Math.floor(i/2)*116, got = !!E[k];
+  // the stories and their endings
+  panel(800, 186, 740, 330, 12); label('Stories', 824, 224, C.amber, 'left', 16);
+  const E = PROFILE.endings || {}, ids = typeof ARC_IDS!=='undefined' ? ARC_IDS : ['pip'], sel = ids.includes(UI.careerArc) ? UI.careerArc : ids[0];
+  ids.forEach((a, i) => btn(930 + i*150, 200, 142, 36, ARCS[a].name.replace(/^The /, ''), () => { UI.careerArc = a; }, { s:13, fill:a===sel, col:ARCS[a].color }));
+  const keys = arcEndings(sel); T(`${keys.filter(k => E[k]).length} of ${keys.length} endings found. ${ARCS[sel].blurb}`, 824, 256, { s:14, c:C.muted, max:690 });
+  keys.forEach((k, i) => { const cx = 824 + (i%2)*352, cy = 272 + Math.floor(i/2)*116, got = !!E[k], d = endingDef(k);
     rr(cx, cy, 340, 104, 10); ctx.fillStyle = got ? hexA(C.amber,.08) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 1.5; ctx.stroke();
-    T(got ? ENDINGS[k].title : '???', cx+16, cy+32, { s:19, f:FD, w:700, c: got ? C.amber : C.muted, max:310 });
-    para(got ? ENDINGS[k].text : { trusted:'Win with Pip trusting you.', cold:'Win with Pip aboard, but not your friend.', free:'Win after letting Pip go.', sold:'Win after selling Pip to the Rebuff.' }[k], cx+16, cy+48, 312, { s:12, lh:16, c:C.muted, max:3 });
-    if(got) tip(cx, cy, 340, 104, ENDINGS[k].title, ENDINGS[k].text); });
+    T(got ? d.title : '???', cx+16, cy+32, { s:19, f:FD, w:700, c: got ? C.amber : C.muted, max:310 });
+    para(got ? d.text : (d.hint || { trusted:'Win with Pip trusting you.', cold:'Win with Pip aboard, but not your friend.', free:'Win after letting Pip go.', sold:'Win after selling Pip to the Rebuff.' }[k]), cx+16, cy+48, 312, { s:12, lh:16, c:C.muted, max:3 });
+    if(got) tip(cx, cy, 340, 104, d.title, d.text); });
   // alert levels
   panel(800, 536, 740, 350, 12); label('Rebuff alert', 824, 574, C.hostile, 'left', 16);
   const A = PROFILE.alert || 0;

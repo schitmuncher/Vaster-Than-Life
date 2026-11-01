@@ -247,11 +247,13 @@ A mod with a `campaign` object is a complete alternative campaign. It only loads
   "beats": { "2": "px_scene2", "3": "px_scene3", "final": "px_last" },   // a story event on entering each sector (questOnly events)
   "bossLines": ["Said at phase 1", "Phase 2", "Phase 3"],
   "chatter": ["Short lines that pop up now and then while travelling."],
+  "gear": { "weapons": ["px_gun"], "drones": [], "augments": ["px_aug"] },   // your own gear: stores always stock some, half of all loot comes from it
+  "recruits": ["human", "px_people"],   // the only peoples stores and events offer as crew
   "win": { "title": "WIN TITLE", "text": "The ending, 2-5 sentences." },
   "lose": "One or two sentences shown when the run is lost."
 }
 ```
-(JSON allows no comments: leave them out of your file.) To rename the final boss or the last sector, add an entry with the game's own id (`"flaggship"` in enemies, `"laststand"` in sectors) holding only the fields you change, such as `{ "id": "flaggship", "name": "The Death Ship" }`. Give your sectors their own `tags` and `enemyTags`, and tag your events and enemies to match: a campaign meets its own enemies wherever it has them.
+(JSON allows no comments: leave them out of your file.) An event in a campaign can add someone by name to the crew with `"cmp": { "join": { "race": "human", "name": "Ada", "quirk": "bookworm", "sk": { "pilot": 1 } } }` in its effect. Mark enemy-only peoples `"secret": true` so they are never offered as crew. A campaign only meets the original game's events and its own, never the built-in content packs. To rename the final boss or the last sector, add an entry with the game's own id (`"flaggship"` in enemies, `"laststand"` in sectors) holding only the fields you change, such as `{ "id": "flaggship", "name": "The Death Ship" }`. Give your sectors their own `tags` and `enemyTags`, and tag your events and enemies to match: a campaign meets its own enemies wherever it has them.
 
 ### remove
 `{"events":["id"], "weapons":["id"]}` removes base content by id.

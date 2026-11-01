@@ -95,9 +95,32 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 ## What's in the game
 
+**Tutorial**
+- **Flight school**, on the title screen. **Guided practice** is a real fight against a training target, one step at a time, with each control lit up as you need it: power, aiming, pausing, a fire, a hull breach, a boarder, the medbay, doors, crew autopilot, volleys, salvage, the map, a jump, a store and an upgrade. Your ship can't be lost, and it never touches your saved run.
+- **Lessons**: 12 illustrated chapters, 45 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
+
+**Four stories**
+- Every run follows one story, a scene per sector, with its own help (or harm) at the Flaggship and its own endings:
+  - **The Data Core**: Pip, the frightened data core in your hold, and Director Kross who wants it back (four endings).
+  - **The Defector**: Commander Ilsa Vance, a Rebuff officer who wants to change sides, a tracker in her uniform, a brother on a Rebuff colony, and a plan to lock the Flaggship's gunners out of their own guns (four endings).
+  - **The Lost Flotilla**: forty shuttles fleeing the Rebuff, scattered along your route. Save them from pyrates, comets and fever, and Old Marrow, a retired mining tug, comes to the Flaggship with you (three endings).
+  - **The Rival**: Captain Juno Harte, flying the decoy run on your route. Races, a missile cache, an ambush, cards or a rescue, and someone to draw the Flaggship's fire (three endings).
+- Pick one in the hangar, or leave it on **Surprise me** to get the one you've seen least. Endings are collected under Career, and winning with all four earns a medal.
+
+**Built-in content packs**
+- What used to be 32 optional content and ship mods is now part of the game: 41 ships, 76 weapons, dozens of drones and augments, 20 peoples, new enemies and sectors, and over 400 events. Rule sets, scripts, challenge packs and campaign mods stay optional in the Mods library. New hulls from the packs are unlocked by playing, like the rest.
+
+**Your crew, remembered**
+- The names and personalities you give your crew are remembered for the next run, and renaming someone mid-run updates them too. **Name your crew** is now a big button at the top of the hangar.
+
 **Campaign mods**
 - A mod can be a whole **campaign**: its own ships, named crew, opening briefing, sectors, enemies, a story scene for each sector, its own villain and a final ending. Turn one on in Mods, then pick it with the **Campaign** arrows in the hangar. It only loads while it's picked, so it never leaks into the normal game, dailies or challenges.
-- **Example: Red Dwarf: Three Million Years Late** (unofficial fan campaign, in the mod library under Stories). Red Dwarf has been towed away by a Simulant battle group. Chase it in Starbug 1 with Lister, Rimmer (a hologram: fire and vacuum can't hurt him), the Cat (very fast, very vain) and Kryten (repairs anything, apologises for everything), with Holly on the backup line. Six sectors of its own, GELFs, Simulants, agonoids and wax droids, a story scene in every sector, a talking toaster, and the Death Ship at the end. All the writing is original; Red Dwarf belongs to its creators.
+- **Example: Red Dwarf: Three Million Years Late** (unofficial fan campaign, in the mod library under Stories). Red Dwarf has been towed away by a Simulant battle group. Chase it in **Starbug 1** or **Blue Midget** with Lister, Rimmer (a hologram: fire and vacuum can't hurt him), the Cat (very fast, very vain) and Kryten (repairs anything, apologises for everything), with Holly on the backup line.
+  - Its own gear, stocked in every store and in half of all loot: the Starbug Laser Cannon, Bazookoids, a JMC Mining Laser, a Simulant Plasma Lance, a GELF Harpoon, the Vindaloo Torpedo, the Toaster Ion Lobber, Rimmer's Scattergun; skutters (repair and armed) and a Light Bee interceptor; augments such as Holly (Backup), the Hard-Light Drive, Space Corps Directives, the Food Dispenser, Kryten's Spare Heads and a Hologrammatic Decoy.
+  - Its own peoples: holograms, Felis sapiens, mechanoids and GELFs to recruit; Simulants, agonoids and waxdroids to fight.
+  - Seven sectors (including the Time Drift), Simulant hunters and cruisers, GELF longboats, psirens, a Space Corps enforcement probe, the Inquisitor and the Death Ship at the end.
+  - A story scene in every sector, and about 30 encounters: a total-immersion game, the Inquisitor, a heroic Rimmer from another dimension, a despair squid, a shape-shifting mechanoid, Legion, a holoship, Kochanski (who can join the crew), Bob the skutter, a white hole, a stasis leak, future echoes, an emohawk, a luck virus, a duelling dimension-hopper and more.
+  - All the writing is original, and the characters use the game's ordinary sprites; Red Dwarf belongs to its creators.
 
 **Better information**
 - **The crew card** is now a slim strip under your ship, so it never covers the rooms. Tap ⓘ for the full card.
@@ -126,7 +149,7 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Fairer power.** Weapons and Drones only hold the bars their powered weapons and drones use: turning one off hands its power back to the reactor, and + powers the next one in line.
 
 **Ships and crew**
-- 16 ships: 8 cruiser classes, each with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
+- 41 ships: the 8 cruiser classes plus the built-in packs' scouts, gunboats, carriers, corsairs and more, most with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
 - 7 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog, Mantlis and the secret Glassborn.
 - Crew skills in Piloting, Engines, Shields, Weapons, Repair and Combat, which improve as crew work.
 - Renaming your ship and crew, and dismissing crew.
@@ -347,7 +370,7 @@ Mods are saved in the browser and apply when you start a new run. Turn them on o
 
 **Make mods with an AI.** The Mods screen has an **AI mod guide** button that downloads [`mods/AI-MOD-GUIDE.md`](mods/AI-MOD-GUIDE.md). Paste the guide into any AI chat, describe the mod you want ("a haunted sector with three ghost ships and a quest"), save the reply as a `.json` file and add it with **Add mod files**, or paste it straight into the mod panel. The guide lists every field, every effect, the ids of everything in the base game and a balance guide, so the AI's mods load first time.
 
-42 mods come with the game in `mods/`, all installable from the Mod library (filter by Content, Ships, Trials, Rules or Scripts):
+The content and ship mods in `mods/` are now **built into the game** (`node tools/build-packs.js` turns them into `js/packs.js`; they also stay in `mods/` as examples for modders). The Mod library offers the rest: the Red Dwarf campaign, the challenge pack, rule sets and scripts. The packs are:
 
 - **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Crystal Arsenal, Voltan Lightworks, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
 - **Ships**: Hangar Expansion, Frontier Classes, Exotic Hulls and Rebuff Defectors, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
@@ -440,6 +463,9 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
 | `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, new encounters, plain-language weapon descriptions, and the ship's pet (jobs and sprite) |
 | `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
+| `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Flaggship help, endings and the hangar story picker |
+| `js/packs.js` | The built-in content packs (generated from `mods/` by `tools/build-packs.js`) |
+| `js/tutorial.js` | Flight school: the guided practice fight and the illustrated lessons |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |
 | `js/saga.js` | Crew personalities, bonds, crew moments and their chains, the ship's pet, the nemesis, last words and ghosts, and the written saga of each run |
 | `js/variety.js` | Extra hails and enemy ships, larger pools of chatter, taunts, greetings and quiet-beacon text, and the helpers that keep them from repeating |

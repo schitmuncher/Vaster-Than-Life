@@ -61,6 +61,7 @@ function unlockText(u){
 
 /* ---------------- mods ---------------- */
 let MODS = LS.get(MOD_KEY, []);
+if(typeof PACK_NAMES!=='undefined'){ const n = MODS.length; MODS = MODS.filter(m => !PACK_NAMES.has(m.name)); if(MODS.length !== n) LS.set(MOD_KEY, MODS); }   // packs that are built in now (packs.js)
 let DATA = null, R = null;
 const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges'];
 const NOTRAIT = {};
@@ -154,7 +155,7 @@ const LIBRARY = { state:'idle', mods:[] };
 async function loadLibrary(){
   if(LIBRARY.state==='loading' || LIBRARY.state==='ready') return;
   LIBRARY.state = 'loading';
-  try{ const r = await fetch('mods/index.json', { cache:'no-store' }); if(!r.ok) throw new Error(r.status); const j = await r.json(); LIBRARY.mods = Array.isArray(j.mods) ? j.mods : []; LIBRARY.state = 'ready'; }
+  try{ const r = await fetch('mods/index.json', { cache:'no-store' }); if(!r.ok) throw new Error(r.status); const j = await r.json(); LIBRARY.mods = (Array.isArray(j.mods) ? j.mods : []).filter(m => !(typeof PACK_FILES!=='undefined' && PACK_FILES.has(m.file))); LIBRARY.state = 'ready'; }
   catch(e){ LIBRARY.state = 'none'; }
 }
 async function installLibraryMod(m){

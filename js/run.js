@@ -35,6 +35,7 @@ function newRun(shipId, name, o={}){
     stats:{ kills:0, scrap:0, jumps:0, shotDown:0, boardKills:0 }, dna:[], lost:[], flags:{}, seen:{}, later:[], log:[], chat:[], mapPieces:0, hold:false, crewAuto:true,
     bay:{}, seeds:{ star_potato:3, ion_berry:2 }, garden:{ plots:[null, null] }, spent:0, fed:0 };
   G.campaign = (typeof CAMP!=='undefined' && CAMP) || null;
+  if(o.practice){ G.noSave = true; G.tut = { step:0 }; }   // flight school: never saved over a real run
   G.ship = withSeed('start', () => makeShip(def,'p',{ name }));
   if(ch) challengeLoadout(ch);
   if(!o.daily && !o.cup && MODS.filter(m => m.enabled).length >= 5) grant('modsquad');
@@ -224,8 +225,8 @@ function eventKinds(e){
 }
 function pickEvent(node){
   if(typeof pickMoment==='function'){ const mo = pickMoment(node); if(mo) return mo; }   // now and then the beacon is about your crew (saga.js)
-  const sd = sectorDef(); const tags = sd.tags || [];
-  let list = Object.values(DATA.events).filter(e => !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
+  const sd = sectorDef(); const tags = sd.tags || [], inCamp = !!(typeof campDef==='function' && campDef());
+  let list = Object.values(DATA.events).filter(e => !(inCamp && e.pack) && !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
     && (!e.tags || e.tags.includes('') || e.tags.some(t => tags.includes(t) || t===G.sectorType)) && (!e.nebula || node?.nebula));
   // no reruns: events already met this run only come back once everything else has been seen
   const fresh = list.filter(e => !G.seen[e.id]); if(fresh.length) list = fresh;
@@ -301,7 +302,7 @@ function applyEffect(e){
   if(e.missiles){ if(e.missiles > 0) G.ammoWarned = false; G.missiles = Math.max(0, G.missiles + e.missiles); L.push(`${sign(e.missiles)} missiles`); }
   if(e.parts){ G.parts = Math.max(0, G.parts + e.parts); L.push(`${sign(e.parts)} drone parts`); }
   if(e.hull){ s.hull = clamp(s.hull + e.hull, e.hull < 0 && !G.enemy ? Math.min(1, s.hull) : 0, s.maxHull); L.push(`${sign(e.hull)} hull`); }   // an event can hurt badly, but never ends the run on its own
-  if(e.crew){ noteGain('crew'); const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(races) : e.crew;
+  if(e.crew){ noteGain('crew'); const races = Object.keys(DATA.races).filter(k => !DATA.races[k].secret); const race = e.crew==='random' ? pick(campRecruits(races)) : e.crew;
     if(s.crew.filter(c=>c.owner==='p'&&!c.drone).length < R.maxCrew){ const c = addCrew(s, race, 'p'); if(typeof sagaJoined==='function') sagaJoined(c); L.push(`${c.name} the ${DATA.races[c.race].name}${c.quirk && typeof quirkName==='function' ? ' (' + quirkName(c).toLowerCase() + ')' : ''} joins your crew`); checkCrewAch(); }
     else { const cand = newCrew(race, 'p'); G.recruitOffer = cand; L.push(`${cand.name} the ${DATA.races[cand.race].name} wants to join, but every bunk is full. You can swap someone out next`); } }
   if(e.crewLoss){ for(let i=0;i<e.crewLoss;i++){ const list = s.crew.filter(c=>c.owner==='p'&&!c.drone); if(list.length<=1) break; const c = pick(list); s.crew.splice(s.crew.indexOf(c),1); L.push(`${c.name} is lost`); G.lost.push(c.name); if(typeof sagaDeath==='function') sagaDeath(c, null, 'lost on the way'); } }
@@ -338,13 +339,13 @@ function applyEffect(e){
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
 function giveWeapon(id){
-  const pool = Object.values(DATA.weapons).filter(w => !w.noLoot);
+  const pool = campGearPool('weapons', Object.values(DATA.weapons).filter(w => !w.noLoot));
   const w = (id==='random' || !DATA.weapons[id]) ? pick(pool) : DATA.weapons[id]; if(!w) return 'Nothing useful inside';
   if(G.ship.weapons.length < R.weaponSlots){ G.ship.weapons.push({ id:w.id, charge:0, on:false, target:null }); return `${w.name} mounted (power it up)`; }
   G.ship.cargo = G.ship.cargo || []; G.ship.cargo.push({ kind:'weapon', id:w.id }); return `${w.name} stowed in cargo`;
 }
 function giveDrone(id){
-  const pool = Object.values(DATA.drones).filter(d => !d.noLoot);
+  const pool = campGearPool('drones', Object.values(DATA.drones).filter(d => !d.noLoot));
   const d = (id==='random' || !DATA.drones[id]) ? pick(pool) : DATA.drones[id]; if(!d) return 'Nothing useful inside';
   G.parts += 2;
   if(G.ship.drones.length < R.droneSlots){ G.ship.drones.push({ id:d.id, on:false, unit:null });
@@ -353,7 +354,7 @@ function giveDrone(id){
   G.ship.cargo = G.ship.cargo || []; G.ship.cargo.push({ kind:'drone', id:d.id }); return `${d.name} stowed in cargo, plus 2 drone parts`;
 }
 function giveAugment(id){
-  const have = G.ship.augments; const pool = Object.keys(DATA.augments).filter(k => !have.includes(k));
+  const have = G.ship.augments; const pool = campGearPool('augments', Object.keys(DATA.augments).filter(k => !have.includes(k)).map(k => DATA.augments[k])).map(a => a.id);
   const k = id==='random' ? pick(pool) : (DATA.augments[id] ? id : null); if(!k) { G.scrap += 30; return '+30 scrap'; }
   if(have.length >= R.augmentSlots){ const v = Math.floor((DATA.augments[k].cost||40)/2); G.scrap += v; return `${DATA.augments[k].name} found, but no slot free. Sold for ${v} scrap`; }
   have.push(k); checkCrewAch(); if(k==='voltanShield' && G.enemy) G.ship.super = Math.max(G.ship.super, 5); return `Augment installed: ${DATA.augments[k].name}`;
@@ -498,6 +499,7 @@ function recordRun(win, reason){
   if(win){ if(G.diff==='hard') grant('hardwin'); if(!(G.lost||[]).length) grant('noloss'); if((G.time||0) < 2400) grant('speedwin'); if(R.sectors >= 10) grant('marathonwin'); }
 }
 function endRun(win, reason){
+  if(G && G.tut && typeof tutFinish==='function'){ tutFinish(false); return; }   // practice never counts
   if(typeof challengeCheck==='function') challengeCheck(win);
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason); if(typeof sagaRunEnd==='function') sagaRunEnd(win, reason);
   if(win && G.flags && G.flags.ghostWake) grant('exp_ghostwin');
@@ -534,7 +536,8 @@ function makeStore_(){
   const dp = Object.values(DATA.drones).filter(d=>!d.noLoot).map(d=>d.id); shuffle(dp);
   const ap = Object.keys(DATA.augments).filter(k => !s.augments.includes(k)); shuffle(ap);
   const sp = Object.keys(INSTALL).filter(k => !s.systems[k] && !(k==='clonebay' && s.systems.medbay) && !(k==='medbay' && s.systems.clonebay)); shuffle(sp);
-  return { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')), crewSold:false, discount:1 };
+  const st = { weapons:wp.slice(0,3), drones:dp.slice(0,2), augments:ap.slice(0,2), systems:sp.slice(0,2), sold:[], crewRace:pick(campRecruits(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass'))), crewSold:false, discount:1 };
+  if(typeof campStoreGear==='function') campStoreGear(st); return st;
 }
 function price(v, st, cat, id){ return Math.max(1, Math.round(v * (st?.discount||1) * (typeof marketMult==='function' ? marketMult(st, cat, id) : 1) * (typeof alertLv==='function' && alertLv() >= 2 ? 1.1 : 1) * (typeof situPrice==='function' ? situPrice() : 1))); }   // store kind, sector, haggling, loyalty (market.js)
 function buy(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
@@ -548,6 +551,7 @@ function update(dt){
   updateStars(dt);
   if(UI.toast){ UI.toast.t -= dt; if(UI.toast.t<=0) UI.toast = null; }
   if(typeof checkHints==='function') checkHints(dt);
+  if(typeof tutTick==='function') tutTick(dt);
   if(typeof updateAmbience==='function') updateAmbience(dt);
   if(typeof netFrame==='function') netFrame(dt);
   if(UI.screen!=='game' || !G) return;

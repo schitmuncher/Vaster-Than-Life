@@ -77,15 +77,12 @@ function petJump(){ const P = petHere(); if(!P) return; P.patted = false;
 function petPat(){ const P = petHere(); if(!P) return; if(P.patted){ toast(`${P.name} has had enough fuss for now.`); return; } P.patted = true; P.hop = performance.now();
   for(const c of G.ship.crew) if(c.owner==='p' && !c.drone && typeof addHearts==='function') addHearts(c, 4); sfx('click'); toast(`You give ${P.name} a fuss. The whole crew cheers up a little.`); }
 /* drawn inside the ship view: a little creature in its room, walking from room to room */
-function drawPet(){ const P = petHere(), sh = G && G.ship; if(!P || !sh || !sh._rects) return; const q = sh._rects[P.room]; if(!q) return;
-  const f = P.from!=null && sh._rects[P.from] ? sh._rects[P.from] : q, k = P.walk==null ? 1 : P.walk, e = k*k*(3-2*k);
-  const cx0 = f.x + f.w*.72, cy0 = f.y + f.h*.72, cx1 = q.x + q.w*.72, cy1 = q.y + q.h*.72, t = performance.now()/1000;
-  const hop = P.hop && t - P.hop/1000 < .6 ? Math.sin((t - P.hop/1000)/.6*Math.PI)*10 : 0;
-  const x = cx0 + (cx1 - cx0)*e, y = cy0 + (cy1 - cy0)*e - Math.abs(Math.sin(t*(k < 1 ? 14 : 2)))*(k < 1 ? 3 : 1) - hop, sc = Math.min(1.2, Math.max(.7, q.h/60)), dir = cx1 >= cx0 ? 1 : -1;
-  ctx.save(); ctx.translate(x, y); ctx.scale(sc*dir, sc); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 4;   // a dark outline so it reads on any floor
+/* a pet, drawn at x, y (also used by the tutorial) */
+function petSprite(kind, x, y, sc, dir, k){ if(k==null) k = 1; if(!dir) dir = 1;
+  const t = performance.now()/1000; ctx.save(); ctx.translate(x, y); ctx.scale(sc*dir, sc); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 4;   // a dark outline so it reads on any floor
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0, 7, 9, 2.5, 0, 0, 7); ctx.fill();
   const body = (c, path) => { ctx.fillStyle = c; ctx.beginPath(); path(); ctx.fill(); };
-  switch(P.kind){
+  switch(kind){
     case 'kitten': { body('#e9eefc', () => ctx.ellipse(0, 0, 8, 5.5, 0, 0, 7)); body('#e9eefc', () => ctx.arc(7, -5, 4.5, 0, 7));
       body('#e9eefc', () => { ctx.moveTo(4, -8); ctx.lineTo(5, -13); ctx.lineTo(7.5, -9); ctx.moveTo(8, -9); ctx.lineTo(10.5, -13); ctx.lineTo(11, -7.5); });
       ctx.strokeStyle = '#e9eefc'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-7, -1); ctx.quadraticCurveTo(-13, -4 + Math.sin(t*4)*3, -11, -11); ctx.stroke();
@@ -103,6 +100,13 @@ function drawPet(){ const P = petHere(), sh = G && G.ship; if(!P || !sh || !sh._
     default: body('#ffb547', () => ctx.arc(0, 0, 5, 0, 7));
   }
   ctx.restore();
+}
+function drawPet(){ const P = petHere(), sh = G && G.ship; if(!P || !sh || !sh._rects) return; const q = sh._rects[P.room]; if(!q) return;
+  const f = P.from!=null && sh._rects[P.from] ? sh._rects[P.from] : q, k = P.walk==null ? 1 : P.walk, e = k*k*(3-2*k);
+  const cx0 = f.x + f.w*.72, cy0 = f.y + f.h*.72, cx1 = q.x + q.w*.72, cy1 = q.y + q.h*.72, t = performance.now()/1000;
+  const hop = P.hop && t - P.hop/1000 < .6 ? Math.sin((t - P.hop/1000)/.6*Math.PI)*10 : 0;
+  const x = cx0 + (cx1 - cx0)*e, y = cy0 + (cy1 - cy0)*e - Math.abs(Math.sin(t*(k < 1 ? 14 : 2)))*(k < 1 ? 3 : 1) - hop, sc = Math.min(1.2, Math.max(.7, q.h/60)), dir = cx1 >= cx0 ? 1 : -1;
+  petSprite(P.kind, x, y, sc, dir, k);
   if(P.busy==='pounce' && Math.floor(t*4)%2) T('!', x, y - 16*sc, { s:14, f:FD, w:700, a:'center', c:C.hostile });
   region(x - 14, y - 16, 28, 24, () => petPat());
   tip(x - 14, y - 16, 28, 24, `${P.name} the ${PET_KINDS[P.kind] || 'pet'}`, `${(PET_JOBS[P.kind]||{}).job || ''} Crew who share a room with ${P.name} grow fonder of you. Tap to give ${P.name} a fuss (once a jump).`); }

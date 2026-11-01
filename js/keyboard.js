@@ -93,5 +93,5 @@ function openRename(kind, crew){
   if(kind==='ship') return openKeyboard({ title:'Name your ship', value:UI.shipName || DATA.ships[UI.selShip]?.name || '', max:24, ok:'Save', random:() => pick(SHIP_NAMES), onOk:v => { UI.shipName = v; } });
   if(kind==='seed') return openKeyboard({ title:'Enter a seed', value:UI.seed || '', max:24, upper:true, allowed:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-', ok:'Use seed', random:randomSeed, hint:'Same seed, same maps and events', onOk:v => { UI.seed = cleanSeed(v) || null; } });
   if(kind==='mp') return openKeyboard({ title:'Your name in multiplayer', value:mpName(), max:22, ok:'Save', random:mpRandomName, onOk:v => { PROFILE.mpName = v.slice(0, 22); saveProfile(); } });
-  if(kind==='crew' && crew) return openKeyboard({ title:`Rename ${crew.name}`, value:crew.name, max:16, ok:'Save', random:() => pick(NAMES), onOk:v => { crew.name = v; if(typeof syncAfterInput==='function' && SYNC.on) syncAfterInput(); } });
+  if(kind==='crew' && crew) return openKeyboard({ title:`Rename ${crew.name}`, value:crew.name, max:16, ok:'Save', random:() => pick(NAMES), onOk:v => { if(typeof rememberRename==='function') rememberRename(crew.name, v); crew.name = v; if(typeof syncAfterInput==='function' && SYNC.on) syncAfterInput(); } });
 }

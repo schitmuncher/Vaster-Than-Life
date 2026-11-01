@@ -129,13 +129,14 @@ function draw(){
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); if(UI.debrief && typeof drawDebrief==='function') drawDebrief(); break;
     case 'career': drawCareer(); break;
+    case 'tutorial': drawTutorial(); break;
     case 'record': drawRecord(); break;
     case 'saga': drawSaga(); break;
     case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
-  if(UI.screen==='game') drawHint();
+  if(UI.screen==='game'){ drawHint(); if(typeof drawTutCoach==='function') drawTutCoach(); }
   if(typeof mobileFrame==='function') mobileFrame();
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
@@ -167,6 +168,12 @@ function drawTitle(){
   btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:17 }); y += 68;
   btn(110, y, hw, 58, 'Gallery', () => { UI.screen = 'gallery'; }, { s:18 });
   btn(x2, y, hw, 58, NET.on ? `Room ${NET.code}` : 'Multiplayer', () => { UI.screen = 'mp'; MP.view = NET.on ? 'room' : 'menu'; MP.err = ''; }, { s:17, col:'#ff8ad8', fill:NET.on });
+  { const tx = 490, ty = hasSave ? 624 : 556, tw = 250, th = 126, fresh = !PROFILE.tutDone && PROFILE.runs < 4, pl = .5 + .5*Math.sin(t*3);   // the tutorial, hard to miss for a new captain
+    if(fresh) glow(tx + tw/2, ty + th/2, 170, C.good, .08 + .1*pl);
+    btn(tx, ty, tw, th, '', () => openTutorial(), { fill:fresh, col:C.good });
+    T('🎓', tx + 40, ty + 74, { s:40, a:'center' }); T('Tutorial', tx + 76, ty + 56, { s:26, f:FD, w:700, c: fresh ? '#06231a' : C.good });
+    T(PROFILE.tutDone ? 'Every system, explained' : 'Learn everything', tx + 76, ty + 86, { s:14, c: fresh ? '#06231a' : C.muted, max:tw - 90 });
+    tip(tx, ty, tw, th, 'Tutorial', 'Guided practice in a real fight, plus a page on every part of the game: power, weapons, crew, damage, drones, stores, the garden, pets, fishing, stories, career, multiplayer and mods.'); }
   drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
   if(typeof isFullscreen==='function' && !isFullscreen()) btn(W-330, 40, 270, 58, '⛶  Full screen', () => toggleFullscreen(), { s:18 });
@@ -252,8 +259,12 @@ function drawHangar(){
     const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
       ['Drones', temp.drones.map(d=>DATA.drones[d.id].name).join(', ')||'None'], ['Systems', Object.keys(temp.systems).filter(k=>!SUB.includes(k)).map(k=>SYSN[k]).join(', ')],
       ['Crew', hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
-    rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, k===5 && open ? 380 : 520, { s:15, lh:18, max:1 }); });
-    if(open && !NET.on && !(typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew)) btn(600, y0+232+5*30-24, 140, 32, 'Name crew', () => { UI.crewPanel = true; }, { s:14, col:C.amber });
+    rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, 520, { s:15, lh:18, max:1 }); });
+    if(open && !NET.on && !(typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew)){   // naming the crew: big, near the top, and it glows until you have used it once
+      const bx = 520, by = y0+20, bw = 226, bh = 48;
+      if(!PROFILE.namedCrew){ const pl = .5 + .5*Math.sin(performance.now()/260); glow(bx+bw/2, by+bh/2, 130, C.amber, .10 + .12*pl); }
+      btn(bx, by, bw, bh, '✎  Name your crew', () => { UI.crewPanel = true; PROFILE.namedCrew = 1; saveProfile(); }, { fill:true, s:17, col:C.amber });
+      tip(bx, by, bw, bh, 'Your crew', `Name them and pick their personalities before you launch.${SET.lastCrew && SET.lastCrew.names && SET.lastCrew.names.length ? ' The names you used last time are filled in for you.' : ''}`); }
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
@@ -273,13 +284,14 @@ function drawHangar(){
   btn(1384, y0+416, 132, 34, 'Enter seed', () => openRename('seed'), { s:13 });
   tip(1236, y0+340, 290, 110, 'Seed', 'Every run has a seed. The same seed gives the same maps, beacons, enemies and stores, so you can replay a run or share it with a friend. Leave it on Random for a fresh run.');
   if(typeof mpHangarLaunch==='function' && mpHangarLaunch(sel, open)) return;
-  btn(1240, 890, 300, 70, 'Launch', () => { const hc = UI.hangarCrew && UI.hangarCrew.ship===sel ? UI.hangarCrew : null; newRun(sel, UI.shipName, { seed:UI.seed, crewNames:hc ? hc.names : null, crewQuirks:hc ? hc.quirks : null }); }, { fill:true, s:26, disabled:!open });
+  btn(1240, 890, 300, 70, 'Launch', () => { const hc = UI.hangarCrew && UI.hangarCrew.ship===sel ? UI.hangarCrew : null; rememberCrew(hc); newRun(sel, UI.shipName, { seed:UI.seed, crewNames:hc ? hc.names : null, crewQuirks:hc ? hc.quirks : null }); }, { fill:true, s:26, disabled:!open });
+  if(typeof drawArcPicker==='function' && open) drawArcPicker(60, 904);
   btn(1060, 890, 160, 70, 'Back', () => { if(NET.on){ UI.screen = 'mp'; MP.view = 'room'; return; } UI.screen = 'title'; });
 }
 function drawModsScreen(){
   label('User content', 60, 70, C.cyan, 'left', 18);
   T('Mods', 60, 122, { s:50, f:FD, w:700 });
-  para('Mods are JSON files that add or replace ships, weapons, drones, augments, races, enemies, sectors and events. Turn them on or off here; changes apply when you start a new run.', 60, 160, 1000, { s:18, c:C.muted, lh:26 });
+  para('Mods are JSON files that add or replace ships, weapons, drones, augments, races, enemies, sectors and events. Turn them on or off here; changes apply when you start a new run. The content packs that used to live here are now part of the game.', 60, 160, 1000, { s:18, c:C.muted, lh:26 });
   const per = 6, pages = Math.max(1, Math.ceil(MODS.length/per)); UI.modsPage = clamp(UI.modsPage, 0, pages-1);
   if(!MODS.length) para('No mods installed yet. Install one from the library, or use "Add mod files" (on Quest, exit VR first so the file picker can open).', 60, 250, 900, { s:20 });
   MODS.slice(UI.modsPage*per, UI.modsPage*per+per).forEach((m,i) => {
@@ -301,8 +313,8 @@ function drawModsScreen(){
   else {
     const flt = UI.libKind || 'all', list = LIBRARY.mods.filter(m => flt==='all' || (m.kind||'content')===flt);
     T(`${list.length} mod${list.length===1?'':'s'}`, lx+460, 266, { s:14, a:'right', c:C.muted });
-    [['all','All'],['campaign','Stories'],['content','Content'],['ships','Ships'],['challenges','Trials'],['rules','Rules'],['script','Scripts']].forEach(([k,l],i) =>
-      btn(lx+20 + i*63, 282, 60, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:12, fill:flt===k }));
+    const kinds = [['all','All'],['campaign','Stories'],['content','Content'],['ships','Ships'],['challenges','Trials'],['rules','Rules'],['script','Scripts']].filter(([k]) => k==='all' || LIBRARY.mods.some(m => (m.kind||'content')===k));   // most content is built in now: only kinds the library still has
+    kinds.forEach(([k,l],i) => btn(lx+20 + i*(440/kinds.length), 282, 440/kinds.length - 4, 32, l, () => { UI.libKind = k; UI.libPage = 0; }, { s:12, fill:flt===k }));
     const per = 6, pages = Math.max(1, Math.ceil(list.length/per)); UI.libPage = clamp(UI.libPage||0, 0, pages-1);
     list.slice(UI.libPage*per, UI.libPage*per+per).forEach((m,i) => { const y = 326 + i*82; const have = MODS.some(x=>x.name===m.name);
       T(m.name, lx+20, y+24, { s:18, f:FD, w:700, max:310 }); para(m.desc||'', lx+20, y+46, 310, { s:13, lh:17, c:C.muted, max:2 });
@@ -500,7 +512,7 @@ const HELP_PAGES = [
     ['Renown & ranks', 'Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story all count, and harder runs earn more. Renown raises your Admiralty rank, from Cadet to Admiral. See Career on the title screen.'],
     ['The send-off', 'Admiral Hale sees you off at the start of each run with a choice of gifts. Higher ranks mean more choices and better gifts, and some gifts come with a price. Hale remembers how your last run went.'],
     ['Ship requisitions', 'Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing. Medals still unlock them sooner.'],
-    ['The data core', 'The core in your hold wakes up in sector 2. Its name is Pip. How you treat Pip changes the last sector, the Flaggship fight and how a win ends. There are four endings to find.'],
+    ['Stories', 'Each run follows one of four stories: Pip the data core, the Defector, the Lost Flotilla or the Rival. Its scenes come once a sector. How you treat its people changes the last sector, the Flaggship fight and how a win ends. Pick one in the hangar, or let "Surprise me" give you one you have not seen.'],
     ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
     ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
     ['Campaign mods', 'A campaign mod is a whole new story: its own ships, crew, sectors, villain and ending. Turn it on in Mods, then pick it with the Campaign arrows at the top of the hangar. Try Red Dwarf: Three Million Years Late in the mod library.'],
@@ -544,7 +556,7 @@ function drawHelpScreen(){
 function drawEnd(){
   const win = UI.screen==='win', last = UI.lastRun;
   label(win ? 'Mission complete' : 'Run over', W/2, 172, win ? C.good : C.hostile, 'center', 22);
-  T(win ? 'THE FLAGGSHIP FALLS' : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
+  T(win ? ((typeof campDef==='function' && G && campDef() && campDef().win && campDef().win.title) || 'THE FLAGGSHIP FALLS') : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
   { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const big = lines(txt, 1100, `400 21px ${FM}`).length <= 2, ls = lines(txt, 1180, `400 ${big ? 21 : 17}px ${FM}`); ls.slice(0,3).forEach((l,i) => T(l, W/2, (big ? 312 : 302) + i*(big ? 28 : 23), { s:big ? 21 : 17, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
   if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap found', G.stats.scrap], ['Jumps', G.stats.jumps], ['Score', last ? last.score : runScore(win)]];
     panel(W/2-640, 380, 1280, 150, 12);
@@ -568,12 +580,21 @@ function drawEnd(){
   else if(G && G.daily) btn(W/2-320, 884, 300, 72, 'Fly the daily again', () => startDaily(), { fill:true, s:20, col:C.cyan });
   btn(W/2+340, 884, 300, 72, 'All runs', () => { UI.screen = 'record'; }, { s:20 });
 }
-/* the starting crew in the hangar: names and personalities you can change before launch */
+/* the starting crew in the hangar: names and personalities you can change before launch.
+   The names (and personalities) of your last crew are remembered, so you only name them once. */
+function rememberCrew(hc){ if(!hc || (typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew) || (typeof NET!=='undefined' && NET.on)) return;
+  const prev = SET.lastCrew && Array.isArray(SET.lastCrew.names) ? SET.lastCrew.names : [], names = hc.names.slice(0, 8), quirks = (hc.quirks||[]).slice(0, 8);
+  for(let i = names.length; i < prev.length && i < 8; i++){ names.push(prev[i]); quirks.push(SET.lastCrew.quirks && SET.lastCrew.quirks[i] || null); }   // a smaller crew this time keeps the extra names for next time
+  SET.lastCrew = { names, quirks }; saveProfile(); }
+/* renaming someone mid-run updates the remembered list too */
+function rememberRename(oldName, name){ const L = SET.lastCrew; if(!L || !Array.isArray(L.names) || !G || G.campaign || G.daily || G.cup) return; const i = L.names.indexOf(oldName); if(i >= 0){ L.names[i] = name; saveProfile(); } }
 function hangarCrew(sel, temp){
   let hc = UI.hangarCrew; if(hc && hc.ship===sel && hc.names.length===temp.crew.length) return hc;
   const used = []; const quirks = temp.crew.map(c => { const q = typeof rollQuirk==='function' ? rollQuirk(used) : null; used.push(q); return q; });
   const CC = typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew;
-  hc = UI.hangarCrew = { ship:sel, names:temp.crew.map((c, i) => CC && CC[i] && CC[i].name || c.name), quirks:quirks.map((q, i) => CC && CC[i] && CC[i].quirk || q) }; return hc;
+  const LC = !CC && !(typeof NET!=='undefined' && NET.on) && SET.lastCrew || null, ln = LC && Array.isArray(LC.names) ? LC.names : [], lq = LC && Array.isArray(LC.quirks) ? LC.quirks : [];   // last run's names come back
+  const qOk = q => q && (!BASE.quirks || (DATA.quirks || BASE.quirks)[q]);
+  hc = UI.hangarCrew = { ship:sel, names:temp.crew.map((c, i) => CC && CC[i] && CC[i].name || (typeof ln[i]==='string' && ln[i].trim() ? ln[i].slice(0, 16) : c.name)), quirks:quirks.map((q, i) => CC && CC[i] && CC[i].quirk || (qOk(lq[i]) ? lq[i] : q)) }; return hc;
 }
 function drawCrewNaming(sel, temp){
   const hc = hangarCrew(sel, temp), n = temp.crew.length, rowH = 76, w = 1080, h = 236 + n*rowH, x = (W-w)/2, y = Math.max(40, (H-h)/2);
