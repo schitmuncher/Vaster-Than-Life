@@ -1022,6 +1022,7 @@ function drawArmory(){
     tip(cx, cy, cw, 96, d.name + (wp.mk ? MK_NAMES[wp.mk] : ''), `${weaponStats(d)}. ${weaponRole(d)}${wp.mk ? ` Refitted: charges ${Math.round(MK_SPEED*wp.mk*100)}% faster.` : ''}${d.desc ? ' ' + d.desc : ''}`);
     const tc = d.type==='missile'||d.type==='bomb' ? '#ffffff' : d.type==='ion' ? C.cyan : d.type==='beam' ? C.violet : d.type==='flak' ? C.warn : C.amber;
     label(d.type, cx+8, cy+52, tc, 'left', 11);
+    if(typeof trickBadge==='function'){ const tb = trickBadge(d, wp); if(tb){ ctx.font = `600 11px ${FD}`; const lw = ctx.measureText(d.type.toUpperCase()).width + d.type.length*2 + 14; T(tb, cx+8+lw, cy+52, { s:11, f:FD, w:700, c:d.color || C.good, max:cw - lw - 50 }); } }   // the weapon's trick, at a glance
     T(d.heal ? `heal ${d.heal}` : d.type==='bomb' ? `${d.sysDamage||0} sys` : `${d.damage}×${d.shots||1}`, cx+cw-8, cy+52, { s:12, a:'right', c:C.muted });
     for(let p=0;p<d.power;p++){ rr(cx+8+p*16, cy+58, 13, 9, 2); ctx.fillStyle = wp.on ? C.amber : C.line; ctx.fill(); }
     bar(cx+8, cy+72, cw-16, 9, wp.charge/d.charge, ready ? C.good : C.amber);
@@ -1083,7 +1084,7 @@ function drawProjectiles(){
     const blockable = (dst.shield>0 && ['laser','ion','flak'].includes(d.type)) || (dst.super>0 && d.type!=='bomb');
     if(blockable && dst._shieldE){ const e = ellipseEdge(dst, a.x, a.y); if(e) b = e; }
     if(d.type==='beam'){
-      const col = d.fire ? C.fire : d.crewDamage ? C.good : C.violet; const wob = Math.sin(G.time*60)*2;
+      const col = d.color || (d.fire ? C.fire : d.crewDamage ? C.good : C.violet); const wob = Math.sin(G.time*60)*2;
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       for(const r of (p.rooms||[p.room])){ let c = roomCenter(dst, r); if(blockable && dst._shieldE){ const e = ellipseEdge(dst, a.x, a.y); if(e) c = e; }
         ctx.strokeStyle = hexA(col, .35*(1-k*.5)); ctx.lineWidth = 16*(1-k)+4; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(c.x,c.y+wob); ctx.stroke();
@@ -1097,7 +1098,7 @@ function drawProjectiles(){
     const ang = Math.atan2(y-py_, x-px_);
     if(kind==='asteroid'){ ctx.save(); ctx.translate(x,y); ctx.rotate(G.time*2 + (p.id?.charCodeAt?.(0)||0)); drawRock(ctx, 0, 0, 9, srng(hashStr(p.id||'a'))); ctx.restore(); if(live && Math.random()<.4) trail(x, y, '#6a6055'); continue; }
     if(kind==='hack' || kind==='bdrone'){ const col = kind==='hack' ? '#ff9de2' : '#f0a6ff'; glow(x,y,16,col,.6); ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle = '#2a3150'; ctx.fillRect(-8,-5,16,10); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(-8,-5,16,10); ctx.restore(); if(live) trail(x, y, '#9a8ab0'); continue; }
-    const col = d.type==='ion' ? C.cyan : d.type==='missile' ? '#ffd9a0' : d.type==='flak' ? C.warn : (p.from==='p' ? C.amber : C.hostile);
+    const col = d.color || (d.type==='ion' ? C.cyan : d.type==='missile' ? '#ffd9a0' : d.type==='flak' ? C.warn : (p.from==='p' ? C.amber : C.hostile));
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     if(d.type==='missile'){ ctx.restore(); if(live){ trail(x - Math.cos(ang)*8, y - Math.sin(ang)*8); } glow(x - Math.cos(ang)*9, y - Math.sin(ang)*9, 14, '#ff8a3d', .8);
       ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle = '#d8dce8'; ctx.beginPath(); ctx.moveTo(9,0); ctx.lineTo(3,-3.5); ctx.lineTo(-8,-3.5); ctx.lineTo(-8,3.5); ctx.lineTo(3,3.5); ctx.closePath(); ctx.fill(); ctx.fillStyle = C.hostile; ctx.fillRect(-8,-5,4,10); ctx.restore(); continue; }

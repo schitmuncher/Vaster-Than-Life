@@ -166,7 +166,9 @@ const PIP_BEATS = ['pip_wake', 'pip_window', 'kross_offer', 'pip_song', 'pip_fea
 /* entering a sector: maybe a story scene. Returns true when one starts. */
 function campaignSector(){
   if(!G || !campaignSolo() || G.noStory) return false; const P = pipState(), sd = sectorDef();
-  const C = campDef(); if(C){ const id = (C.beats||{})[sd.final ? 'final' : String(G.sector)]; if(id && DATA.events[id] && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
+  const C = campDef(); if(C){ let id = (C.beats||{})[sd.final ? 'final' : String(G.sector)];
+    if(Array.isArray(id)){ const ok = id.filter(x => DATA.events[x] && !G.seen[x]); id = ok.length ? ok[hashStr(String(G.seed||'') + '|beat|' + G.sector) % ok.length] : null; }   // a list: one of them, picked by the run's seed
+    if(id && DATA.events[id] && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }
   if(typeof arcPure==='function' && arcPure()) return arcSector();   // another story this run (arcs.js)
   if(sd.final){ const id = P.sold ? 'kross_final' : P.free ? 'pip_beacons' : P.met ? (P.trust >= 3 ? 'pip_ready_hi' : 'pip_ready_lo') : null;
     if(id && !G.seen[id]){ startEvent(id); G.thenMap = true; return true; } return false; }

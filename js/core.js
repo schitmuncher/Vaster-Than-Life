@@ -116,7 +116,7 @@ function validateMod(d){
   return E;
 }
 // gentle warnings for fields the game never reads, so a typo like "damge" doesn't fail silently
-const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire breach sysDamage crewDamage ion stun pierce rooms radius heal desc',
+const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire breach sysDamage crewDamage ion stun pierce rooms radius heal desc warm homing pin splash bounce crit wild salvage gas fear toast decoy drain color',
   drones:'name kind power cost rate shot targets role heal desc', races:'name color hp repair combat speed power heal fireproof telepathic mindImmune deathBurst learn armor noAir desc',
   augments:'name cost desc fx', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
   enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases', ships:'name cls layout desc hull reactor color image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',

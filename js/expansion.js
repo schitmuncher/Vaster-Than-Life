@@ -28,7 +28,8 @@ function drawRefits(st, cx, y, W2){
 
 
 /* ---------------- weapon descriptions in plain words ---------------- */
-function weaponRole(d){ if(!d) return '';
+function weaponRole(d){ if(!d) return ''; return weaponRole_(d) + (typeof trickText==='function' ? trickText(d) : ''); }
+function weaponRole_(d){
   const n = d.shots||1, dmg = d.damage||0, every = `every ${d.charge}s`;
   const extras = []; if(d.fire) extras.push(d.fire >= .5 ? 'often starts fires' : 'can start fires'); if(d.breach) extras.push(d.breach >= .5 ? 'often breaches the hull' : 'can breach the hull'); if(d.stun) extras.push(`stuns crew for ${d.stun}s`); if(d.crewDamage) extras.push(`hurts crew in the room (${d.crewDamage})`);
   const x = extras.length ? ` ${extras.join(', ').replace(/^./, m => m.toUpperCase())}.` : '';

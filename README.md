@@ -140,6 +140,8 @@ If the host's connection drops, guests in a shared game can **keep playing the r
   - Its own peoples: holograms, Felis sapiens, mechanoids and GELFs to recruit; Simulants, agonoids and waxdroids to fight.
   - Seven sectors (including the Time Drift), Simulant hunters and cruisers, GELF longboats, psirens, a Space Corps enforcement probe, the Inquisitor and the Death Ship at the end.
   - A story scene in every sector, and about 30 encounters: a total-immersion game, the Inquisitor, a heroic Rimmer from another dimension, a despair squid, a shape-shifting mechanoid, Legion, a holoship, Kochanski (who can join the crew), Bob the skutter, a white hole, a stasis leak, future echoes, an emohawk, a luck virus, a duelling dimension-hopper and more.
+  - **Guns that play differently.** Every Red Dwarf weapon has its own trick: the Starbug Laser Cannon warms up and fires faster with every shot, Bazookoids home in and never miss, the JMC Mining Laser salvages scrap from every hit, the GELF Harpoon pins its target so it can't dodge, the Simulant Plasma Lance drains power, the Vindaloo Torpedo gasses the room, the Toaster Ion Lobber feeds your crew, Rimmer's Scattergun hits for anything from nothing to triple, the Light Bee Projector throws up a decoy shield, the Skutter Rivet Gun ricochets, the Polymorph Canister makes crew panic and flee, Ace's Wildfire Cannon crits, and the White Hole Lens pins time itself. Each card shows its trick at a glance, and the enemies use some of them too.
+  - **Starbug has its own three-bulb layout**, and the story scene in each sector is picked from two, so runs differ. There's an eighth sector, the Garbage Trail (three million years of Red Dwarf's rubbish), a Simulant Dreadnought, and more encounters: a curry monster, the White Giant's wreck, a GELF market, red alert, a spare hologram, Lister's gig, the Tank, a feud between the toaster and the food dispenser, and others.
   - All the writing is original, and the characters use the game's ordinary sprites; Red Dwarf belongs to its creators.
 
 **Better information**
@@ -485,6 +487,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
 | `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Flaggship help, endings and the hangar story picker |
 | `js/arcs2.js` | Twenty more stories, each with a hidden twist rolled per run, their scenes, Flaggship effects and endings |
+| `js/tricks.js` | Weapon tricks any weapon or mod can use: warm-up, homing, pinning, splash, ricochet, crits, salvage, gas, panic, toast, decoys, power drain |
 | `js/packs.js` | The built-in content packs (generated from `mods/` by `tools/build-packs.js`) |
 | `js/tutorial.js` | Flight school: the guided practice fight and the illustrated lessons |
 | `js/travellers.js` | Kestrel Jones's bounties, Doctor Oddly's implants and clinic, devotion at ten hearts, and more strange days |

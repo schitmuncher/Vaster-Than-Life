@@ -95,9 +95,23 @@ Changes the game's rules for the whole run. All fields optional.
 | `rooms` | number | Beams: how many rooms the beam sweeps (1–4) |
 | `radius` | number | Flak: spread (1–2) |
 | `heal` | number | Bombs only: heals your own crew in the target room instead (20–60) |
+| `warm` | 0–0.3 | Warms up: charges this much faster after each shot, up to 3 times |
+| `homing` | true | Never misses |
+| `pin` | seconds | A hit stops the target dodging for this long |
+| `splash` | number | A hit also damages a neighbouring room this much |
+| `bounce` | number | A hit ricochets into another random room for this much |
+| `crit` | 0–1 | Chance of double damage |
+| `wild` | number | Each shot does a random 0 to (damage + wild) |
+| `salvage` | number | Scrap gained each time it hits |
+| `gas` | true | The room hit loses all its air |
+| `fear` | true | Crew in the room hit panic and run |
+| `toast` | number | Every shot heals your own crew this much |
+| `decoy` | number | Every shot adds this much super shield to your ship (max 3) |
+| `drain` | number | A hit locks this many bars of the system it hits |
+| `color` | "#rrggbb" | Colour of its shots |
 | `desc` | text | One line |
 
-Lasers, ion and flak are stopped by shield layers (each shot removes one layer). Missiles and bombs ignore shields but use one missile each. Beams lose 1 damage per shield layer.
+Give a weapon one special trick, two at most, so it feels different from the base guns. Lasers, ion and flak are stopped by shield layers (each shot removes one layer). Missiles and bombs ignore shields but use one missile each. Beams lose 1 damage per shield layer.
 
 ### drones
 | Field | Meaning |
@@ -244,7 +258,7 @@ A mod with a `campaign` object is a complete alternative campaign. It only loads
   "sectors": ["px_a", "px_b", "px_c"],  // the only sector types offered at exits (at least 2)
   "noTravellers": true,                 // no Mags, Kestrel or Doctor Oddly
   "eventBias": 6,                       // how much more often events tagged for your sectors come up
-  "beats": { "2": "px_scene2", "3": "px_scene3", "final": "px_last" },   // a story event on entering each sector (questOnly events)
+  "beats": { "2": "px_scene2", "3": ["px_scene3a", "px_scene3b"], "final": "px_last" },   // a story event on entering each sector (questOnly events); a list picks one per run
   "bossLines": ["Said at phase 1", "Phase 2", "Phase 3"],
   "chatter": ["Short lines that pop up now and then while travelling."],
   "gear": { "weapons": ["px_gun"], "drones": [], "augments": ["px_aug"] },   // your own gear: stores always stock some, half of all loot comes from it

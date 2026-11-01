@@ -73,6 +73,7 @@ function evasion(sh){
       else if(pil>=2) base *= pil>=3 ? .8 : .5; else base = 0;
       const ec = mannedCrew(sh,'engines'); if(ec && base>0) base += [5,7,10][skillLvl(ec,'engines')]; }
   }
+  if(typeof trickPinned==='function' && trickPinned(sh) && sh.cloak.t<=0) return 0;   // pinned by a harpoon: no dodging
   if(sh.cloak.t>0) base += 60;
   if(hasAug(sh,'stealth')) base += 5; base += augFx(sh,'evade'); if(typeof petEvade==='function') base += petEvade(sh);
   if(sh.side==='p' && base>0) base += (curDiff().evade || 0);
@@ -132,6 +133,7 @@ function hitRoom(sh, ri_, d, o={}){
   if(!lit && d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)*Math.max(0, 1 - augFx(sh,'breachRes'))){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
   if(d.ion && d.type!=='ion') { if(r.sys) ionize(sh, r.sys, d.ion); }
   if(d.stun) for(const c of sh.crew) if(c.room===ri_) c.stunT = Math.max(c.stunT, d.stun);
+  if(typeof trickHit==='function') trickHit(sh, ri_, d, o);   // weapon tricks (tricks.js)
   const c = roomCenter(sh, ri_); burst(c.x, c.y, .5 + .3*Math.max(1,dmg), '#ffb547'); if(dmg>1) debris(c.x, c.y, sh.color, 4); if(dmg>0) fx('text', c.x, c.y-34, `-${dmg}`);
   if(sh.side==='p' && dmg>0 && Math.random()<.4) say('hit');
   sfx('hit');
@@ -156,6 +158,7 @@ function fireWeapon(sh, w, foe){
   else for(let i=0;i<(d.shots||1);i++) launch(sh.side, to, d, w.target, { t:-i*.22 });
   sfx(d.type==='missile'?'missile':d.type==='ion'?'ion':d.type==='beam'?'beam':d.type==='flak'?'flak':d.type==='bomb'?'bomb':(d.damage||1)>=2?'heavy':'laser', { vol: sh.side==='p' ? 1 : .75 });
   if(sh.side==='e' || !G.autofire) w.target = null;
+  if(typeof trickFire==='function') trickFire(sh, w, d);
   emit('fire', { ship:sh, weapon:w });
   return true;
 }
@@ -181,7 +184,7 @@ function resolve_(p){
     for(const r of (p.rooms||[p.room])) hitRoom(tgt, r, Object.assign({}, d, { damage:Math.max(0,pen) }), { by:p.from });
     return;
   }
-  if(Math.random()*100 < evasion(tgt)){
+  if(!(typeof trickHoming==='function' && trickHoming(d)) && Math.random()*100 < evasion(tgt)){
     fxAtRoom(tgt, p.room, 'text', 'MISS'); sfx('miss');
     const pc = mannedCrew(tgt,'piloting'); if(pc) gainXP(pc,'pilot',2); const ec = mannedCrew(tgt,'engines'); if(ec) gainXP(ec,'engines',2);
     return;
@@ -192,8 +195,8 @@ function resolve_(p){
     if(d.type==='ion') ionize(tgt, 'shields', d.damage||1);
     return;
   }
-  if(d.type==='ion'){ const r = tgt.rooms[p.room]; if(r && r.sys) ionize(tgt, r.sys, d.damage||1); fxAtRoom(tgt, p.room, 'ion'); sfx('ion'); if(d.stun) for(const c of tgt.crew) if(c.room===p.room) c.stunT = d.stun; return; }
-  hitRoom(tgt, p.room, d, { by:p.from });
+  if(d.type==='ion'){ const r = tgt.rooms[p.room]; if(r && r.sys) ionize(tgt, r.sys, d.damage||1); fxAtRoom(tgt, p.room, 'ion'); sfx('ion'); if(d.stun) for(const c of tgt.crew) if(c.room===p.room) c.stunT = d.stun; if(typeof trickHit==='function') trickHit(tgt, p.room, Object.assign({}, d, { damage:0 }), { by:p.from }); return; }
+  hitRoom(tgt, p.room, typeof trickDamage==='function' ? trickDamage(d) : d, { by:p.from });
 }
 
 /* ---------------- drones ---------------- */
@@ -586,7 +589,7 @@ function tickShip(sh, dt, foe){
   const diff = curDiff();
   for(const w of sh.weapons){
     const d = DATA.weapons[w.id]; if(!d) continue;
-    if(!foe || foe.dead || !w.on){ w.charge = Math.max(0, w.charge - dt*3); continue; }
+    if(!foe || foe.dead || !w.on){ w.charge = Math.max(0, w.charge - dt*3); w.warm = 0; continue; }
     if(foe.cloak.t>0 && !d.heal) continue;
     let mult = 1; const wc = mannedCrew(sh,'weapons'); if(wc) mult *= [1.1,1.15,1.2][skillLvl(wc,'weapons')] * (traitOf(wc).charge||1); else if(sh.auto) mult *= 1.05;
     if(hasAug(sh,'reloader')) mult *= 1.1; mult *= 1 + augFx(sh,'charge');
@@ -595,7 +598,8 @@ function tickShip(sh, dt, foe){
     if(sh.isEnemy && typeof alertLv==='function' && alertLv() >= 7) mult *= 1.06;   // Rebuff alert 7: drilled gunners   // the Flaggship fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
-    if(typeof refitMult==='function') mult *= refitMult(sh, w);   // Mk II / Mk III refits (expansion.js)
+    if(typeof refitMult==='function') mult *= refitMult(sh, w);
+    if(d.warm && typeof trickCharge==='function') mult *= trickCharge(w, d);   // Mk II / Mk III refits (expansion.js)
     w.charge = Math.min(d.charge, w.charge + dt*mult);
     if(w.charge >= d.charge){
       if(sh.isEnemy && w.target==null) w.target = w.cmdT!=null && foe.rooms[w.cmdT] ? w.cmdT : aiTargetRoom(foe, d);   // a fleet commander (multiplayer) can aim enemy guns

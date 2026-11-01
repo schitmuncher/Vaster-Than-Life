@@ -1,6 +1,6 @@
 {
  "name": "Red Dwarf: Three Million Years Late",
- "version": "2.0",
+ "version": "3.0",
  "author": "Vaster Than Life team (unofficial fan campaign)",
  "campaign": {
   "id": "reddwarf",
@@ -58,17 +58,36 @@
    "rd_simulant",
    "rd_waxworks",
    "rd_backwards",
-   "rd_timedrift"
+   "rd_timedrift",
+   "rd_trash"
   ],
   "noTravellers": true,
   "eventBias": 6,
   "beats": {
-   "2": "rd_curry",
-   "3": "rd_exam",
-   "4": "rd_mirror",
-   "5": "rd_guilt",
-   "6": "rd_holly",
-   "7": "rd_skutters",
+   "2": [
+    "rd_curry",
+    "rd_rimmer_disc"
+   ],
+   "3": [
+    "rd_exam",
+    "rd_cat_priest"
+   ],
+   "4": [
+    "rd_mirror",
+    "rd_reality"
+   ],
+   "5": [
+    "rd_guilt",
+    "rd_head3"
+   ],
+   "6": [
+    "rd_holly",
+    "rd_hollyhop"
+   ],
+   "7": [
+    "rd_skutters",
+    "rd_strike"
+   ],
    "final": "rd_final"
   },
   "bossLines": [
@@ -94,7 +113,11 @@
    "Holly: There's an emergency. Hang on. No, there isn't. Carry on.",
    "Lister: If we live, I'm going to have the biggest curry in history. If we don't, also curry.",
    "Skutter has painted a rude word on the hull. Kryten is pretending not to know which one.",
-   "The food dispenser has produced a cup of soup with a fork in it. Again."
+   "The food dispenser has produced a cup of soup with a fork in it. Again.",
+   "Kryten: The bazookoids are tracking beautifully, sir. They've already found three of your socks.",
+   "Lister: The cannon's getting warm. That's either good or very bad.",
+   "Rimmer's Scattergun has hit the target, the scenery and, briefly, Rimmer.",
+   "The toaster lobber has fired another crumpet. The crew ate it."
   ],
   "win": {
    "title": "RED DWARF RECOVERED",
@@ -112,7 +135,12 @@
     "rd_vindaloo",
     "rd_toaster_gun",
     "rd_scattergun",
-    "rd_tension_sheet"
+    "rd_tension_sheet",
+    "rd_ace_cannon",
+    "rd_lightbee_gun",
+    "rd_polymorph",
+    "rd_rivet_gun",
+    "rd_whitehole"
    ],
    "drones": [
     "rd_skutter",
@@ -224,13 +252,12 @@
    "layout": "A",
    "cls": "Mining shuttle",
    "color": "#7fbf6a",
-   "pattern": "TABAN",
    "hull": 30,
    "reactor": 8,
    "fuel": 16,
    "missiles": 8,
    "parts": 2,
-   "desc": "A battered mining shuttle with a crew of four and a smell of curry that no air filter has ever beaten.",
+   "desc": "A battered three-bulb mining shuttle. Its twin cannon warms up as it fires, and its bazookoids never miss. It smells of curry.",
    "systems": {
     "shields": 2,
     "engines": 2,
@@ -259,6 +286,85 @@
    ],
    "augments": [
     "rd_holly"
+   ],
+   "rooms": [
+    {
+     "sys": "engines",
+     "x": 0,
+     "y": 0,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "oxygen",
+     "x": 0,
+     "y": 2,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "doors",
+     "x": 2,
+     "y": 1,
+     "w": 1,
+     "h": 2
+    },
+    {
+     "sys": "medbay",
+     "x": 3,
+     "y": 0,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "weapons",
+     "x": 3,
+     "y": 2,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "teleporter",
+     "x": 5,
+     "y": 0,
+     "w": 1,
+     "h": 2
+    },
+    {
+     "sys": "drones",
+     "x": 5,
+     "y": 2,
+     "w": 1,
+     "h": 2
+    },
+    {
+     "sys": "sensors",
+     "x": 6,
+     "y": 1,
+     "w": 1,
+     "h": 2
+    },
+    {
+     "sys": "shields",
+     "x": 7,
+     "y": 0,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "cloaking",
+     "x": 7,
+     "y": 2,
+     "w": 2,
+     "h": 2
+    },
+    {
+     "sys": "piloting",
+     "x": 9,
+     "y": 1,
+     "w": 1,
+     "h": 2
+    }
    ]
   },
   {
@@ -273,7 +379,7 @@
    "fuel": 16,
    "missiles": 8,
    "parts": 4,
-   "desc": "Starbug's smaller, bluer cousin: cramped, fast and full of mining gear. Comes with a skutter.",
+   "desc": "Starbug's smaller, bluer cousin. Its mining laser salvages scrap from every hit, and its toaster feeds the crew.",
    "systems": {
     "shields": 2,
     "engines": 3,
@@ -452,8 +558,7 @@
     "piloting": 1
    },
    "weapons": [
-    "basic",
-    "basic"
+    "rd_scattergun"
    ],
    "crew": [
     "rd_waxdroid",
@@ -627,6 +732,68 @@
    "crew": [
     "human"
    ]
+  },
+  {
+   "id": "rd_sim_dread",
+   "name": "Simulant Dreadnought",
+   "tags": [
+    "rdsim"
+   ],
+   "onlyTagged": true,
+   "hull": 15,
+   "sectors": [
+    6,
+    8
+   ],
+   "systems": {
+    "shields": 4,
+    "engines": 2,
+    "weapons": 6,
+    "drones": 2,
+    "oxygen": 1,
+    "medbay": 1,
+    "piloting": 1,
+    "doors": 2
+   },
+   "weapons": [
+    "rd_gelf_harpoon",
+    "rd_plasma_lance",
+    "bust1"
+   ],
+   "drones": [
+    "combat1"
+   ],
+   "crew": [
+    "rd_simulant",
+    "rd_simulant",
+    "rd_simulant",
+    "rd_agonoid"
+   ]
+  },
+  {
+   "id": "rd_trash_crawler",
+   "name": "Garbage Scow",
+   "tags": [
+    "rdtrash"
+   ],
+   "onlyTagged": true,
+   "auto": true,
+   "hull": 10,
+   "sectors": [
+    1,
+    8
+   ],
+   "systems": {
+    "shields": 2,
+    "engines": 1,
+    "weapons": 3,
+    "piloting": 1
+   },
+   "weapons": [
+    "rd_rivet_gun",
+    "basic"
+   ],
+   "crew": []
   }
  ],
  "sectors": [
@@ -808,6 +975,32 @@
    "nebula": 0.15,
    "intro": [
     "Holly reports that time is a bit runny in this sector. The Cat is fine with it, provided it doesn't affect his hair."
+   ]
+  },
+  {
+   "id": "rd_trash",
+   "name": "The Garbage Trail",
+   "blurb": "Three million years of Red Dwarf's rubbish, still drifting in a line across space. Some of it is valuable. Some of it is alive.",
+   "color": "#a0a878",
+   "mix": {
+    "event": 54,
+    "combat": 32,
+    "empty": 14
+   },
+   "tags": [
+    "rd",
+    "rdtrash"
+   ],
+   "enemyTags": [
+    "rdtrash",
+    "rdgelf"
+   ],
+   "hazards": {
+    "asteroid": 0.14
+   },
+   "nebula": 0,
+   "intro": [
+    "Holly confirms it: every bin bag the ship ever jettisoned is out here. Lister recognises a sock."
    ]
   },
   {
@@ -2257,6 +2450,526 @@
      }
     }
    ]
+  },
+  {
+   "id": "rd_rimmer_disc",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "Holly finds a box of old hologram personality discs in a storeroom: the ship's dead crew, three million years in a drawer. She can run one more hologram, if Rimmer agrees to be switched off for a while. Rimmer does not agree.",
+   "choices": [
+    {
+     "text": "Leave Rimmer running.",
+     "effect": {
+      "text": "Rimmer is so relieved he's nice to everyone for almost an hour.",
+      "crewHeal": 30
+     }
+    },
+    {
+     "text": "Run the captain's disc instead, for one sector.",
+     "effect": {
+      "text": "Captain Hollister's hologram takes the bridge, eats a hologram sandwich and gives very sensible orders. The crew have never been more organised.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 40
+      }
+     }
+    },
+    {
+     "text": "Run Rimmer and a second Rimmer.",
+     "effect": {
+      "text": "Two Rimmers. They hate each other immediately. They spend the whole sector arguing, which keeps them both out of the way.",
+      "xp": {
+       "skill": "repair",
+       "amt": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_cat_priest",
+   "questOnly": true,
+   "once": true,
+   "art": "star",
+   "text": "The Cat picks up a signal in his own language: a lone ship, and on it, the last priest of the cat people, very old and very holy. The Cat goes very quiet.",
+   "choices": [
+    {
+     "text": "Let the Cat visit him.",
+     "effect": {
+      "text": "The Cat comes back with a blessing, a new outfit and an air of great serenity that lasts until lunch.",
+      "xp": {
+       "skill": "combat",
+       "amt": 40
+      }
+     }
+    },
+    {
+     "text": "Ask the priest for a blessing on the ship.",
+     "effect": {
+      "text": "The priest blesses the ship, the crew and the curry. Things go oddly well afterwards.",
+      "augment": "random"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_reality",
+   "questOnly": true,
+   "once": true,
+   "art": "nebula",
+   "text": "Everyone wakes up in a games arcade, wearing headsets. A technician tells you that the last four years were a game, and you've all just lost. Lister is a policeman called Dwayne. The Cat has a terrible haircut.",
+   "choices": [
+    {
+     "text": "Believe it.",
+     "effect": {
+      "text": "It takes everyone an hour of total despair to work out that it was the despair squid's ink again. You're back aboard Starbug, shaken, and much fonder of each other.",
+      "crewHurt": 10,
+      "cmp": {
+       "hearts": 30
+      }
+     }
+    },
+    {
+     "text": "Refuse to believe it.",
+     "effect": {
+      "text": "Kryten points out that the arcade has no doors. The illusion breaks. You're back on Starbug, and the squid is very disappointed.",
+      "xp": {
+       "skill": "combat",
+       "amt": 20
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_head3",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "Kryten's spare head number three has developed opinions. It wants to be in charge of the ship. It has written a manifesto. Kryten is mortified.",
+   "choices": [
+    {
+     "text": "Let the head run engineering for a sector.",
+     "effect": {
+      "text": "Head three is a tyrant, but the engines have never been cleaner.",
+      "upgrade": "engines"
+     }
+    },
+    {
+     "text": "Put it back in the cupboard.",
+     "effect": {
+      "text": "It sulks in the cupboard, loudly, for days.",
+      "crewHeal": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_hollyhop",
+   "questOnly": true,
+   "once": true,
+   "art": "nebula",
+   "text": "Holly has invented a new drive. \"The Holly Hop Drive. Press the button, and you're wherever you want to be. In theory. I've tested it on a sandwich.\"",
+   "choices": [
+    {
+     "text": "Press the button.",
+     "chance": 0.5,
+     "success": {
+      "text": "You arrive in exactly the right place, which surprises everyone, especially Holly.",
+      "fleetPush": -0.25
+     },
+     "fail": {
+      "text": "You arrive in the right place in a parallel universe where everyone is the opposite sex, have a very awkward chat, and press the button again.",
+      "fuel": -2
+     }
+    },
+    {
+     "text": "Leave the button alone.",
+     "effect": {
+      "text": "Holly presses it anyway, by accident. The sandwich disappears for good.",
+      "fleetPush": -0.05
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_strike",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "The skutters have gone on strike. They want better pay, longer holidays and to be allowed to watch cowboy films. They have made placards.",
+   "choices": [
+    {
+     "text": "Give them the cowboy films.",
+     "effect": {
+      "text": "The skutters go back to work, humming theme tunes. Repairs go twice as fast.",
+      "xp": {
+       "skill": "repair",
+       "amt": 40
+      }
+     }
+    },
+    {
+     "text": "Break the strike.",
+     "effect": {
+      "text": "The skutters return to work and spend the rest of the run doing exactly what they're told, and nothing more.",
+      "parts": -2
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_curry_monster",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "creature",
+   "text": "Something has been growing at the back of the fridge since sector one. It is orange, it has eyes, and it smells of a very old chicken madras. Lister is proud of it.",
+   "choices": [
+    {
+     "text": "Fight it.",
+     "chance": 0.7,
+     "success": {
+      "text": "The curry monster is defeated with two fire extinguishers and a mop.",
+      "scrap": 10
+     },
+     "fail": {
+      "text": "The curry monster wins the first round. Then it falls asleep. Everyone smells of madras for a week.",
+      "crewHurt": 20
+     }
+    },
+    {
+     "text": "Lister wants to keep it.",
+     "effect": {
+      "text": "It lives in a bucket and gets fed leftovers. It is very good at clearing up.",
+      "crewHeal": 20,
+      "cmp": {
+       "hearts": 10
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_white_giant",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "wreck",
+   "text": "The wreck of the White Giant, Starbug's bigger sister ship, drifts in a debris field. Most of it is gone. Its armoury isn't.",
+   "choices": [
+    {
+     "text": "Raid the armoury.",
+     "effect": {
+      "text": "Inside, one gun, still in its wrapping.",
+      "weapon": "random"
+     }
+    },
+    {
+     "text": "Strip its hull plates.",
+     "effect": {
+      "text": "Thick, old-fashioned plating. Kryten bolts it on.",
+      "maxHull": 3,
+      "hull": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_gelf_market",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "market",
+   "text": "A GELF trading post: a ring of war canoes lashed together, selling everything from spare kidneys to second-hand brides.",
+   "choices": [
+    {
+     "text": "Buy a GELF harpoon (30 scrap).",
+     "req": {
+      "scrap": 30
+     },
+     "cost": {
+      "scrap": 30
+     },
+     "effect": {
+      "text": "The seller throws in a free kidney. You decline.",
+      "weapon": "rd_gelf_harpoon"
+     }
+    },
+    {
+     "text": "Trade the Cat's spare suit.",
+     "req": {
+      "race": "rd_felis"
+     },
+     "effect": {
+      "text": "The Cat refuses, then agrees, then weeps. The GELFs pay a fortune for it.",
+      "scrap": 60
+     }
+    },
+    {
+     "text": "Browse, and leave quickly.",
+     "effect": {
+      "text": "Someone tries to sell {crew} a husband.",
+      "crewHeal": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_red_alert",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "space",
+   "text": "Rimmer has declared red alert. Kryten points out that this means changing the bulb in the alert light, which is a big job. There is no actual emergency. Rimmer wants the bulb changed anyway.",
+   "choices": [
+    {
+     "text": "Change the bulb.",
+     "effect": {
+      "text": "It takes two hours. The new bulb is very red. Rimmer is satisfied.",
+      "xp": {
+       "skill": "repair",
+       "amt": 15
+      }
+     }
+    },
+    {
+     "text": "Declare blue alert instead.",
+     "effect": {
+      "text": "Nobody knows what blue alert means. Everyone feels calmer.",
+      "crewHeal": 25
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_hollister_disc",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1,
+   "once": true,
+   "art": "wreck",
+   "text": "In a drifting escape pod: a hologram disc labelled \"Second Technician, Spare\". Holly can run it, if you want another pair of hands. Light ones.",
+   "choices": [
+    {
+     "text": "Switch it on.",
+     "effect": {
+      "text": "A slightly bewildered hologram technician flickers into being and asks what year it is. Everyone avoids the question.",
+      "cmp": {
+       "join": {
+        "race": "rd_hologram",
+        "name": "Petersen",
+        "quirk": "optimist"
+       }
+      }
+     }
+    },
+    {
+     "text": "Leave it switched off.",
+     "effect": {
+      "text": "You sell the disc to a GELF collector.",
+      "scrap": 20
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_gig",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "market",
+   "text": "Lister has booked the band. The band is Lister, and his guitar, which has two strings. The venue is a GELF bar. The crowd is armed.",
+   "choices": [
+    {
+     "text": "Let him play.",
+     "chance": 0.5,
+     "success": {
+      "text": "Against all known science, the GELFs love it. They carry Lister out on their shoulders and pay him in scrap.",
+      "scrap": 40,
+      "cmp": {
+       "hearts": 15
+      }
+     },
+     "fail": {
+      "text": "The GELFs do not love it.",
+      "fight": "rd_gelf_raider"
+     }
+    },
+    {
+     "text": "Pull the plug.",
+     "effect": {
+      "text": "Lister sulks. The GELFs are relieved.",
+      "crewHeal": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_pod",
+   "tags": [
+    "rdtrash"
+   ],
+   "weight": 2,
+   "once": true,
+   "art": "wreck",
+   "text": "A garbage pod from Red Dwarf, jettisoned three million years ago. Lister recognises his own handwriting on it: \"DO NOT OPEN\".",
+   "choices": [
+    {
+     "text": "Open it.",
+     "chance": 0.6,
+     "success": {
+      "text": "Inside: Lister's old lucky things, a box of spares nobody wanted and some very ancient poppadoms.",
+      "parts": 3,
+      "missiles": 3
+     },
+     "fail": {
+      "text": "Inside: a three-million-year-old laundry basket. It has evolved.",
+      "crewHurt": 20,
+      "fight": "rd_trash_crawler"
+     }
+    },
+    {
+     "text": "Leave it closed. He did write DO NOT OPEN.",
+     "effect": {
+      "text": "Wise. Probably.",
+      "crewHeal": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_tank",
+   "tags": [
+    "rdtrash"
+   ],
+   "weight": 2,
+   "once": true,
+   "art": "wreck",
+   "text": "Among the rubbish drifts a section of Red Dwarf's old prison deck, the Tank, still sealed. Something inside is knocking politely.",
+   "choices": [
+    {
+     "text": "Open the cell.",
+     "chance": 0.5,
+     "success": {
+      "text": "Inside, an ancient skutter that was jailed for insubordination. It joins your crew of skutters, at once, insubordinately.",
+      "drone": "rd_skutter"
+     },
+     "fail": {
+      "text": "Inside, a very old, very cross prison droid. It wants to arrest someone.",
+      "fight": "rd_trash_crawler"
+     }
+    },
+    {
+     "text": "Salvage the cell door.",
+     "effect": {
+      "text": "Excellent plating.",
+      "hull": 4
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_bin_mountain",
+   "tags": [
+    "rdtrash"
+   ],
+   "weight": 2,
+   "once": true,
+   "art": "asteroid",
+   "text": "A mountain of bin bags as big as a moon, held together by its own gravity. Somewhere inside is everything Red Dwarf ever threw away.",
+   "choices": [
+    {
+     "text": "Dig.",
+     "chance": 0.65,
+     "success": {
+      "text": "Two days of digging, and you find a working gun, a crate of fuel and a lot of very old yoghurt.",
+      "weapon": "random",
+      "fuel": 3
+     },
+     "fail": {
+      "text": "The mountain collapses. You escape with a scratched hull and a mild smell.",
+      "hull": -3
+     }
+    },
+    {
+     "text": "Send the skutters in.",
+     "effect": {
+      "text": "They come back with drone parts and look very pleased with themselves.",
+      "parts": 4
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_dispenser_war",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "space",
+   "text": "The food dispenser and Talkie Toaster have started a feud. The dispenser only makes chicken soup. The toaster only makes toast. Both are now refusing to make anything for anyone who sides with the other.",
+   "choices": [
+    {
+     "text": "Side with the toaster.",
+     "effect": {
+      "text": "Toast for every meal. Morale is surprisingly high.",
+      "crewHeal": 30
+     }
+    },
+    {
+     "text": "Side with the dispenser.",
+     "effect": {
+      "text": "Soup for every meal. The toaster sulks and asks if anyone wants a muffin, quietly, at night.",
+      "crewHeal": 30
+     }
+    },
+    {
+     "text": "Unplug them both.",
+     "effect": {
+      "text": "Silence. Peace. Hunger.",
+      "scrap": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_trash_hail",
+   "hail": "rdtrash",
+   "text": "A garbage scow full of angry automated bin droids drifts into your path. Its loudspeaker plays a recorded message: \"Littering is an offence.\"",
+   "choices": [
+    {
+     "text": "Fire.",
+     "effect": {
+      "begin": true
+     }
+    },
+    {
+     "text": "Promise to recycle.",
+     "chance": 0.5,
+     "success": {
+      "text": "The scow accepts. It follows you for a while, checking.",
+      "dismiss": true
+     },
+     "fail": {
+      "text": "\"Lies detected.\"",
+      "begin": true
+     }
+    }
+   ]
   }
  ],
  "weapons": [
@@ -2266,11 +2979,13 @@
    "type": "laser",
    "damage": 1,
    "shots": 2,
-   "charge": 11,
+   "charge": 12,
    "power": 2,
    "cost": 50,
    "tier": 1,
-   "desc": "Starbug's own twin cannon. Reliable, if you hit it hard enough."
+   "desc": "Starbug's twin cannon. Slow to get going, but it warms up: every shot makes the next one come sooner.",
+   "warm": 0.15,
+   "color": "#7fffb0"
   },
   {
    "id": "rd_bazookoid",
@@ -2284,7 +2999,9 @@
    "tier": 1,
    "fire": 0.1,
    "breach": 0.09,
-   "desc": "Mining bazookoids, wired to the hull and pointed out of the cargo hatch."
+   "desc": "Mining bazookoids with a homing chip Kryten fitted. They chase their target round corners. They never miss.",
+   "homing": true,
+   "color": "#ffe08a"
   },
   {
    "id": "rd_bazookoid2",
@@ -2298,7 +3015,8 @@
    "tier": 1,
    "fire": 0.3,
    "breach": 0.2,
-   "desc": "A heavy bazookoid that Kryten tuned up. It now fires twice as hard and complains half as much."
+   "desc": "A heavy bazookoid that Kryten tuned up. One shot in four hits twice as hard.",
+   "crit": 0.25
   },
   {
    "id": "rd_mining_laser",
@@ -2310,7 +3028,9 @@
    "power": 2,
    "cost": 50,
    "tier": 1,
-   "desc": "Made for cutting asteroids open. Works on ships too, once the shields are down."
+   "desc": "Made for cutting asteroids open, and it still sorts the good metal out of whatever it cuts. Every hit salvages scrap.",
+   "salvage": 2,
+   "color": "#ffd166"
   },
   {
    "id": "rd_plasma_lance",
@@ -2323,20 +3043,24 @@
    "cost": 70,
    "tier": 2,
    "fire": 0.3,
-   "desc": "Pulled off a dead Simulant ship. It still seems annoyed about it."
+   "desc": "Pulled off a dead Simulant ship. It doesn't just burn: it drains the power out of every system it touches.",
+   "drain": 1,
+   "color": "#b48cff"
   },
   {
    "id": "rd_gelf_harpoon",
    "name": "GELF Harpoon",
    "type": "missile",
-   "damage": 3,
+   "damage": 2,
    "shots": 1,
    "charge": 14,
    "power": 2,
    "cost": 50,
    "tier": 2,
    "breach": 0.6,
-   "desc": "A barbed harpoon from a GELF war canoe. Punches a hole straight through, and lets the air out."
+   "desc": "A barbed GELF harpoon on a long chain. Once it bites, the target can't dodge for six seconds.",
+   "pin": 6,
+   "color": "#c98a4a"
   },
   {
    "id": "rd_vindaloo",
@@ -2349,7 +3073,9 @@
    "tier": 2,
    "fire": 1,
    "crewDamage": 20,
-   "desc": "A torpedo casing packed with Lister's emergency curry. Sets the room on fire, and the crew in it, a bit."
+   "desc": "A torpedo packed with Lister's emergency curry. Sets the room on fire and the fumes leave nobody breathing.",
+   "gas": true,
+   "color": "#ff7a3d"
   },
   {
    "id": "rd_toaster_gun",
@@ -2361,20 +3087,23 @@
    "power": 1,
    "cost": 30,
    "tier": 1,
-   "desc": "Fires electrified crumpets. Knocks systems out for a while, then asks if anyone wants another."
+   "desc": "Fires electrified crumpets. Knocks out a system, and every volley feeds your crew a hot crumpet too.",
+   "toast": 6,
+   "color": "#ffcf8a"
   },
   {
    "id": "rd_scattergun",
    "name": "Rimmer's Scattergun",
    "type": "flak",
    "damage": 1,
-   "shots": 3,
-   "charge": 10,
+   "shots": 4,
+   "charge": 11,
    "power": 2,
    "cost": 60,
    "tier": 2,
    "radius": 1,
-   "desc": "A flak cannon Rimmer designed himself. It hits everything near where it's aimed, and never quite what it's aimed at."
+   "desc": "Rimmer designed it himself. Four fragments, and nobody, least of all Rimmer, knows how hard each one will hit.",
+   "wild": 1
   },
   {
    "id": "rd_tension_sheet",
@@ -2387,7 +3116,79 @@
    "cost": 50,
    "tier": 2,
    "stun": 5,
-   "desc": "Kryten built it from a vending machine and a guilt chip. Scrambles systems and stuns whoever is standing next to them."
+   "desc": "Kryten built it from a vending machine and a guilt chip. Scrambles systems, stuns the crew, and sends them running from the room.",
+   "fear": true
+  },
+  {
+   "id": "rd_ace_cannon",
+   "name": "Ace's Wildfire Cannon",
+   "type": "laser",
+   "damage": 1,
+   "shots": 3,
+   "charge": 13,
+   "power": 3,
+   "cost": 85,
+   "tier": 3,
+   "crit": 0.3,
+   "fire": 0.25,
+   "color": "#ff5a7a",
+   "desc": "The cannon from a dashing hero's test ship, left behind in a dimension rip. Three shots, and every one of them might be the one that counts."
+  },
+  {
+   "id": "rd_lightbee_gun",
+   "name": "Light Bee Projector",
+   "type": "laser",
+   "damage": 1,
+   "shots": 1,
+   "charge": 9,
+   "power": 1,
+   "cost": 45,
+   "tier": 1,
+   "decoy": 1,
+   "color": "#9fd6ff",
+   "desc": "Fires a real shot and a hologram of your ship at the same time. Each volley adds a point of super shield while the enemy works out which ship is real."
+  },
+  {
+   "id": "rd_polymorph",
+   "name": "Polymorph Canister",
+   "type": "bomb",
+   "damage": 0,
+   "charge": 14,
+   "power": 1,
+   "cost": 45,
+   "tier": 2,
+   "crewDamage": 10,
+   "stun": 3,
+   "fear": true,
+   "desc": "A canister holding a very small, very upset polymorph. It turns into everyone's worst fear. The crew in that room leave. Quickly."
+  },
+  {
+   "id": "rd_rivet_gun",
+   "name": "Skutter Rivet Gun",
+   "type": "laser",
+   "damage": 1,
+   "shots": 2,
+   "charge": 11,
+   "power": 2,
+   "cost": 60,
+   "tier": 2,
+   "bounce": 1,
+   "color": "#c8d0dc",
+   "desc": "The skutters built it from a riveting machine. Every hit ricochets into another room."
+  },
+  {
+   "id": "rd_whitehole",
+   "name": "White Hole Lens",
+   "type": "beam",
+   "damage": 1,
+   "rooms": 3,
+   "charge": 20,
+   "power": 3,
+   "cost": 80,
+   "tier": 3,
+   "pin": 4,
+   "color": "#ffffff",
+   "desc": "A lens ground from a white hole's afterglow. Its beam pins time itself: the target can't dodge while it burns."
   }
  ],
  "drones": [
