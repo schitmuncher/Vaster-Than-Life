@@ -51,7 +51,10 @@ const MIDI_STYLES = {
 const MIDI = { song:null, url:null, loading:false, style:null, next:0, idx:0, t0:0, loopAt:0 };
 function midiLoad(url){
   if(MIDI.url === url && (MIDI.song || MIDI.loading)) return; MIDI.url = url; MIDI.song = null; MIDI.loading = true;
-  fetch(url).then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b => { MIDI.song = parseMidi(b); MIDI.loading = false; }).catch(() => { MIDI.loading = false; MIDI.song = null; });
+  const done = b => { MIDI.song = parseMidi(b); MIDI.loading = false; }, fail = () => { MIDI.loading = false; MIDI.song = null; };
+  // some hosts won't serve .mid files: then use the base64 copy beside it (my-theme.mid.json, { "base64": "..." })
+  const viaJson = () => fetch(url + '.json').then(r => { if(!r.ok) throw new Error(r.status); return r.json(); }).then(j => { const s = atob(j.base64), a = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); done(a.buffer); }).catch(fail);
+  fetch(url).then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b => { try{ done(b); }catch(e){ viaJson(); } }).catch(viaJson);
 }
 /* which arrangement fits the moment (null: the normal soundtrack) */
 function midiCue(){
