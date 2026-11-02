@@ -37,6 +37,7 @@ const REP_TIERS = [[-50,'Despised','#ff5a7a'], [-10,'Disliked','#ff8a5a'], [25,'
 function rep(f){ return (G && G.rep && G.rep[f]) || 0; }
 function repTier(f){ const v = rep(f); for(const t of REP_TIERS) if(v < t[0]) return t; return REP_TIERS[4]; }
 function repAdd(f, n, why){ if(!G || !FACTIONS[f] || !n) return; G.rep = G.rep || {}; const before = repTier(f)[1]; G.rep[f] = clamp((G.rep[f]||0) + n, -100, 100); const after = repTier(f)[1];
+  if(after==='Revered' && before!=='Revered' && typeof factionRevered==='function') factionRevered(f);
   if(after!==before) toast(`${FACTIONS[f].name}: you are now ${after}${why ? ' (' + why + ')' : ''}.`); }
 function repPriceMult(kind){ if(!FACTIONS[kind]) return 1; const t = repTier(kind)[1]; return { Despised:1.4, Disliked:1.2, Neutral:1, Favoured:.9, Revered:.82 }[t]; }
 function repCombatEnd(kind, e){
@@ -174,7 +175,7 @@ function livingRunEnd(win, reason){
   if(!win && havenPerksOn() && !G.noSave){ PROFILE.lastWreck = { name:G.ship.name, def:G.shipDef, weapons:G.ship.weapons.map(w => w.id).slice(0, 3), crew:[...(G.lost || []), ...G.ship.crew.filter(c => c.owner==='p' && !c.drone).map(c => c.name)].slice(0, 6), sector:G.sector, boarded:/crew/.test(reason || '') }; }
 }
 function livingArrive(node, first){
-  if(!G) return; machineJump(node); crewDowntime(); if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump();
+  if(!G) return; machineJump(node); crewDowntime(); if(typeof heatArrive==='function'){ heatArrive(node, first); jobsArrive(node, first); } if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump();
   if(havenDone('biodome') && havenPerksOn() && G.garden && G.hazard!=='ionstorm') for(const p of G.garden.plots) if(p) p.g += .25;
   if(G._shop){ const spent = (G.spent||0) - G._shop.spent; if(spent > 0){ const k = G._shop.kind, gain = Math.floor(spent / 25) * (k==='sloog' ? 2 : 1); if(FACTIONS[k]) repAdd(k, gain, 'good business'); if(k==='nebula') repAdd('pyrate', Math.floor(spent / 40)); } G._shop = null; }
   if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; }
@@ -187,27 +188,38 @@ function livingEffect(e, L){
   if(e.wreckLoot && G.wreck){ const w = G.wreck.weapons.find(id => DATA.weapons[id]); if(w) L.push(giveWeapon(w)); delete PROFILE.lastWreck; saveProfile(); }
   if(e.wreckDone){ delete PROFILE.lastWreck; saveProfile(); }
 }
-function livingCombatStart(e, def, o){ repCombatStart(e, def, o); if(def.boss && !(o && o.phase)) havenResidentsHelp(e);
+function livingCombatStart(e, def, o){ repCombatStart(e, def, o); if(def.boss && !(o && o.phase)){ havenResidentsHelp(e); if(typeof pipIntel==='function') pipIntel(e); }
   if(def.revenant && G.wreck){ e.name = `The ${G.wreck.name}`; const ws = G.wreck.weapons.filter(id => DATA.weapons[id]); if(ws.length){ e.weapons = ws.map(id => ({ id, charge:0, on:true, target:null })); e.systems.weapons.max = Math.max(e.systems.weapons.max, ws.reduce((t, id) => t + (DATA.weapons[id].power||1), 0)); e.systems.weapons.power = e.systems.weapons.max; }
     e.crew.filter(c => c.owner==='e' && !c.drone).forEach((c, i) => { if(G.wreck.crew[i]) c.name = G.wreck.crew[i]; }); } }
 
 /* ---------------- screens ---------------- */
 function drawLayoutTab(f, cx, y0){
-  const s = G.ship, W2 = f.w - 64, act = combosOf(s); const here = atStore();
-  label('Room combos', cx, y0+10, C.amber, 'left', 15); T('Systems in rooms joined by a door work together.', cx + 170, y0+12, { s:14, c:C.muted });
-  COMBOS.forEach((C_, i) => { const x = cx + (i % 2)*(W2/2 + 10), y = y0 + 28 + Math.floor(i/2)*74, w = W2/2 - 10, on = act.includes(C_), has = C_.sys.every(g => g.some(k => s.systems[k]));
-    panel(x, y, w, 66, 8); if(on){ rr(x, y, w, 66, 8); ctx.strokeStyle = C.good; ctx.lineWidth = 2; ctx.stroke(); }
-    T(C_.name, x+16, y+26, { s:18, f:FD, w:700, c: on ? C.good : has ? C.ink : C.muted });
-    T(C_.sys.map(g => g.map(k => SYSN[k] || k).join('/')).join(' + '), x+210, y+26, { s:13, c:C.muted, max:w-330 });
-    T(on ? 'ACTIVE' : has ? 'not next to each other' : 'missing a system', x+w-16, y+26, { s:13, a:'right', c: on ? C.good : C.muted, w:700 });
-    T(C_.text, x+16, y+50, { s:13, c: on ? C.ink : C.muted, max:w-30 }); });
-  const y1 = y0 + 28 + Math.ceil(COMBOS.length/2)*74 + 14;
-  label('Shipyard: swap two rooms', cx, y1+8, C.amber, 'left', 15);
-  T(here ? `Pick a room, then another to swap their systems. ${swapCost()} scrap.${havenDone('engineering') ? ' (Haven\'s Rest shipyard: half price)' : ''}` : 'Only at a store: the dockyard crews do the heavy lifting.', cx + 300, y1+10, { s:14, c: here ? C.ink : C.muted });
-  const rooms = s.rooms.map((r, i) => i); const bw = 150;
-  rooms.forEach((i, k) => { const r = s.rooms[i], x = cx + (k % 8)*(bw + 8), y = y1 + 26 + Math.floor(k/8)*52, sel = UI.swapA===i;
-    btn(x, y, bw, 44, r.sys ? (SYSN[r.sys] || r.sys) + (s.systems[r.sys] ? '' : ' (empty)') : `Empty ${r.w}×${r.h}`, () => { if(!here) return; if(UI.swapA==null){ UI.swapA = i; return; } if(UI.swapA===i){ UI.swapA = null; return; }
-      const a = UI.swapA; UI.swapA = null; if(!s.rooms[a].sys && !r.sys) return; spend(swapCost(), () => { swapRooms(a, i); toast(`Swapped. ${combosOf(s).length} combo${combosOf(s).length===1 ? '' : 's'} active.`); }); }, { s:14, fill:sel, disabled:!here || (UI.swapA!=null && UI.swapA!==i && G.scrap < swapCost()), col: r.sys ? (SYSC[r.sys] || C.amber) : C.muted }); });
+  const s = G.ship, W2 = f.w - 64, act = combosOf(s), here = atStore(), LW = Math.round(W2*.6);
+  // your ship, drawn: tap two rooms to swap their systems
+  label('Your ship', cx, y0+10, C.amber, 'left', 15);
+  T(here ? `Tap a room, then another, to swap their systems: ${swapCost()} scrap.` : 'Room swaps happen at a store or at home. Glowing links are active combos.', cx + 130, y0+12, { s:14, c: here ? C.ink : C.muted, max:LW-140 });
+  const key = s.rooms.map(r => r.sys || '-').join(','); if(!UI.layoutShip || UI.layoutShip._key!==key || UI.layoutShip._src!==s){ UI.layoutShip = Object.assign({}, s, { crew:[], _rects:null, _src:s, _key:key, _style:s._style }); UI.layoutShip._src = s; UI.layoutShip._key = key; }
+  const T_ = UI.layoutShip; T_.rooms = s.rooms; T_.systems = s.systems;
+  drawShip(T_, { x:cx, y:y0+40, w:LW, h:380 }, 1, false, false); ctx.globalAlpha = 1;
+  const R_ = T_._rects || [], ctr = q => [q.x + q.w/2, q.y + q.h/2];
+  // combo links
+  for(const C_ of act){ const A = C_.sys[0].filter(k => s.systems[k]).map(k => roomOf(s, k)).filter(i => i >= 0), B = C_.sys[1].filter(k => s.systems[k]).map(k => roomOf(s, k)).filter(i => i >= 0);
+    for(const a of A) for(const b of B) if(linked(s, a, b) && R_[a] && R_[b]){ const [x1, y1] = ctr(R_[a]), [x2, y2] = ctr(R_[b]); const pl = .55 + .45*Math.sin(performance.now()/300);
+      ctx.save(); ctx.strokeStyle = hexA(C.good, .5 + .4*pl); ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.shadowColor = C.good; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+      const mx = (x1+x2)/2, my = (y1+y2)/2; ctx.font = `700 13px ${FD}`; const tw = ctx.measureText(C_.name).width + 14; rr(mx - tw/2, my - 11, tw, 22, 11); ctx.fillStyle = 'rgba(6,20,14,.92)'; ctx.fill(); T(C_.name, mx, my + 5, { s:13, a:'center', c:C.good, w:700 }); } }
+  // tap targets on each room
+  R_.forEach((q, i) => { if(!q) return; const r = s.rooms[i], sel = UI.swapA===i;
+    if(sel){ ctx.save(); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.setLineDash([8, 5]); ctx.lineDashOffset = -performance.now()/40; ctx.strokeRect(q.x+2, q.y+2, q.w-4, q.h-4); ctx.restore(); }
+    region(q.x, q.y, q.w, q.h, () => { if(!here){ toast('Dock at a store or at home to swap rooms.'); return; } if(UI.swapA==null){ UI.swapA = i; return; } if(UI.swapA===i){ UI.swapA = null; return; }
+      const a = UI.swapA; UI.swapA = null; if(!s.rooms[a].sys && !r.sys) return; spend(swapCost(), () => { swapRooms(a, i); toast(`Swapped. ${combosOf(s).length} combo${combosOf(s).length===1 ? '' : 's'} active.`); }); }, 'room:' + i);
+    tip(q.x, q.y, q.w, q.h, r.sys ? (SYSN[r.sys] || r.sys) + (s.systems[r.sys] ? '' : ' (not installed)') : 'Empty room', here ? (UI.swapA==null ? 'Tap to pick this room, then tap another to swap.' : 'Tap to swap with the picked room.') : 'Swaps only at a store or at home.'); });
+  if(UI.swapA!=null && s.rooms[UI.swapA]){ const r = s.rooms[UI.swapA]; T(`Picked: ${r.sys ? SYSN[r.sys] || r.sys : 'empty room'}. Now tap the room to swap with.`, cx, y0+468, { s:16, c:C.amber }); }
+  // the combo list
+  const rx = cx + LW + 24, rw = W2 - LW - 24; label(`Room combos · ${act.length} active`, rx, y0+10, C.amber, 'left', 15);
+  COMBOS.forEach((C_, i) => { const y = y0 + 24 + i*72, on = act.includes(C_), has = C_.sys.every(g => g.some(k => s.systems[k]));
+    panel(rx, y, rw, 64, 8); if(on){ rr(rx, y, rw, 64, 8); ctx.strokeStyle = C.good; ctx.lineWidth = 2; ctx.stroke(); }
+    T(C_.name, rx+14, y+24, { s:16, f:FD, w:700, c: on ? C.good : has ? C.ink : C.muted }); T(on ? 'ACTIVE' : has ? 'not linked' : 'missing a system', rx+rw-14, y+24, { s:12, a:'right', w:700, c: on ? C.good : C.muted });
+    T(`${C_.sys.map(g => g.map(k => SYSN[k] || k).join('/')).join(' + ')}: ${C_.text}`, rx+14, y+48, { s:12, c: on ? C.ink : C.muted, max:rw-28 }); });
 }
 function drawWorkshopTab(f, cx, y0){
   const W2 = f.w - 64, ms = machines(), here = atStore();
@@ -246,6 +258,7 @@ function drawFactionsTab(f, cx, y0){
 function drawHaven(){
   const H_ = haven(); T('Haven\'s Rest', 60, 122, { s:50, f:FD, w:700, c:'#9fdc7a' });
   label(`Restored ${HAVEN_WINGS.filter(w => havenDone(w.id)).length} of ${HAVEN_WINGS.length} wings · renown to spend ${fmtNum(renownFree())}`, 62, 152, C.muted, 'left', 16);
+  if(typeof drawStation==='function') drawStation(1380, 110, 92);
   para('Great-uncle Tobiah\'s old station. Send goods home from any store during a run (Ship → Workshop) to restore a wing; each restored wing helps every future run. Or let the Directorate\'s contractors rebuild it for renown, which doesn\'t lower your rank.', 62, 186, 1460, { s:16, c:C.ink });
   HAVEN_WINGS.forEach((w, i) => { const x = 60 + (i % 2)*740, y = 236 + Math.floor(i/2)*150, done = havenDone(w.id); panel(x, y, 720, 140, 10);
     if(done){ rr(x, y, 720, 140, 10); ctx.strokeStyle = '#9fdc7a'; ctx.lineWidth = 2; ctx.stroke(); }

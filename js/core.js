@@ -123,7 +123,7 @@ const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire b
   events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices twist req',
   challenges:'name desc tier ship difficulty rules start scrapMult goal' };
 const MOD_FX = 'evade ionRes sysRes breachRes ammo speed shield heal charge dps repair scrap superShield reactor'.split(' ');
-const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons scar unscar downgrade convert anom petEvo eatGoods loseAugment undoScrap rep wreckLoot wreckDone'.split(' ');
+const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons scar unscar downgrade convert anom petEvo eatGoods loseAugment undoScrap rep wreckLoot wreckDone heat heatDrop'.split(' ');
 let MOD_ALLOW = null;
 function modWarnings(d){
   if(!MOD_ALLOW){ MOD_ALLOW = {}; const B = typeof BASE!=='undefined' ? BASE : DATA;

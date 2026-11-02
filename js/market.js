@@ -231,7 +231,7 @@ function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.key
   const n = bad.reduce((t, id) => t + goodsHave(id), 0); for(const id of bad) delete G.bay[id]; return `Rebuff inspectors find your illegal cargo (${n} crates) and confiscate the lot.`; }
 
 /* ---------------- the store screen ---------------- */
-function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['crew','Crew'],['arms','Armoury'],['tonics','Tonics'],['goods','Goods'], ...(st.bar ? [['bar','Bar']] : []), ['sell','Sell']]; }
+function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['crew','Crew'],['arms','Armoury'],['tonics','Tonics'],['goods','Goods'], ['contracts','Contracts'], ...(st.bar ? [['bar','Bar']] : []), ['sell','Sell']]; }
 function spend(cost, fn){ if(G.scrap < cost){ toast('Not enough scrap.'); return false; } G.scrap -= cost; G.spent = (G.spent||0) + cost; fn(); sfx('buy'); save(); return true; }
 function earn(v){ G.scrap += v; G.stats.scrap = G.stats.scrap; G.earnedSelling = (G.earnedSelling||0) + v; if(G.earnedSelling >= 300) grant('market_mogul'); }
 function drawMarket(m){
@@ -245,7 +245,7 @@ function drawMarket(m){
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
   const list = storeTabs(st); if(!list.some(t => t[0]===UI.storeTab)) UI.storeTab = 'weapons';
   const has = id => list.find(t => t[0]===id), extra = list.filter(t => !['weapons','drones','augments','systems','supplies','arms','tonics','crew','bar','goods','sell'].includes(t[0]));
-  groupTabs(f.x+32, f.y+76, f.w-64, [['Gear', [has('weapons'), has('drones'), has('augments'), has('systems')]], ['Supplies', [has('supplies'), has('arms'), has('tonics')]], ['Crew', [has('crew'), has('bar')]], ['Trade', [has('goods'), has('sell'), ...extra]]], UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; UI.storeMsg = null; UI.confirmTrade = null; }, 'store');
+  groupTabs(f.x+32, f.y+76, f.w-64, [['Gear', [has('weapons'), has('drones'), has('augments'), has('systems')]], ['Supplies', [has('supplies'), has('arms'), has('tonics')]], ['Crew', [has('crew'), has('bar')]], ['Trade', [has('goods'), has('sell'), has('contracts'), ...extra.filter(t => t[0]!=='contracts')]]], UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; UI.storeMsg = null; UI.confirmTrade = null; }, 'store');
   const y0 = f.y+146, cx = f.x+32, W2 = f.w-64;
   const row = (i, name, sub, cost, onBuy, o={}) => { const y = y0 + i*94; panel(cx, y, W2, 84, 8);
     T(name, cx+20, y+28, { s:21, f:FD, w:700, c: o.soldTxt ? C.muted : C.ink, max:W2-360 }); if(o.stats) T(o.stats, cx+20 + Math.min(W2-760, ctx.measureText(name).width + 16), y+28, { s:13, c:C.cyan });
@@ -253,6 +253,7 @@ function drawMarket(m){
     if(o.deal){ rr(cx+W2-430, y+24, 104, 34, 17); ctx.fillStyle = hexA(C.good,.2); ctx.fill(); T('DEAL −30%', cx+W2-378, y+47, { s:13, f:FD, w:700, a:'center', c:C.good }); }
     btn(cx+W2-300, y+16, 280, 52, o.soldTxt || `Buy · ${cost}`, onBuy, { disabled: !!o.soldTxt || o.disabled || G.scrap < cost, fill:!o.soldTxt && !o.disabled && G.scrap>=cost, col:C.good }); };
   switch(UI.storeTab){
+    case 'contracts': if(typeof drawContracts==='function') drawContracts(storeOffers(st), cx, y0, W2, true); break;
     case 'arms': if(typeof drawStoreArms==='function') drawStoreArms(st, cx, y0, W2, row); break;
     case 'tonics': if(typeof drawStoreTonics==='function') drawStoreTonics(st, cx, y0, W2, row); break;
     case 'weapons': {

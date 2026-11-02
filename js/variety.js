@@ -239,6 +239,7 @@ more(SECTOR_INTROS, {
 /* a hail the crew haven't heard yet this run: every hail of that faction (and some generic ones) before any repeat */
 function pickHailFresh(tag){
   const all = Object.values(DATA.events).filter(e => e.hail);
+  if(['repfriend','rephate','hunter','enforcer'].includes(tag)){ const o = all.filter(e => e.hail===tag); if(o.length) return pick(o).id; }   // these always speak for themselves
   let own = all.filter(e => e.hail===tag); const gen = tag==='fleet' ? [] : all.filter(e => e.hail==='generic' && e.hail!==tag);
   if(!own.length) own = gen;
   const seen = (G && G.seen) || {}, freshOwn = own.filter(e => !seen[e.id]), freshGen = gen.filter(e => !seen[e.id]);

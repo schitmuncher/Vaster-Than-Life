@@ -182,6 +182,7 @@ function arrive_(i){
   const due = free ? G.later.find(l => l.jumps <= (node.type==='combat' ? -2 : 0) && DATA.events[l.event] && !(DATA.events[l.event].moment && typeof momentOk==='function' && !momentOk(DATA.events[l.event]))) : null;
   G.later = G.later.filter(l => l!==due && (l.jumps > -12 || !DATA.events[l.event]?.moment));   // a scene that never found a beacon is dropped eventually
   if(due){ startEvent(due.event, { star:due.star }); return; }
+  if(typeof heatIntercept==='function' && heatIntercept(node, first)) return;   // hunters and blockades (openworld.js)
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='haven' && typeof havenArrive==='function'){ havenArrive(node, i); return; }   // home (havenvisit.js)
   if(node.type==='store' && typeof anomStoreBlock==='function' && anomStoreBlock(node)){ save(); return; }
@@ -206,7 +207,7 @@ function arrive_(i){
       G.modal = { type:'msg', title: G.hazard ? HAZARDS[G.hazard] : 'Quiet beacon', text, extra: typeof fishButton==='function' && G.hazard!=='sun' ? [fishButton(node)].filter(Boolean) : null }; save(); }
   }
 }
-function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (typeof situFleet==='function' ? situFleet() : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1); }
+function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (typeof situFleet==='function' ? situFleet() : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1) * (typeof heatFleetMult==='function' ? heatFleetMult() : 1); }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
   ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Rebuff Fleet is slower in here too.' }[h]; }
 function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
@@ -345,6 +346,7 @@ function applyEffect(e){
   if(typeof itemsEffect==='function') itemsEffect(e, L);
   if(typeof anomEffect==='function') anomEffect(e, L);
   if(typeof livingEffect==='function') livingEffect(e, L);
+  if(typeof openEffect==='function') openEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -486,6 +488,7 @@ function finishCombat(kind, offer){
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   if(typeof anomCombatEnd==='function') anomCombatEnd(kind, e, L);   // pilgrims, pets (anomalies.js)
   if(typeof repCombatEnd==='function') repCombatEnd(kind, e);   // faction standing (living.js)
+  if(typeof heatCombatEnd==='function'){ heatCombatEnd(kind, e); jobsCombatEnd(kind, e); }   // heat, bounties (openworld.js)
   if(typeof homeFight==='function') homeFight();
   if(typeof petAfterFight==='function') petAfterFight(L);
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)

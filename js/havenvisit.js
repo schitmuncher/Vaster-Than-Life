@@ -26,6 +26,7 @@ Object.assign(BASE.goods, { starfruit:{ name:'Starfruit', base:85, kind:'crop', 
 
 /* ---------------- the relay beacon on each sector map ---------------- */
 function havenPlace(nodes, cols, final){
+  if(G){ G.heat = Math.max(0, (G.heat||0) - 20); G.blockadeBeat = false; if(typeof syncHeatChip==='function') syncHeatChip(); }   // a new sector: the trail cools a little
   if(final || !havenPerksOn()) return; const cand = nodes.filter(nd => nd.col>=2 && nd.col<=cols-3 && ['event','empty','combat'].includes(nd.type) && !nd.quest);
   if(!cand.length) return; const nd = pick(cand); nd.type = 'haven'; nd.distress = false; nd.elite = false; }
 function havenArrive(node, i){
@@ -56,7 +57,7 @@ function feverJump(node){
   if(G.away===11) toast('Cabin fever: eleven jumps without a port. The crew are getting short with each other. Find a store, or go home.');
   if(G.away >= 16 && Math.random() < .08 && typeof addScar==='function'){ const sc = addScar(pick(['sparky','leaky'])); if(sc) toast(`Something has rattled loose after so long out here: ${scarName(sc)}.`); }
 }
-if(typeof ANOM_INFO!=='undefined') ANOM_INFO.fever = { name:'Cabin fever', col:'#ff8a5a', text:() => `${G.away} jumps since the last port. The crew lose hearts every jump and repair 10% slower; after 16 jumps things start to rattle loose. Any store, or Haven's Rest, cures it.` };
+if(typeof ANOM_INFO!=='undefined') ANOM_INFO.fever = { name:'Cabin fever', label:() => `Cabin fever · ${G.away} jumps`, col:'#ff8a5a', text:() => `${G.away} jumps since the last port. The crew lose hearts every jump and repair 10% slower; after 16 jumps things start to rattle loose. Any store, or Haven's Rest, cures it.` };
 
 /* ---------------- run start: the Cantina's recruit, Ossery's rent ---------------- */
 function havenRunStart(){
@@ -66,12 +67,28 @@ function havenRunStart(){
 }
 function havenLease(){ const H_ = haven(); for(const w of HAVEN_WINGS) if(!H_.done[w.id]) H_.done[w.id] = 'leased'; H_.leased = true; H_.residents = []; saveProfile(); toast('Madame Ossery\'s contractors restore every wing overnight. The rent starts next run.'); }
 
+/* ---------------- the station, drawn: each wing lights up as it is restored ---------------- */
+function drawStation(x, y, R){
+  const t = performance.now()/1000, ws = HAVEN_WINGS, n = ws.length, done = ws.filter(w => havenDone(w.id)).length;
+  ctx.save(); glow(x, y, R*1.5, '#9fdc7a', .05 + .1*done/n);
+  ctx.strokeStyle = 'rgba(159,220,122,.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R*.72, 0, 7); ctx.stroke();   // the ring corridor
+  ws.forEach((w, i) => { const a = -Math.PI/2 + i/n*Math.PI*2 + t*.02, on = havenDone(w.id), mx = x + Math.cos(a)*R*.72, my = y + Math.sin(a)*R*.72, mw = R*.34, mh = R*.2;
+    ctx.strokeStyle = on ? 'rgba(159,220,122,.6)' : 'rgba(120,130,160,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + Math.cos(a)*R*.24, y + Math.sin(a)*R*.24); ctx.lineTo(mx, my); ctx.stroke();   // spokes
+    ctx.save(); ctx.translate(mx, my); ctx.rotate(a + Math.PI/2); rr(-mw/2, -mh/2, mw, mh, 5); ctx.fillStyle = on ? '#1f3a26' : '#151a26'; ctx.fill(); ctx.strokeStyle = on ? '#9fdc7a' : '#3a4256'; ctx.lineWidth = 2; ctx.stroke();
+    for(let k = 0; k < 4; k++){ const wx = -mw/2 + mw*(k + .5)/4 - 2, lit = on && (Math.sin(t*1.3 + i*1.7 + k) > -.6); ctx.fillStyle = lit ? '#ffe9a8' : on ? '#3c5a3c' : '#22283a'; ctx.fillRect(wx, -3, 4, 6); }
+    if(!on){ ctx.strokeStyle = 'rgba(255,90,122,.35)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-mw/2 + 4, -mh/2 + 3); ctx.lineTo(mw/2 - 6, mh/2 - 2); ctx.stroke(); }   // a crack: still dark
+    ctx.restore();
+    if(R >= 120){ const lx = x + Math.cos(a)*R*1.04, ly = y + Math.sin(a)*R*1.04; T(w.name.replace(/^The /, ''), lx, ly + 4, { s:12, a: Math.cos(a) > .3 ? 'left' : Math.cos(a) < -.3 ? 'right' : 'center', c: on ? '#9fdc7a' : C.muted }); } });
+  ctx.beginPath(); ctx.arc(x, y, R*.24, 0, 7); const g = ctx.createRadialGradient(x, y - R*.08, 2, x, y, R*.24); g.addColorStop(0, done ? '#6fae6f' : '#4a5470'); g.addColorStop(1, '#141a2a'); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#9fdc7a'; ctx.lineWidth = 2; ctx.stroke();   // the hub
+  ctx.beginPath(); ctx.arc(x, y, R*.07, 0, 7); ctx.fillStyle = `rgba(255,233,168,${.5 + .5*Math.sin(t*2)})`; ctx.fill();   // the relay light
+  ctx.restore(); }
+
 /* ---------------- the visit screen ---------------- */
 function drawHavenVisit(m){
   const f = mframe(1440, 880, 'Haven\'s Rest'), V = G.havenVisit || (G.havenVisit = { node:m.node }), s = G.ship, cx = f.x+32, W2 = f.w-64;
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  const tabsL = [['home','Home'],['bunks','Bunks'],['drydock','Drydock'],['greenhouse','Greenhouse'],['cantina','Cantina'],['market','Market']];
-  tabs(cx, f.y+76, tabsL, UI.havenTab || 'home', t => UI.havenTab = t, 190);
+  const tabsL = [['home','Home'],['bunks','Bunks'],['drydock','Drydock'],['greenhouse','Greenhouse'],['cantina','Cantina'],['market','Market'],['board','Noticeboard']];
+  tabs(cx, f.y+76, tabsL, UI.havenTab || 'home', t => UI.havenTab = t, 186);
   const y0 = f.y+146, tab = UI.havenTab || 'home';
   if(tab==='home'){
     para(`Great-uncle Tobiah's station, ${HAVEN_WINGS.filter(w => havenDone(w.id)).length} of ${HAVEN_WINGS.length} wings working${haven().leased ? ', on lease to Madame Ossery' : ''}. The relay holds a jump open: when you leave, you're back at the beacon you came from.`, cx, y0+16, W2, { s:17, lh:24 });
@@ -79,6 +96,8 @@ function drawHavenVisit(m){
       T(w.name.replace(/^The /, ''), x+14, y+26, { s:16, f:FD, w:700, c: done ? '#9fdc7a' : C.muted }); T(done ? 'working' : 'dark: ' + w.bundle, x+14, y+48, { s:12, c: done ? C.ink : C.muted, max:W2/4 - 30 }); });
     const res = haven().residents || []; T(res.length ? `Residents: ${res.join(', ')}` : 'No residents yet.', cx, y0+240, { s:15, c:C.ink });
     drawHavenDeliver(cx, y0+266, W2/2);
+    drawStation(cx + W2*.76, y0 + 440, 150);
+  } else if(tab==='board' && typeof drawContracts==='function'){ if(!V.jobs) V.jobs = makeOffers(`haven${G.sector}n${G.map.cur}`); drawContracts(V.jobs, cx, y0, W2, true);
   } else if(tab==='bunks'){
     para('The bunks are old and the blankets smell of somebody else\'s great-uncle, but it\'s home. A night here heals everyone, cures cabin fever and brings the crew closer. The Rebuff Fleet won\'t wait while you sleep.', cx, y0+16, W2, { s:17, lh:24 });
     btn(cx, y0+90, 360, 64, V.rested ? 'Rested' : 'Rest a night', () => { V.rested = true; for(const c of s.crew) if(c.owner==='p'){ c.hp = c.maxHp; if(!c.drone && typeof addHearts==='function') addHearts(c, 10); } G.away = 0; if(G.anom) delete G.anom.fever; G.fleetX += .04; toast('Everyone slept like a log. The Fleet crept a little closer.'); }, { disabled:V.rested, fill:!V.rested, col:C.good, s:18 });

@@ -1185,6 +1185,7 @@ function drawModal(){
         { const S = typeof situFor==='function' ? situFor(t) : null; if(S){ T('◆ ' + S.name, bx+18, by+272, { s:15, f:FD, w:700, c:S.col, max:cw-36 }); para(S.desc, bx+18, by+292, cw-36, { s:12, lh:16, c:C.ink, max:2 }); } }
         btn(bx+16, by+ch-62, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col, s:17 });
         tip(bx, by, cw, ch-70, sd.name, `${sd.blurb||''} ${sd.fleetMult && sd.fleetMult<1 ? 'The Rebuff Fleet moves slower here. ' : ''}Fights ${mix.combat||0}%, events ${mix.event||0}%, quiet beacons ${mix.empty||0}%.`); });
+      if(typeof exitHomeButton==='function') exitHomeButton(f);
       btn(f.x+f.w-232, f.y+f.h-82, 200, 56, 'Stay here', () => { G.modal = null; }); break; }
     case 'stranded': { const f = mframe(940, 420, 'Out of fuel', C.hostile);
       para('The tanks are dry. You can broadcast a distress call for fuel, but the Rebuff Fleet will hear it too and close in.', f.x+32, f.y+104, f.w-64, { s:21 });
@@ -1498,7 +1499,7 @@ function shipAdvice(s){ const y = k => s.systems[k]?.max || 0, wNeed = s.weapons
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  groupTabs(f.x+32, f.y+76, f.w-64, [['Ship', [['systems','Systems'],['gear','Weapons'],['augments','Augments'],['layout','Layout']]], ['Crew', [['crew','Crew'],['arms','Armoury'],['factions','Factions']]], ['Cargo', [['hold','Hold'],['garden','Garden'],['workshop','Workshop']]], ['Log', [['log','Captain\'s log']]]], UI.tab, t => { UI.tab = t; UI.swapA = null; }, 'ship');
+  groupTabs(f.x+32, f.y+76, f.w-64, [['Ship', [['systems','Systems'],['gear','Weapons'],['augments','Augments'],['layout','Layout']]], ['Crew', [['crew','Crew'],['arms','Armoury'],['factions','Factions']]], ['Cargo', [['hold','Hold'],['garden','Garden'],['workshop','Workshop']]], ['Log', [['log','Captain\'s log'], ['jobs','Contracts']]]], UI.tab, t => { UI.tab = t; UI.swapA = null; }, 'ship');
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
@@ -1550,6 +1551,7 @@ function drawShipModal(){
   } else if(UI.tab==='arms' && typeof drawArmouryTab==='function'){ drawArmouryTab(f, cx, y0);
   } else if(UI.tab==='hold' && typeof drawHoldTab==='function'){ drawHoldTab(f, cx, y0);
   } else if(UI.tab==='garden' && typeof drawGardenTab==='function'){ drawGardenTab(f, cx, y0);
+  } else if(UI.tab==='jobs' && typeof drawContracts==='function'){ drawContracts([], cx, y0, f.w-64, false);
   } else if(UI.tab==='layout' && typeof drawLayoutTab==='function'){ drawLayoutTab(f, cx, y0);
   } else if(UI.tab==='workshop' && typeof drawWorkshopTab==='function'){ drawWorkshopTab(f, cx, y0);
   } else if(UI.tab==='factions' && typeof drawFactionsTab==='function'){ drawFactionsTab(f, cx, y0);

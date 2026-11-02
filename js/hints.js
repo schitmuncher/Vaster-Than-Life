@@ -49,6 +49,7 @@ const HINTS = {
   tonics:    { title:'Tonics and treats', text:'You have something to give a crew member. Ship → Armoury → Tonics & treats: permanent boosts, skill chips, stims and medkits, given to one person at a time.', at:()=>RECT.ship },
   workshop:  { title:'The workshop', text:'This store sells workshop machines: load one with goods from your hold and it turns them into something worth more while you jump. Ship → Workshop. You can also send goods home to Haven\'s Rest from there, and swap rooms for combos in Ship → Layout.', at:()=>RECT.ship },
   standing:  { title:'They remember you', text:'That changed how a faction sees you. Ship → Factions shows your standing: it sets their store prices, and whether their ships talk or shoot.', at:()=>RECT.ship },
+  heat:      { title:'You are getting noticed', text:'Heat shows how much the Rebuff are paying attention (the chip under your ship). Quiet beacons, nebulas and a trip home cool it. Let it reach 70 and hunter-killers come looking; at 90 the exit is blockaded.' },
   home:      { title:'You can go home', text:'The green HOME beacon on the map is the Haven\'s Rest relay. Jump there to rest the crew, repair cheaply, store guns for future runs and tend the greenhouse.', at:()=>RECT.map },
   fever:     { title:'Cabin fever', text:'Eleven jumps without a port: the crew lose hearts every jump and repair slower. Any store, or a trip home, cures it.' },
   scar:      { title:'Your ship is scarred', text:'Some damage doesn\'t go away by itself: a leaking room, a jammed system, sparking wiring, or a system locked out. Hover the little badge on a room to see what\'s wrong. Any store\'s dockyard can patch it (Supplies), and some crew know other ways.' },
@@ -116,6 +117,7 @@ function checkHints(dt){
     if(!e && Object.keys(G.items||{}).length) hint('tonics');
     if(!e && (G.scars||[]).length) hint('scar');
     if(!e && G.anom && G.anom.fever) hint('fever');
+    if(!e && (G.heat||0) >= 35) hint('heat');
     if(!e && G.rep && Object.values(G.rep).some(v => Math.abs(v) >= 10)) hint('standing');
     if(!e && typeof anomList==='function' && anomList().length) hint('anomaly');
     if(G.fuel <= 3) hint('fuel');

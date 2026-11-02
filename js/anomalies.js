@@ -184,9 +184,9 @@ function twistOf(id){ const ev = DATA.events[id]; if(!ev || !Array.isArray(ev.tw
 /* ---------------- the HUD: what is bending your run ---------------- */
 function drawAnomChips(x, y){
   if(!G || UI.screen!=='game') return; const l = anomList(), sc = scars(); let cx = x;
-  for(const k of l){ const I = ANOM_INFO[k], w = Math.min(200, 26 + I.name.length*8.5);
+  for(const k of l){ const I = ANOM_INFO[k], nm = I.label ? I.label(G.anom) : I.name, w = Math.min(230, 26 + nm.length*8.5);
     rr(cx, y, w, 26, 13); ctx.fillStyle = hexA(I.col, .16); ctx.fill(); ctx.strokeStyle = I.col; ctx.lineWidth = 1.5; ctx.stroke();
-    T(I.name, cx + w/2, y + 18, { s:13, a:'center', c:I.col, w:700 }); tip(cx, y, w, 26, I.name, I.text(G.anom)); cx += w + 8; }
+    T(nm, cx + w/2, y + 18, { s:13, a:'center', c:I.col, w:700, max:w-12 }); tip(cx, y, w, 26, I.name, I.text(G.anom)); cx += w + 8; }
   if(sc.length){ const w = 98; rr(cx, y, w, 26, 13); ctx.fillStyle = 'rgba(255,138,61,.14)'; ctx.fill(); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 1.5; ctx.stroke();
     T(`${sc.length} scar${sc.length>1 ? 's' : ''}`, cx + w/2, y + 18, { s:13, a:'center', c:'#ff8a3d', w:700 }); tip(cx, y, w, 26, 'Ship scars', sc.map(s => `${scarName(s)}: ${SCAR_KINDS[s.kind].text}`).join(' ') + ' Patch them at a store (Supplies → Dockyard).'); }
 }
