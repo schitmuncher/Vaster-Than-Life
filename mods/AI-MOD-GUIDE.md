@@ -73,6 +73,7 @@ Changes the game's rules for the whole run. All fields optional.
 | `power` | number | Free power to the system in the room they stand in (1) |
 | `deathBurst` | number | Damage to enemies in the room when they die (10–30) |
 | `learn` | number | Skill learning speed (1–2) |
+| `projected` | true/false | A projection (hologram): weapons with `disrupt` hurt them badly |
 | `desc` | text | One line shown in the crew card |
 
 ### weapons
@@ -108,6 +109,7 @@ Changes the game's rules for the whole run. All fields optional.
 | `toast` | number | Every shot heals your own crew this much |
 | `decoy` | number | Every shot adds this much super shield to your ship (max 3) |
 | `drain` | number | A hit locks this many bars of the system it hits |
+| `disrupt` | number | Crew of a `projected` race (holograms) in the room it hits take this much damage and flicker out for 3 seconds |
 | `color` | "#rrggbb" | Colour of its shots |
 | `desc` | text | One line |
 
@@ -125,15 +127,16 @@ Give a weapon one special trick, two at most, so it feels different from the bas
 | `targets` | Defense drones: list from `missile`, `hack`, `bdrone`, `laser`, `ion`, `flak`, `asteroid` |
 | `role` | Internal drones: `repair` or `fight` |
 | `heal` | Hull drones: hull repaired per drone part (3–6) |
+| `stun`, `fear` | Boarding drones: on landing, stun everyone in the room for this many seconds / make them panic and run |
 | `desc` | One line |
 
 ### augments
 | Field | Meaning |
 | --- | --- |
 | `id`, `name`, `cost` (30–100), `desc` | Required, the description must say what it does |
-| `fx` | The effect. Any of: `charge`, `shield`, `repair`, `speed`, `dps`, `scrap`, `ionRes`, `sysRes`, `breachRes`, `ammo`, `evade`, `heal`, `superShield` |
+| `fx` | The effect. Any of: `charge`, `shield`, `repair`, `speed`, `dps`, `scrap`, `ionRes`, `sysRes`, `breachRes`, `ammo`, `evade`, `heal`, `superShield`, `reactor` |
 
-`fx` values: `charge`, `shield`, `repair`, `speed`, `dps` and `scrap` are fractions (0.1 = 10% better, keep under 0.3). `ionRes`, `sysRes`, `breachRes` and `ammo` are chances from 0 to 1 (keep under 0.5). `evade` is extra evasion points (2–10). `heal` is health per second for your crew anywhere (0.2–1). `superShield` is super-shield points at the start of every fight (1–5). Several augments add up. Example: `{"id":"px_lens","name":"Gunner's Lens","cost":55,"desc":"Weapons charge 10% faster.","fx":{"charge":0.1}}`
+`fx` values: `charge`, `shield`, `repair`, `speed`, `dps` and `scrap` are fractions (0.1 = 10% better, keep under 0.3). `ionRes`, `sysRes`, `breachRes` and `ammo` are chances from 0 to 1 (keep under 0.5). `evade` is extra evasion points (2–10). `reactor` is extra reactor power. Negative values are weaknesses: a trade-off augment pairs a big strength with a real cost, e.g. `{ "evade": 12, "breachRes": -0.6 }` (much harder to hit, but hits breach far more often) or `{ "charge": 0.25, "sysRes": -0.3 }` (faster guns, systems break more easily). `heal` is health per second for your crew anywhere (0.2–1). `superShield` is super-shield points at the start of every fight (1–5). Several augments add up. Example: `{"id":"px_lens","name":"Gunner's Lens","cost":55,"desc":"Weapons charge 10% faster.","fx":{"charge":0.1}}`
 
 ### traits (every recruited crew member gets one at random)
 `id`, `name`, `desc`, plus any of: `repair`, `dps`, `speed` (multipliers, 1.1–1.4), `charge` (weapon charge while manning weapons, 1.05–1.15), `shield` (shield recharge while manning shields, 1.1–1.25), `hp` (extra health, 10–40), `evade` (extra evasion while piloting, 3–8), `heal` (health per second for everyone in the same room, 1–2.5).
@@ -172,6 +175,9 @@ A good starting ship: 2 shield, 2 engine, 1 oxygen, 3 weapon power, 2 starting w
 | `crew` | Race ids (leave empty for automated ships) |
 | `auto` | true: an automated ship with no crew |
 | `sectors` | `[min, max]` sectors it can appear in, e.g. `[2, 8]` |
+| `relentless` | true: never gives up and jumps away, even when neither ship can land a hit |
+| `mirror` | true: copies the player's own weapons at the start of the fight |
+| `style` | Optional look (see ships) |
 
 ### sectors
 | Field | Meaning |
@@ -203,6 +209,8 @@ An event is a scene with choices.
 | `questOnly` | true: only reached through another event's `quest`, `event` or `later` |
 | `once` | true: at most once per run |
 | `flag` / `noFlag` | Only when a story flag is set / not set |
+| `req` | Only offered when this is met (same fields as a choice's `req`, plus `pet: true`), e.g. `{"race":"rd_hologram","scrap":70}` |
+| `twist` | A list of event ids: each run picks one of them (by seed) whenever this event comes up, so the same encounter can go a different way next time. Give the versions `questOnly: true` |
 | `hail` | Makes it a hail shown before fights with ships carrying this tag (see below) |
 | `art` | Picture: `nebula`, `star`, `distress`, `station`, `creature`, `market`, `fleet`, `wreck`, `planet`, `glass`, `ship`, `space`, `asteroid` |
 
@@ -218,6 +226,8 @@ An event is a scene with choices.
 - Ship: `install` (system id or `"random"`), `upgrade` (system id or `"random"`), `damageSystem` (system id or `"random"`), `reactor` (number), `maxHull` (number), `fire` (true: starts a fire)
 - Story: `fight` (enemy id or `"random"`), `afterWin` (an effect applied if you win that fight), `event` (go straight to another event), `quest` (marks a beacon in this sector; arriving there opens that event), `later` (`{"event":"id","jumps":3}` opens an event a few jumps later), `store` (true: opens a store), `reveal` (true: reveals the sector map), `fleetPush` (moves the fleet: -0.06 is a good escape, 0.05 is a delay)
 - Dialogue: `choices` (a new list of choices: the conversation goes on, as deep as you like), `setFlag` / `clearFlag` (story flags read by `flag`/`noFlag` on events)
+- Lasting damage (an event can't end the run, but it can leave a mark): `scar` (`"random"`, a kind, or `{"kind":"locked","sys":"medbay","why":"…","need":{"goodsKind":"meal"}}`; kinds: `leaky` a room loses air, `jammed` a system loses a bar, `sparky` hits there start fires, `locked` the system is offline; a store's dockyard patches them, or hands over the `need`), `unscar` (1, a kind, or `"all"`), `downgrade` (a system id or `"random"`: one level lost for good), `reactor` (negative: bars lost for good)
+- Crew and gear: `convert` (`{"race":"glassborn","n":1}` or `{"race":"…","all":true}`: crew turn into another people, keeping names and skills), `loseAugment` (an augment id), `petEvo` (`fixer`, `ballistic`, `armoured`, `gourmet`), `eatGoods` (a goods kind taken from the hold)
 
 **Hails** are events shown when a fight starts against a ship with that tag. Give them `"hail":"pyrate"` (or any enemy tag, including your own), and in choices use `"begin":true` to start the fight, or `"dismiss":true` to end the encounter peacefully. `"primeWeapons":true` starts the fight with charged guns.
 

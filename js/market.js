@@ -300,9 +300,10 @@ function drawStoreSupplies(st, cx, y0, W2){
     ['Medical care', miss ? `Heal every crew member fully (${Math.round(miss)} health missing).` : 'Your crew are all healthy.', price(Math.max(3, Math.ceil(miss/14)), st, 'supply'), () => { for(const c of s.crew) if(c.owner==='p') c.hp = c.maxHp; }, miss < 1],
     ['Cargo racks (+4 hold)', `Hold ${holdUsed()}/${holdCap()}. Up to 16 extra space.`, price(25, st, 'supply'), () => { G.holdBonus = (G.holdBonus||0) + 4; }, (G.holdBonus||0) >= 16],
     ['Hydroponic planter', `Grow crops as you fly. You have ${garden().plots.length} of ${PLANTER_MAX}.`, price(PLANTER_COST, st, 'supply'), () => { garden().plots.push(null); }, garden().plots.length >= PLANTER_MAX] ];
+  { const sr = typeof scarStoreRow==='function' ? scarStoreRow(st, price) : null; if(sr) rows.push(sr); }   // the dockyard patches ship scars (anomalies.js)
   rows.forEach((r, i) => { const col = i < 5 ? 0 : 1, j = i < 5 ? i : i - 5, x = cx + col*(W2/2 + 10), w = W2/2 - 10, y = y0 + j*86;
     panel(x, y, w, 76, 8); T(r[0], x+20, y+32, { s:19, f:FD, w:700, max:w-260 }); T(r[1], x+20, y+56, { s:13, c:C.muted, max:w-260 });
-    btn(x+w-220, y+12, 200, 52, `Buy · ${r[2]}`, () => spend(r[2], r[3]), { disabled: r[4] || G.scrap < r[2], col:C.good }); });
+    btn(x+w-220, y+12, 200, 52, r[2] ? `Buy · ${r[2]}` : 'Hand over', () => spend(r[2], r[3]), { disabled: r[4] || G.scrap < r[2], col:C.good }); });
 }
 function drawStoreCrew(st, m, cx, y0, W2){
   const s = G.ship, mine = s.crew.filter(c => c.owner==='p' && !c.drone), half = W2/2 - 10, full = mine.length >= R.maxCrew, cands = storeCandidates(st, m.node);

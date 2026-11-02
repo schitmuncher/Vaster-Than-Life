@@ -97,7 +97,7 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 **Tutorial**
 - **Flight school**, on the title screen. **Guided practice** is a real fight against a training target, one step at a time, with each control lit up as you need it: power, aiming, pausing, a fire, a hull breach, a boarder, the medbay, doors, crew autopilot, volleys, salvage, the map, a jump, a store and an upgrade. Your ship can't be lost, and it never touches your saved run.
-- **Lessons**: 12 illustrated chapters, 48 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
+- **Lessons**: 12 illustrated chapters, 52 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
 
 **Hand-to-hand combat**
 - **Personal weapons and armour.** Every crew member has a weapon slot and an armour slot (Ship → **Armoury**). 22 kinds of kit: blunt (wrench, stun baton, gravity hammer that throws foes out of the room), blades (knife, cutlass, fire axe, plasma torch, monofilament sword: cuts bleed), guns (laser pistol, boarding shotgun, pulse rifle: they also shoot into neighbouring rooms) and weird ones (freeze ray, spore pistol, tentacle whip, life-leech glove, mender's staff, a rubber chicken that makes the whole room stop to laugh). Armour: flak vest, boarding plate, void suit (breathe without air), personal shield, auto-medpack.
@@ -149,8 +149,27 @@ If the host's connection drops, guests in a shared game can **keep playing the r
   - **Guns that play differently.** Every Red Dwarf weapon has its own trick: the Starbug Laser Cannon warms up and fires faster with every shot, Bazookoids home in and never miss, the JMC Mining Laser salvages scrap from every hit, the GELF Harpoon pins its target so it can't dodge, the Simulant Plasma Lance drains power, the Vindaloo Torpedo gasses the room, the Toaster Ion Lobber feeds your crew, Rimmer's Scattergun hits for anything from nothing to triple, the Light Bee Projector throws up a decoy shield, the Skutter Rivet Gun ricochets, the Polymorph Canister makes crew panic and flee, Ace's Wildfire Cannon crits, and the White Hole Lens pins time itself. Each card shows its trick at a glance, and the enemies use some of them too.
   - **Starbug has its own three-bulb layout**, and the story scene in each sector is picked from two, so runs differ. There's an eighth sector, the Garbage Trail (three million years of Red Dwarf's rubbish), a Simulant Dreadnought, and more encounters: a curry monster, the White Giant's wreck, a GELF market, red alert, a spare hologram, Lister's gig, the Tank, a feud between the toaster and the food dispenser, and others.
   - **Its theme music, arranged seven ways.** The campaign plays the Red Dwarf theme (a MIDI file) at different moments, each in its own arrangement: a slow lounge version in the hangar, a rock version as you set out, a music-box version on quiet beacons, an eerie, detuned version in the strange sectors (the psi-moon, the Time Drift, the backwards universe, Waxworld), a fast battle version in fights, a heavy one against bosses and a big victory version at the end.
+  - **No more solved jokes.** The polymorph craves a different emotion each run (read what it has already eaten before you pick the bait: the famous answer is now a trap), the Inquisitor might be the real thing, a stricter judge, or a GELF con artist in a curtain, the white hole sometimes runs backwards, and the despair squid's ink sometimes makes everything seem to go brilliantly for three jumps. It wasn't real.
+  - **Simulants fight back**: hard-light disruptors that scramble Rimmer, shock boarders, a Hard-Light Hunter and a Dreadnought that never retreats.
+  - **Sitcom problems that stick**: side in the food war and the loser barricades the medbay until someone brings it a proper meal; break the skutters' strike and they glue a drone bay shut.
+  - **New scenes**: Talkie Toaster wired into the reactor (faster guns, the odd vented room), Rimmer's ego, a reactor meltdown only someone who doesn't breathe can fix, and the Thermonuclear Vindaloo. Blue options now have risky ways through when the right character is dead.
   - Every Red Dwarf ship has its own look: Starbug and Blue Midget are three-bulbed mining shuttles, Simulant ships are hard-edged gunboats, GELF ships are insect-like, the psiren's is organic.
   - All the writing is original, and the characters use the game's ordinary sprites; Red Dwarf belongs to its creators.
+
+**Runs that stop being polite**
+- **Ship scars.** Some damage stays: a room that leaks air, a system jammed one bar short, wiring that sparks into fires, a system locked out until you deal with the cause. Events can't end your run, but they can scar it. A badge shows on the room, and any store's dockyard (Supplies) patches it; Enjinn workshops do it cheaper.
+- **Anomalies** bend the rules for a few jumps, each with a climax:
+  - **Void fungus** (nebulas): mends your hull every jump but glows so the Fleet sees you, eats your drone parts, swallows the oxygen system and finally asks for the reactor. Merge with it, burn it out (a Pebblekin can pull it out bare-handed) or vent the ship.
+  - **WARDEN-9**, an Enjinn escort carrier that opens fire on every enemy for you. Some runs it starts "correcting" your course into hazards and finally takes the helm; other runs it's genuinely loyal.
+  - **Crystal song** (Glass space): super shields at the start of every fight, engines stuck at 2 power, and your crew slowly turning to glass. Join the choir, smash its heart, or sell it.
+  - **The Black Mark**: take the Pyrate King's mark and the Rebuff stop chasing you. Fedoration enforcers hunt you instead, lawful stores shut their shutters, and at the end the King offers to help against the Flaggship, for half your crew.
+  - **Pilgrims of the Quiet**: Voltan pilgrims lend you a huge shield as long as you kill nobody. Ion, board and accept surrenders. Destroy a crewed ship and they sabotage the reactor; win three fights peacefully and they bless you, and come back at the Flaggship.
+  - **A time fracture**: fly through and, for the next few jumps, if your ship is destroyed, time snaps back to the fracture. Once. The enemies remember.
+- **Elite Rebuff ships** that change the fight: the Suffocator gasses rooms and pins you so you can't dodge, the Leech Frigate drains your power, the Auto-Strangler does both, and the Pyrate Shock-Raider fires boarding drones that stun the whole room on landing. Elites never give up and jump away.
+- **Trade-off augments**: Reckless Overdrive (fast guns and crew, fragile systems, more breaches), Caffeine Drip-Line, Glass-Fibre Plating (+12% evasion, far more breaches), Sympathetic Shields, the Blood Reactor (+3 power, the crew bleed every jump), the Scrap Furnace, the Berserker Loop and the Mirror Hull.
+- **Friends and rivals at work.** Bonded crew in the same room work 15% better. Rivals fight 25% harder to show off, but repair 40% slower.
+- **Pet diets.** When your pet gets hungry, what you feed it decides what it becomes: a fixer, a beast that spits at enemy ships, an armour-plated welder or a gourmet that heals the room.
+- **The Saboteur** has a fourth twist: sometimes none of the passengers did it.
 
 **Spoken voices (optional)**
 - Settings → Audio → **Spoken voices** reads the story aloud with your device's own voices. **Dialogue** speaks only what characters say; **Full story** adds a narrator, crew chatter and enemy taunts. Off by default.
@@ -505,6 +524,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/tricks.js` | Weapon tricks any weapon or mod can use: warm-up, homing, pinning, splash, ricochet, crits, salvage, gas, panic, toast, decoys, power drain |
 | `js/arms.js` | Personal weapons and armour: kit data, melee effects, wear and repair, enemy kit and drops, the Armoury tab and store |
 | `js/items.js` | Tonics and treats: permanent per-crew boosts, skill chips, boosts, healing, eating raw crops, the Tonics view and store tab |
+| `js/anomalies.js` | Ship scars, anomalies (fungus, escort AI, crystal, Black Mark, pilgrims, time fracture), trade-off augments, elite ships, bonds at work, pet diets, event twists |
 | `js/hulls.js` | Ship looks per faction: hull outlines, engines, fins, decorations, plating and cockpits |
 | `js/midi.js` | A small MIDI player that plays a campaign's theme in different arrangements at different moments |
 | `js/voices.js` | Optional spoken voices: each character's voice, working out who says each line, the narrator |

@@ -1,6 +1,6 @@
 {
  "name": "Red Dwarf: Three Million Years Late",
- "version": "3.1",
+ "version": "4.0",
  "author": "Vaster Than Life team (unofficial fan campaign)",
  "campaign": {
   "id": "reddwarf",
@@ -202,7 +202,8 @@
    "speed": 1,
    "fireproof": true,
    "noAir": true,
-   "desc": "Made of light. Fire and vacuum can't touch him. Neither can a spanner, or a punch, very well."
+   "desc": "Made of light. Fire and vacuum can't touch him. Neither can a spanner, or a punch, very well. Simulant hard-light disruptors scramble them.",
+   "projected": true
   },
   {
    "id": "rd_felis",
@@ -494,10 +495,11 @@
     "oxygen": 1,
     "medbay": 1,
     "piloting": 1,
-    "doors": 1
+    "doors": 1,
+    "drones": 2
    },
    "weapons": [
-    "bust1",
+    "hardlight_disruptor",
     "rd_plasma_lance"
    ],
    "crew": [
@@ -506,7 +508,10 @@
     "rd_simulant",
     "rd_agonoid"
    ],
-   "style": "rebuff"
+   "style": "rebuff",
+   "drones": [
+    "shock_boarder"
+   ]
   },
   {
    "id": "rd_gelf_raider",
@@ -624,7 +629,7 @@
    },
    "weapons": [
     "basic",
-    "basic"
+    "hardlight_disruptor"
    ],
    "crew": [
     "rd_simulant",
@@ -795,6 +800,7 @@
     "doors": 2
    },
    "weapons": [
+    "hardlight_disruptor",
     "rd_gelf_harpoon",
     "rd_plasma_lance",
     "bust1"
@@ -808,7 +814,8 @@
     "rd_simulant",
     "rd_agonoid"
    ],
-   "style": "flag"
+   "style": "flag",
+   "relentless": true
   },
   {
    "id": "rd_trash_crawler",
@@ -835,6 +842,74 @@
    ],
    "crew": [],
    "style": "hive"
+  },
+  {
+   "id": "rd_sim_hardlight",
+   "name": "Simulant Hard-Light Hunter",
+   "tags": [
+    "rdsim"
+   ],
+   "onlyTagged": true,
+   "relentless": true,
+   "hull": 13,
+   "sectors": [
+    3,
+    8
+   ],
+   "style": "stealth",
+   "systems": {
+    "shields": 4,
+    "engines": 3,
+    "weapons": 4,
+    "drones": 2,
+    "oxygen": 1,
+    "medbay": 1,
+    "piloting": 1,
+    "doors": 1
+   },
+   "weapons": [
+    "hardlight_disruptor",
+    "rd_bazookoid2"
+   ],
+   "drones": [
+    "shock_boarder"
+   ],
+   "crew": [
+    "rd_simulant",
+    "rd_simulant",
+    "rd_simulant"
+   ]
+  },
+  {
+   "id": "rd_dibbley",
+   "name": "The Dibbley-Class Nightmare",
+   "eventOnly": true,
+   "mirror": true,
+   "tags": [
+    "rdsim"
+   ],
+   "hull": 12,
+   "sectors": [
+    1,
+    9
+   ],
+   "style": "bug",
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "weapons": 6,
+    "oxygen": 1,
+    "piloting": 1,
+    "doors": 1
+   },
+   "weapons": [
+    "basic"
+   ],
+   "crew": [
+    "human",
+    "human",
+    "human"
+   ]
   }
  ],
  "sectors": [
@@ -1328,6 +1403,11 @@
       "crewHeal": 25,
       "goods": {
        "rations": 3
+      },
+      "setFlag": "rdToaster",
+      "later": {
+       "event": "rd_toaster_reactor",
+       "jumps": 3
       }
      }
     },
@@ -1341,6 +1421,11 @@
       },
       "goods": {
        "berry_pie": 1
+      },
+      "setFlag": "rdToaster",
+      "later": {
+       "event": "rd_toaster_reactor",
+       "jumps": 3
       }
      }
     },
@@ -1407,38 +1492,19 @@
    "weight": 1,
    "once": true,
    "art": "creature",
-   "text": "Something has crept aboard: a shape-shifter that feeds on emotions. It has already eaten Rimmer's bad temper (he is now unbearably nice) and is eyeing the Cat's vanity.",
+   "text": "Something has crept aboard: a shape-shifter that feeds on emotions.",
    "choices": [
     {
-     "text": "Corner it and flush it out of the airlock.",
-     "chance": 0.6,
-     "success": {
-      "text": "Out it goes. Everyone gets their feelings back, which is a mixed blessing.",
-      "crewHeal": 15
-     },
-     "fail": {
-      "text": "It turns into a fire extinguisher, then a fire. A real one.",
-      "fire": true,
-      "crewHurt": 15
-     }
-    },
-    {
-     "text": "Let it eat the fear first.",
+     "text": "Find out what it has eaten.",
      "effect": {
-      "text": "With no fear left, the crew fight like lunatics for a while.",
-      "xp": {
-       "skill": "combat",
-       "amt": 15
-      }
-     }
-    },
-    {
-     "text": "Offer it Rimmer's revision timetable.",
-     "effect": {
-      "text": "It starves to death halfway down the first page.",
-      "scrap": 15
+      "text": "..."
      }
     }
+   ],
+   "twist": [
+    "rd_poly_vanity",
+    "rd_poly_anger",
+    "rd_poly_fear"
    ]
   },
   {
@@ -1762,6 +1828,11 @@
       }
      }
     }
+   ],
+   "twist": [
+    "rd_inquisitor",
+    "rd_inq_humble",
+    "rd_inq_fake"
    ]
   },
   {
@@ -1853,11 +1924,29 @@
      }
     },
     {
+     "text": "Dive anyway, eyes shut, singing.",
+     "chance": 0.35,
+     "success": {
+      "text": "Nobody looks. Everybody sings. It works.",
+      "scrap": 45,
+      "augment": "random"
+     },
+     "fail": {
+      "text": "The ink gets in. Someone stays at the bottom of the sea.",
+      "crewLoss": 1,
+      "crewHurt": 20
+     }
+    },
+    {
      "text": "Leave it well alone.",
      "effect": {
       "text": "You fly on, and everyone feels slightly better about themselves for having made a good decision."
      }
     }
+   ],
+   "twist": [
+    "rd_despair",
+    "rd_despair_ink"
    ]
   },
   {
@@ -1899,6 +1988,19 @@
      "text": "It's a trap. Fly on.",
      "effect": {
       "text": "It wasn't a trap. Kryten sulks for a sector."
+     }
+    },
+    {
+     "text": "Give her your best spare parts and wish her luck.",
+     "req": {
+      "parts": 3
+     },
+     "cost": {
+      "parts": 3
+     },
+     "effect": {
+      "text": "She fixes her ship with your parts, and leaves you a gift worth far more.",
+      "augment": "rd_spare_heads"
      }
     }
    ]
@@ -1944,6 +2046,14 @@
      "effect": {
       "text": "Legion is so delighted with the cleaning that it lets everyone go and pays Kryten in scrap.",
       "scrap": 40
+     }
+    },
+    {
+     "text": "Give Legion one of your ship's systems to study.",
+     "effect": {
+      "text": "Legion is fascinated. While it takes your engines apart to see how they work, you slip out of the back door. You won't get that engine level back.",
+      "downgrade": "random",
+      "fleetPush": -0.03
      }
     }
    ]
@@ -2265,6 +2375,10 @@
       "fuel": -1
      }
     }
+   ],
+   "twist": [
+    "rd_white_hole",
+    "rd_white_hole_rev"
    ]
   },
   {
@@ -2652,10 +2766,40 @@
      }
     },
     {
+     "text": "Pay their settlement.",
+     "req": {
+      "scrap": 50
+     },
+     "cost": {
+      "scrap": 50
+     },
+     "effect": {
+      "text": "The skutters accept, frame the receipt and go back to work.",
+      "xp": {
+       "skill": "repair",
+       "amt": 20
+      }
+     }
+    },
+    {
+     "text": "Kryten talks to the shop steward.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten and the lead skutter talk for an hour in clicks and beeps. The strike ends with a new union badge for Kryten and a much better drone bay.",
+      "parts": 3
+     }
+    },
+    {
      "text": "Break the strike.",
      "effect": {
-      "text": "The skutters return to work and spend the rest of the run doing exactly what they're told, and nothing more.",
-      "parts": -2
+      "text": "The skutters go back to work and do exactly what they're told, and nothing more. One of them has glued a drone bay door shut for good, out of spite.",
+      "parts": -2,
+      "scar": {
+       "kind": "jammed",
+       "sys": "drones"
+      }
      }
     }
    ]
@@ -2967,22 +3111,54 @@
     {
      "text": "Side with the toaster.",
      "effect": {
-      "text": "Toast for every meal. Morale is surprisingly high.",
-      "crewHeal": 30
+      "text": "Toast for every meal. Morale is surprisingly high. The dispenser has barricaded itself in the medbay and won't come out until somebody brings it a proper meal.",
+      "crewHeal": 30,
+      "scar": {
+       "kind": "locked",
+       "sys": "medbay",
+       "why": "The food dispenser has barricaded itself in.",
+       "need": {
+        "goodsKind": "meal"
+       }
+      }
      }
     },
     {
      "text": "Side with the dispenser.",
      "effect": {
-      "text": "Soup for every meal. The toaster sulks and asks if anyone wants a muffin, quietly, at night.",
-      "crewHeal": 30
+      "text": "Soup for every meal. Talkie Toaster has crawled into the medbay's wiring and is refusing to come out until somebody brings it a proper meal to toast.",
+      "crewHeal": 30,
+      "scar": {
+       "kind": "locked",
+       "sys": "medbay",
+       "why": "Talkie Toaster is in the wiring.",
+       "need": {
+        "goodsKind": "meal"
+       }
+      }
+     }
+    },
+    {
+     "text": "Kryten negotiates a peace treaty.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Toast on Mondays, soup on Tuesdays, both at weekends. Both machines sign. Kryten is unbearably proud.",
+      "crewHeal": 30,
+      "cmp": {
+       "hearts": 15
+      }
      }
     },
     {
      "text": "Unplug them both.",
      "effect": {
-      "text": "Silence. Peace. Hunger.",
-      "scrap": 5
+      "text": "Silence. Peace. Hunger. Nobody will speak to you for a whole jump.",
+      "scrap": 5,
+      "cmp": {
+       "hearts": -15
+      }
      }
     }
    ]
@@ -3008,6 +3184,579 @@
      "fail": {
       "text": "\"Lies detected.\"",
       "begin": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_poly_vanity",
+   "questOnly": true,
+   "art": "creature",
+   "title": "The polymorph",
+   "text": "Something has crept aboard: a shape-shifter that feeds on emotions. It has already eaten the Cat's whole sense of style (he is wearing beige), and it is eyeing Rimmer's medals. Kryten says they each crave one feeling above all, and that feeding it the wrong one makes it stronger.",
+   "choices": [
+    {
+     "text": "Offer it Rimmer's revision timetable.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Lure it with the Cat's mirror.",
+     "effect": {
+      "text": "It gorges on the Cat's reflection, swells up, and pops. It was hungry for vanity, and that was far too much.",
+      "scrap": 25,
+      "crewHeal": 20
+     }
+    },
+    {
+     "text": "Make Lister furious: hide his last curry.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Corner it and flush it out of the airlock.",
+     "chance": 0.45,
+     "success": {
+      "text": "Out it goes. Everyone gets their feelings back, which is a mixed blessing.",
+      "crewHeal": 15
+     },
+     "fail": {
+      "text": "It turns into a fire extinguisher, then a fire. A real one, in the wiring, and the wiring never quite forgives you.",
+      "fire": true,
+      "crewHurt": 15,
+      "scar": "sparky"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_poly_anger",
+   "questOnly": true,
+   "art": "creature",
+   "title": "The polymorph",
+   "text": "Something has crept aboard: a shape-shifter that feeds on emotions. It has already eaten Rimmer's bad temper (he is now unbearably nice), and it is eyeing Lister, who is grumbling about the food. Kryten says they each crave one feeling above all, and that feeding it the wrong one makes it stronger.",
+   "choices": [
+    {
+     "text": "Offer it Rimmer's revision timetable.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Lure it with the Cat's mirror.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Make Lister furious: hide his last curry.",
+     "effect": {
+      "text": "Lister's rage is so pure and so enormous that the polymorph chokes on it. It was hungry for anger, and found more than it could eat.",
+      "scrap": 25,
+      "crewHeal": 20
+     }
+    },
+    {
+     "text": "Corner it and flush it out of the airlock.",
+     "chance": 0.45,
+     "success": {
+      "text": "Out it goes. Everyone gets their feelings back, which is a mixed blessing.",
+      "crewHeal": 15
+     },
+     "fail": {
+      "text": "It turns into a fire extinguisher, then a fire. A real one, in the wiring, and the wiring never quite forgives you.",
+      "fire": true,
+      "crewHurt": 15,
+      "scar": "sparky"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_poly_fear",
+   "questOnly": true,
+   "art": "creature",
+   "title": "The polymorph",
+   "text": "Something has crept aboard: a shape-shifter that feeds on emotions. It has already eaten Kryten's anxiety (he has stopped apologising, which is terrifying), and it is eyeing the crew's nerves. Kryten says they each crave one feeling above all, and that feeding it the wrong one makes it stronger.",
+   "choices": [
+    {
+     "text": "Offer it Rimmer's revision timetable.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Lure it with the Cat's mirror.",
+     "effect": {
+      "text": "Wrong meal. It eats the bait and the feeling behind it, and grows. It smashes through two bulkheads on its way out of the airlock, and leaves one of them leaking for good.",
+      "crewHurt": 20,
+      "scar": "leaky"
+     }
+    },
+    {
+     "text": "Show it the ship's horror film collection.",
+     "effect": {
+      "text": "The crew scream all night. The polymorph eats until it bursts. It was hungry for fear.",
+      "scrap": 25,
+      "crewHeal": 20
+     }
+    },
+    {
+     "text": "Corner it and flush it out of the airlock.",
+     "chance": 0.45,
+     "success": {
+      "text": "Out it goes. Everyone gets their feelings back, which is a mixed blessing.",
+      "crewHeal": 15
+     },
+     "fail": {
+      "text": "It turns into a fire extinguisher, then a fire. A real one, in the wiring, and the wiring never quite forgives you.",
+      "fire": true,
+      "crewHurt": 15,
+      "scar": "sparky"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_inq_humble",
+   "questOnly": true,
+   "art": "ship",
+   "title": "The Inquisitor",
+   "text": "A droid in a long dark cloak steps out of a time hole onto your bridge. \"I am the Inquisitor. I judge each life by the standards of the one who lives it.\" It turns to {crew}. \"Tell me what you have done with your life. And do not lie: I have seen it.\"",
+   "choices": [
+    {
+     "text": "Argue your case: list your achievements.",
+     "effect": {
+      "text": "\"By your own standards,\" it says, \"you have failed. Everyone has.\" It opens fire, mostly to make a point.",
+      "fight": "rd_inquisitor",
+      "afterWin": {
+       "text": "In the wreck, the Inquisitor's time gauntlet. Kryten sells it quickly.",
+       "scrap": 55
+      }
+     }
+    },
+    {
+     "text": "Admit everything you have ever done wrong.",
+     "effect": {
+      "text": "It takes a long time. The Inquisitor listens to all of it, then nods. \"At least you know.\" It erases nobody, and leaves you its spare gauntlet as a sort of receipt.",
+      "scrap": 45,
+      "xp": {
+       "skill": "combat",
+       "amt": 20
+      }
+     }
+    },
+    {
+     "text": "Let Rimmer list his failures.",
+     "req": {
+      "race": "rd_hologram"
+     },
+     "effect": {
+      "text": "Rimmer, for once, tells the truth about himself. The list is long and honest, and the Inquisitor seems almost moved. \"You will do,\" it says, and goes.",
+      "cmp": {
+       "hearts": 25
+      },
+      "xp": {
+       "skill": "pilot",
+       "amt": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_inq_fake",
+   "questOnly": true,
+   "art": "ship",
+   "title": "The Inquisitor",
+   "text": "A droid in a long dark cloak steps out of a time hole onto your bridge. \"I am the Inquisitor. Those found wanting are erased.\" The cloak still has a price tag on it. The time hole is painted on a sheet.",
+   "choices": [
+    {
+     "text": "Argue your case.",
+     "effect": {
+      "text": "\"Very moving. That'll be sixty scrap for the hearing.\" It is a GELF con artist, and it takes the money before you've worked that out.",
+      "scrap": -35
+     }
+    },
+    {
+     "text": "Pull the cloak off.",
+     "effect": {
+      "text": "Underneath: a small, embarrassed GELF, and a sack of everything it has conned out of other ships. You keep the sack.",
+      "scrap": 60
+     }
+    },
+    {
+     "text": "Cat sniffs it.",
+     "req": {
+      "race": "rd_felis"
+     },
+     "effect": {
+      "text": "\"That's no droid. That's a GELF in a curtain. And it's wearing MY aftershave.\" The Cat gets his aftershave back, and the GELF's whole stash.",
+      "scrap": 70,
+      "weapon": "random"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_white_hole_rev",
+   "questOnly": true,
+   "art": "star",
+   "title": "A white hole",
+   "text": "A white hole, spitting time out. Something is odd about this one: the planets around it are orbiting backwards, and Lister's cue ball keeps arriving before he hits it. Holly says she can fix it given forty years. Lister reckons one shot will do.",
+   "choices": [
+    {
+     "text": "Lister takes the shot, by eye.",
+     "chance": 0.25,
+     "success": {
+      "text": "Somehow, against all physics, it works. Lister will never let anyone forget it.",
+      "fleetPush": -0.2
+     },
+     "fail": {
+      "text": "The planet goes the wrong way, because everything here goes the wrong way. It nearly hits you twice, once before and once after.",
+      "hull": -5,
+      "fleetPush": 0.05
+     }
+    },
+    {
+     "text": "Kryten calculates it backwards first.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "For once Lister actually listens to Kryten. He aims at where the planet was going to have been. Perfect shot.",
+      "fleetPush": -0.22
+     }
+    },
+    {
+     "text": "Holly works out the angle.",
+     "chance": 0.6,
+     "success": {
+      "text": "Holly takes a very long time and gets it right. The planet plugs the hole.",
+      "fleetPush": -0.15
+     },
+     "fail": {
+      "text": "Holly takes a very long time and gets it wrong. Twice.",
+      "fleetPush": 0.08
+     }
+    },
+    {
+     "text": "Fly round it.",
+     "effect": {
+      "text": "It takes a long time, or a short time. It's hard to tell.",
+      "fuel": -1
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_despair_ink",
+   "questOnly": true,
+   "art": "planet",
+   "title": "The despair squid",
+   "text": "An ocean moon, very still. Holly picks up a creature beneath its surface the size of a city: a despair squid. There is a wrecked survey ship on the seabed, full of salvage. Kryten checks his records twice. \"Sir, its ink doesn't make you despair at once. It makes you believe things are going rather well.\"",
+   "choices": [
+    {
+     "text": "Dive for the salvage.",
+     "effect": {
+      "text": "The dive goes perfectly. Suspiciously perfectly. Over the next few jumps everything goes your way: fights won, scrap everywhere. Everyone feels marvellous.",
+      "scrap": 40,
+      "anom": {
+       "squid": 3,
+       "squidFoe": "rd_dibbley"
+      }
+     }
+    },
+    {
+     "text": "Cat leads the dive.",
+     "req": {
+      "race": "rd_felis"
+     },
+     "effect": {
+      "text": "The ink tells the Cat everything is going well. The Cat already believed that, so it has nothing to work with. He comes back with real loot.",
+      "scrap": 55,
+      "weapon": "random"
+     }
+    },
+    {
+     "text": "Leave it well alone.",
+     "effect": {
+      "text": "You fly on, and everyone feels slightly better about themselves for having made a good decision. Genuinely."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_squid_wake",
+   "questOnly": true,
+   "art": "creature",
+   "title": "Waking up",
+   "text": "Everyone wakes up on the floor of Starbug, still in orbit round the ocean moon. The last three jumps never happened. The ships you fought were asteroids. The scrap was seaweed. Lister is holding a medal he awarded himself.",
+   "choices": [
+    {
+     "text": "Laugh it off. You're alive.",
+     "effect": {
+      "text": "The scrap was never real, but the crew came through it without venting the ship or shooting each other, and they're oddly proud of that.",
+      "undoScrap": true,
+      "augment": "rd_unbreakable"
+     }
+    },
+    {
+     "text": "Count what's really missing.",
+     "effect": {
+      "text": "Rather a lot of missiles, which you fired at rocks.",
+      "undoScrap": true,
+      "missiles": -2,
+      "crewHeal": 30
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_toaster_reactor",
+   "questOnly": true,
+   "art": "ship",
+   "title": "Talkie Toaster's proposal",
+   "text": "Talkie Toaster has a proposal. \"Wire me into the reactor. I can run it far better than whoever's doing it now, and I'll toast at the same time. Efficiency! Would anyone like a crumpet while you think about it?\"",
+   "choices": [
+    {
+     "text": "Do it. What could go wrong?",
+     "effect": {
+      "text": "The reactor hums with a faint smell of toast. Weapons charge noticeably faster. Toaster is thrilled.",
+      "augment": "rd_toaster_core",
+      "later": {
+       "event": "rd_toaster_vent",
+       "jumps": 4
+      }
+     }
+    },
+    {
+     "text": "Absolutely not.",
+     "effect": {
+      "text": "\"Fine. FINE. Would anyone like any toast?\""
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_toaster_vent",
+   "questOnly": true,
+   "art": "ship",
+   "title": "Toast-related incident",
+   "text": "An alarm. Talkie Toaster, trying to make the reactor run hot enough for a perfect bagel, has vented the air out of a room. \"Sorry! Sorry. Bagel?\"",
+   "choices": [
+    {
+     "text": "Leave it wired in. Put up with it.",
+     "effect": {
+      "text": "The crew scramble into spacesuits, again. The weapons stay fast.",
+      "crewHurt": 12,
+      "later": {
+       "event": "rd_toaster_vent",
+       "jumps": 4
+      }
+     }
+    },
+    {
+     "text": "Unplug the toaster from the reactor.",
+     "effect": {
+      "text": "Toaster sulks in the galley. The reactor is slower and quieter and smells of nothing at all.",
+      "loseAugment": "rd_toaster_core"
+     }
+    },
+    {
+     "text": "Kryten writes it a safety manual.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Toaster reads the whole manual, then asks if Kryten would like any toast. But the venting stops.",
+      "crewHurt": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_ego",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "minSector": 2,
+   "req": {
+    "race": "rd_hologram",
+    "scrap": 70
+   },
+   "art": "ship",
+   "title": "Ace Rimmer, in his own mind",
+   "text": "Things are going well, and it has gone to Rimmer's head. He has drawn up a new chain of command (with himself at the top), redesigned the uniforms and is demanding to command the next jump.",
+   "choices": [
+    {
+     "text": "Let him command one jump.",
+     "chance": 0.4,
+     "success": {
+      "text": "Somehow, nothing goes wrong. Rimmer is insufferable for days.",
+      "fleetPush": -0.04,
+      "cmp": {
+       "hearts": 10
+      }
+     },
+     "fail": {
+      "text": "Rimmer hails a Simulant ship to \"open negotiations\" and surrenders the ship by mistake. You have to fight your way out of the surrender.",
+      "fight": "rd_sim_hunter",
+      "afterWin": {
+       "text": "Rimmer explains that was all part of his plan.",
+       "scrap": 30
+      }
+     }
+    },
+    {
+     "text": "Kryten talks him down.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten tells Rimmer he is far too important to waste on a mere jump. Rimmer agrees completely, and goes for a lie down.",
+      "cmp": {
+       "hearts": 10
+      }
+     }
+    },
+    {
+     "text": "Give him a medal instead.",
+     "req": {
+      "scrap": 20
+     },
+     "cost": {
+      "scrap": 20
+     },
+     "effect": {
+      "text": "You make him a medal out of a bottle top. He polishes it for a week and forgets all about commanding.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 15
+      }
+     }
+    },
+    {
+     "text": "Confine him to quarters.",
+     "effect": {
+      "text": "Rimmer sulks loudly in his quarters for a whole sector. Everyone else has a lovely time.",
+      "cmp": {
+       "hearts": -10
+      },
+      "crewHeal": 20
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_meltdown",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.1,
+   "once": true,
+   "minSector": 3,
+   "art": "ship",
+   "title": "Meltdown",
+   "text": "The reactor is going critical. The only way to stop it is to vent the whole ship and have someone walk through the vacuum to the core and pull the rods by hand. Holly gives it four minutes.",
+   "choices": [
+    {
+     "text": "Rimmer goes. He doesn't need air.",
+     "req": {
+      "race": "rd_hologram"
+     },
+     "effect": {
+      "text": "Rimmer strolls through the vacuum, pulls the rods and strolls back. He is a hero. He will mention it daily for the rest of his existence.",
+      "cmp": {
+       "hearts": 30
+      },
+      "xp": {
+       "skill": "engines",
+       "amt": 30
+      }
+     }
+    },
+    {
+     "text": "Kryten goes. Mechanoids don't breathe.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "chance": 0.7,
+     "success": {
+      "text": "Kryten does it, apologising to the reactor the whole way.",
+      "xp": {
+       "skill": "repair",
+       "amt": 30
+      }
+     },
+     "fail": {
+      "text": "Kryten pulls the rods, but the radiation fries his wiring and half the core's. The reactor room sparks for ever after.",
+      "crewHurt": 15,
+      "scar": "sparky"
+     }
+    },
+    {
+     "text": "Ask for a volunteer.",
+     "effect": {
+      "text": "Someone goes. The ship is saved. They don't come back.",
+      "crewLoss": 1
+     }
+    },
+    {
+     "text": "Eject the core and limp on.",
+     "effect": {
+      "text": "The core goes out of the airlock and explodes very prettily a long way off. The backup reactor is two bars short of the old one, for good.",
+      "reactor": -2
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_curry_lab",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1,
+   "once": true,
+   "minSector": 2,
+   "art": "ship",
+   "title": "The Thermonuclear Vindaloo",
+   "text": "Lister has a recipe. It needs exotic ingredients: Starbug's own fuel (for the heat) and missile propellant (for the kick). \"It's not for eating,\" he says. \"It's for winning.\"",
+   "choices": [
+    {
+     "text": "Give him what he needs.",
+     "req": {
+      "fuel": 4,
+      "missiles": 3
+     },
+     "cost": {
+      "fuel": 3,
+      "missiles": 3
+     },
+     "effect": {
+      "text": "The galley is closed for a day. What comes out glows faintly and is too hot to look at. One spoonful each before a fight, Lister says, and stand well back.",
+      "item": "rd_thermo_vindaloo"
+     }
+    },
+    {
+     "text": "Not with our fuel.",
+     "effect": {
+      "text": "Lister makes a normal vindaloo instead, which is still a weapon.",
+      "crewHeal": 15
      }
     }
    ]
@@ -3342,6 +4091,26 @@
    "fx": {
     "superShield": 3
    }
+  },
+  {
+   "id": "rd_toaster_core",
+   "name": "Toaster-Wired Reactor",
+   "cost": 0,
+   "noLoot": true,
+   "desc": "Talkie Toaster runs the reactor now: weapons charge 15% faster. Every few jumps it vents a room by accident.",
+   "fx": {
+    "charge": 0.15
+   }
+  },
+  {
+   "id": "rd_unbreakable",
+   "name": "Unbreakable Delusion",
+   "cost": 0,
+   "noLoot": true,
+   "desc": "The crew survived the despair squid's ink and came out believing in themselves a bit too much: they heal slowly anywhere on the ship.",
+   "fx": {
+    "heal": 0.25
+   }
   }
  ],
  "arms": [
@@ -3448,6 +4217,19 @@
    "skill": "pilot",
    "xp": 60,
    "desc": "Holly swears they work. They work, a bit."
+  },
+  {
+   "id": "rd_thermo_vindaloo",
+   "name": "Thermonuclear Vindaloo",
+   "kind": "buff",
+   "cost": 45,
+   "tier": 2,
+   "buff": {
+    "dmg": 0.6,
+    "spd": 0.3
+   },
+   "fights": 3,
+   "desc": "Lister's masterpiece. For the next three fights: +60% hand-to-hand damage and +30% speed. Eyes water at fifty paces."
   }
  ]
 }

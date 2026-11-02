@@ -19,12 +19,13 @@ function eff(sh, k){
   if(k==='sensors' && G && (G.nebula || (G.jam && sh===G.ship))) return 0;
   let e = SUB.includes(k) ? s.max : s.power + bonusPower(sh,k);
   e = Math.min(e, s.max - s.dmg);
+  if(G && sh===G.ship && (G.scars || G.anom) && typeof scarCap==='function') e = Math.min(e, scarCap(sh, k));   // ship scars (anomalies.js)
   if(s.ionT>0) e -= s.ion;
   if(hackedNow(sh,k)) return 0;
   return Math.max(0, e);
 }
 function lvlIdx(sh, k){ return clamp(eff(sh,k)-1, 0, 2); }
-function reactorAvail(sh){ let r = sh.reactor; if(G && G.hazard==='ionstorm') r = Math.floor(r/2); if(sh.battery.t>0) r += sh.battery.extra||2; return r; }
+function reactorAvail(sh){ let r = sh.reactor + Math.round(augFx(sh,'reactor')); if(G && G.hazard==='ionstorm') r = Math.floor(r/2); if(sh.battery.t>0) r += sh.battery.extra||2; return r; }
 function reactorUsed(sh){ let u = 0; for(const k of MAIN) u += sh.systems[k]?.power||0; return u; }
 function reactorFree(sh){ return reactorAvail(sh) - reactorUsed(sh); }
 function shedPower(sh){
@@ -126,10 +127,11 @@ function hitRoom(sh, ri_, d, o={}){
   if(G){ r.hitAt = G.time||0; r.hitN = (r.hitAt - (r._hitPrev||-9) < 3 ? (r.hitN||0) : 0) + (dmg + (d.sysDamage||0)); r._hitPrev = r.hitAt; r.hitIon = d.type==='ion'; if(dmg>0) r.scorch = Math.min(6, (r.scorch||0) + Math.max(1, dmg)); }
   if(dmg>0 && !o.noHull) sh.hull = Math.max(0, sh.hull - dmg);
   const sysd = dmg + (d.sysDamage||0);
-  if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15) && !(Math.random() < augFx(sh,'sysRes'))) damageSystem(sh, r.sys, sysd); }
+  if(r.sys && sh.systems[r.sys] && sysd>0){ if(!(hasAug(sh,'casing') && Math.random()<.15) && !(Math.random() < augFx(sh,'sysRes'))) damageSystem(sh, r.sys, sysd); if(augFx(sh,'sysRes') < 0 && Math.random() < -augFx(sh,'sysRes')) damageSystem(sh, r.sys, 1); }
   const crewDmg = 15*dmg + (d.crewDamage||0);
   if(crewDmg>0) for(const c of sh.crew) if(c.room===ri_){ c.hp -= crewDmg*(raceOf(c).armor||1); c.lastBy = o.by || null; }
   const lit = d.fire && Math.random() < d.fire; if(lit){ igniteRoom(sh, ri_); if(sh.side==='p') say('fire', { force:true }); }
+  else if(dmg>0 && typeof scarHit==='function') scarHit(sh, ri_);   // sparking wiring (anomalies.js)
   if(!lit && d.breach && Math.random() < d.breach*(hasAug(sh,'rockPlating')?.5:1)*Math.max(0, 1 - augFx(sh,'breachRes'))){ r.breach = Math.min(r.w*r.h, r.breach + 1); if(sh.side==='p') say('breach', { force:true }); }
   if(d.ion && d.type!=='ion') { if(r.sys) ionize(sh, r.sys, d.ion); }
   if(d.stun) for(const c of sh.crew) if(c.room===ri_) c.stunT = Math.max(c.stunT, d.stun);
@@ -170,7 +172,9 @@ function resolve_(p){
   if(p.kind==='hack'){ tgt.hacked = { room:p.room, attached:true, pulseT:0, cd:2, by:p.from }; fxAtRoom(tgt, p.room, 'ion'); sfx('zap'); return; }
   if(p.kind==='bdrone'){ const owner = shipBySide(p.from); const dr = owner?.drones.find(x=>x.unit===p.id);
     const c = newDroneUnit(p.bp, p.from); tgt.crew.push(c); placeCrew(tgt, c, p.room); if(dr) dr.unit = c.id;
-    const r = tgt.rooms[p.room]; if(r) r.breach = Math.min(r.w*r.h, r.breach+1); fxAtRoom(tgt, p.room, 'boom'); sfx('hit'); return; }
+    const r = tgt.rooms[p.room]; if(r) r.breach = Math.min(r.w*r.h, r.breach+1); fxAtRoom(tgt, p.room, 'boom'); sfx('hit');
+    const bd = DATA.drones[p.bp]; if(bd && bd.stun) for(const x of tgt.crew) if(x.room===p.room && crewSide(x)===tgt.side && x!==c) x.stunT = Math.max(x.stunT||0, bd.stun);   // a shock boarder lands with a pulse
+    if(bd && bd.fear && typeof trickHit==='function') trickHit(tgt, p.room, { fear:true }, {}); return; }
   if(d.heal){ for(const c of tgt.crew) if(c.room===p.room && crewSide(c)===p.from) c.hp = Math.min(c.maxHp, c.hp + d.heal); fxAtRoom(tgt, p.room, 'heal'); return; }
   if(d.type==='bomb'){
     if(tgt.cloak.t>0){ fxAtRoom(tgt, p.room, 'text', 'MISS'); sfx('miss'); return; }
@@ -421,7 +425,7 @@ function moveCrewStep(sh, c, dt){
   else { c.x += dx/dist*sp; c.y += dy/dist*sp; }
   const k = Math.round(c.x)+','+Math.round(c.y); if(sh.cellRoom[k]!=null) c.room = sh.cellRoom[k];
 }
-function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(1 + ((c.bonus && c.bonus.dmg)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'dmg') : 0))*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps'))*(c.owner==='e' ? (curDiff().foeMelee || 1) : 1); }   // Easy: enemy boarders hit softer
+function crewDps(c){ const r = raceOf(c); if(c.drone) return DATA.drones[c.drone]?.role==='repair' ? 0 : 12; return 9*(1 + ((c.bonus && c.bonus.dmg)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'dmg') : 0))*(r.combat??1)*[1,1.1,1.2][skillLvl(c,'combat')]*(traitOf(c).dps||1)*(c.vengeT > 0 ? 1.3 : 1)*(1 + augFx(typeof shipBySide==='function' ? shipBySide(c.owner) : null, 'dps'))*(c.owner==='e' ? (curDiff().foeMelee || 1) : 1)*(typeof bondMult==='function' ? bondMult(c, 'dps') : 1); }   // Easy: enemy boarders hit softer
 function killCrew(sh, c){
   if(c && c.hp <= 0 && typeof devotedSave==='function' && devotedSave(c)) return;   // ten hearts: they refuse to die, once (travellers.js)
   const i = sh.crew.indexOf(c); if(i<0) return; if(typeof armDrop==='function') armDrop(c); sh.crew.splice(i,1); if(c.owner==='p' && !c.drone) sfx('death');
@@ -559,7 +563,7 @@ function tickShip(sh, dt, foe){
     } else if(friends.length){
       const workers = friends.filter(c => c.stunT<=0 && raceOf(c).repair>0 && !(c.drone && DATA.drones[c.drone]?.role!=='repair'));
       if(!workers.length) return;
-      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1)*(typeof armRepair==='function' ? armRepair(c) : 1)*(1 + ((c.bonus && c.bonus.rep)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'rep') : 0)), 0) * R.repairRate * dt * (1 + augFx(shipBySide(workers[0].owner) || sh, 'repair'));
+      let rate = workers.reduce((t,c)=>t + raceOf(c).repair*[1,1.1,1.2][skillLvl(c,'repair')]*(traitOf(c).repair||1)*(typeof armRepair==='function' ? armRepair(c) : 1)*(1 + ((c.bonus && c.bonus.rep)||0) + (typeof itemBuff==='function' ? itemBuff(c, 'rep') : 0))*(typeof bondMult==='function' ? bondMult(c, 'rep') : 1), 0) * R.repairRate * dt * (1 + augFx(shipBySide(workers[0].owner) || sh, 'repair'));
       if(r.fire>0){ r.fireP += rate*2.6*(typeof armFire==='function' ? Math.max(...workers.map(armFire)) : 1)*(hasAug(shipBySide(workers[0].owner)||sh,'fireSup')?2:1); if(r.fireP>=1){ r.fireP = 0; r.fire--; workers.forEach(c=>gainXP(c,'repair',.5)); } }
       else if(r.breach>0){ r.breachP += rate; if(r.breachP>=1){ r.breachP = 0; r.breach--; workers.forEach(c=>gainXP(c,'repair',1)); } }
       else if(r.sys && sh.systems[r.sys] && sh.systems[r.sys].dmg>0){ const s = sh.systems[r.sys]; s.rep += rate;

@@ -17,7 +17,7 @@
      drain:  a hit takes this many bars of power off the system it hits, for a while
      color:  the colour of its shots
    ========================================================================= */
-const TRICK_KEYS = 'warm homing pin splash bounce crit wild salvage gas fear toast decoy drain color'.split(' ');
+const TRICK_KEYS = 'warm homing pin splash bounce crit wild salvage gas fear toast decoy drain disrupt color'.split(' ');
 function hasTricks(d){ return !!d && TRICK_KEYS.some(k => d[k]); }
 /* charge speed: a warming gun gets faster with each shot */
 function trickCharge(w, d){ return d && d.warm ? 1 + d.warm * Math.min(3, w.warm||0) : 1; }
@@ -50,6 +50,7 @@ function trickHit(sh, ri_, d, o){
   if(d.fear){ const doors = sh.rooms.map((x, i) => i).filter(i => i!==ri_ && roomDist(sh, ri_, i) <= 1.4);
     for(const cr of sh.crew) if(cr.room===ri_ && crewSide(cr)===sh.side && !cr.drone && doors.length){ try{ orderMove(sh, cr, pick(doors)); }catch(e){} } }
   if(d.drain && r.sys && sh.systems[r.sys]) ionize(sh, r.sys, d.drain);
+  if(d.disrupt){ let n = 0; for(const cr of sh.crew) if(cr.room===ri_ && !cr.drone && raceOf(cr).projected){ cr.hp -= d.disrupt; cr.stunT = Math.max(cr.stunT||0, 3); n++; } if(n) fx('text', c.x, c.y - 58, 'FLICKER'); }
 }
 /* a pinned ship can't dodge */
 function trickPinned(sh){ return !!(sh && sh.pinUntil && G && (G.time||0) < sh.pinUntil); }
@@ -68,8 +69,9 @@ function trickText(d){ if(!d) return ''; const t = [];
   if(d.toast) t.push(`each shot heals your crew by ${d.toast}`);
   if(d.decoy) t.push(`each shot adds ${d.decoy} point${d.decoy>1?'s':''} of super shield to your ship`);
   if(d.drain) t.push(`drains ${d.drain} power from the system it hits`);
+  if(d.disrupt) t.push(`holograms in the room it hits take ${d.disrupt} damage and flicker out`);
   return t.length ? ' Special: ' + t.join('; ') + '.' : ''; }
 /* a two-word tag for the weapon card */
 function trickBadge(d, w){ if(!d) return '';
   if(d.warm) return w && w.warm ? `WARM ×${w.warm}` : 'WARMS UP';
-  return d.homing ? 'HOMING' : d.pin ? 'PINS' : d.splash ? 'SPLASH' : d.bounce ? 'RICOCHET' : d.crit ? 'CRITS' : d.wild ? 'WILD' : d.salvage ? 'SALVAGE' : d.gas ? 'GAS' : d.fear ? 'PANIC' : d.toast ? 'TOAST' : d.decoy ? 'DECOY' : d.drain ? 'DRAIN' : ''; }
+  return d.homing ? 'HOMING' : d.pin ? 'PINS' : d.splash ? 'SPLASH' : d.bounce ? 'RICOCHET' : d.crit ? 'CRITS' : d.wild ? 'WILD' : d.salvage ? 'SALVAGE' : d.gas ? 'GAS' : d.fear ? 'PANIC' : d.toast ? 'TOAST' : d.decoy ? 'DECOY' : d.drain ? 'DRAIN' : d.disrupt ? 'ANTI-HOLO' : ''; }

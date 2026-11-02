@@ -767,6 +767,7 @@ function drawTopBar(){
   { const at = typeof homeAttention==='function' && !G.enemy && homeAttention(); if(at){ ctx.beginPath(); ctx.arc(1466, 18, 8, 0, 7); ctx.fillStyle = C.good; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); tip(1380, 12, 92, 52, 'Ship', at + '.'); } }
   btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
   if((SET.speed||1)!==1) label(`Speed ${Math.round((SET.speed||1)*100)}%`, 1108, 66, C.cyan, 'left', 11);
+  if(typeof drawAnomChips==='function') drawAnomChips(78, 506);   // anomalies and ship scars (anomalies.js)
 }
 
 function layoutShip(sh, box, facing, mini){
@@ -823,9 +824,10 @@ function drawShip(sh, box, facing, isEnemy, mini){
         ctx.beginPath(); ctx.moveTo(fx_-cell*.12, fy+cell*.22); ctx.quadraticCurveTo(fx_-cell*.14, fy, fx_-fl, fy-cell*.18); ctx.quadraticCurveTo(fx_+cell*.14, fy, fx_+cell*.12, fy+cell*.22); ctx.closePath(); ctx.fillStyle = '#ffd27a'; ctx.fill();
         if(live && Math.random()<.12) ember(fx_, fy - cell*.25); }
       for(let k=0; k<r.breach; k++){ const bx = q.x + q.w - (k+.5)*Math.min(cell*.5, 22) - 4, by = q.y + q.h - 12; ctx.beginPath(); ctx.arc(bx, by, Math.min(9, cell*.14), 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 2; ctx.stroke(); if(live && Math.random()<.25) vent(bx, by, (Math.random()-.5), -1); }
+      if(typeof drawScar==='function') drawScar(sh, i, q, cell);
     }
     if(!mini && G && seen && !selW && !UI.mode && !UI.selCrew){ const parts = []; if(s){ parts.push(`Level ${s.max}${SUB.includes(r.sys) ? '' : `, power ${s.power}`}${s.dmg ? `, ${s.dmg} damaged` : ''}${s.ionT>0 ? ', ion locked' : ''}.`); }
-      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`);
+      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`); { const st_ = typeof scarText==='function' ? scarText(sh, i) : ''; if(st_) parts.push(st_); }
       const here = sh.crew.filter(c => c.room===i); if(here.length) parts.push(`Crew here: ${here.map(c => c.drone ? 'drone' : c.name).slice(0,4).join(', ')}.`);
       if(isEnemy) parts.push('Select a weapon, then click here to target it.');
       tip(q.x, q.y, q.w, q.h, r.sys ? SYSN[r.sys] + (isEnemy ? ' (enemy)' : '') : (isEnemy ? 'Enemy room' : 'Room'), parts.join(' ')); }

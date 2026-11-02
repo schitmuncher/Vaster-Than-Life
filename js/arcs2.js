@@ -560,7 +560,7 @@ const SAB_CLUES = [
   ['Candle wax on the floor by the oxygen pump. Brother Mott lights candles to pray.', 'Mott\'s prayer book has Rebuff hymns in the margins, scribbled out.', 'Mott was seen in the drone bay "praying for the machines" just before the parts went missing.'] ];
 ARC2.sab = { name:'The Saboteur', who:'your passengers', count:'Clues found', color:'#ff7a5a', blurb:'Three passengers, and one of them is wrecking your ship. A different culprit every time.',
   hale:'"You\'re carrying three passengers to command: Ambassador Orsk, Engineer Vey and Brother Mott. Do be nice to them."',
-  roll:(S, r) => { S.t = pickT(r, 3); },
+  roll:(S, r) => { S.t = r() < .25 ? 3 : pickT(r, 3); },   // 3: none of them. The ship itself.
   beats:[S => 'sab_start' + S.t, S => 'sab_fire' + S.t, S => 'sab_drone' + S.t, S => S.f.named ? null : 'sab_trap' + S.t, S => S.f.named ? null : 'sab_accuse' + S.t],
   final:() => null,
   ending:S => S.f.right ? 'sab_solved' : S.f.wrong ? 'sab_wrongman' : 'sab_open',
@@ -587,6 +587,24 @@ for(let t = 0; t < 3; t++){ const cl = SAB_CLUES[t], who = SAB[t];
     chc('Set the trap.', .5, { text:`At 3am, a figure creeps into the shield room. The lights snap on. It\'s ${who}.`, a:{ f:['right', 'named'], note:`The crew caught ${who} sabotaging the ship.` } }, { text:'Nobody comes. Whoever it is, they\'re careful.', a:{ n:1 } }),
     ch('Interview each passenger instead.', { text:'Orsk is pompous, Vey is nervous and Mott is serene. None of them blinks.', a:{ n:1 } }) ]);
   SE('sab_accuse' + t, 'J\'accuse', 'station', `It\'s time to name the saboteur. The three passengers sit in the galley. The whole crew is watching.`, SAB.map((n, i) => ch(`Accuse ${n}.`, i===t ? { text:`${n} goes very still, then laughs. "Very good, Captain." They hand over a Rebuff transmitter.`, a:{ f:['right', 'named'], note:`The captain unmasked ${n} as the saboteur.` } } : { text:`${n} protests. Loudly. You lock them up anyway. That night, something else breaks.`, damageSystem:'random', a:{ f:['wrong', 'named'], note:`The captain accused ${n} of sabotage, and was wrong.` } })).concat([ ch('Accuse nobody.', { text:'The passengers go back to their cabins. One of them is smiling.', a:{} }) ])); }
+
+/* the fourth twist: all three passengers are innocent. A dormant Rebuff program in the life support is doing it */
+SE('sab_start3', 'Sabotage', 'ship', `Someone has cut the cable to your backup oxygen pump. Neatly, and on purpose. Your three passengers, Ambassador Orsk, Engineer Vey and Brother Mott, all say they were asleep.`, [
+  ch('Look closely at the cable.', { text:'It wasn\'t cut with a blade. It was burned through from the inside, by a power surge. The pump\'s own controller sent it.', setFlag:'sabAI', a:{ n:1, note:'In sector 2 someone aboard sabotaged the ship. The suspects were Ambassador Orsk, Engineer Vey and Brother Mott.' } }),
+  ch('Lock the passengers in their cabins.', { text:'Three passengers, three locked doors, three very cross faces. That night, a fourth door locks itself.', a:{ note:'In sector 2 someone aboard sabotaged the ship. The suspects were Ambassador Orsk, Engineer Vey and Brother Mott.' } }) ]);
+SE('sab_fire3', 'A fire', 'ship', `A small fire in the weapons room. Set, not started. All three passengers were locked in their cabins at the time.`, [
+  ch('Search the room.', { text:'The fire started inside a ventilation fan. The fan\'s logs say it ran backwards for nine seconds, all by itself.', setFlag:'sabAI', a:{ n:1 } }),
+  ch('{who} reads the scene like a novel.', { text:'{who} walks the room twice. "None of them did this. Nobody did this. The ship did this."', setFlag:'sabAI', a:{ n:1 }, xp:{ skill:'repair', amt:5 } }, { req:{ quirk:'bookworm' } }) ]);
+SE('sab_drone3', 'The drone bay', 'ship', `Your drone parts have been tampered with. Every passenger has a solid alibi. So does every member of your crew.`, [
+  ch('Pull the life-support logs.', { text:'Someone edited the logs. The edit came from the life-support computer itself, at 3am, with a Rebuff signature.', setFlag:'sabAI', a:{ n:1 } }),
+  ch('Write it off and move on.', { text:'You lose a few parts.', parts:-2, a:{} }) ]);
+SE('sab_trap3', 'A trap', 'station', `{crew} suggests a trap: leave the shield room unguarded tonight, and watch.`, [
+  chc('Set the trap.', .6, { text:'At 3am, nobody comes. Then the shield room door locks itself, the lights go out, and the vents start to hiss. Your crew get the door open with a crowbar. The ship is the saboteur.', setFlag:'sabAI', crewHurt:10, a:{ n:1 } }, { text:'Nobody comes. Whoever it is, they\'re careful.', a:{ n:1 } }),
+  ch('Interview each passenger instead.', { text:'Orsk is pompous, Vey is nervous and Mott is serene. All three are telling the truth, and that is the strangest thing of all.', a:{ n:1 } }) ]);
+SE('sab_accuse3', 'J\'accuse', 'station', `It\'s time to name the saboteur. The three passengers sit in the galley. The whole crew is watching. Somewhere above them, the air vents hum.`, [
+  ...SAB.map(n => ch(`Accuse ${n}.`, { text:`${n} is locked in the brig, protesting. That night the sabotage carries on as if nothing has happened.`, a:{ f:['wrong', 'named'], note:`The crew accused ${n}, who was innocent.` } })),
+  ch('"It\'s none of them. It\'s the ship."', { text:'You purge the life-support computer. It fights back: every vent on the ship opens at once. When the air comes back, a Rebuff sleeper program lies dead in the logs. One vent never quite seals again.', crewHurt:25, scar:{ kind:'leaky' }, a:{ f:['right', 'named'], note:'The saboteur was a Rebuff program hidden in the life support. The crew purged it.' } }, { req:{ flag:'sabAI', hide:true } }),
+  ch('{who} checks the ship before accusing anyone.', { text:'{who} finds the sleeper program in the life support and walls it off before it can open the vents. The three passengers applaud.', a:{ f:['right', 'named'], note:'The saboteur was a Rebuff program hidden in the life support. {who} found it.' } }, { req:{ race:'enjinn' } }) ]);
 
 /* ---------------- 15. The Long Lights ---------------- */
 ARC2.keeper = { name:'The Long Lights', who:'Keeper Ezra', count:'Beacons relit', color:'#ffe08a', blurb:'An old keeper begs you to relight the dying beacons along your route. Some were put out for a reason.',

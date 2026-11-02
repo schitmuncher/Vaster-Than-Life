@@ -166,6 +166,7 @@ function arrive_(i){
   if(typeof homeJump==='function') homeJump();   // the garden grows (homestead.js)
   if(typeof campaignArrive==='function') campaignArrive(node, first);
   if(typeof petJump==='function') petJump();   // Pip has opinions (campaign.js)
+  if(typeof anomArrive==='function') anomArrive(node, first);   // fungus, escorts, fractures (anomalies.js)
   emit('arrive', node);
   if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
@@ -179,6 +180,7 @@ function arrive_(i){
   G.later = G.later.filter(l => l!==due && (l.jumps > -12 || !DATA.events[l.event]?.moment));   // a scene that never found a beacon is dropped eventually
   if(due){ startEvent(due.event, { star:due.star }); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
+  if(node.type==='store' && typeof anomStoreBlock==='function' && anomStoreBlock(node)){ save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
   if(!first && typeof fishButton==='function' && G.rod && fishSpot(node) && node.type==='empty' && !G.hazard){ G.modal = { type:'msg', title:'Back at the fishing spot', text:'The same quiet patch of space. The fish here have heard about you.', extra:[fishButton(node)].filter(Boolean) }; save(); return; }
   if(!first){ toast(pick(['Familiar beacon: nothing new on sensors.', 'You have been here before. Still nothing here.', 'Same old beacon. Your crew waves at the scorch marks.'])); save(); return; }   // no box to close: going back somewhere empty should cost no taps
@@ -226,7 +228,7 @@ function eventKinds(e){
 function pickEvent(node){
   if(typeof pickMoment==='function'){ const mo = pickMoment(node); if(mo) return mo; }   // now and then the beacon is about your crew (saga.js)
   const sd = sectorDef(); const tags = sd.tags || [], inCamp = !!(typeof campDef==='function' && campDef());
-  let list = Object.values(DATA.events).filter(e => !(inCamp && e.pack) && !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
+  let list = Object.values(DATA.events).filter(e => !(inCamp && e.pack) && !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (!e.req || reqMet(e.req)) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
     && (!e.tags || e.tags.includes('') || e.tags.some(t => tags.includes(t) || t===G.sectorType)) && (!e.nebula || node?.nebula));
   // no reruns: events already met this run only come back once everything else has been seen
   const fresh = list.filter(e => !G.seen[e.id]); if(fresh.length) list = fresh;
@@ -250,7 +252,7 @@ function fillText(t, cx={}){ const out = String(t||'').replace(/\{crew\}/g, cx.c
   .replace(/\{enemy\}/g, G?.enemy?.name||'enemy ship').replace(/\{sector\}/g, G ? sectorDef().name : ''); return fixThe(typeof sagaFill==='function' ? sagaFill(out, cx) : out); }
 function quirkCrewName(q){ const l = G.ship.crew.filter(c => c.owner==='p' && !c.drone && c.quirk===q); return l.length ? pick(l).name : 'Someone'; }
 function logEntry(t){ if(!G) return; (G.log = G.log||[]).push({ s:G.sector, t:fixThe(t) }); if(G.log.length>80) G.log.shift(); }
-function startEvent(id, o={}){ sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
+function startEvent(id, o={}){ if(typeof twistOf==='function') id = twistOf(id); sfx(o.combat ? 'hail' : 'event'); const ev = id && DATA.events[id]; if(!ev){ G.modal = { type:'msg', title:'Quiet beacon', text:'Static on every channel.' }; return; }
   emit('event', ev); G.seen[id] = 1; G.modal = { type:'event', id, combat:!!o.combat, ctx:(ev.moment && typeof sagaCtx==='function' && sagaCtx(ev, o.star)) || { crew:randomCrewName() } }; }
 function pickHail(tag){ if(typeof pickHailFresh==='function') return pickHailFresh(tag); const all = Object.values(DATA.events).filter(e => e.hail); let l = all.filter(e => e.hail===tag); if(!l.length) l = all.filter(e => e.hail==='generic'); return l.length ? pick(l).id : null; }
 function reqHidden(q){ return !!(q && (q.hide || q.race || q.system || q.weaponType || q.drone || q.augment || q.quirk || q.pet)); }
@@ -295,7 +297,7 @@ function chooseOption(ch){
 }
 function sign(n){ return (n>0?'+':'') + n; }
 function applyEffect(e){
-  const L = [], s = G.ship; if(!e) return L;
+  const L = [], s = G.ship; if(!e) return L; G._scrap0 = G.stats.scrap;
   const sm = curDiff().scrap * (hasAug(s,'scrapArm') ? 1.1 : 1) * (1 + augFx(s,'scrap')) * (G.chScrap || 1);
   if(e.scrap){ const v = e.scrap>0 ? Math.round(e.scrap*sm*(1 + .12*((G?.sector||1)-1))) : e.scrap; G.scrap = Math.max(0, G.scrap + v); if(v>0) G.stats.scrap += v; L.push(`${sign(v)} scrap`); }
   if(e.fuel){ G.fuel = Math.max(0, G.fuel + e.fuel); L.push(`${sign(e.fuel)} fuel`); }
@@ -337,6 +339,7 @@ function applyEffect(e){
   if(typeof expansionEffect==='function') expansionEffect(e, L);
   if(typeof armsEffect==='function') armsEffect(e, L);
   if(typeof itemsEffect==='function') itemsEffect(e, L);
+  if(typeof anomEffect==='function') anomEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -393,6 +396,7 @@ function pickEnemy(n){
 function startCombat(id, o={}){ G.fightsHere = (G.fightsHere||0) + 1; return withSeed(`s${G.sector}n${G.map?.cur}f${G.fightsHere}`, () => startCombat_(id, o)); }
 function startCombat_(id, o={}){
   if(o.harder) G.fleetFights = (G.fleetFights||0) + 1;
+  if(typeof anomCombatPick==='function'){ const r_ = anomCombatPick(id, o); if(r_) id = r_; }   // the Black Mark brings enforcers (anomalies.js)
   const n = Math.max(1, Math.min(G.sector + (o.harder ? 1 + Math.floor(((G.fleetFights||1)-1)/3) : 0), 9) - (curDiff().ease||0));   // Easy: enemies are a sector behind
   const def = id==='flag' ? DATA.enemies[R.bossId] : (id && id!=='random' && DATA.enemies[id]) ? DATA.enemies[id] : pickEnemy(n);
   if(!def){ G.modal = { type:'msg', title:'All clear', text:'Sensors show no hostiles.' }; return; }
@@ -418,6 +422,7 @@ function startCombat_(id, o={}){
   if(hasAug(s,'voltanShield')) s.super = Math.max(s.super, 5); if(augFx(s,'superShield') > 0) s.super = Math.max(s.super, Math.round(augFx(s,'superShield')));
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
   G.enemy.super = G.enemy.superMax;
+  if(typeof anomCombatStart==='function') anomCombatStart(G.enemy, Object.assign({ id:def.id || id }, def), o);
   sfx('alarm'); haptic(.3, 200); emit('combatStart', G.enemy); logEntry(`Engaged the ${G.enemy.name}.`);
   if(typeof mpCombatStart==='function') mpCombatStart(G.enemy);
   if(o.hail){ const hid = pickHail(o.hail===true ? (G.enemy.hailTag || G.enemy.faction) : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
@@ -473,6 +478,7 @@ function finishCombat(kind, offer){
   if(G.afterWin){ const aw = G.afterWin; G.afterWin = null; L.push(...applyEffect(aw)); if(aw.text) L.unshift(aw.text); }
   { const pt = curDiff().patch || 0, sh = G.ship; if(pt && sh.hull < sh.maxHull){ const h = Math.min(pt, sh.maxHull - sh.hull); sh.hull += h; L.push(`Your crew patches ${h} hull from the wreckage`); } }   // Easy: a little mercy between fights
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
+  if(typeof anomCombatEnd==='function') anomCombatEnd(kind, e, L);   // pilgrims, pets (anomalies.js)
   if(typeof homeFight==='function') homeFight();
   if(typeof petAfterFight==='function') petAfterFight(L);
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)
@@ -580,6 +586,7 @@ function updateGame(dt){
     const foe = G.enemy && !G.enemy.dead ? G.enemy : null;
     if(foe) G.combatT += dt;
     tickShip(G.ship, dt, foe); if(typeof petTick==='function') petTick(dt);   // the ship's pet at work (expansion.js)
+    if(typeof anomTick==='function') anomTick(dt);   // leaks, fungus, evolved pets (anomalies.js)
     if(foe && !G.duel){ tickShip(foe, dt, G.ship); enemyBrain(foe, G.ship, dt); }   // a duel opponent's ship runs in their own game
     deployDrones(G.ship, foe); if(foe && !G.duel) deployDrones(foe, G.ship);
     tickUnits(dt);
@@ -599,7 +606,7 @@ function updateGame(dt){
         if(s.hull < st.ph || foe.hull < st.eh || pc < st.pc || ec < st.ec || es > (st.es===99 ? es : st.es)){ G.stT = 0; }
         else if(!G.paused) G.stT = (G.stT||0) + dt;
         st.ph = Math.min(st.ph, s.hull); st.eh = Math.min(st.eh, foe.hull); st.pc = Math.min(st.pc, pc); st.ec = Math.min(st.ec, ec); st.es = st.es===99 ? es : Math.max(st.es, es);
-        if(G.stT > 45 && foe.fleeT==null){ foe.fleeT = 12; foe.stalemate = true; toast(`Neither ship can land a blow. The ${foe.name} gives up and spins up its jump drive.`); } }
+        if(G.stT > 45 && foe.fleeT==null && !foe.relentless){ foe.fleeT = 12; foe.stalemate = true; toast(`Neither ship can land a blow. The ${foe.name} gives up and spins up its jump drive.`); } }
       if(foe.fleeT!=null && !foe.dead){ if(foe.stalemate || (eff(foe,'engines')>0 && (manned(foe,'piloting') || foe.auto))) foe.fleeT -= dt; if(foe.fleeT<=0){ finishCombat('fled'); return; } }
     }
     if(G.enemy && G.enemy.dead){ G.dieT -= dt; const b = G.enemy._b; if(b && Math.random() < dt*10) burst(rand(b.x0,b.x1), rand(b.y0,b.y1), .8, '#ff8a3d'); if(G.dieT<=0){ finishCombat(G.enemy.deadKind || 'destroyed'); } }
@@ -619,6 +626,7 @@ function updateGame(dt){
     else if(!e.auto && ownerCrewCount('e')===0){ e.dead = true; e.deadKind = 'crew'; G.dieT = .8; if(typeof juiceKill==='function') juiceKill(e, 'crew'); G.proj = G.proj.filter(p=>p.from!=='e'); G.units = G.units.filter(u=>u.side!=='e'); }
   }
   if(typeof mpGameTick==='function' && mpGameTick(dt)) return;
+  if(UI.screen==='game' && G.ship.hull<=0 && typeof anomRescue==='function' && anomRescue()) return;   // a time fracture snaps back (anomalies.js)
   if(UI.screen==='game' && (G.ship.hull<=0 || ownerCrewCount('p')===0)){
     endRun(false, G.ship.hull<=0 ? 'Your hull gave out. The Rebuff Fleet collects the pieces.' : 'Your last crew member is gone. The ship drifts on, empty.'); }
 }
