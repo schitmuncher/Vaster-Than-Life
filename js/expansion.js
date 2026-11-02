@@ -19,7 +19,7 @@ function refitMult(sh, w){ return sh && sh.side==='p' && w.mk ? 1 + MK_SPEED*w.m
 function drawRefits(st, cx, y, W2){
   const s = G.ship, ws = s.weapons.filter(w => DATA.weapons[w.id] && !DATA.weapons[w.id].heal); if(!ws.length) return;
   label('Workshop: refit the guns you have', cx, y, C.cyan, 'left', 14);
-  T('Each refit makes a gun charge 15% faster. Two refits per gun.', cx + 360, y, { s:13, c:C.muted, max:W2-360 });
+  T('Each refit: 15% faster charging. Two per gun.', cx + W2, y, { s:13, a:'right', c:C.muted, max:W2/2 - 20 });
   ws.slice(0, 4).forEach((w, i) => { const x = cx + (i%2)*(W2/2 + 6), yy = y + 14 + Math.floor(i/2)*60, bw = W2/2 - 6, d = DATA.weapons[w.id], mk = w.mk||0, c = refitCost(w);
     rr(x, yy, bw, 52, 8); ctx.fillStyle = 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
     T(weaponLabel(w), x+16, yy+24, { s:17, f:FD, w:700, c: mk ? C.cyan : C.ink, max:bw-250 }); T(`${(d.charge/(1 + MK_SPEED*mk)).toFixed(1)}s${mk < MK_MAX ? ` → ${(d.charge/(1 + MK_SPEED*(mk+1))).toFixed(1)}s` : ''}`, x+16, yy+44, { s:13, c:C.muted });

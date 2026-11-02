@@ -244,8 +244,8 @@ function drawMarket(m){
   T(`${k.name}, ${(DATA.races[k.race]||{}).name || ''} keeper (${k.mood}): "${String(m.greet).replace(/^"|"$/g, '')}"`, tx, f.y+44, { s:15, c:C.muted, max:f.x+f.w-260-tx });
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
   const list = storeTabs(st); if(!list.some(t => t[0]===UI.storeTab)) UI.storeTab = 'weapons';
-  const tw = Math.floor((f.w - 64 - (list.length-1)*8)/list.length);
-  tabs(f.x+32, f.y+76, list, UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; UI.storeMsg = null; UI.confirmTrade = null; }, tw);
+  const has = id => list.find(t => t[0]===id), extra = list.filter(t => !['weapons','drones','augments','systems','supplies','arms','tonics','crew','bar','goods','sell'].includes(t[0]));
+  groupTabs(f.x+32, f.y+76, f.w-64, [['Gear', [has('weapons'), has('drones'), has('augments'), has('systems')]], ['Supplies', [has('supplies'), has('arms'), has('tonics')]], ['Crew', [has('crew'), has('bar')]], ['Trade', [has('goods'), has('sell'), ...extra]]], UI.storeTab, t => { UI.storeTab = t; UI.storePage = 0; UI.storeMsg = null; UI.confirmTrade = null; }, 'store');
   const y0 = f.y+146, cx = f.x+32, W2 = f.w-64;
   const row = (i, name, sub, cost, onBuy, o={}) => { const y = y0 + i*94; panel(cx, y, W2, 84, 8);
     T(name, cx+20, y+28, { s:21, f:FD, w:700, c: o.soldTxt ? C.muted : C.ink, max:W2-360 }); if(o.stats) T(o.stats, cx+20 + Math.min(W2-760, ctx.measureText(name).width + 16), y+28, { s:13, c:C.cyan });

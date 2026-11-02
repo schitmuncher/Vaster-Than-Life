@@ -63,6 +63,14 @@ function panel(x,y,w,h,r=10){ rr(x,y,w,h,r); const g = ctx.createLinearGradient(
 
 function bar(x,y,w,h,frac,col,bg=C.panel2){ rr(x,y,w,h,3); ctx.fillStyle = bg; ctx.fill(); if(frac>0){ rr(x,y,Math.max(3,w*clamp(frac,0,1)),h,3); ctx.fillStyle = col; ctx.fill(); } }
 function tabs(x,y,list,cur,set,w=150){ list.forEach((t,i)=>btn(x+i*(w+8), y, w, 44, t[1], ()=>set(t[0]), { fill:cur===t[0], s:16 })); }
+/* a few big group tabs, then the current group's own tabs on the same row: fewer, bigger targets */
+function groupTabs(x, y, width, groups, cur, set, key){
+  groups = groups.map(g => [g[0], g[1].filter(Boolean)]).filter(g => g[1].length); UI.lastSub = UI.lastSub || {};
+  let gi = groups.findIndex(g => g[1].some(t => t[0]===cur)); if(gi < 0) gi = 0; const sub = groups[gi][1]; UI.lastSub[key + gi] = cur;
+  const gw = 168, gap = 8; groups.forEach((g, i) => btn(x + i*(gw+gap), y, gw, 44, g[0], () => set(UI.lastSub[key + i] && g[1].some(t => t[0]===UI.lastSub[key + i]) ? UI.lastSub[key + i] : g[1][0][0]), { fill:i===gi, s:17 }));
+  if(sub.length < 2) return; const sx = x + groups.length*(gw+gap) + 24, sw = Math.min(170, Math.floor((width - (sx - x) - (sub.length-1)*gap)/sub.length));
+  ctx.fillStyle = hexA(C.amber, .5); ctx.fillRect(sx - 14, y + 8, 2, 28);
+  sub.forEach((t, i) => btn(sx + i*(sw+gap), y, sw, 44, t[1], () => set(t[0]), { fill:cur===t[0], s:15, col:C.cyan })); }
 
 /* ---------------- stars ---------------- */
 const STARS = Array.from({length:240}, () => ({ x:Math.random()*W, y:Math.random()*H, z:rand(.2,1) }));
@@ -1144,14 +1152,16 @@ function mframe(w,h,title,col=C.amber,m){ if(typeof fixThe==='function') title =
 function drawModal(){
   const m = G.modal;
   switch(m.type){
-    case 'msg': { const f = mframe(960, clamp(230 + lines(m.text||'', 896, `400 21px ${FM}`).length*31, 340, 560), m.title, C.amber, m); const txt = fillText(m.text, m.ctx||{ crew:randomCrewName() }); m.ctx = m.ctx || { crew:randomCrewName() }; const sh_ = typed(m, txt);
-      para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
+    case 'msg': { const K = readScale(), MW = K > 1 ? 1300 : 960, MS = Math.round(21*K), ML = Math.round(31*K);
+      const f = mframe(MW, clamp(230 + lines(m.text||'', MW-64, `400 ${MS}px ${FM}`).length*ML, 340, K > 1 ? 860 : 560), m.title, C.amber, m); const txt = fillText(m.text, m.ctx||{ crew:randomCrewName() }); m.ctx = m.ctx || { crew:randomCrewName() }; const sh_ = typed(m, txt);
+      para(sh_, f.x+32, f.y+110, f.w-64, { s:MS, lh:ML });
       if(sh_.length===txt.length){ btn(f.x+f.w-332, f.y+f.h-92, 300, 62, m.btn || 'Continue', () => { G.modal = null; if(m.then) m.then(); }, { fill:true });
         (m.extra||[]).forEach((x, i) => btn(f.x+32 + i*280, f.y+f.h-92, 260, 62, x.label, () => x.fn(m), { col:C.cyan, s:18 })); }   // e.g. fishing at a quiet beacon
       else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'event': drawEventModal(m); break;
-    case 'result': { const f = mframe(960, clamp(220 + lines(m.text||'', 896, `400 21px ${FM}`).length*31 + Math.min(8,(m.lines||[]).length)*32, 360, 620), m.title||'Outcome', C.amber, m); const sh_ = typed(m, m.text||''); const hgt = para(sh_, f.x+32, f.y+110, f.w-64, { s:21, lh:31 });
-      if(sh_.length===(m.text||'').length){ (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+146 + hgt + i*32, { s:19, c: /^-|lost|damaged|fire|injured|closer/i.test(l) ? C.hostile : C.good }));
+    case 'result': { const K = readScale(), RW = K > 1 ? 1300 : 960, RS = Math.round(21*K), RL = Math.round(31*K), LS = Math.round(19*K), LL = Math.round(32*K);
+      const f = mframe(RW, clamp(220 + lines(m.text||'', RW-64, `400 ${RS}px ${FM}`).length*RL + Math.min(8,(m.lines||[]).length)*LL, 360, K > 1 ? 900 : 620), m.title||'Outcome', C.amber, m); const sh_ = typed(m, m.text||''); const hgt = para(sh_, f.x+32, f.y+110, f.w-64, { s:RS, lh:RL });
+      if(sh_.length===(m.text||'').length){ (m.lines||[]).slice(0,8).forEach((l,i) => T('› ' + l, f.x+32, f.y+110 + Math.round(36*K) + hgt + i*LL, { s:LS, c: /^-|lost|damaged|fire|injured|closer/i.test(l) ? C.hostile : C.good }));
         btn(f.x+f.w-332, f.y+f.h-92, 300, 62, 'Continue', () => closeResult(m), { fill:true }); } else T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); break; }
     case 'map': drawMapModal(); break;
     case 'swapcrew': drawSwapCrew(m); break;
@@ -1189,29 +1199,32 @@ function drawModal(){
   }
 }
 
+/* phones: story scenes read at a bigger size, with a slimmer picture */
+function readScale(){ return typeof MOB!=='undefined' && MOB.touch && MOB.gh && MOB.gh < 600 ? 1.38 : 1; }
 function drawEventModal(m){
+  const K = readScale(), FW = K > 1 ? 1440 : 1120, AH = K > 1 ? 84 : 150, TS = Math.round(20*K), TL = Math.round(29*K), CS = Math.round(19*K), CL = Math.round(27*K);
   const base = DATA.events[m.id]; const ev = m.inline || base; if(!ev){ G.modal = null; return; }
   const node = G.map?.nodes[G.map.cur];
   const title = m.title ? m.title : base?.title ? base.title : m.combat ? 'Incoming hail' : (node?.quest===m.id || base?.questOnly) ? 'Quest beacon' : (base?.distress || node?.distress) ? 'Distress beacon' : 'Beacon';
   m.ctx = m.ctx || { crew:randomCrewName() }; m.who = m.who || {};
   const fullText = fillText(ev.text, m.ctx);
   const visChoices = ev.choices.filter(c => !(reqHidden(c.req) && !reqMet(c.req)));
-  let need = 272 + lines(fullText, 1056, `400 20px ${FM}`).length*29 + 16 + (m.lines ? Math.min(4, m.lines.length)*26 + 4 : 0);
+  let need = 122 + AH + lines(fullText, FW-64, `400 ${TS}px ${FM}`).length*TL + 16 + (m.lines ? Math.min(4, m.lines.length)*26 + 4 : 0);
   for(const c of visChoices){ const rk = c.req?.race || (c.req?.quirk ? 'q:' + c.req.quirk : '_'); if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : c.req?.quirk ? quirkCrewName(c.req.quirk) : m.ctx.crew;
-    need += lines(`1. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`, 1010, `400 19px ${FM}`).length*27 + 32; }
-  const f = mframe(1120, clamp(need + 30, 480, 940), title, m.combat ? C.hostile : C.amber, m);
+    need += lines(`1. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`, FW-110, `400 ${CS}px ${FM}`).length*CL + 32; }
+  const f = mframe(FW, clamp(need + 30, 480, 960), title, m.combat ? C.hostile : C.amber, m);
   const ak = artFor(base || ev, m); const art = eventArt(ak, (m.id||'x') + (m.inline ? ':' + (ev.text||'').length : ''), 1056, 150);
-  ctx.drawImage(art, f.x+32, f.y+84); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.strokeRect(f.x+32, f.y+84, 1056, 150);
+  ctx.drawImage(art, 0, (150-AH)/2, 1056, AH, f.x+32, f.y+84, FW-64, AH); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.strokeRect(f.x+32, f.y+84, FW-64, AH);
   // a scene about one of your crew shows who it is about
   { const sc = m.ctx && m.ctx.starId && typeof crewById==='function' ? crewById(m.ctx.starId) : null;
-    if(sc && !m.combat && !(base && base.noStar)){ const px = f.x+32+78, py = f.y+84+68; ctx.beginPath(); ctx.arc(px, py, 50, 0, 7); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
-      if(typeof ensureLook==='function') ensureLook(sc); drawPortrait(px, py, 40, sc, false);
+    if(sc && !m.combat && !(base && base.noStar)){ const px = f.x+32+78, py = f.y+84+(K > 1 ? 42 : 68); ctx.beginPath(); ctx.arc(px, py, K > 1 ? 38 : 50, 0, 7); ctx.fillStyle = 'rgba(6,9,18,.82)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
+      if(typeof ensureLook==='function') ensureLook(sc); drawPortrait(px, py, K > 1 ? 31 : 40, sc, false);
       const tag = sc.name + (sc.quirk && typeof quirkName==='function' ? ' · ' + quirkName(sc) : ''); ctx.font = `700 15px ${FD}`; const tw = ctx.measureText(tag).width + 20;
-      const tx = Math.max(f.x+40, px - tw/2); rr(tx, f.y+84+120, tw, 24, 12); ctx.fillStyle = 'rgba(6,9,18,.9)'; ctx.fill(); T(tag, tx + tw/2, f.y+84+137, { s:15, f:FD, w:700, a:'center', c:C.amber }); } }
-  if(m.combat && G.enemy?._art){ const a = G.enemy._art.c; const sc = Math.min(560/a.width, 140/a.height); const w = a.width*sc, h = a.height*sc; ctx.drawImage(a, f.x+32+1056-w-20, f.y+84+(150-h)/2, w, h); glow(f.x+32+1056-w*.2, f.y+84+75, 60, C.hostile, .15); }
-  let y = f.y + 272;
+      const tx = Math.max(f.x+40, px - tw/2); rr(tx + (K > 1 ? 70 : 0), f.y+84+(K > 1 ? 58 : 120), tw, 24, 12); ctx.fillStyle = 'rgba(6,9,18,.9)'; ctx.fill(); T(tag, tx + (K > 1 ? 70 : 0) + tw/2, f.y+84+(K > 1 ? 75 : 137), { s:15, f:FD, w:700, a:'center', c:C.amber }); } }
+  if(m.combat && G.enemy?._art){ const a = G.enemy._art.c; const sc = Math.min(560/a.width, (AH-10)/a.height); const w = a.width*sc, h = a.height*sc; ctx.drawImage(a, f.x+FW-32-w-20, f.y+84+(AH-h)/2, w, h); glow(f.x+FW-32-w*.2, f.y+84+AH/2, 60, C.hostile, .15); }
+  let y = f.y + 122 + AH;
   const text = fillText(ev.text, m.ctx); const shown = typed(m, text); const done = shown.length===text.length;
-  y += para(shown, f.x+32, y, f.w-64, { s:20, lh:29 });
+  y += para(shown, f.x+32, y, f.w-64, { s:TS, lh:TL });
   if(!done){ T('Click to skip', f.x+f.w-32, f.y+f.h-24, { s:14, a:'right', c:C.muted }); return; }
   if(m.lines && m.lines.length){ y += 4; for(const l of m.lines.slice(0,4)){ T('› ' + l, f.x+32, y+4, { s:17, c: /^-|lost|injured|fire|closer/i.test(l) ? C.hostile : C.good }); y += 26; } }
   y += 12;
@@ -1220,12 +1233,12 @@ function drawEventModal(m){
     const ok = reqMet(c.req), blue = reqHidden(c.req);
     const rk = c.req?.race || (c.req?.quirk ? 'q:' + c.req.quirk : '_'); if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : c.req?.quirk ? quirkCrewName(c.req.quirk) : m.ctx.crew;
     const txt = `${i+1}. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`;
-    const ls = lines(txt, f.w-110, `400 19px ${FM}`); const h = ls.length*27 + 22;
+    const ls = lines(txt, f.w-110, `400 ${CS}px ${FM}`); const h = ls.length*CL + 22;
     const hov = ok && hovered(f.x+32, y, f.w-64, h);
     rr(f.x+32, y, f.w-64, h, 8); const g = ctx.createLinearGradient(f.x, 0, f.x+f.w, 0); g.addColorStop(0, hov ? hexA(blue?C.cyan:C.amber,.22) : '#18203c'); g.addColorStop(1, '#0f1529'); ctx.fillStyle = g; ctx.fill();
     ctx.lineWidth = hov?3:1.5; ctx.strokeStyle = !ok ? C.line : blue ? C.cyan : (hov?C.amber:C.line); ctx.stroke();
     if(hov){ ctx.fillStyle = blue ? C.cyan : C.amber; ctx.fillRect(f.x+32, y+4, 4, h-8); }
-    ls.forEach((l,k) => T(l, f.x+54, y+31+k*27, { s:19, c: !ok ? C.muted : blue ? C.cyan : C.ink }));
+    ls.forEach((l,k) => T(l, f.x+54, y+Math.round(31*K)+k*CL, { s:CS, c: !ok ? C.muted : blue ? C.cyan : C.ink }));
     if(ok) region(f.x+32, y, f.w-64, h, () => chooseOption(c), 'choice:' + i);
     y += h + 10;
   });
@@ -1485,7 +1498,7 @@ function shipAdvice(s){ const y = k => s.systems[k]?.max || 0, wNeed = s.weapons
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons'],['arms','Armoury'],['augments','Augments'],['layout','Layout'],['hold','Hold'],['garden','Garden'],['workshop','Workshop'],['factions','Factions'],['log','Log']], UI.tab, t => { UI.tab = t; UI.swapA = null; }, 118);
+  groupTabs(f.x+32, f.y+76, f.w-64, [['Ship', [['systems','Systems'],['gear','Weapons'],['augments','Augments'],['layout','Layout']]], ['Crew', [['crew','Crew'],['arms','Armoury'],['factions','Factions']]], ['Cargo', [['hold','Hold'],['garden','Garden'],['workshop','Workshop']]], ['Log', [['log','Captain\'s log']]]], UI.tab, t => { UI.tab = t; UI.swapA = null; }, 'ship');
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
