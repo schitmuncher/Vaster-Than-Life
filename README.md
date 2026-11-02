@@ -97,7 +97,7 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 
 **Tutorial**
 - **Flight school**, on the title screen. **Guided practice** is a real fight against a training target, one step at a time, with each control lit up as you need it: power, aiming, pausing, a fire, a hull breach, a boarder, the medbay, doors, crew autopilot, volleys, salvage, the map, a jump, a store and an upgrade. Your ship can't be lost, and it never touches your saved run.
-- **Lessons**: 12 illustrated chapters, 56 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
+- **Lessons**: 12 illustrated chapters, 57 short pages, covering everything: the mission and the map, your ship and power, weapons, staying alive, crew, damage control, drones and gadgets, events and stores, life aboard (garden, hearts, birthdays, pets, fishing), stories and career, other ways to play, and controls.
 
 **Hand-to-hand combat**
 - **Personal weapons and armour.** Every crew member has a weapon slot and an armour slot (Ship → **Armoury**). 22 kinds of kit: blunt (wrench, stun baton, gravity hammer that throws foes out of the room), blades (knife, cutlass, fire axe, plasma torch, monofilament sword: cuts bleed), guns (laser pistol, boarding shotgun, pulse rifle: they also shoot into neighbouring rooms) and weird ones (freeze ray, spore pistol, tentacle whip, life-leech glove, mender's staff, a rubber chicken that makes the whole room stop to laugh). Armour: flak vest, boarding plate, void suit (breathe without air), personal shield, auto-medpack.
@@ -162,7 +162,16 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **The workshop.** Buy machines at stores and they work while you jump: a preserves jar, a fermentation keg, a zero-G cask that ages wine into a fortune (only on deep-space jumps), a seed maker, a recycler (junk and fish into drone parts) and a loom (ballistic cloth that mends all your crew's kit). Ship → Workshop.
 - **Crossbreeding.** Harvest a crop next to a different one and you may get a hybrid seed: Frostfire root or Solar vine.
 - **Crew off duty.** Between jumps the daredevil spars, the poet writes epic poems worth selling, the tinkerer scrounges scrap (and sometimes sets fire to things), the cook turns crops into stew, the collector finds junk and the bookworm reads the crew manuals. Rivals at the same station in a fight may come to blows; sweethearts together on the shields charge them faster; veterans slowly teach rookies who share their room. At 6 hearts a crew member asks a personal favour; at 10 they make the ship a keepsake.
-- **Haven's Rest.** Your great-uncle's old station, restored across runs, Stardew-style: send goods home from any store to complete each wing's bundle. Seven wings (the Biodome, Aquaculture Bay, the Promenade, the Engineering Deck, the Communications Relay, the Smuggler's Fence, the Cellar), each giving every future run a perk. Or let the Directorate's contractors rebuild a wing for renown. Win a story with its best ending and whoever you saved moves in, and flies with you against the Flaggship in later runs. On the title screen.
+- **Going home.** A run is no longer just A to B: every sector but the last has a **Haven's Rest relay** on its map (HOME) that jumps you to the station and back. At home:
+  - **Bunks**: rest a night. Everyone healed, cabin fever cured, hearts up; the Fleet gains a little while you sleep.
+  - **Drydock**: hull repairs at half store prices (free once restored), scars patched at half price, room swaps at half price, and a **weapon locker** that keeps guns between runs.
+  - **Greenhouse**: beds that keep growing on every jump of every run, with half as much again at harvest, and starfruit, which only grows here.
+  - **Cantina** (once restored): hire visiting specialists, already experts at something.
+  - **Market** (once the Promenade is restored): rare augments, starfruit seeds, and 20% over the going rate for your goods.
+  - **Freight**: send goods to finish the wings' bundles.
+- **Cabin fever.** Eleven jumps without a port and the crew lose hearts every jump and repair 10% slower; after sixteen, things start to rattle loose. Any store or a trip home cures it.
+- **Madame Ossery** will lease the whole station: every wing restored at once, but she takes rent every run and a fee every time you dock, and no ally will move into a station she owns.
+- **Haven's Rest.** Your great-uncle's old station, restored across runs, Stardew-style: send goods home from any store to complete each wing's bundle. Eight wings (the Biodome, Aquaculture Bay, the Promenade, the Engineering Deck, the Communications Relay, the Smuggler's Fence, the Cellar, the Cantina), each giving every future run a perk. Or let the Directorate's contractors rebuild a wing for renown. Win a story with its best ending and whoever you saved moves in, and flies with you against the Flaggship in later runs. On the title screen.
 - **The wreck of your last ship.** Lose a run, and next time you may find what's left of your old ship: salvage its guns, hold a service for its crew, or search the decks and meet what's still aboard.
 
 **Runs that stop being polite**
@@ -534,6 +543,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/arms.js` | Personal weapons and armour: kit data, melee effects, wear and repair, enemy kit and drops, the Armoury tab and store |
 | `js/items.js` | Tonics and treats: permanent per-crew boosts, skill chips, boosts, healing, eating raw crops, the Tonics view and store tab |
 | `js/living.js` | Faction standing, room combos and the shipyard, the workshop, crew off duty, crossbreeding, Haven's Rest, the wreck of your last ship |
+| `js/havenvisit.js` | Visiting Haven's Rest during a run: the relay beacon, bunks, drydock and weapon locker, greenhouse, cantina, market, cabin fever, Ossery's lease |
 | `js/anomalies.js` | Ship scars, anomalies (fungus, escort AI, crystal, Black Mark, pilgrims, time fracture), trade-off augments, elite ships, bonds at work, pet diets, event twists |
 | `js/hulls.js` | Ship looks per faction: hull outlines, engines, fins, decorations, plating and cockpits |
 | `js/midi.js` | A small MIDI player that plays a campaign's theme in different arrangements at different moments |

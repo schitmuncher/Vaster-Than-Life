@@ -75,8 +75,8 @@ function comboFx(sh, k){
   if(!G || sh!==G.ship) return 0; let v = 0; for(const C_ of combosOf(sh)) if(typeof C_.fx[k]==='number') v += C_.fx[k];
   if(k==='shield'){ const sr = roomOf(sh, 'shields'); if(sr >= 0 && sh.crew.some(c => c.room===sr && c.bond && c.bond.kind==='sweethearts' && sh.crew.some(o => o.id===c.bond.id && o.room===sr))) v += .1; }   // sweethearts guard each other
   return v; }
-function swapCost(){ return Math.round((30 + 8*(G.sector||1)) * (havenDone('engineering') ? .5 : 1)); }
-function atStore(){ return !!(G && G.map && G.map.nodes[G.map.cur] && G.map.nodes[G.map.cur].type==='store'); }
+function swapCost(){ const home = G && G.map && G.map.nodes[G.map.cur] && G.map.nodes[G.map.cur].type==='haven'; return Math.round((30 + 8*(G.sector||1)) * (havenDone('engineering') ? .5 : 1) * (home ? .5 : 1)); }
+function atStore(){ return !!(G && G.map && G.map.nodes[G.map.cur] && ['store','haven'].includes(G.map.nodes[G.map.cur].type)); }
 function swapRooms(a, b){ const sh = G.ship, ra = sh.rooms[a], rb = sh.rooms[b]; if(!ra || !rb) return; const t = ra.sys; ra.sys = rb.sys; rb.sys = t; sh._combos = null; if(typeof shipArt==='function') sh._art = null; }
 
 /* ---------------- the workshop ---------------- */
@@ -166,6 +166,7 @@ function livingRunStart(){
   if(havenDone('engineering')){ s.maxHull += 3; s.hull += 3; }
   if(havenDone('relay')){ G.fuel += 4; if(G.map) for(const n of G.map.nodes) n.revealed = true; }
   if(havenDone('cellar')) G.scrap += 60;
+  if(typeof havenRunStart==='function') havenRunStart();
   if(PROFILE.lastWreck){ G.wreck = PROFILE.lastWreck; G.later.push({ event:'old_wreck', jumps:ri(7, 15) }); }
 }
 function livingRunEnd(win, reason){
@@ -173,7 +174,7 @@ function livingRunEnd(win, reason){
   if(!win && havenPerksOn() && !G.noSave){ PROFILE.lastWreck = { name:G.ship.name, def:G.shipDef, weapons:G.ship.weapons.map(w => w.id).slice(0, 3), crew:[...(G.lost || []), ...G.ship.crew.filter(c => c.owner==='p' && !c.drone).map(c => c.name)].slice(0, 6), sector:G.sector, boarded:/crew/.test(reason || '') }; }
 }
 function livingArrive(node, first){
-  if(!G) return; machineJump(node); crewDowntime();
+  if(!G) return; machineJump(node); crewDowntime(); if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump();
   if(havenDone('biodome') && havenPerksOn() && G.garden && G.hazard!=='ionstorm') for(const p of G.garden.plots) if(p) p.g += .25;
   if(G._shop){ const spent = (G.spent||0) - G._shop.spent; if(spent > 0){ const k = G._shop.kind, gain = Math.floor(spent / 25) * (k==='sloog' ? 2 : 1); if(FACTIONS[k]) repAdd(k, gain, 'good business'); if(k==='nebula') repAdd('pyrate', Math.floor(spent / 40)); } G._shop = null; }
   if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; }
@@ -254,7 +255,10 @@ function drawHaven(){
     if(!done) btn(x+500, y+80, 200, 44, `Renown · ${fmtNum(w.renown)}`, () => havenBuy(w), { s:14, disabled:renownFree() < w.renown }); });
   const res = H_.residents || []; label('Residents', 840, 820, '#9fdc7a', 'left', 15);
   para(res.length ? `${res.join(', ')}. They fly with you against the Flaggship in every run (up to four).` : 'Nobody yet. Win a story with its best ending, and whoever you saved will move in, and fly with you against the Flaggship.', 840, 846, 680, { s:14, lh:20, c:C.ink });
-  btn(60, 870, 200, 64, 'Back', () => { UI.screen = 'title'; });
+  if(!H_.leased){ btn(300, 870, 420, 64, UI.leaseAsk ? 'Sure? Rent every run, no residents' : 'Lease it to Madame Ossery', () => { if(!UI.leaseAsk){ UI.leaseAsk = true; return; } UI.leaseAsk = false; havenLease(); }, { s:16, col:C.hostile });
+    tip(300, 870, 420, 64, 'Madame Ossery\'s lease', 'Every wing restored overnight. But Ossery takes 50 scrap at the start of every run and 15 every time you dock, and no ally will move into a station she owns.'); }
+  else T('Leased to Madame Ossery: 50 scrap rent every run, 15 to dock.', 300, 908, { s:15, c:C.hostile });
+  btn(60, 870, 200, 64, 'Back', () => { UI.screen = 'title'; UI.leaseAsk = false; });
 }
 
 /* ---------------- crossbreeding: two different crops side by side ---------------- */
@@ -268,7 +272,7 @@ if(typeof SEEDS!=='undefined') Object.assign(SEEDS, {
 
 /* ---------------- Haven's Rest residents: the people your stories saved ---------------- */
 const BEST_ENDINGS = { pip:['trusted','free'], vance:['vance_loyal'], flotilla:['fl_reborn','fl_few'], harte:['harte_wing','harte_rivals'] };
-function havenResident(ek){ if(!G || !havenPerksOn() || !G.arc || !ARCS[G.arc]) return; const A = ARCS[G.arc], best = BEST_ENDINGS[G.arc] || (A.medal ? [A.medal] : []);
+function havenResident(ek){ if(!G || !havenPerksOn() || haven().leased || !G.arc || !ARCS[G.arc]) return; const A = ARCS[G.arc], best = BEST_ENDINGS[G.arc] || (A.medal ? [A.medal] : []);
   if(!best.includes(ek)) return; const H_ = haven(); H_.residents = H_.residents || []; if(H_.residents.includes(A.who)) return; H_.residents.push(A.who); saveProfile(); toast(`${A.who} has moved into Haven's Rest, and will fly with you against the Flaggship in future runs.`); }
 function havenResidentsHelp(e){ const R_ = (PROFILE.haven && PROFILE.haven.residents) || []; if(!R_.length || !havenPerksOn()) return; const n = Math.min(4, R_.length);
   e.hull = Math.max(6, e.hull - 2*n); if(e.systems.shields) ionize(e, 'shields', n); toast(`From Haven's Rest: ${R_.slice(-n).join(', ')} ${n>1 ? 'arrive' : 'arrives'} to help. The Flaggship takes ${2*n} damage before you fire.`); }

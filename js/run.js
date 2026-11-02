@@ -100,6 +100,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0; if(typeof situEnter==='fu
   const mids = nodes.filter(nd => nd.col>=2 && nd.col<=cols-2);
   const storeN = Math.random() < .25 ? 3 : 2; const placed = [];
   for(const nd of shuffle(mids.slice())){ if(placed.length>=storeN) break; if(placed.some(p => Math.abs(p.col - nd.col) < 2)) continue; nd.type = 'store'; nd.distress = false; placed.push(nd); }
+  if(typeof havenPlace==='function' && G) havenPlace(nodes, cols, final);   // the relay home (havenvisit.js)
   G.map = { nodes, cur:0, trail:[0] }; G.fleetX = -.2; G.hazard = null; G.nebula = false;
   if(G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='mystic') && Math.random() < .6){ const hid = nodes.filter(nd => !nd.revealed); shuffle(hid); for(const nd of hid.slice(0, 4)) nd.revealed = true; G.mysticSaw = true; }   // a mystic dreams the way ahead
   while(G.questQueue.length){ const q = G.questQueue.shift(); placeQuest(q); }
@@ -182,6 +183,7 @@ function arrive_(i){
   G.later = G.later.filter(l => l!==due && (l.jumps > -12 || !DATA.events[l.event]?.moment));   // a scene that never found a beacon is dropped eventually
   if(due){ startEvent(due.event, { star:due.star }); return; }
   if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
+  if(node.type==='haven' && typeof havenArrive==='function'){ havenArrive(node, i); return; }   // home (havenvisit.js)
   if(node.type==='store' && typeof anomStoreBlock==='function' && anomStoreBlock(node)){ save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
   if(!first && typeof fishButton==='function' && G.rod && fishSpot(node) && node.type==='empty' && !G.hazard){ G.modal = { type:'msg', title:'Back at the fishing spot', text:'The same quiet patch of space. The fish here have heard about you.', extra:[fishButton(node)].filter(Boolean) }; save(); return; }

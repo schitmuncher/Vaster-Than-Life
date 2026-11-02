@@ -917,11 +917,12 @@ function drawQuiet(){
   const b = EBOX; const node = G.map?.nodes[G.map.cur];
   ctx.beginPath(); ctx.arc(b.x+b.w*.62, b.y+b.h*.46, 150, 0, 7); const pg = ctx.createRadialGradient(b.x+b.w*.55,b.y+b.h*.38,10,b.x+b.w*.62,b.y+b.h*.46,150);
   pg.addColorStop(0, G.nebula ? '#5a4a8f' : '#3a4f7a'); pg.addColorStop(1,'#0c1226'); ctx.fillStyle = pg; ctx.fill();
-  label(node?.type==='store' ? 'Store beacon' : node?.type==='exit' ? 'Exit beacon' : node?.type==='base' ? 'Fedoration Command' : 'Beacon', b.x+20, b.y+34, C.cyan, 'left', 18);
+  label(node?.type==='haven' ? 'Haven\'s Rest relay' : node?.type==='store' ? 'Store beacon' : node?.type==='exit' ? 'Exit beacon' : node?.type==='base' ? 'Fedoration Command' : 'Beacon', b.x+20, b.y+34, C.cyan, 'left', 18);
   T('No hostiles in range.', b.x+20, b.y+74, { s:24, f:FD, w:600 });
   T(G.hazard ? HAZARDS[G.hazard] : 'Open the map to plot your next jump.', b.x+20, b.y+106, { s:18, c: G.hazard ? C.warn : C.muted });
   const boarders = G.ship.crew.filter(c => crewSide(c)!=='p').length;
   if(boarders) T(`${boarders} intruder${boarders>1?'s':''} still aboard!`, b.x+20, b.y+140, { s:20, f:FD, w:700, c:C.hostile });
+  if(node?.type==='haven' && typeof havenArrive==='function') btn(b.x+20, b.y+b.h-90, 240, 64, 'Go home', () => havenArrive(node, G.map.cur), { fill:true, col:'#9fdc7a' });
   if(node?.type==='store') btn(b.x+20, b.y+b.h-90, 240, 64, 'Open store', () => { if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:G.map.cur }; }, { fill:true });
   if(node?.type==='exit') btn(b.x+20, b.y+b.h-90, 300, 64, 'Jump to next sector', () => { G.modal = { type:'exit', opts:sectorOptions() }; }, { fill:true, col:C.good });
   btn(b.x+b.w-200, b.y+b.h-90, 180, 64, 'Map', openMap);
@@ -1157,6 +1158,7 @@ function drawModal(){
     case 'clinic': if(typeof drawClinic==='function') drawClinic(m); else G.modal = null; break;
     case 'fishing': if(typeof drawFishing==='function') drawFishing(m); else G.modal = m.back || null; break;
     case 'store': drawStoreModal(m); break;
+    case 'haven': if(typeof drawHavenVisit==='function') drawHavenVisit(m); else G.modal = null; break;
     case 'ship': drawShipModal(); break;
     case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 680, 'Exit beacon', C.good);
       para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
@@ -1249,6 +1251,7 @@ function mapIcon(kind, x, y, s, col, g = ctx){
   const u = s/2, dot = (px, py, r) => { g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); };
   g.beginPath();
   switch(kind){
+    case 'haven': g.moveTo(-u*.9, -u*.05); g.lineTo(0, -u*.85); g.lineTo(u*.9, -u*.05); g.moveTo(-u*.65, -u*.2); g.lineTo(-u*.65, u*.8); g.lineTo(u*.65, u*.8); g.lineTo(u*.65, -u*.2); g.stroke(); g.beginPath(); g.rect(-u*.18, u*.25, u*.36, u*.55); g.stroke(); break;
     case 'store': g.moveTo(-u*1.05, -u*.75); g.lineTo(-u*.7, -u*.75); g.lineTo(-u*.45, u*.35); g.lineTo(u*.8, u*.35); g.lineTo(u*1.0, -u*.45); g.lineTo(-u*.6, -u*.45); g.stroke(); dot(-u*.25, u*.78, u*.18); dot(u*.6, u*.78, u*.18); break;
     case 'hostile': g.arc(0, 0, u*.68, 0, 7); g.stroke(); g.beginPath(); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ g.moveTo(dx*u*.32, dy*u*.32); g.lineTo(dx*u*1.02, dy*u*1.02); } g.stroke(); break;
     case 'distress': dot(0, 0, u*.22); for(const r of [.55, .92]){ g.beginPath(); g.arc(0, 0, u*r, -.75, .75); g.stroke(); g.beginPath(); g.arc(0, 0, u*r, Math.PI-.75, Math.PI+.75); g.stroke(); } break;
@@ -1307,8 +1310,8 @@ function drawMapModal(){
   nodes.forEach((n,i) => {
     const x = mx(n), y = my(n), reach = reachSet.has(i), isCur = i===G.map.cur, hov = i===hovI;
     const flagHere = G.flag && G.flag.node===i, known = scan || n.revealed, taken = n.x < G.fleetX && !isCur, soon = !taken && !isCur && n.x < G.fleetX + step;
-    const hideSt = typeof storeHidden==='function' && storeHidden(n, reach), kind = flagHere ? 'flag' : n.type==='store' && !hideSt ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.elite && !n.visited ? 'elite' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
-    const col = { flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, elite:'#ff9f43', hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
+    const hideSt = typeof storeHidden==='function' && storeHidden(n, reach), kind = flagHere ? 'flag' : n.type==='haven' ? 'haven' : n.type==='store' && !hideSt ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.elite && !n.visited ? 'elite' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
+    const col = { haven:'#9fdc7a', flag:C.hostile, store:C.good, exit:C.good, base:C.good, quest:C.warn, distress:C.warn, elite:'#ff9f43', hostile:C.hostile, visited:C.muted, start:C.muted, empty:C.muted }[kind] || C.ink;
     const r = hov ? 25 : 20;
     if(hov) glow(x, y, 48, col, .45); else if(reach && jumpable) glow(x, y, 34, col, .16 + .08*Math.sin(t*3 + i));
     ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = n.visited ? '#10172c' : C.room; ctx.fill(); ctx.lineWidth = reach ? 3 : 2; ctx.strokeStyle = kind==='visited' ? hexA(col,.6) : col; ctx.stroke();
@@ -1322,12 +1325,12 @@ function drawMapModal(){
     if(showHz){ const hc = HZCOL[n.hazard] || C.warn, hx = x + 19, hy = y - 19; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fillStyle = '#0b1122'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = hc; ctx.stroke(); mapIcon(n.hazard, hx, hy, 13, hc);
       if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
     if(n.fishy && (known || n.visited || reach)){ T('🐟', x - 21, y - 14, { s:15, a:'center' }); }
-    let tag = n.type==='store' && !hideSt ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
+    let tag = n.type==='haven' ? 'HOME' : n.type==='store' && !hideSt ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
     if(flagHere) tag = 'FLAGGSHIP';
     if(tag) label(tag, x, y+48, col, 'center', 13);
     if(taken){ ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
-    { const name = n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
+    { const name = n.type==='haven' ? 'Haven\'s Rest relay: jump home and back. Rest, repair, the locker, the greenhouse' : n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
       const ahead = (n.x - G.fleetX)/step; const bits = [];
       if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.'); if(n.fishy) bits.push(G.rod ? 'A fishing spot.' : 'A fishing spot (you need a rod).');
       if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
@@ -1340,7 +1343,7 @@ function drawMapModal(){
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
   // legend in the header
-  { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['elite','Veteran','#ff9f43'],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good]]){
+  { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['elite','Veteran','#ff9f43'],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good], ...(G.map.nodes.some(n => n.type==='haven') ? [['haven','Home','#9fdc7a']] : [])]){
       T(name, lx, f.y+45, { s:14, c:C.muted, a:'right' }); const tw = ctx.measureText(name).width; mapIcon(k, lx - tw - 16, f.y+40, 16, c); lx -= tw + 50; } }
   // footer: where the exit is, how far behind the fleet is, fuel
   ctx.fillStyle = hexA(C.cyan,.35); ctx.fillRect(f.x, ay+ah, f.w, 1.5);
@@ -1621,6 +1624,6 @@ window.addEventListener('keydown', e => {
   else if(e.key==='h' || e.key==='H'){ if(!G.modal){ returnToStations(G.ship); toast('Crew back to stations.'); } }
   else if(e.key==='+' || e.key==='=' || e.key==='-' || e.key==='_'){ const i = SPEEDS.indexOf(SET.speed||1); SET.speed = SPEEDS[clamp(i + (e.key==='+'||e.key==='=' ? 1 : -1), 0, SPEEDS.length-1)]; saveProfile(); toast(`Game speed ${Math.round(SET.speed*100)}%`); }
   else if(/^[1-4]$/.test(e.key) && !G.modal){ const i = +e.key-1, w = G.ship.weapons[i]; if(w && w.on) { UI.selWeapon = UI.selWeapon===i ? null : i; UI.mode = null; } }
-  else if(e.key==='Escape'){ if(G.modal && ['map','ship','store'].includes(G.modal.type)) G.modal = null; UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
+  else if(e.key==='Escape'){ if(G.modal && ['map','ship','store','haven'].includes(G.modal.type)) G.modal = null; UI.selCrew = null; UI.selWeapon = null; UI.mode = null; }
   if(typeof syncAfterInput==='function' && SYNC.on) syncAfterInput();
 });

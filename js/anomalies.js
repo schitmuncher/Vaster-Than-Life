@@ -163,9 +163,10 @@ function anomStoreBlock(node){
 
 /* ---------------- crew bonds in the same room ---------------- */
 function bondMult(c, kind){
-  if(!c || !c.bond || c.drone) return 1; const o = typeof crewById==='function' ? crewById(c.bond.id) : null; if(!o || o.room!==c.room || o.hp <= 0 || o.owner!==c.owner) return 1;
-  if(c.bond.kind==='rivals') return kind==='dps' ? 1.25 : .6;   // showing off in a fight, arguing over the wrench
-  return 1.15; }
+  const fever = kind==='rep' && G && G.anom && G.anom.fever && c && c.owner==='p' ? .9 : 1;   // cabin fever (havenvisit.js)
+  if(!c || !c.bond || c.drone) return fever; const o = typeof crewById==='function' ? crewById(c.bond.id) : null; if(!o || o.room!==c.room || o.hp <= 0 || o.owner!==c.owner) return fever;
+  if(c.bond.kind==='rivals') return (kind==='dps' ? 1.25 : .6) * (kind==='rep' && G && G.anom && G.anom.fever ? .9 : 1);   // showing off in a fight, arguing over the wrench
+  return 1.15 * fever; }
 
 /* ---------------- pets that change with their food ---------------- */
 const PET_EVO = {
