@@ -49,6 +49,7 @@ function newRun(shipId, name, o={}){
   logEntry(`Took command of ${G.ship.name}.`);
   G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
   if(typeof campaignRunStart==='function') campaignRunStart(o);   // Admiral Hale's send-off, Rebuff alert (campaign.js)
+  if(typeof livingRunStart==='function') livingRunStart();   // standing carried over, Haven's Rest perks, an old wreck (living.js)
   if(typeof mpRunStarted==='function') mpRunStarted(o);
   save();
 }
@@ -167,6 +168,7 @@ function arrive_(i){
   if(typeof campaignArrive==='function') campaignArrive(node, first);
   if(typeof petJump==='function') petJump();   // Pip has opinions (campaign.js)
   if(typeof anomArrive==='function') anomArrive(node, first);   // fungus, escorts, fractures (anomalies.js)
+  if(typeof livingArrive==='function') livingArrive(node, first);   // workshop, crew off duty, standing (living.js)
   emit('arrive', node);
   if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
     if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
@@ -340,6 +342,7 @@ function applyEffect(e){
   if(typeof armsEffect==='function') armsEffect(e, L);
   if(typeof itemsEffect==='function') itemsEffect(e, L);
   if(typeof anomEffect==='function') anomEffect(e, L);
+  if(typeof livingEffect==='function') livingEffect(e, L);
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -423,6 +426,7 @@ function startCombat_(id, o={}){
   if(hasAug(s,'preigniter')) for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || 0;
   G.enemy.super = G.enemy.superMax;
   if(typeof anomCombatStart==='function') anomCombatStart(G.enemy, Object.assign({ id:def.id || id }, def), o);
+  if(typeof livingCombatStart==='function') livingCombatStart(G.enemy, def, o);
   sfx('alarm'); haptic(.3, 200); emit('combatStart', G.enemy); logEntry(`Engaged the ${G.enemy.name}.`);
   if(typeof mpCombatStart==='function') mpCombatStart(G.enemy);
   if(o.hail){ const hid = pickHail(o.hail===true ? (G.enemy.hailTag || G.enemy.faction) : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
@@ -479,6 +483,7 @@ function finishCombat(kind, offer){
   { const pt = curDiff().patch || 0, sh = G.ship; if(pt && sh.hull < sh.maxHull){ const h = Math.min(pt, sh.maxHull - sh.hull); sh.hull += h; L.push(`Your crew patches ${h} hull from the wreckage`); } }   // Easy: a little mercy between fights
   if(typeof sagaFightWon==='function') sagaFightWon(kind, e, L);
   if(typeof anomCombatEnd==='function') anomCombatEnd(kind, e, L);   // pilgrims, pets (anomalies.js)
+  if(typeof repCombatEnd==='function') repCombatEnd(kind, e);   // faction standing (living.js)
   if(typeof homeFight==='function') homeFight();
   if(typeof petAfterFight==='function') petAfterFight(L);
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)
@@ -511,6 +516,7 @@ function recordRun(win, reason){
 function endRun(win, reason){
   if(G && G.tut && typeof tutFinish==='function'){ tutFinish(false); return; }   // practice never counts
   if(typeof challengeCheck==='function') challengeCheck(win);
+  if(typeof livingRunEnd==='function') livingRunEnd(win, reason);
   sfx(win ? 'victory' : 'defeat'); recordRun(win, reason); if(typeof sagaRunEnd==='function') sagaRunEnd(win, reason);
   if(win && G.flags && G.flags.ghostWake) grant('exp_ghostwin');
   if(typeof campaignRunEnd==='function') campaignRunEnd(win, reason);   // renown, ranks, endings, alert levels (campaign.js)
@@ -587,6 +593,7 @@ function updateGame(dt){
     if(foe) G.combatT += dt;
     tickShip(G.ship, dt, foe); if(typeof petTick==='function') petTick(dt);   // the ship's pet at work (expansion.js)
     if(typeof anomTick==='function') anomTick(dt);   // leaks, fungus, evolved pets (anomalies.js)
+    if(typeof livingTick==='function') livingTick(dt);   // rivals, mentors (living.js)
     if(foe && !G.duel){ tickShip(foe, dt, G.ship); enemyBrain(foe, G.ship, dt); }   // a duel opponent's ship runs in their own game
     deployDrones(G.ship, foe); if(foe && !G.duel) deployDrones(foe, G.ship);
     tickUnits(dt);

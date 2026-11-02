@@ -119,11 +119,11 @@ function validateMod(d){
 const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire breach sysDamage crewDamage ion stun pierce rooms radius heal desc warm homing pin splash bounce crit wild salvage gas fear toast decoy drain disrupt color',
   drones:'name kind power cost rate shot targets role heal stun fear desc', races:'name color hp repair combat speed power heal fireproof telepathic mindImmune deathBurst learn armor noAir projected desc',
   augments:'name cost desc fx', arms:'name kind dmg dur cost tier stun bleed knock reach fear laugh leech heal repair fire armor vac medpack noLoot desc', items:'name kind cost tier hp dmg rep spd xp skill heal buff fights hearts cure noLoot desc', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
-  enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases style relentless mirror', ships:'name cls layout desc hull reactor color style image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',
+  enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases style relentless mirror revenant', ships:'name cls layout desc hull reactor color style image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',
   events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices twist req',
   challenges:'name desc tier ship difficulty rules start scrapMult goal' };
 const MOD_FX = 'evade ionRes sysRes breachRes ammo speed shield heal charge dps repair scrap superShield reactor'.split(' ');
-const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons scar unscar downgrade convert anom petEvo eatGoods loseAugment undoScrap'.split(' ');
+const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons scar unscar downgrade convert anom petEvo eatGoods loseAugment undoScrap rep wreckLoot wreckDone'.split(' ');
 let MOD_ALLOW = null;
 function modWarnings(d){
   if(!MOD_ALLOW){ MOD_ALLOW = {}; const B = typeof BASE!=='undefined' ? BASE : DATA;

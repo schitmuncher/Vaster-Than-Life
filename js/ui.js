@@ -126,6 +126,7 @@ function draw(){
     case 'ach': drawAchievements(); break;
     case 'challenges': drawChallenges(); break;
     case 'gallery': drawGallery(); break;
+    case 'haven': if(typeof drawHaven==='function') drawHaven(); break;
     case 'game': drawGame(); break;
     case 'over': case 'win': drawEnd(); if(UI.debrief && typeof drawDebrief==='function') drawDebrief(); break;
     case 'career': drawCareer(); break;
@@ -173,6 +174,7 @@ function drawTitle(){
     btn(tx, ty, tw, th, '', () => openTutorial(), { fill:fresh, col:C.good });
     T('🎓', tx + 40, ty + 74, { s:40, a:'center' }); T('Tutorial', tx + 76, ty + 56, { s:26, f:FD, w:700, c: fresh ? '#06231a' : C.good });
     T(PROFILE.tutDone ? 'Every system, explained' : 'Learn everything', tx + 76, ty + 86, { s:14, c: fresh ? '#06231a' : C.muted, max:tw - 90 });
+    if(typeof drawHaven==='function'){ const hy = ty + th + 12, nd = typeof HAVEN_WINGS!=='undefined' ? HAVEN_WINGS.filter(w => havenDone(w.id)).length : 0; btn(tx, hy, tw, 60, `Haven's Rest ${nd}/${HAVEN_WINGS.length}`, () => { UI.screen = 'haven'; }, { s:17, col:'#9fdc7a' }); tip(tx, hy, tw, 60, 'Haven\'s Rest', 'Your great-uncle\'s old station. Restore its wings with goods sent home from stores; each restored wing helps every future run.'); }
     tip(tx, ty, tw, th, 'Tutorial', 'Guided practice in a real fight, plus a page on every part of the game: power, weapons, crew, damage, drones, stores, the garden, pets, fishing, stories, career, multiplayer and mods.'); }
   drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
@@ -1480,7 +1482,7 @@ function shipAdvice(s){ const y = k => s.systems[k]?.max || 0, wNeed = s.weapons
 function drawShipModal(){
   const s = G.ship, f = mframe(1440, 880, s.name);
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons & drones'],['arms','Armoury'],['augments','Augments'],['hold','Hold & gifts'],['garden','Garden & galley'],['log','Captain\'s log']], UI.tab, t => UI.tab = t, 164);
+  tabs(f.x+32, f.y+76, [['systems','Systems'],['crew','Crew'],['gear','Weapons'],['arms','Armoury'],['augments','Augments'],['layout','Layout'],['hold','Hold'],['garden','Garden'],['workshop','Workshop'],['factions','Factions'],['log','Log']], UI.tab, t => { UI.tab = t; UI.swapA = null; }, 118);
   const y0 = f.y+146, cx = f.x+32;
   if(UI.tab==='systems'){
     const sysRow = (k, x, y) => { const sy = s.systems[k], capL = CAPS[k]||8, cost = upgradeCost(k, sy.max);
@@ -1532,6 +1534,9 @@ function drawShipModal(){
   } else if(UI.tab==='arms' && typeof drawArmouryTab==='function'){ drawArmouryTab(f, cx, y0);
   } else if(UI.tab==='hold' && typeof drawHoldTab==='function'){ drawHoldTab(f, cx, y0);
   } else if(UI.tab==='garden' && typeof drawGardenTab==='function'){ drawGardenTab(f, cx, y0);
+  } else if(UI.tab==='layout' && typeof drawLayoutTab==='function'){ drawLayoutTab(f, cx, y0);
+  } else if(UI.tab==='workshop' && typeof drawWorkshopTab==='function'){ drawWorkshopTab(f, cx, y0);
+  } else if(UI.tab==='factions' && typeof drawFactionsTab==='function'){ drawFactionsTab(f, cx, y0);
   } else if(UI.tab==='log'){
     label('Captain\'s log', cx, y0+10, C.muted, 'left', 14);
     const entries = (G.log||[]).slice(-17).reverse(); if(!entries.length) T('Nothing logged yet.', cx, y0+56, { s:18, c:C.muted });

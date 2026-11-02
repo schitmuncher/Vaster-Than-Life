@@ -10,7 +10,7 @@ function hasAug(sh, id){ return !!(sh && sh.augments && sh.augments.includes(id)
    scrap, charge, shield, speed, repair, dps (fractions: .15 = 15% more), evade (points), heal (health per second, everyone aboard),
    sysRes, ionRes, ammo (chances: system damage shrugged off, ion ignored, missile or drone part kept), breachRes (fraction fewer breaches),
    superShield (super shield points at the start of each fight) */
-function augFx(sh, k){ if(!sh || !sh.augments || !sh.augments.length) return 0; let v = 0; for(const id of sh.augments){ const f = DATA.augments[id]?.fx; if(f && typeof f[k]==='number') v += f[k]; } return v; }
+function augFx(sh, k){ if(!sh) return 0; let v = typeof comboFx==='function' ? comboFx(sh, k) : 0; if(!sh.augments || !sh.augments.length) return v; for(const id of sh.augments){ const f = DATA.augments[id]?.fx; if(f && typeof f[k]==='number') v += f[k]; } return v; }
 function hackedNow(sh, k){ const h = sh.hacked; return !!(h && h.attached && h.pulseT>0 && sh.rooms[h.room] && sh.rooms[h.room].sys===k); }
 function bonusPower(sh, k){ const i = roomOf(sh,k); if(i<0) return 0; let b = 0;
   for(const c of sh.crew){ if(c.drone || c.path.length || c.room!==i || crewSide(c)!==sh.side) continue; b += (DATA.races[c.race]?.power||0); } return b; }

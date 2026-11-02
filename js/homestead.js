@@ -29,7 +29,7 @@ function ripe(p){ return p && p.g >= SEEDS[p.seed].grow; }
 function harvest(i){ const gd = garden(), p = gd.plots[i]; if(!ripe(p)) return; const sd = SEEDS[p.seed]; let n = ri(sd.yield[0], sd.yield[1]); if(gardener()) n++;
   const bumper = Math.random() < (gardener() ? .25 : .12); if(bumper){ n *= 2; G.bumpers = (G.bumpers||0) + 1; }   // now and then, a bumper crop
   const got = addGoods(sd.crop, n); if(!got){ toast('Your hold is full. Sell or eat something first.'); return; }
-  gd.plots[i] = null; sfx('buy'); toast(`${bumper ? 'Bumper crop! ' : ''}Harvested ${got} ${goodsDef(sd.crop).name}${got < n ? ' (the rest would not fit)' : ''}.`);
+  gd.plots[i] = null; sfx('buy'); if(typeof crossBreed==='function') crossBreed(i, sd); toast(`${bumper ? 'Bumper crop! ' : ''}Harvested ${got} ${goodsDef(sd.crop).name}${got < n ? ' (the rest would not fit)' : ''}.`);
   if(bumper && typeof sagaNote==='function' && G.bumpers===1) sagaNote('garden', `The ship's garden produced a bumper crop of ${goodsDef(sd.crop).name.toLowerCase()} in sector ${G.sector}. Everyone had seconds.`);
   G.harvests = (G.harvests||0) + 1; if(G.harvests===1 && typeof sagaNote==='function') sagaNote('garden', `In sector ${G.sector} the crew brought in their first harvest from the ship's garden: ${got} ${goodsDef(sd.crop).name.toLowerCase()}.`);
   if(G.harvests >= 5) grant('home_harvest'); }
@@ -80,7 +80,7 @@ const GIFT_HATES = { rations:'*', junk:'*', contraband:['worrier','bookworm'], l
 function heartsOf(c){ return Math.floor(clamp(c && c.hearts || 0, 0, 1000)/100); }
 function addHearts(c, n){ if(!c || c.drone || c.owner!=='p') return; if(n > 0 && G && G.ship && G.ship.crew.some(o => o.owner==='p' && o.quirk==='romantic')) n *= 1.2; const before = heartsOf(c); c.hearts = clamp((c.hearts||0) + n, 0, 1000); const now = heartsOf(c);
   if(now > before){ if(now >= 8 && !c.hpBonusH){ c.hpBonusH = true; c.maxHp += 10; c.hp += 10; }
-    for(const lv of [4, 8, 10]) if(before < lv && now >= lv && !(c.heartScenes||[]).includes(lv)){ (c.heartScenes = c.heartScenes || []).push(lv); G.later.push({ event:'m_heart' + lv, jumps:ri(1,3), star:c.id }); }
+    for(const lv of [4, 6, 8, 10]) if(before < lv && now >= lv && !(c.heartScenes||[]).includes(lv)){ (c.heartScenes = c.heartScenes || []).push(lv); if(DATA.events['m_heart' + lv]) G.later.push({ event:'m_heart' + lv, jumps:ri(1,3), star:c.id }); if(lv===10 && DATA.events.m_keepsake) G.later.push({ event:'m_keepsake', jumps:ri(4,6), star:c.id }); }
     if(now===10) grant('home_bestie'); } }
 function heartPerkText(c){ const h = heartsOf(c);
   const now = h >= 10 ? 'Devoted: works 15% better, +10 health, and will cheat death once for you.' : h >= 8 ? 'Works 10% better and has +10 health.' : h >= 6 ? 'Works 10% better for you.' : h >= 3 ? 'Works 5% better for you.' : 'No bonus yet.';

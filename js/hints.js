@@ -47,6 +47,8 @@ const HINTS = {
   arms:      { title:'Arm your crew', text:'You have personal weapons or armour in the locker. Open Ship (S) → Armoury, pick a crew member\'s slot, then something from the locker. Armed crew win boarding fights far faster.', at:()=>RECT.ship },
   armbroken: { title:'Broken kit', text:'Someone\'s weapon or armour has broken and does nothing now. Repair it in Ship → Armoury with a drone part, or at a store\'s repair shop.', at:()=>RECT.ship },
   tonics:    { title:'Tonics and treats', text:'You have something to give a crew member. Ship → Armoury → Tonics & treats: permanent boosts, skill chips, stims and medkits, given to one person at a time.', at:()=>RECT.ship },
+  workshop:  { title:'The workshop', text:'This store sells workshop machines: load one with goods from your hold and it turns them into something worth more while you jump. Ship → Workshop. You can also send goods home to Haven\'s Rest from there, and swap rooms for combos in Ship → Layout.', at:()=>RECT.ship },
+  standing:  { title:'They remember you', text:'That changed how a faction sees you. Ship → Factions shows your standing: it sets their store prices, and whether their ships talk or shoot.', at:()=>RECT.ship },
   scar:      { title:'Your ship is scarred', text:'Some damage doesn\'t go away by itself: a leaking room, a jammed system, sparking wiring, or a system locked out. Hover the little badge on a room to see what\'s wrong. Any store\'s dockyard can patch it (Supplies), and some crew know other ways.' },
   anomaly:   { title:'Something is bending this run', text:'An anomaly is changing the rules for a while: the chip under your ship says what it does. Most build to a climax over the next few jumps, so watch for its next scene.' },
   hull:      { title:'Hull is getting low', text:'Hull repairs cost a few scrap each at stores, and quiet beacons sometimes let your crew patch it. Avoid optional fights until you\'ve repaired.', at:()=>RECT.hull },
@@ -86,7 +88,7 @@ function checkHints(dt){
   if(!m && G.stats.jumps===0 && !G.enemy) hint('welcome');
   if(m?.type==='map'){ hint('map'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
   if(typeof inXR==='function' && inXR()){ hint('vr'); }
-  if(m?.type==='store'){ hint('store'); if(s.hull < s.maxHull*.6) hint('hull'); }
+  if(m?.type==='store'){ hint('store'); if(G.stats.jumps >= 4) hint('workshop'); if(s.hull < s.maxHull*.6) hint('hull'); }
   if(m?.type==='event') hint('event');
   if(m?.type==='surrender') hint('surrender');
   if(e && !m){
@@ -111,6 +113,7 @@ function checkHints(dt){
     if(!e && s.crew.some(c => c.owner==='p' && ((c.arm && c.arm.dur <= 0) || (c.suit && c.suit.dur <= 0 && !(DATA.arms[c.suit.id]||{}).medpack)))) hint('armbroken');
     if(!e && Object.keys(G.items||{}).length) hint('tonics');
     if(!e && (G.scars||[]).length) hint('scar');
+    if(!e && G.rep && Object.values(G.rep).some(v => Math.abs(v) >= 10)) hint('standing');
     if(!e && typeof anomList==='function' && anomList().length) hint('anomaly');
     if(G.fuel <= 3) hint('fuel');
     if(!e && G.stats.jumps >= 2 && G.garden && G.garden.plots.some(p => !p) && Object.values(G.seeds||{}).some(n => n > 0)) hint('garden');   // home life (homestead.js)

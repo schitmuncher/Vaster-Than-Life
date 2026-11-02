@@ -100,7 +100,7 @@ function marketStock(st){
   st.seeds = Object.keys(typeof SEEDS!=='undefined' ? SEEDS : {}).filter(k => !SEEDS[k].only || SEEDS[k].only===kind); shuffle(st.seeds); st.seeds = st.seeds.slice(0, 3);
   st.moodMult = ({ grumpy:1.06, cheerful:.96, suspicious:1.04, 'very relaxed':.95 })[st.keeper.mood] || 1;
   st.bar = Math.random() < (K.bar ?? .5); st.haggled = null; st.crate = 0;
-  return st;
+  return typeof livingStock==='function' ? livingStock(st) : st;
 }
 /* the price of something at this store (run.js price() calls this) */
 function marketMult(st, cat, id){
@@ -110,6 +110,7 @@ function marketMult(st, cat, id){
   if(id && st.wob && st.wob[id]) m *= st.wob[id];
   if(st.haggled==='won') m *= .85; else if(st.haggled==='lost') m *= 1.1;
   m *= 1 - loyaltyOff();
+  if(typeof repPriceMult==='function') m *= repPriceMult(st.kind);   // faction standing (living.js)
   if(K.shady && G.ship.crew.some(c => c.owner==='p' && c.quirk==='expyrate')) m *= .9;   // an ex-pyrate knows the right people
   return m;
 }
@@ -127,7 +128,7 @@ function sellMult(st, kind){ const K = storeKind(st); let m = (K.pays && K.pays[
 function goodsPrice(id, st, selling){
   const g = goodsDef(id); if(!g) return 0; const kind = (st && st.kind) || G.sectorType;
   let p = g.base * (g.from.includes(kind) ? .6 : g.want.includes(kind) ? 1.65 : 1) * (1 + .02*((G.sector||1) - 1));
-  if(selling){ p *= .75 * sellMult(st, g.kind) * sellMagsBonus(st, g.kind); return Math.max(1, Math.round(p)); }
+  if(selling){ p *= .75 * sellMult(st, g.kind) * sellMagsBonus(st, g.kind) * (typeof livingSellMult==='function' ? livingSellMult() : 1); return Math.max(1, Math.round(p)); }
   return Math.max(1, Math.round(p * (st ? marketMult(st, 'goods') : 1)));
 }
 

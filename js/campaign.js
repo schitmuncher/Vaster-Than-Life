@@ -276,7 +276,7 @@ function campaignRunEnd(win, reason){
   add(arcPure() ? `${arcDef().name}` : 'Pip\'s story', (arcPure() ? arcState().beats : P.beats)*5);
   let ending = null; const ek = win ? endingFor() : null;
   if(ek && endingDef(ek)){ PROFILE.endings = PROFILE.endings || {}; const first = !PROFILE.endings[ek]; if(first){ PROFILE.endings[ek] = Date.now(); add(`New ending: ${endingDef(ek).title}`, 60); }
-    ending = Object.assign({ id:ek, first }, endingDef(ek)); grant('end_' + ek); if(Object.keys(ENDINGS).every(k => PROFILE.endings[k])) grant('end_all');
+    ending = Object.assign({ id:ek, first }, endingDef(ek)); if(typeof havenResident==='function') havenResident(ek); grant('end_' + ek); if(Object.keys(ENDINGS).every(k => PROFILE.endings[k])) grant('end_all');
     if(campaignPure()){ PROFILE.arcWins = PROFILE.arcWins || {}; PROFILE.arcWins[arcId()] = 1; if(ARC_IDS.filter(k => PROFILE.arcWins[k]).length >= 10) grant('arcs_all'); } }
   const dm = { easy:.75, normal:1, hard:1.5 }[G.diff] || 1, am = 1 + .15*alertLv();
   const base = lines.reduce((t, l) => t + l[1], 0), total = Math.max(5, Math.round(base * dm * am));
