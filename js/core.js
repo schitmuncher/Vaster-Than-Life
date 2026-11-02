@@ -63,7 +63,7 @@ function unlockText(u){
 let MODS = LS.get(MOD_KEY, []);
 if(typeof PACK_NAMES!=='undefined'){ const n = MODS.length; MODS = MODS.filter(m => !PACK_NAMES.has(m.name)); if(MODS.length !== n) LS.set(MOD_KEY, MODS); }   // packs that are built in now (packs.js)
 let DATA = null, R = null;
-const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges','arms','items'];
+const KINDS = ['weapons','races','ships','enemies','events','drones','augments','sectors','traits','challenges','arms','items','goods','quirks'];
 const NOTRAIT = {};
 function traitOf(c){ const t = (c && c.trait && DATA && DATA.traits && DATA.traits[c.trait]) || NOTRAIT; const p = typeof perkOf==='function' ? perkOf(c) : null; return p ? mergeTrait(t, p) : t; }   // personalities, friendship and good food (homestead.js)
 let HOOKS = {};
@@ -119,9 +119,9 @@ function validateMod(d){
 const MOD_KEYS = { weapons:'name type damage shots charge power cost tier fire breach sysDamage crewDamage ion stun pierce rooms radius heal desc warm homing pin splash bounce crit wild salvage gas fear toast decoy drain disrupt color',
   drones:'name kind power cost rate shot targets role heal stun fear desc', races:'name color hp repair combat speed power heal fireproof telepathic mindImmune deathBurst learn armor noAir projected desc',
   augments:'name cost desc fx', arms:'name kind dmg dur cost tier stun bleed knock reach fear laugh leech heal repair fire armor vac medpack noLoot desc', items:'name kind cost tier hp dmg rep spd xp skill heal buff fights hearts cure noLoot desc', traits:'name desc repair dps speed charge shield hp evade heal', sectors:'name blurb color mix tags enemyTags hazards nebula fleetMult intro',
-  enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases style relentless mirror revenant', ships:'name cls layout desc hull reactor color style image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock',
-  events:'text weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices twist req',
-  challenges:'name desc tier ship difficulty rules start scrapMult goal' };
+  enemies:'name tags onlyTagged eventOnly hull systems weapons drones crew sectors auto super boss phases style relentless mirror revenant', ships:'name cls layout desc hull reactor color style image systems reserve weapons drones crew augments fuel missiles parts pattern rooms unlock lvl ch',
+  events:'text title weight minSector maxSector tags nebula distress questOnly once flag noFlag hail art choices twist req triggered',
+  challenges:'name desc tier ship difficulty rules start scrapMult goal', goods:'name base kind from want desc illegal', quirks:'name desc' };
 const MOD_FX = 'evade ionRes sysRes breachRes ammo speed shield heal charge dps repair scrap superShield reactor'.split(' ');
 const MOD_EFFECTS = 'text scrap fuel missiles parts hull crew crewLoss weapon drone augment install upgrade damageSystem reactor fire fight afterWin event quest later store choices setFlag clearFlag begin dismiss crewHeal crewHurt maxHull xp reveal fleetPush mapPiece unlock achievement primeWeapons scar unscar downgrade convert anom petEvo eatGoods loseAugment undoScrap rep wreckLoot wreckDone heat heatDrop'.split(' ');
 let MOD_ALLOW = null;
@@ -135,9 +135,35 @@ function modWarnings(d){
   for(const [id,a] of Object.entries(toMap(d.augments))) for(const f in (a?.fx||{})) if(!MOD_FX.includes(f)) W.push(`augment "${id}": unknown fx "${f}" (use ${MOD_FX.join(', ')}).`);
   const chk = (e, id) => { if(!e) return; for(const f in e) if(!MOD_ALLOW.effects.has(f)) W.push(`event "${id}": unknown effect "${f}".`); if(e.afterWin) chk(e.afterWin, id); for(const c of e.choices||[]){ chk(c.effect,id); chk(c.success,id); chk(c.fail,id); } };
   for(const [id,ev] of Object.entries(toMap(d.events))) for(const c of ev?.choices||[]){ chk(c.effect, id); chk(c.success, id); chk(c.fail, id); }
+  try{ W.push(...modRefWarnings(d)); }catch(e){}
   return W;
 }
-const KIND_ONE = { races:'race', weapons:'weapon', drones:'drone', augments:'augment', ships:'ship', enemies:'enemy', sectors:'sector', events:'event', traits:'trait', challenges:'challenge' };
+/* references to things that don't exist (a typo in a weapon id, an event nobody can reach...) */
+function modRefWarnings(d){
+  const B = typeof BASE!=='undefined' ? BASE : DATA, W = [], has = (k, id) => id==null || id==='random' || !!((B[k] && B[k][id]) || toMap(d[k])[id]);
+  const need = (k, id, where) => { for(const x of [].concat(id)) if(typeof x==='string' && !has(k, x)) W.push(`${where}: there is no ${KIND_ONE[k] || k} "${x}".`); };
+  for(const [k, lbl] of [['ships','ship'],['enemies','enemy']]) for(const [id, o] of Object.entries(toMap(d[k]))){ if(!o) continue;
+    need('weapons', o.weapons || [], `${lbl} "${id}"`); need('drones', o.drones || [], `${lbl} "${id}"`); need('races', o.crew || [], `${lbl} "${id}"`); if(o.augments) need('augments', o.augments, `${lbl} "${id}"`); }
+  const evs = toMap(d.events), reached = new Set();
+  const eff = (e, id) => { if(!e || typeof e!=='object') return; const at = `event "${id}"`;
+    if(e.fight && e.fight!=='random') need('enemies', e.fight, at); if(e.weapon) need('weapons', e.weapon, at); if(e.drone) need('drones', e.drone, at); if(e.augment) need('augments', e.augment, at);
+    if(e.arm) need('arms', e.arm, at); if(e.item) need('items', e.item, at); if(typeof e.crew==='string') need('races', e.crew, at);
+    for(const x of [e.event, e.quest, e.later && e.later.event]) if(x){ reached.add(x); need('events', x, at); }
+    if(e.goods && typeof e.goods==='object') for(const g in e.goods) need('goods', g, at);
+    if(e.afterWin) eff(e.afterWin, id); for(const c of e.choices || []) ch(c, id); };
+  const ch = (c, id) => { if(!c) return; const q = c.req || {}; if(q.race) need('races', q.race, `event "${id}" (req)`); if(q.augment) need('augments', q.augment, `event "${id}" (req)`);
+    eff(c.effect, id); eff(c.success, id); eff(c.fail, id); if(c.chance!=null && (!c.success || !c.fail)) W.push(`event "${id}": a choice with "chance" needs both "success" and "fail".`); };
+  for(const [id, ev] of Object.entries(evs)){ if(!ev) continue; for(const c of ev.choices || []) ch(c, id); for(const t of ev.twist || []){ reached.add(t); need('events', t, `event "${id}" (twist)`); } }
+  const C = d.campaign; if(C && typeof C==='object'){ need('ships', C.ships || [], 'campaign'); if(C.start) need('sectors', C.start, 'campaign'); need('sectors', C.sectors || [], 'campaign');
+    for(const b of Object.values(C.beats || {})) for(const x of [].concat(b)){ reached.add(x); need('events', x, 'campaign beats'); } }
+  for(const [id, ev] of Object.entries(evs)) if(ev && ev.questOnly && !ev.triggered && !reached.has(id) && !(B.events && B.events[id])) W.push(`event "${id}" is questOnly, but nothing in this mod leads to it (use "quest", "event", "later", "twist" or a campaign beat).`);
+  for(const [id, w] of Object.entries(toMap(d.weapons))){ if(!w || typeof w.charge!=='number') continue; const dmg = (w.damage||0) * (w.type==='beam' ? 1 : (w.shots||1)), rate = dmg / w.charge / Math.max(1, w.power||1);
+    if(w.charge < 5) W.push(`weapon "${id}": charge ${w.charge}s is very fast (base guns are 8-25s).`);
+    if(rate > .3) W.push(`weapon "${id}": ${dmg} damage every ${w.charge}s for ${w.power} power is much stronger than any base gun. Lower damage or shots, or raise charge or power.`); }
+  for(const [id, s] of Object.entries(toMap(d.ships))){ if(s && typeof s.hull==='number' && (s.hull > 40 || s.hull < 15)) W.push(`ship "${id}": hull ${s.hull} is outside the usual 20-35.`); }
+  return W;
+}
+const KIND_ONE = { goods:'good', quirks:'quirk', arms:'personal weapon', items:'tonic', races:'race', weapons:'weapon', drones:'drone', augments:'augment', ships:'ship', enemies:'enemy', sectors:'sector', events:'event', traits:'trait', challenges:'challenge' };
 function modSummary(d){ const parts=[]; for(const k of KINDS){ const n = Object.keys(toMap(d[k])).length; if(n) parts.push(`${n} ${n===1 ? (KIND_ONE[k]||k) : k}`); }
   if(d.rules) parts.push('rules'); if(d.script) parts.push('script'); return parts.join(', ') || 'no content'; }
 function addModText(txt, label){
@@ -146,7 +172,7 @@ function addModText(txt, label){
   if(errs.length) return { ok:false, msg:`${label} was not added:\n• ` + errs.slice(0,8).join('\n• ') + (errs.length>8?`\n…and ${errs.length-8} more.`:'') };
   const entry = { name:d.name.trim(), version:d.version||'', author:d.author||'', enabled:true, data:d, added:Date.now() };
   const i = MODS.findIndex(m=>m.name===entry.name); if(i>=0) MODS[i]=entry; else MODS.push(entry);
-  let warn = ''; try{ const W = modWarnings(d); if(W.length) warn = `\nCheck these (they do nothing as written):\n• ` + W.slice(0,5).join('\n• ') + (W.length>5 ? `\n…and ${W.length-5} more.` : ''); }catch(e){}
+  let warn = ''; try{ const W = modWarnings(d); if(W.length) warn = `\nCheck these (paste them back to the AI that wrote the mod):\n• ` + W.slice(0,5).join('\n• ') + (W.length>5 ? `\n…and ${W.length-5} more.` : ''); }catch(e){}
   if(!LS.set(MOD_KEY, MODS)) return { ok:true, msg:`${entry.name} is active for this session, but this browser would not save it for next time.${warn}` };
   return { ok:true, msg:`Added ${entry.name} (${modSummary(d)}). It applies to new runs.${d.script && !SET.allowScripts ? ' Its script stays off until you allow mod scripts in Settings.' : ''}${warn}` };
 }

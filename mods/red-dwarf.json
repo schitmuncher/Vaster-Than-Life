@@ -1,6 +1,6 @@
 {
  "name": "Red Dwarf: Three Million Years Late",
- "version": "4.0",
+ "version": "4.1",
  "author": "Vaster Than Life team (unofficial fan campaign)",
  "campaign": {
   "id": "reddwarf",
@@ -3500,6 +3500,7 @@
   },
   {
    "id": "rd_squid_wake",
+   "triggered": true,
    "questOnly": true,
    "art": "creature",
    "title": "Waking up",

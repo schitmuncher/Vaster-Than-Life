@@ -1232,7 +1232,7 @@ function drawEventModal(m){
   y += 12;
   const choices = visChoices;
   choices.forEach((c,i) => {
-    const ok = reqMet(c.req), blue = reqHidden(c.req);
+    const ok = reqMet(c.req) && (typeof costOk!=='function' || costOk(c.cost)), blue = reqHidden(c.req);
     const rk = c.req?.race || (c.req?.quirk ? 'q:' + c.req.quirk : '_'); if(!m.who[rk]) m.who[rk] = c.req?.race ? randomCrewName(c.req.race) : c.req?.quirk ? quirkCrewName(c.req.quirk) : m.ctx.crew;
     const txt = `${i+1}. ${reqLabel(c.req)}${fillText(c.text, Object.assign({}, m.ctx, { who:m.who[rk] }))}${costLabel(c.cost, c.text)}`;
     const ls = lines(txt, f.w-110, `400 ${CS}px ${FM}`); const h = ls.length*CL + 22;

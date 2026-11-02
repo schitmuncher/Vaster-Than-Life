@@ -50,7 +50,8 @@ BASE.goods = {
   melon_sorbet:{ name:'Moon melon sorbet', base:45, kind:'meal', from:[], want:['rebuff','glass','sloog'], desc:'Cold, sweet and absurdly fancy.' },
   fish_supper: { name:'Fish supper',    base:18, kind:'meal',  from:[], want:['civilian','laststand'], desc:'Battered space fish and chunky potato. Proper food.' }
 };
-function goodsDef(id){ return (DATA && DATA.goods && DATA.goods[id]) || BASE.goods[id] || null; }
+function goodsDef(id){ const g = (DATA && DATA.goods && DATA.goods[id]) || BASE.goods[id] || null; if(g && (!g.from || !g.want || !g.kind)){ g.from = g.from || []; g.want = g.want || []; g.kind = g.kind || 'trade'; g.base = g.base || 10; } return g; }
+function goodsIds(){ return Object.keys((DATA && DATA.goods) || BASE.goods); }
 function holdCap(){ return (R.hold || 16) + (G.holdBonus || 0); }
 function holdUsed(){ return Object.values(G.bay || {}).reduce((a, b) => a + b, 0); }
 function goodsHave(id){ return (G.bay && G.bay[id]) || 0; }
@@ -94,8 +95,8 @@ function marketStock(st){
   // two crew looking for work, of different races
   const races = (typeof campRecruits==='function' ? campRecruits : x => x)(Object.keys(DATA.races).filter(k => !DATA.races[k].secret || G.sectorType==='glass')); shuffle(races); st.crewRaces = races.slice(0, 2); st.crewRace = st.crewRaces[0]; st.hired = [];
   // goods: some of what this sector makes, a couple of other things, and seeds
-  const here = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return g.kind!=='meal' && g.kind!=='curio' && g.kind!=='fish' && (!g.illegal || K.shady) && g.from.includes(kind); });
-  const other = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return (g.kind==='trade') && !g.from.includes(kind) && (!g.illegal || K.shady); }); shuffle(other);
+  const here = goodsIds().filter(id => { const g = goodsDef(id); return g.kind!=='meal' && g.kind!=='curio' && g.kind!=='fish' && (!g.illegal || K.shady) && g.from.includes(kind); });
+  const other = goodsIds().filter(id => { const g = goodsDef(id); return (g.kind==='trade') && !g.from.includes(kind) && (!g.illegal || K.shady); }); shuffle(other);
   st.goods = [...new Set([...here, ...other.slice(0, 2)])].filter(id => goodsDef(id).kind!=='crop').map(id => ({ id, n:ri(2, 6) }));
   st.seeds = Object.keys(typeof SEEDS!=='undefined' ? SEEDS : {}).filter(k => !SEEDS[k].only || SEEDS[k].only===kind); shuffle(st.seeds); st.seeds = st.seeds.slice(0, 3);
   st.moodMult = ({ grumpy:1.06, cheerful:.96, suspicious:1.04, 'very relaxed':.95 })[st.keeper.mood] || 1;
@@ -190,7 +191,7 @@ function openCrate(st){
   if(r < .22) msg = 'Inside: ' + giveWeapon('random');
   else if(r < .31) msg = 'Inside: ' + giveDrone('random');
   else if(r < .38) msg = 'Inside: ' + giveAugment('random');
-  else if(r < .66){ const ids = Object.keys(BASE.goods).filter(id => ['trade','curio'].includes(goodsDef(id).kind)); const id = pick(ids), n = ri(2, 5), got = addGoods(id, n); msg = got ? `Inside: ${got} × ${goodsDef(id).name}.` : 'Inside: goods, but your hold is full, so you leave them.'; }
+  else if(r < .66){ const ids = goodsIds().filter(id => ['trade','curio'].includes(goodsDef(id).kind)); const id = pick(ids), n = ri(2, 5), got = addGoods(id, n); msg = got ? `Inside: ${got} × ${goodsDef(id).name}.` : 'Inside: goods, but your hold is full, so you leave them.'; }
   else if(r < .8 && typeof SEEDS!=='undefined'){ const k = pick(Object.keys(SEEDS)); G.seeds = G.seeds || {}; G.seeds[k] = (G.seeds[k]||0) + 3; msg = `Inside: 3 packets of ${SEEDS[k].name} seeds.`; }
   else if(r < .86){ G.missiles += 4; G.parts += 2; msg = 'Inside: 4 missiles and 2 drone parts, packed in straw.'; }
   else msg = pick(['Inside: four hundred rubber ducks. You keep one for luck.','Inside: a single, very old sandwich.','Inside: another, smaller mystery crate. It is empty.','Inside: a love letter addressed to someone called "Big Dave". You read it. It is very detailed.']) + ' ' + (addGoods('junk', 2) ? '(+2 interesting junk)' : '');
@@ -217,7 +218,7 @@ function factionGood(faction){ const map = { pyrate:['pyrate_rum','contraband','
 /* effects for events and loot (called from applyEffect): goods:{id:n} or goods:'loot', seeds:{id:n} */
 function marketEffect(e, L){
   if(!G || !e) return;
-  if(e.goods){ const list = e.goods==='loot' ? { [factionGood(G.enemy && G.enemy.faction)]:ri(1,3) } : e.goods==='random' ? { [pick(Object.keys(BASE.goods).filter(id => goodsDef(id).kind==='trade'))]:ri(2,4) } : e.goods;
+  if(e.goods){ const list = e.goods==='loot' ? { [factionGood(G.enemy && G.enemy.faction)]:ri(1,3) } : e.goods==='random' ? { [pick(goodsIds().filter(id => goodsDef(id).kind==='trade'))]:ri(2,4) } : e.goods;
     for(const [id, n] of Object.entries(list)){ const got = addGoods(id, n); if(got) L.push(`+${got} ${goodsDef(id).name}`); else if(n > 0) L.push(`${goodsDef(id)?.name || id} left behind (hold full)`); } }
   if(e.seeds && typeof SEEDS!=='undefined'){ G.seeds = G.seeds || {}; const list = e.seeds==='random' ? { [pick(Object.keys(SEEDS))]:ri(2,3) } : e.seeds;
     for(const [k, n] of Object.entries(list)) if(SEEDS[k]){ G.seeds[k] = (G.seeds[k]||0) + n; L.push(`+${n} ${SEEDS[k].name} seeds`); } }
@@ -347,7 +348,7 @@ function drawStoreGoods(st, cx, y0, W2){
     tip(qx, sy, half-230, 70, `${sd.name} seeds`, `${g.desc}${sd.nebula ? ' Grows faster in a nebula.' : ''} Every crop grows faster under a sun.`);
     btn(qx+half-220, sy+12, 200, 46, `Buy 2 · ${p*2}`, () => spend(p*2, () => { G.seeds = G.seeds || {}; G.seeds[k2] = (G.seeds[k2]||0) + 2; toast(`+2 ${sd.name} seeds. Plant them from Ship → Garden.`); }), { s:15, disabled:G.scrap < p*2, col:C.good });
     sy += 78; }
-  const wants = Object.keys(BASE.goods).filter(id => goodsDef(id).want.includes(st.kind)).map(id => goodsDef(id).name);
+  const wants = goodsIds().filter(id => goodsDef(id).want.includes(st.kind)).map(id => goodsDef(id).name);
   para(st.mags ? 'Mags buys relics and curios for far more than anyone else.' : `${storeKind(st).title} pays well for: ${wants.length ? wants.slice(0, 6).join(', ') : 'nothing in particular'}.`, qx, sy + 14, half, { s:15, lh:20, c:C.cyan, max:2 });
   drawRequestBoard(st, qx, sy + 70, half);
 }
@@ -381,7 +382,7 @@ function drawStoreSell(st, cx, y0, W2, f){
    ========================================================================= */
 /* ---------------- request boards: deliver goods for good money ---------------- */
 function makeRequest(st){
-  const ids = Object.keys(BASE.goods).filter(id => { const g = goodsDef(id); return g && !g.illegal && g.kind!=='curio' && !g.from.includes(st.kind) && (g.kind!=='meal' || G.sector >= 2); });
+  const ids = goodsIds().filter(id => { const g = goodsDef(id); return g && !g.illegal && g.kind!=='curio' && !g.from.includes(st.kind) && (g.kind!=='meal' || G.sector >= 2); });
   if(!ids.length) return null; const id = pick(ids), g = goodsDef(id), n = g.base >= 20 ? ri(1, 2) : ri(2, 4);
   return { id, n, pay:Math.round(g.base * n * 1.9 + 10 + G.sector*3), by:Math.min(R.sectors, G.sector + 1), from:st.title, taken:false };
 }
@@ -413,7 +414,7 @@ function magsStore(){
   const wp = Object.values(DATA.weapons).filter(w => !w.noLoot && (w.tier||1) >= 2).map(w => w.id); shuffle(wp); st.weapons = wp.slice(0, 2);
   const ap = Object.keys(DATA.augments).filter(k => !G.ship.augments.includes(k)); shuffle(ap); st.augments = ap.slice(0, 2);
   for(const id of [...st.weapons, ...st.augments]) st.wob[id] = .9;
-  st.goods = shuffle(Object.keys(BASE.goods).filter(id => ['trade','curio'].includes(goodsDef(id).kind) && !goodsDef(id).illegal)).slice(0, 4).map(id => ({ id, n:ri(1, 3) }));
+  st.goods = shuffle(goodsIds().filter(id => ['trade','curio'].includes(goodsDef(id).kind) && !goodsDef(id).illegal)).slice(0, 4).map(id => ({ id, n:ri(1, 3) }));
   st.seeds = ['glass_lily', 'moon_melon', 'nebula_bloom']; st.deal = st.weapons[0] ? 'w:' + st.weapons[0] : null;
   st.request = makeRequest(st); if(st.request){ st.request.pay = Math.round(st.request.pay * 1.4); st.request.mags = true; st.request.by = Math.min(R.sectors, G.sector + 2); }
   return st;

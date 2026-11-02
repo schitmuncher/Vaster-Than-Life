@@ -280,11 +280,14 @@ function reqMet(q){
   if(q.noFlag && G.flags[q.noFlag]) return false;
   return true;
 }
+/* a choice that costs something can only be picked when you have it, even without a matching req */
+function costOk(c){ return !c || ((G.scrap >= (c.scrap||0)) && (G.fuel >= (c.fuel||0)) && (G.missiles >= (c.missiles||0)) && (G.parts >= (c.parts||0))); }
 function reqLabel(q){ if(!q) return '';
   if(q.race) return `[${DATA.races[q.race]?.name||q.race}] `; if(q.quirk) return `[${(typeof quirkDef==='function' && quirkDef(q.quirk)?.name)||q.quirk}] `; if(q.pet) return `[${G.pet ? G.pet.name : 'Pet'}] `; if(q.system) return `[${SYSN[q.system]||q.system} ${q.level||1}] `;
   if(q.weaponType) return `[${q.weaponType}] `; if(q.drone) return `[${DATA.drones[q.drone]?.name||q.drone}] `; if(q.augment) return `[${DATA.augments[q.augment]?.name||q.augment}] `; return ''; }
 function costLabel(c, text){ if(!c) return ''; if(text && /\d+\s*(scrap|fuel|missile|drone part)/i.test(text)) return ''; const p=[]; for(const k of ['scrap','fuel','missiles','parts']) if(c[k]) p.push(`${c[k]} ${k==='parts'?'drone parts':k}`); return p.length ? ` (costs ${p.join(', ')})` : ''; }
 function chooseOption(ch){
+  if(ch && ch.cost && !costOk(ch.cost)){ toast('You can\'t afford that.'); return; }
   const prev = G.modal || {}; const cx = Object.assign({}, prev.ctx||{ crew:randomCrewName() });
   const rk = ch.req?.race || (ch.req?.quirk ? 'q:' + ch.req.quirk : '_');
   cx.who = (prev.who && prev.who[rk]) || (ch.req?.race ? randomCrewName(ch.req.race) : ch.req?.quirk ? quirkCrewName(ch.req.quirk) : cx.crew);   // the same person the choice named

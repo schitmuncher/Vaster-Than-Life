@@ -1,0 +1,76 @@
+{
+  "name": "The Glacier Belt",
+  "version": "1.0",
+  "author": "Example",
+  "races": [
+    { "id": "ip_rimeling", "name": "Rimeling", "color": "#cdeeff", "hp": 90, "repair": 1.2, "combat": 0.8, "speed": 1, "fireproof": true, "desc": "Small, frosty and calm. Fires simply go out around them." }
+  ],
+  "weapons": [
+    { "id": "ip_frostgun", "name": "Frost Repeater", "type": "laser", "damage": 1, "shots": 2, "charge": 11, "power": 2, "cost": 55, "tier": 2, "pin": 2, "color": "#a8e6ff", "desc": "Two icy bolts. A hit freezes the target's thrusters for a moment." },
+    { "id": "ip_icicle", "name": "Icicle Launcher", "type": "missile", "damage": 2, "shots": 1, "charge": 12, "power": 1, "cost": 45, "tier": 1, "splash": 1, "desc": "A missile of solid ice that shatters into the next room." },
+    { "id": "ip_chiller", "name": "Deep Chiller", "type": "ion", "damage": 1, "shots": 1, "charge": 10, "power": 1, "cost": 40, "tier": 2, "drain": 1, "desc": "Ion frost that leaves a system sluggish for a while." }
+  ],
+  "drones": [
+    { "id": "ip_snowplough", "name": "Snowplough Drone", "kind": "defense", "power": 2, "cost": 50, "rate": 2.6, "targets": ["missile", "asteroid"], "desc": "Ploughs incoming missiles and loose rocks out of the way." }
+  ],
+  "augments": [
+    { "id": "ip_coldsink", "name": "Cold Sink", "cost": 60, "desc": "Weapons charge 18% faster, but the cold makes crew repair 15% slower.", "fx": { "charge": 0.18, "repair": -0.15 } }
+  ],
+  "goods": [
+    { "id": "ip_icewine", "name": "Glacier wine", "base": 28, "kind": "trade", "from": ["ip_glacier"], "want": ["pyrate", "voltan", "civilian"], "desc": "Fermented inside a comet. Served very cold." }
+  ],
+  "quirks": [
+    { "id": "ip_stoic", "name": "Stoic", "desc": "Has never once complained about the cold. Or anything." }
+  ],
+  "arms": [
+    { "id": "ip_icepick", "name": "Ice Pick", "kind": "blade", "dmg": 1.35, "dur": 70, "cost": 35, "tier": 1, "bleed": 2, "desc": "A climber's pick. Surprisingly good in a corridor fight." }
+  ],
+  "enemies": [
+    { "id": "ip_frostjaw", "name": "Frostjaw Raider", "tags": ["ip_ice", "pyrate"], "onlyTagged": true, "hull": 10, "sectors": [1, 8], "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "piloting": 1, "doors": 1 }, "weapons": ["ip_frostgun", "basic"], "crew": ["human", "ip_rimeling"], "style": "pyrate" },
+    { "id": "ip_icebreaker", "name": "Icebreaker Drone", "tags": ["ip_ice", "auto"], "eventOnly": true, "auto": true, "hull": 12, "sectors": [1, 8], "systems": { "shields": 2, "engines": 1, "weapons": 3, "piloting": 1 }, "weapons": ["ip_icicle", "ip_chiller"], "crew": [], "style": "auto" }
+  ],
+  "ships": [
+    { "id": "ip_sledge", "name": "The Sledge", "cls": "Ice Hauler", "layout": "A", "desc": "Slow, sturdy and very warm inside.", "hull": 32, "reactor": 8, "color": "#a8e6ff", "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "sensors": 1, "doors": 1 }, "reserve": ["drones"], "weapons": ["ip_frostgun", "ip_icicle"], "crew": ["human", "ip_rimeling", "pebblekin"], "fuel": 16, "missiles": 6, "parts": 2, "pattern": "TABAN", "lvl": 6, "ch": { "shipSector": ["pestrel", 4] } }
+  ],
+  "sectors": [
+    { "id": "ip_glacier", "name": "The Glacier Belt", "blurb": "Frozen comets, frozen wrecks, and pirates who wear three coats.", "intro": ["Frost creeps across the viewport.", "Everything out here is cold, slow and patient."], "color": "#a8e6ff", "mix": { "event": 48, "combat": 38, "empty": 14 }, "tags": ["ip_ice"], "enemyTags": ["ip_ice"], "hazards": { "asteroid": 0.12 }, "nebula": 0.15, "fleetMult": 0.9 }
+  ],
+  "events": [
+    { "id": "ip_hail_toll", "hail": "ip_ice", "text": "\"Ice toll. Ten scrap, or we cut your engines out and keep them as a souvenir.\"", "choices": [
+      { "text": "Pay the toll (10 scrap).", "req": { "scrap": 10 }, "cost": { "scrap": 10 }, "effect": { "text": "They wave you through, grinning.", "dismiss": true } },
+      { "text": "Have {who} explain the toll is illegal.", "req": { "quirk": "bookworm" }, "effect": { "text": "{who} quotes three regulations. They leave out of sheer boredom.", "dismiss": true } },
+      { "text": "Open fire.", "effect": { "text": "So be it.", "begin": true } } ] },
+    { "id": "ip_hail_cold", "hail": "ip_ice", "text": "\"You're a long way from anywhere warm, little ship.\"", "choices": [
+      { "text": "Fight.", "effect": { "text": "Weapons hot. Very hot.", "begin": true } },
+      { "text": "Offer a bottle of glacier wine.", "req": { "goodsKind": "trade" }, "effect": { "text": "They drink to your health and leave you alone.", "goods": { "ip_icewine": -1 }, "dismiss": true } } ] },
+    { "id": "ip_derelict", "title": "Frozen derelict", "tags": ["ip_ice"], "art": "wreck", "text": "A freighter hangs in the dark, iced over from nose to tail. Something inside is still blinking.", "choices": [
+      { "text": "Strip the hull plating and go.", "effect": { "text": "Cold work, but honest. The plating sells.", "scrap": 18 } },
+      { "text": "Cut into the cargo hold.", "chance": 0.55,
+        "success": { "text": "Crates of glacier wine, perfectly chilled.", "goods": { "ip_icewine": 3 }, "scrap": 10 },
+        "fail": { "text": "The hold was holding back a lot of very cold air. {crew} gets frostbite.", "crewHurt": 20, "hull": -2 } },
+      { "text": "Let {who} warm the airlock.", "req": { "race": "pebblekin" }, "effect": { "text": "{who} glows red and the ice slides off. Inside: a spare drone and a thank-you note.", "drone": "ip_snowplough", "parts": 2 } },
+      { "text": "Leave it be.", "effect": { "text": "Some wrecks are better left frozen." } } ] },
+    { "id": "ip_map", "tags": ["ip_ice"], "art": "station", "text": "An old ice miner sells you a chart with one beacon circled twice.", "choices": [
+      { "text": "Buy it (15 scrap).", "req": { "scrap": 15 }, "cost": { "scrap": 15 }, "effect": { "text": "\"Don't wake the big one,\" he says.", "quest": "ip_cache" } },
+      { "text": "No thanks.", "effect": { "text": "He shrugs and goes back to his soup." } } ] },
+    { "id": "ip_cache", "questOnly": true, "art": "asteroid", "title": "The circled beacon", "text": "A cache in the ice, and an icebreaker drone parked on top of it.", "choices": [
+      { "text": "Clear it out.", "effect": { "text": "The drone wakes up.", "fight": "ip_icebreaker", "afterWin": { "text": "The cache is yours.", "scrap": 40, "weapon": "ip_frostgun" } } },
+      { "text": "Back away quietly.", "effect": { "text": "Not today." } } ] },
+    { "id": "ip_stowaway", "tags": ["ip_ice"], "once": true, "art": "ship", "text": "A shivering kid is hiding in your cargo bay, wrapped in three of your blankets.", "choices": [
+      { "text": "Let her stay till the next port.", "effect": { "text": "She eats everything and fixes the toaster.", "setFlag": "ip_kid", "later": { "event": "ip_kid_back", "jumps": 4 } } },
+      { "text": "Hand her to the port authority.", "effect": { "text": "She doesn't look back.", "rep": { "voltan": -5 } } } ] },
+    { "id": "ip_kid_back", "questOnly": true, "flag": "ip_kid", "title": "A message", "text": "A message from the kid: her family runs a shipyard, and they want to say thank you.", "choices": [
+      { "text": "Accept, gratefully.", "effect": { "text": "They patch your hull and won't take a penny.", "hull": 8, "unscar": 1 } } ] },
+    { "id": "ip_signal", "tags": ["ip_ice"], "art": "distress", "text": "A distress call from inside a comet.", "choices": [ { "text": "Investigate.", "effect": { "text": "Nothing but ice." } } ], "twist": ["ip_signal_real", "ip_signal_trap"] },
+    { "id": "ip_signal_real", "questOnly": true, "art": "distress", "text": "A distress call from inside a comet. A voice, faint: \"Please. We're nearly out of air.\"", "choices": [
+      { "text": "Drill them out (1 fuel).", "req": { "fuel": 2 }, "cost": { "fuel": 1 }, "effect": { "text": "A Rimeling miner tumbles out, gasping and grateful, and asks to join.", "crew": "ip_rimeling" } },
+      { "text": "Mark it for the authorities.", "effect": { "text": "You log the location and move on.", "rep": { "voltan": 5 } } } ] },
+    { "id": "ip_signal_trap", "questOnly": true, "art": "distress", "text": "A distress call from inside a comet. A voice, faint: \"Please. We're nearly out of air.\"", "choices": [
+      { "text": "Drill them out (1 fuel).", "req": { "fuel": 2 }, "cost": { "fuel": 1 }, "effect": { "text": "The comet splits open. It was a pirate hide all along.", "fight": "ip_frostjaw", "afterWin": { "text": "Their stash is full of picks and wine.", "arm": "ip_icepick", "goods": { "ip_icewine": 2 } } } },
+      { "text": "Mark it for the authorities.", "effect": { "text": "Later you hear they found a pirate nest there. A small reward arrives.", "scrap": 15 } } ] },
+    { "id": "ip_soup", "tags": ["ip_ice"], "art": "planet", "text": "A frozen outpost. The settlers haven't had a hot meal in a month.", "choices": [
+      { "text": "Share a meal from the hold.", "req": { "goodsKind": "meal" }, "effect": { "text": "They've never tasted anything so good. They load you up with fuel.", "eatGoods": "meal", "fuel": 3, "rep": { "pebblekin": 8 } } },
+      { "text": "Trade for their spare cells (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "Fair trade. Cold hands, warm hearts.", "missiles": 3, "parts": 1 } },
+      { "text": "Wish them luck.", "effect": { "text": "They wave until you're out of sight." } } ] }
+  ]
+}
