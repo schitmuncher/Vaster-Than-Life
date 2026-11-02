@@ -178,7 +178,7 @@ function livingArrive(node, first){
   if(!G) return; machineJump(node); crewDowntime(); if(typeof heatArrive==='function'){ heatArrive(node, first); jobsArrive(node, first); } if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump();
   if(havenDone('biodome') && havenPerksOn() && G.garden && G.hazard!=='ionstorm') for(const p of G.garden.plots) if(p) p.g += .25;
   if(G._shop){ const spent = (G.spent||0) - G._shop.spent; if(spent > 0){ const k = G._shop.kind, gain = Math.floor(spent / 25) * (k==='sloog' ? 2 : 1); if(FACTIONS[k]) repAdd(k, gain, 'good business'); if(k==='nebula') repAdd('pyrate', Math.floor(spent / 40)); } G._shop = null; }
-  if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; }
+  if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; const cs = typeof havenCanSend==='function' && havenCanSend(); if(cs) toast(`You're carrying ${needName(cs.it)} for ${cs.w.name}. Send it home: Trade → Send home.`); }
 }
 function livingStock(st){ if(havenDone('promenade') && havenPerksOn()){ const extra = Object.keys(DATA.augments).filter(k => !DATA.augments[k].noLoot && !st.augments.includes(k) && !G.ship.augments.includes(k)); if(extra.length) st.augments.push(pick(extra)); } return st; }
 function livingSellMult(){ return havenDone('fence') && havenPerksOn() ? 1.1 : 1; }
@@ -240,7 +240,7 @@ function drawWorkshopTab(f, cx, y0){
   drawHavenDeliver(bx, y0 + 26 + 6*58 + 16, bw);
 }
 function drawHavenDeliver(x, y, w){
-  const here = atStore(); label('Haven\'s Rest', x, y+10, '#9fdc7a', 'left', 15); T(here ? 'A freighter can take goods home from here.' : 'Send goods home from any store.', x + 140, y+12, { s:13, c:C.muted });
+  const here = atStore(); label('Haven\'s Rest', x, y+10, '#9fdc7a', 'left', 15); T(here ? 'A freighter can take goods home from here. Full list: store → Trade → Send home.' : 'Send goods home from any store (Trade → Send home).', x + 140, y+12, { s:13, c:C.muted, max:w-140 });
   let row = 0; for(const W_ of HAVEN_WINGS){ if(havenDone(W_.id) || row >= 4) continue;
     const needs = W_.needs.filter(([it, n]) => havenGiven(W_, it) < n && haveForHaven(it) > 0); if(!needs.length) continue;
     const [it, n] = needs[0], yy = y + 24 + row*44; T(`${W_.name}: ${needName(it)} ${havenGiven(W_, it)}/${n}`, x, yy+28, { s:14, max:w-180 });
@@ -259,15 +259,19 @@ function drawHaven(){
   const H_ = haven(); T('Haven\'s Rest', 60, 122, { s:50, f:FD, w:700, c:'#9fdc7a' });
   label(`Restored ${HAVEN_WINGS.filter(w => havenDone(w.id)).length} of ${HAVEN_WINGS.length} wings · renown to spend ${fmtNum(renownFree())}`, 62, 152, C.muted, 'left', 16);
   if(typeof drawStation==='function') drawStation(1380, 110, 92);
-  para('Great-uncle Tobiah\'s old station. Send goods home from any store during a run (Ship → Workshop) to restore a wing; each restored wing helps every future run. Or let the Directorate\'s contractors rebuild it for renown, which doesn\'t lower your rank.', 62, 186, 1460, { s:16, c:C.ink });
+  if(typeof openWiki==='function') btn(900, 100, 300, 50, '? How it works', () => openWiki('g_haven_restore', 'haven'), { s:16, col:C.cyan });
+  para('How to restore a wing: in any run, collect the goods it needs (grow, cook, fish, brew in the workshop or buy at stores), then at any store open Trade → Send home. What you send is kept for good. Or rebuild a wing with renown (your rank stays). Tap a good to see where to find it.', 62, 180, 1200, { s:15, lh:20, c:C.ink, max:3 });
   HAVEN_WINGS.forEach((w, i) => { const x = 60 + (i % 2)*740, y = 236 + Math.floor(i/2)*150, done = havenDone(w.id); panel(x, y, 720, 140, 10);
     if(done){ rr(x, y, 720, 140, 10); ctx.strokeStyle = '#9fdc7a'; ctx.lineWidth = 2; ctx.stroke(); }
     T(w.name, x+20, y+34, { s:22, f:FD, w:700, c: done ? '#9fdc7a' : C.ink }); T(done ? 'RESTORED' : w.bundle, x+700, y+34, { s:15, a:'right', c: done ? '#9fdc7a' : C.amber, w:700 });
-    T(w.needs.map(([it, n]) => `${needName(it)} ${Math.min(n, havenGiven(w, it))}/${n}`).join(' · '), x+20, y+64, { s:14, c: done ? C.muted : C.ink, max:680 });
-    para(w.reward, x+20, y+88, done ? 680 : 460, { s:13, lh:18, c:C.muted, max:2 });
+    if(done) T(w.needs.map(([it, n]) => `${needName(it)} ${n}/${n}`).join(' · '), x+20, y+64, { s:14, c:C.muted, max:680 });
+    else { UI._hvWrap = false; let nx = x+20, ny = y+64; for(const [it, n] of w.needs){ const gv = Math.min(n, havenGiven(w, it)), src = havenSrc(it), t = `${needName(it)} ${gv}/${n} (${src.tag})`;
+      T('', 0, -99, { s:14 }); const tw = ctx.measureText(t).width; if(nx + tw > x + (ny > y+64 ? 490 : 700)){ nx = x+20; ny += 22; UI._hvWrap = true; }
+      T(t, nx, ny, { s:14, c: gv >= n ? '#9fdc7a' : C.ink }); tip(nx, ny-18, tw, 26, needName(it), src.long); nx += tw + 18; } }
+    const wrapped = !done && UI._hvWrap; para(w.reward, x+20, wrapped ? y+110 : y+88, done ? 680 : 460, { s:13, lh:18, c:C.muted, max: wrapped ? 1 : 2 });
     if(!done) btn(x+500, y+80, 200, 44, `Renown · ${fmtNum(w.renown)}`, () => havenBuy(w), { s:14, disabled:renownFree() < w.renown }); });
-  const res = H_.residents || []; label('Residents', 840, 820, '#9fdc7a', 'left', 15);
-  para(res.length ? `${res.join(', ')}. They fly with you against the Flaggship in every run (up to four).` : 'Nobody yet. Win a story with its best ending, and whoever you saved will move in, and fly with you against the Flaggship.', 840, 846, 680, { s:14, lh:20, c:C.ink });
+  const res = H_.residents || []; label('Residents', 840, 856, '#9fdc7a', 'left', 15);
+  para(res.length ? `${res.join(', ')}. They fly with you against the Flaggship in every run (up to four).` : 'Nobody yet. Win a story with its best ending, and whoever you saved will move in, and fly with you against the Flaggship.', 840, 880, 680, { s:14, lh:20, c:C.ink });
   if(!H_.leased){ btn(300, 870, 420, 64, UI.leaseAsk ? 'Sure? Rent every run, no residents' : 'Lease it to Madame Ossery', () => { if(!UI.leaseAsk){ UI.leaseAsk = true; return; } UI.leaseAsk = false; havenLease(); }, { s:16, col:C.hostile });
     tip(300, 870, 420, 64, 'Madame Ossery\'s lease', 'Every wing restored overnight. But Ossery takes 50 scrap at the start of every run and 15 every time you dock, and no ally will move into a station she owns.'); }
   else T('Leased to Madame Ossery: 50 scrap rent every run, 15 to dock.', 300, 908, { s:15, c:C.hostile });

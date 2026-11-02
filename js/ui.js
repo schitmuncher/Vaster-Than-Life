@@ -171,7 +171,7 @@ function drawTitle(){
   const on = MODS.filter(m=>m.enabled).length, chDone = Object.values(PROFILE.challenges||{}).filter(r => r.done).length;
   btn(110, y, hw, 58, chDone ? `Challenges ${chDone}` : 'Challenges', () => { applyMods(); UI.screen = 'challenges'; }, { s:17, col:C.good });
   btn(x2, y, hw, 58, on ? `Mods (${on})` : 'Mods', () => { UI.screen = 'mods'; loadLibrary(); }, { s:18 }); y += 68;
-  btn(110, y, hw, 58, 'Manual', () => { UI.screen = 'help'; UI.helpPage = 0; }, { s:18 });
+  btn(110, y, hw, 58, 'Wiki', () => { UI.screen = 'help'; UI.helpPage = 0; }, { s:18 });
   btn(x2, y, hw, 58, 'Settings', () => { UI.screen = 'settings'; }, { s:18 }); y += 68;
   btn(110, y, hw, 58, 'Record', () => { UI.screen = 'record'; }, { s:18 });
   btn(x2, y, hw, 58, `Medals ${Object.keys(PROFILE.ach).filter(k => ACHIEVEMENTS.some(a => a.id===k)).length}/${ACHIEVEMENTS.length}`, () => { UI.screen = 'ach'; }, { s:17 }); y += 68;
@@ -735,7 +735,7 @@ function drawGame(){
       if(fsOk) btn(x0 + (bw + 12)*(sg ? 2 : 1), 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); }
     // second row: speed, the manual, and leaving the run
     panel(W/2-300, 438, 600, 66, 10); speedButton(W/2-290, 448);
-    btn(W/2-60, 448, 160, 46, 'Manual', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
+    btn(W/2-60, 448, 160, 46, 'Wiki', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
     const fighting = G.enemy && !G.enemy.dead;
     if(NET.on && SYNC.guest) btn(W/2+110, 448, 180, 46, 'Leave game', () => mpLeave(), { s:15, col:C.hostile, loc:true });
     else btn(W/2+110, 448, 180, 46, UI.confirmExit ? 'Really leave?' : NET.on ? 'Save & end' : 'Save & exit', () => { if(fighting && !UI.confirmExit){ UI.confirmExit = true; toast('Leaving mid-fight: Continue will start from your last autosave, before this beacon.'); return; } UI.confirmExit = false; save(); if(NET.on){ netSend({ t:'end', why:'The host ended the session.' }); mpLeave(); } UI.screen = 'title'; G = null; }, { s:15, col:C.hostile, fill:!!UI.confirmExit });

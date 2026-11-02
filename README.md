@@ -175,6 +175,8 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Faction ships.** Become Revered by a faction and it gives you one of its ship designs for good.
 - **Cabin fever.** Eleven jumps without a port and the crew lose hearts every jump and repair 10% slower; after sixteen, things start to rattle loose. Any store or a trip home cures it.
 - **Madame Ossery** will lease the whole station: every wing restored at once, but she takes rent every run and a fee every time you dock, and no ally will move into a station she owns.
+- **The ship's wiki.** Title screen → Wiki (or Wiki in the pause menu): search every page, Guides for every system, and an Encyclopedia page for every weapon, drone, augment, race, ship, enemy, sector, good, crop, meal, machine, kit, Haven wing, faction, combo, scar, anomaly, pet, medal and challenge, built from the live data so mods appear too. Pages link to each other.
+- **Restoring Haven's Rest, made clear.** Stores have a Trade → Send home tab listing every dark wing, what it still needs, what you're carrying and where to get the rest; the station has a Restore wings tab; docking with something a wing wants tells you so.
 - **Haven's Rest.** Your great-uncle's old station, restored across runs, Stardew-style: send goods home from any store to complete each wing's bundle. Eight wings (the Biodome, Aquaculture Bay, the Promenade, the Engineering Deck, the Communications Relay, the Smuggler's Fence, the Cellar, the Cantina), each giving every future run a perk. Or let the Directorate's contractors rebuild a wing for renown. Win a story with its best ending and whoever you saved moves in, and flies with you against the Flaggship in later runs. On the title screen.
 - **The wreck of your last ship.** Lose a run, and next time you may find what's left of your old ship: salvage its guns, hold a service for its crew, or search the decks and meet what's still aboard.
 
@@ -548,6 +550,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/items.js` | Tonics and treats: permanent per-crew boosts, skill chips, boosts, healing, eating raw crops, the Tonics view and store tab |
 | `js/living.js` | Faction standing, room combos and the shipyard, the workshop, crew off duty, crossbreeding, Haven's Rest, the wreck of your last ship |
 | `js/openworld.js` | Heat and Rebuff hunters, exit blockades, contracts, home between sectors, faction ships, Pip's intel |
+| `js/wiki.js` | The ship's wiki: hand-written guides plus an encyclopedia generated from DATA, with search, links and scrolling |
 | `js/havenvisit.js` | Visiting Haven's Rest during a run: the relay beacon, bunks, drydock and weapon locker, greenhouse, cantina, market, cabin fever, Ossery's lease |
 | `js/anomalies.js` | Ship scars, anomalies (fungus, escort AI, crystal, Black Mark, pilgrims, time fracture), trade-off augments, elite ships, bonds at work, pet diets, event twists |
 | `js/hulls.js` | Ship looks per faction: hull outlines, engines, fins, decorations, plating and cockpits |

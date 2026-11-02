@@ -1,0 +1,296 @@
+'use strict';
+/* =========================================================================
+   The ship's wiki: the Manual, rebuilt as an in-game encyclopedia.
+   - Guides: hand-written articles on every part of the game (the old
+     manual cards, the flight-school lessons, and new pages on life aboard,
+     Haven's Rest, the open galaxy, anomalies, mods and settings).
+   - Encyclopedia: a page for everything in the game's data, built live
+     from DATA so mods show up too (weapons, drones, augments, races,
+     ships, enemies, sectors, goods, crops, meals, machines, kit, wings,
+     factions, combos, scars, anomalies, pets, medals, challenges).
+   - Search across both, "See also" links between pages, scrolling by
+     wheel, drag or the arrow buttons. openWiki(id) jumps to any page.
+   ========================================================================= */
+const WIKI = { built:null, key:'' };
+
+/* ---------------- hand-written guides ---------------- */
+// body: paragraphs. "## " starts a subheading, "• " a bullet.
+const WIKI_GUIDES = [
+  ['start', 'Start here', [
+    ['g_welcome', 'How to use this wiki', ['This is the ship\'s wiki. Guides explain how things work. The Encyclopedia has a page for every weapon, drone, augment, crew race, ship, enemy, good, crop, meal and more, built from the game\'s own data, so mods appear here too.', '• Type to search (or tap the search box). Search looks through every page.', '• Tap a page in the list to read it. Scroll with the mouse wheel, by dragging, or with the arrows.', '• Green links at the bottom of a page lead to related pages.', 'You can open the wiki from the title screen (Manual) or from the pause menu in a run.'], ['g_firstrun', 'g_glossary']],
+    ['g_firstrun', 'Your first run, step by step', ['## Before you leave', '• Play the Tutorial\'s guided practice once. It takes five minutes.', '• In the hangar pick the Pestrel on Easy. Any story will do.', '## Sector 1', '• Head for the store and the exit, visiting beacons on the way. Each jump costs 1 fuel and lets the Rebuff Fleet creep forward.', '• In a fight: power your weapons, target the enemy Shields room, and keep crew at the Helm, Engines, Shields and Weapons.', '• Hurt crew go to the Medbay. Fires and breaches need someone sent to them.', '## Spending', '• At the first store: repair the hull if it is below about two thirds, buy fuel up to 6-8, then upgrade Shields to 4 (a second layer) in Ship → Systems.', '• Don\'t hoard scrap. It only helps once it is spent.', '## Later', '• Each exit offers a choice of sectors. Nebulas hide you from the Fleet; hostile sectors pay more but hit harder.', '• In the last sector, find the Flaggship and beat it three times.'], ['g_glossary', 'g_basics_power', 'g_tactics_spend_scrap_well']],
+    ['g_glossary', 'Glossary', ['• Scrap: money. Earned from fights, events and selling.', '• Fuel: 1 per jump. Run out and you drift until the Fleet catches you.', '• Missiles: ammo for missile and bomb weapons.', '• Drone parts: used each time a drone launches. Also repair personal kit.', '• Beacon: a stop on the sector map.', '• The Rebuff Fleet: the red band that chases you across each sector.', '• Heat: how much the Rebuff are hunting you specifically (see Heat).', '• Hearts: how much a crew member likes being aboard. Ten per person.', '• Renown: career points earned by every run. It raises your rank and can rebuild Haven\'s Rest.', '• Haven\'s Rest: your great-uncle\'s station, restored across runs.', '• Standing: how a faction feels about you, from Despised to Revered.', '• Scar: lasting damage to a room until it is patched.', '• Anomaly: a situation that bends the rules for several sectors.'], ['g_ow_heat', 'g_haven_overview', 'g_ow_factions']],
+    ['g_ending', 'How a run ends', ['A run is won by beating the Rebuff Flaggship three times in the last sector, before it wears down Fedoration command.', 'It is lost if your hull reaches zero, every crew member dies, or you run out of fuel and the Fleet catches you.', '• Every run earns renown, won or lost, for your Admiralty rank.', '• Lose, and your next run may stumble on the wreck of your old ship.', '• Goods you sent to Haven\'s Rest, guns in the locker and greenhouse crops are kept whatever happens.', '• Win a story with its best ending, and whoever you saved may move into Haven\'s Rest.'], ['g_ow_wreck', 'g_haven_residents', 'g_career_renown_ranks']] ]],
+  ['aboard', 'Life aboard', [
+    ['g_skills', 'Crew skills', ['Crew learn by doing. There are six skills: piloting (at the Helm), engines, shields, weapons, repair and combat.', '• Each skill has three levels, from untrained to expert, and each level is a real bonus.', '• Keep people at the same post and they improve faster. Humans learn a little quicker than everyone else.', '• Bookworms make everyone learn faster. Veterans teach rookies who share their room between jumps.', '• Gifts a crew member loves give them a burst of practice.'], ['e_races', 'g_hearts']],
+    ['g_hearts', 'Hearts, gifts and birthdays', ['Every crew member has ten hearts. Gifts they love, meals together, nights out and fights survived together win hearts; selling a friend, or a long time away from home, loses them.', '## What hearts give', '• 3 hearts: 5% better at everything. 6: 10%. 8: +10 health. 10: devoted, and a keepsake.', '## Gifts', '• Give goods from Ship → Cargo → Hold. Each race and each personality loves certain things (see the race and quirk pages).', '• Nobody likes rations or junk.', '## Birthdays', '• A birthday lasts two jumps. A present then counts triple and makes them better at their job. Forget, and they sulk for three fights.'], ['e_quirks', 'e_races', 'g_cabin_fever']],
+    ['g_bonds', 'Friends, sweethearts and rivals', ['Crew form bonds as runs go on, and bonds matter when two of them share a room.', '• Friends in the same room work a little better together.', '• Sweethearts on the shields make them recharge faster.', '• Rivals in the same room hit 25% harder in a fight, but repair much slower (they argue over the wrench), and between jumps they may come to blows.', 'Check bonds on each crew member\'s card (tap them, then ⓘ).'], ['g_hearts', 'g_offduty']],
+    ['g_offduty', 'Crew off duty', ['Between jumps your crew get on with their lives, depending on their personality (quirk).', '• The daredevil spars (combat practice), and sometimes wrecks a sparring drone.', '• The poet writes; now and then an epic poem appears in the hold.', '• The tinkerer scrounges parts. The cook turns crops into star stew.', '• The bookworm reads, and everyone learns from it.', '• Veterans teach rookies who share their room.'], ['e_quirks', 'g_bonds']],
+    ['g_garden', 'The garden', ['Plant seeds in your hydroponic planters (Ship → Cargo → Garden). Crops grow one step every jump.', '• They grow faster near a sun, and not at all in an ion storm. Void peppers and nebula blooms love nebulas.', '• Buy seeds at stores (Trade → Goods), win them in events, or make more with a seed maker.', '• Harvest to sell, give as gifts, cook, or brew. Stores buy more planters, up to six.', '• A gardener in the crew makes crops grow faster and give an extra portion.'], ['e_crops', 'g_galley', 'g_haven_greenhouse']],
+    ['g_galley', 'Cooking in the galley', ['Cook crops and fish into meals in the galley (Ship → Cargo → Garden). Each meal feeds the whole crew and gives an edge for three fights.', '• Spicy hash: harder punches. Fish supper: faster weapons. Star stew: faster repairs and more health. Berry pie: dodging and speed. Melon sorbet: a bit of everything.', '• A cook in the crew makes double portions.', '• Meals are goods too: some people love them as gifts, and some wings of Haven\'s Rest need them.'], ['e_meals', 'g_garden', 'g_fishing']],
+    ['g_fishing', 'Fishing', ['Fishing needs a rod: stores sell one in Supplies, and Mags Vetch always has one.', '• You can only fish at fishing spots: nebula and asteroid beacons, and a few others marked on arrival.', '• Catches: space fish, sometimes a deep eel, sometimes junk, and once in a while the rod snaps.', '• Fish feed the galley, sell well in Pebblekin space, and two wings of Haven\'s Rest want them.'], ['g_galley', 'e_goods']],
+    ['g_pets', 'Pets', ['Some events give you a pet: a void kitten, a hull slug, a star moth, a space goat or a pocket nebula.', '• Pets cheer the crew up and help in small ways.', '• What you feed a pet changes what it grows into (see the Pets pages).'], ['e_pets']],
+    ['g_kit', 'Personal kit and tonics', ['Crew can carry their own weapons and armour (Ship → Crew → Armoury). Stores sell them in Supplies → Armoury.', '• Blunt weapons stun. Blades make foes bleed. Guns also shoot into the next room. Armour soaks damage.', '• Kit wears out with use and breaks; mend it with a drone part, at a store, or all at once with ballistic cloth.', '• Beaten boarders drop their kit.', '• Tonics (Supplies → Tonics) make one person permanently tougher, faster or smarter. Some are for a few fights only.'], ['e_arms', 'e_items']] ]],
+  ['haven', 'Haven\'s Rest', [
+    ['g_haven_overview', 'Haven\'s Rest: overview', ['Great-uncle Tobiah left you a battered old station. It is the one thing that lasts from run to run.', '• Restore its wings and every future run gets their perks (see Restoring a wing).', '• Each sector except the last has a green HOME beacon on the map: the station\'s relay. Jump there to visit.', '• At an exit beacon you can also drop in at home before choosing the next sector.', '• Visits: rest the crew, repair cheaply, keep guns in the locker, tend the greenhouse, hire at the cantina, take contracts.', '• From the title screen: see every wing, spend renown, and meet the residents.', 'Home perks work in normal single-player runs, not in dailies, challenges, seed duels, multiplayer or the Red Dwarf campaign.'], ['g_haven_restore', 'g_haven_visit', 'e_wings']],
+    ['g_haven_restore', 'Restoring a wing (the Biodome and the rest)', ['Each dark wing needs a set of goods, called its bundle. The Biodome, for example, needs 5 star potatoes, 5 ion berries and 2 moon melons.', '## How', '• 1. See what a wing needs: title screen → Haven\'s Rest, or in a run any store → Trade → Send home. Each good says where to find it: (grow), (cook), (fish), (workshop) or (buy).', '• 2. Collect it during a run: grow crops in the garden, cook meals, fish, brew in the workshop, or buy goods at the right kind of store.', '• 3. Send it: at any store open Trade → Send home and press Send. At the station itself, use the Restore wings tab.', '• 4. When every line is full, the wing lights up for good.', '## Good to know', '• Everything you send is kept, even if the run ends badly. A wing can take several runs.', '• When you dock carrying something a wing needs, the game tells you.', '• Fuel: only what is above 3 can be sent, so you never strand yourself.', '• Or skip it: rebuild a wing outright with renown from the title screen. That doesn\'t lower your rank.'], ['e_wings', 'g_garden', 'g_workshop']],
+    ['g_haven_visit', 'Visiting home', ['Jump to the HOME beacon, or press "Drop in at Haven\'s Rest" at an exit. When you leave, the relay puts you back where you came from.', '• Bunks: a night\'s rest heals everyone, adds hearts and cures cabin fever. The Fleet creeps a little closer.', '• Drydock: hull repairs at 2 scrap a point (free once a visit with the Engineering Deck), patch scars at half price, and the weapon locker.', '• Greenhouse, Cantina, Market and Noticeboard: see their own pages.', '• Room swaps cost half price here.', '• Going home cools your heat a lot.'], ['g_haven_locker', 'g_haven_greenhouse', 'g_cabin_fever']],
+    ['g_haven_locker', 'The weapon locker', ['Leave a gun in the locker at the drydock and it stays there for every future run. Take it aboard on any visit.', '• Four slots, or six with the Engineering Deck restored.', '• A good way to keep a favourite gun, or to start a run strong.'], ['g_haven_visit']],
+    ['g_haven_greenhouse', 'The greenhouse', ['Station soil is better than your planters. Crops in the greenhouse grow on every jump of every run, even while you are out there, and give half as much again.', '• Three beds, six with the Biodome restored.', '• Starfruit trees only grow here. Buy their seeds at the station market.', '• Plant and harvest whenever you visit.'], ['g_garden', 'e_crops']],
+    ['g_haven_cantina', 'The cantina', ['Once the Cantina wing is restored, visiting specialists drink there. Hire one when you call home.', '• Every run also starts with one extra trained crew member.'], ['e_wings']],
+    ['g_haven_residents', 'Residents', ['Win a story with its best ending and whoever you saved may move into Haven\'s Rest.', '• Residents fly with you against the Flaggship in every future run, up to four of them.', '• If Pip lives there, the Flaggship\'s defences are decoded before every final battle.', '• Madame Ossery\'s lease means nobody will move in.'], ['g_haven_lease', 'g_ow_pip']],
+    ['g_haven_lease', 'Madame Ossery\'s lease', ['On the title screen you can lease the station to Madame Ossery. Her contractors restore every wing overnight.', '• The price: 50 scrap at the start of every run, and 15 every time you dock.', '• No ally will move into a station she owns.'], ['g_haven_residents']],
+    ['g_cabin_fever', 'Cabin fever', ['A long time without going home wears on the crew.', '• From 11 jumps away, everyone loses a quarter of a heart each jump and repairs slow a little.', '• From 16 jumps away, the ship may pick up a scar as things are let slip.', '• A night in the bunks at Haven\'s Rest cures it. A chip under your ship shows how long you have been away.'], ['g_haven_visit', 'g_hearts', 'e_scars']] ]],
+  ['galaxy', 'Open galaxy', [
+    ['g_ow_heat', 'Heat', ['Heat is how much the Rebuff Directorate is paying attention to you, from 0 to 100. A chip under your ship shows it once it passes 20.', '## What raises it', '• Destroying Rebuff ships (+10) or fleet ships. Other kills (+4). Winning boarding fights.', '## What cools it', '• Quiet beacons (-5) and nebulas (-8) you haven\'t visited, stores (-3), going home (a lot), and a cloak or stealth augment.', '• Bribing hunters, paying a code forger, or hiring a decoy freighter in events.', '• Beating hunters (-15) or breaking a blockade (-30).', '## What it does', '• 40, Noticed: the Fleet moves faster.', '• 70, Hunted: hunter-killers may drop on you at any beacon.', '• 90, Blockade: the exit beacon is blockaded and you have to fight through.'], ['g_ow_contracts', 'e_enemy_rb_hunter']],
+    ['g_ow_contracts', 'Contracts', ['Stores and Haven\'s Rest have noticeboards (Trade → Contracts, or the Noticeboard tab at home). Take up to three at a time; track them in Ship → Log → Contracts.', '• Delivery: the cargo goes in your hold now. Bring it to any store in the named sector or later. Too late and the client is annoyed.', '• Bounty: beat two ships of a faction (destroy, board or make them surrender).', '• Survey: visit three quiet or nebula beacons you haven\'t seen before.', 'Each pays scrap, and the client\'s faction likes you more (+10).'], ['g_ow_factions', 'g_ow_heat']],
+    ['g_ow_factions', 'Factions and standing', ['Six peoples remember what you do: the Mantlis, Sloogs, Voltans, Pyrates, Enjinn and Pebblekin. See each one\'s page for what they like and hate. Ship → Crew → Factions shows your standing.', '## Tiers', '• Despised: their ships come in hot and their stores charge 40% more.', '• Disliked: 20% more.', '• Neutral: normal prices.', '• Favoured: 10% off, and their ships may let you pass.', '• Revered: 18% off, their ships let you pass, allies join your fights in their space, and they give you one of their ship designs to keep.', 'A quarter of your standing carries into your next run.'], ['e_factions', 'g_ow_contracts']],
+    ['g_ow_layout', 'Room layout and combos', ['Systems in rooms joined by a door can work together. These pairings are room combos: engines next to weapons make guns charge faster, and so on.', '• Ship → Ship → Layout draws your ship with active combos as glowing links.', '• At a store or at home, tap a room, then another, to swap their systems. It costs scrap (half at home, half again with the Engineering Deck).', '• Only installed systems count.'], ['e_combos']],
+    ['g_workshop', 'The workshop', ['Machines in your hold turn raw goods into something worth more, a few jumps at a time. Buy them at stores (Ship → Cargo → Workshop); you can carry four.', '• Load a machine with something from the hold and keep jumping. Collect the result when it is ready.', '• Preserves jar: crops into preserves. Keg: fruit into wine. Zero-G cask: ages wine into a vintage, in deep space only. Seed maker: crops back into seeds. Recycler: junk or fish into drone parts. Loom: silk or chitin into ballistic cloth.'], ['e_machines', 'g_haven_restore']],
+    ['g_ow_wreck', 'The wreck of your last ship', ['Lose a run and, partway through your next one, you may come across what is left of your old ship.', '• Its logs, its guns, and sometimes its crew are still aboard. Something may have moved in.'], ['g_ending']],
+    ['g_ow_pip', 'Pip at home', ['If Pip, the data core from the first story, lives at Haven\'s Rest, it decodes the Flaggship\'s defences before every final battle, so the Flaggship starts weakened.'], ['g_haven_residents']] ]],
+  ['anomaly', 'Anomalies and scars', [
+    ['g_anom_about', 'What anomalies are', ['Some events start an anomaly: a situation that bends the rules for several sectors, with a climax at the end. A chip under your ship names each one; press and hold it for details.', '• Void fungus, a WARDEN-9 escort, a crystal in the reactor, the Black Mark, pilgrims aboard, a time fracture, and in the Red Dwarf campaign, ink.', '• Each has its own page in the Encyclopedia.'], ['e_anoms', 'g_scars']],
+    ['g_scars', 'Ship scars', ['A scar is lasting damage to a room: a leaky hull, a jammed system one bar short, sparking wiring, or a system locked out until you deal with the cause.', '• A small icon in the bottom left of the room shows it.', '• Patch scars at a store\'s dockyard (Supplies), at half price at home, or with the right crew in an event.', '• Some locked-out systems need a particular thing handed over before they work again.'], ['e_scars', 'g_cabin_fever']],
+    ['g_tradeoff', 'Trade-off augments', ['Some augments give a big strength with a real weakness. The blood reactor, for example, feeds on the crew\'s health. Read the augment\'s page before you buy.'], ['e_augs']],
+    ['g_relentless', 'Relentless elites', ['Some elite enemies never give up and leave. They suffocate, pin and drain you. There is no stalemate timer against them: it ends when one of you does.'], ['e_enemies']],
+    ['g_twists', 'Event twists', ['Many events come in several versions, picked fresh each run, so the same encounter can\'t be solved from memory. The same stranger may be honest one run and a trap the next.'], ['g_map_hazards_events']] ]],
+  ['setup', 'Mods and settings', [
+    ['g_mods', 'Mods', ['Mods are JSON files that add or change ships, weapons, drones, augments, races, enemies, sectors, events and rules.', '• Title screen → Mods opens the library. Tap to turn a mod on or off; it applies to your next run.', '• The Mods button can also load a file or pasted JSON.', '• Everything a mod adds appears in this wiki\'s Encyclopedia.'], ['g_rd']],
+    ['g_rd', 'Red Dwarf: Three Million Years Late', ['A campaign mod in the library: a whole new story, with its own ships, crew, sectors, villain, music and ending. Turn it on in Mods, then pick it with the Campaign arrows at the top of the hangar.', 'Red Dwarf belongs to its creators. This is an original fan story using generic sprites.'], ['g_mods']],
+    ['g_voices', 'Spoken voices', ['Settings → Audio → Spoken voices reads story lines aloud with your device\'s voices, with a different voice for each character. Choose off, dialogue only, or everything, and set the speed.'], ['g_phone']],
+    ['g_phone', 'Playing on a phone', ['Turn the phone sideways. Install the game to your home screen for true full screen.', '• Tap to act; press and hold for details; pinch or double-tap to zoom.', '• Settings → Text size makes all text bigger. Story scenes already use bigger text on phones.', '• Two-finger tap pauses. Android\'s back button closes windows.'], ['g_controls_touch']],
+    ['g_saving', 'Saving and backups', ['The run saves itself between fights. Record, on the title screen, can save a backup file of everything (career, Haven\'s Rest, medals) to load on another device.'], []] ]]
+];
+
+/* ---------------- building the pages ---------------- */
+function wSlug(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); }
+function wPct(v){ return Math.round(v*100) + '%'; }
+function wSec(k){ k = String(k || ''); return ((DATA.sectors && DATA.sectors[k] && DATA.sectors[k].name) || (k ? k[0].toUpperCase() + k.slice(1) : '')); }
+function wNames(ids, src){ return (ids || []).map(id => (src[id] && src[id].name) || id).join(', '); }
+function wGood(id){ return (typeof needName==='function' ? needName(id) : (goodsDef(id) || {}).name) || id; }
+function wikiBuild(){
+  const key = [Object.keys(DATA.weapons).length, Object.keys(DATA.ships).length, Object.keys(DATA.goods||{}).length, Object.keys(DATA.events||{}).length].join(',');
+  if(WIKI.built && WIKI.key===key) return WIKI.built; WIKI.key = key;
+  const A = {}, cats = [], add = (cat, a) => { a.cat = cat.id; A[a.id] = a; cat.ids.push(a.id); };
+  const cat = (half, id, name) => { const c = { half, id, name, ids:[] }; cats.push(c); return c; };
+  // guides: start, then the old manual cards, the flight-school lessons, and the newer chapters
+  const G0 = WIKI_GUIDES[0]; { const c = cat('g', G0[0], G0[1]); for(const [id, t, body, see] of G0[2]) add(c, { id, title:t, body, see }); }
+  if(typeof HELP_PAGES!=='undefined') for(const [name, items] of HELP_PAGES){ const c = cat('g', 'h_' + wSlug(name), name);
+    for(const [h, t] of items) add(c, { id:`g_${wSlug(name)}_${wSlug(h)}`, title:h, body:[t] }); }
+  if(typeof TUT_LESSONS!=='undefined'){ const c = cat('g', 'lessons', 'Flight school');
+    for(const L of TUT_LESSONS){ const body = []; for(const p of L.pages){ body.push('## ' + p.h); for(const x of p.pts) body.push('• ' + x); } add(c, { id:'l_' + L.id, title:`${L.icon} ${L.name}`, body }); } }
+  for(const [cid, name, list] of WIKI_GUIDES.slice(1)){ const c = cat('g', cid, name); for(const [id, t, body, see] of list) add(c, { id, title:t, body, see }); }
+  // a few hand-written pages link to old manual cards by guessed ids: keep only the ones that exist (checked when drawn)
+  // ---- the encyclopedia ----
+  { const c = cat('e', 'systems', 'Systems'); const keys = typeof SYSN!=='undefined' ? Object.keys(SYSN) : [];
+    for(const k of keys){ const d = typeof sysDesc==='function' ? sysDesc(k) : ''; if(!d) continue; add(c, { id:'e_sys_' + k, title:SYSN[k], sub:'System', body:[d, ...wSysExtra(k)], see:wCombosWith(k) }); } }
+  { const c = cat('e', 'weapons', 'Weapons'); const ws = Object.values(DATA.weapons).filter(d => d && d.name).sort((a, b) => (a.type||'').localeCompare(b.type||'') || (a.tier||0)-(b.tier||0) || a.name.localeCompare(b.name));
+    for(const d of ws){ const st = [['Type', cap(d.type)], ['Damage', `${d.damage||0}${(d.shots||1) > 1 ? ' × ' + d.shots + ' shots' : ''}`], ['Charge', `${d.charge}s`], ['Power', d.power||0], ['Cost', d.cost||'—']];
+      const ex = wWeaponExtras(d); if(ex) st.push(['Extras', ex]);
+      add(c, { id:'e_w_' + d.id, title:d.name, sub:`${cap(d.type)} weapon${d.tier ? ' · tier ' + d.tier : ''}`, stats:st, body:[d.desc || '', typeof weaponRole==='function' ? weaponRole(d) : '', d.noLoot ? 'Not sold in stores or found as loot: it only comes from events.' : 'Sold at stores and found as loot.', d.pack ? `From the ${d.pack} pack.` : ''].filter(Boolean), see:['l_weapons'] }); } }
+  { const c = cat('e', 'drones', 'Drones'); const KN = { attack:'Attack drone: orbits the enemy and shoots it.', defense:'Defence drone: shoots down incoming missiles (and sometimes lasers).', anti:'Anti-drone: hunts enemy drones.', internal:'Internal drone: works inside a ship (repairing, or fighting boarders).', boarding:'Boarding drone: flies into the enemy ship and fights there.', hull:'Hull drone: repairs your hull.' };
+    for(const d of Object.values(DATA.drones).filter(d => d && d.name).sort((a, b) => (a.kind||'').localeCompare(b.kind||'') || a.name.localeCompare(b.name)))
+      add(c, { id:'e_d_' + d.id, title:d.name, sub:`${cap(d.kind)} drone`, stats:[['Power', d.power||0], ['Cost', d.cost||'—'], ...(d.rate ? [['Fires every', d.rate + 's']] : []), ...(d.shot ? [['Shot', `${cap(d.shot.type)} ${d.shot.damage||0}`]] : [])], body:[d.desc || '', KN[d.kind] || '', 'Uses one drone part every time it launches.'].filter(Boolean), see:['g_basics_drones'] }); }
+  { const c = cat('e', 'augments', 'Augments');
+    for(const d of Object.values(DATA.augments).filter(d => d && d.name).sort((a, b) => a.name.localeCompare(b.name)))
+      add(c, { id:'e_a_' + d.id, title:d.name, sub:'Augment', stats:[['Cost', d.cost||'—']], body:[d.desc || '', d.noLoot ? 'Not sold in stores: it only comes from events.' : 'Sold at stores (Gear → Augments) and found as loot. You can carry three.'].filter(Boolean) }); }
+  { const c = cat('e', 'races', 'Crew races');
+    for(const r of Object.values(DATA.races).filter(r => r && r.name && !r.secret).sort((a, b) => a.name.localeCompare(b.name))){
+      const fl = []; if(r.fireproof) fl.push('fireproof'); if(r.noAir) fl.push('needs no air'); if(r.telepathic) fl.push('telepathic'); if(r.mindImmune) fl.push('immune to mind control'); if(r.armor) fl.push('armoured'); if(r.power) fl.push('powers the room it is in'); if(r.deathBurst) fl.push('bursts when killed'); if(r.heal) fl.push('heals others');
+      const loves = typeof RACE_LOVES!=='undefined' && RACE_LOVES[r.id] ? RACE_LOVES[r.id].map(wGood).join(', ') : '';
+      add(c, { id:'e_r_' + r.id, title:r.name, sub:'Crew race', stats:[['Health', r.hp||100], ['Repair', wPct(r.repair||1)], ['Combat', wPct(r.combat||1)], ['Speed', wPct(r.speed||1)], ...(r.learn && r.learn!==1 ? [['Learning', wPct(r.learn)]] : []), ...(fl.length ? [['Special', fl.join(', ')]] : [])], body:[r.desc || '', loves ? `Loves: ${loves}.` : ''].filter(Boolean), see:['g_hearts', 'g_skills'] }); } }
+  { const c = cat('e', 'quirks', 'Traits and quirks');
+    for(const [id, q] of Object.entries(DATA.quirks || {})){ const lv = typeof GIFT_LOVES!=='undefined' && GIFT_LOVES[id] ? GIFT_LOVES[id].map(wGood).join(', ') : '';
+      add(c, { id:'e_q_' + id, title:q.name, sub:'Personality quirk', body:[q.desc || '', typeof QUIRK_TEXT!=='undefined' && QUIRK_TEXT[id] ? QUIRK_TEXT[id] : '', lv ? `Loves: ${lv}.` : ''].filter(Boolean), see:['g_offduty', 'g_hearts'] }); }
+    for(const t of Object.values(DATA.traits || {}).filter(t => t && t.name)) add(c, { id:'e_t_' + t.id, title:t.name, sub:'Crew trait', body:[t.desc || ''] }); }
+  { const c = cat('e', 'kit', 'Personal kit');
+    for(const d of Object.values(DATA.arms || {}).filter(d => d && d.name)){ const fl = ['stun','bleed','fire','reach','fear','leech','heal','knock','vac'].filter(k => d[k]).join(', ');
+      add(c, { id:'e_k_' + d.id, title:d.name, sub:`${cap(d.kind)} · hand-to-hand kit`, stats:[['Damage', wPct(d.dmg||1)], ['Durability', d.dur||'—'], ['Cost', d.cost||'—'], ...(d.armor ? [['Armour', wPct(d.armor)]] : []), ...(fl ? [['Extras', fl]] : [])], body:[d.desc || ''], see:['g_kit'] }); }
+    for(const d of Object.values(DATA.items || {}).filter(d => d && d.name)) add(c, { id:'e_i_' + d.id, title:d.name, sub:`Tonic · ${d.kind==='perm' ? 'permanent' : d.kind || ''}`, stats:[['Cost', d.cost||'—']], body:[d.desc || ''], see:['g_kit'] }); }
+  { const c = cat('e', 'ships', 'Your ships');
+    for(const d of Object.values(DATA.ships).filter(d => d && d.name)){ const u = d.unlock, ut = !u ? 'Available from the start.' : u.win ? `Unlock: win a run with the ${(DATA.ships[u.win]||{}).name || u.win}.` : u.sector ? `Unlock: reach sector ${u.sector}.` : u.kills ? `Unlock: destroy ${u.kills} ships in total.` : u.ach ? `Unlock: earn the medal "${((typeof ACHIEVEMENTS!=='undefined' && ACHIEVEMENTS.find(a => a.id===u.ach)) || {}).name || u.ach}".` : 'Unlocked by playing.';
+      const sys = Object.entries(d.systems || {}).map(([k, v]) => `${SYSN[k] || k} ${v}`).join(', ');
+      add(c, { id:'e_s_' + d.id, title:d.name, sub:d.cls || 'Ship', stats:[['Hull', d.hull], ['Reactor', d.reactor], ['Fuel', d.fuel], ['Missiles', d.missiles], ['Parts', d.parts]], body:[d.desc || '', `Systems: ${sys}.`, d.reserve && d.reserve.length ? `Empty rooms for: ${d.reserve.map(k => SYSN[k] || k).join(', ')}.` : '', d.weapons && d.weapons.length ? `Weapons: ${wNames(d.weapons, DATA.weapons)}.` : '', d.drones && d.drones.length ? `Drones: ${wNames(d.drones, DATA.drones)}.` : '', d.crew && d.crew.length ? `Crew: ${wNames(d.crew, DATA.races)}.` : '', ut, typeof shipUnlocked==='function' && shipUnlocked(d) ? 'You have this ship.' : 'Locked. Ranks also unlock ships as you play.'].filter(Boolean) }); } }
+  { const c = cat('e', 'enemies', 'Enemy ships');
+    for(const d of Object.values(DATA.enemies).filter(d => d && d.name && d.id!=='tut_target').sort((a, b) => ((a.sectors||[0])[0]) - ((b.sectors||[0])[0]) || a.name.localeCompare(b.name))){
+      const fl = []; if(d.boss) fl.push('boss'); if(d.elite) fl.push('elite'); if(d.relentless) fl.push('relentless'); if(d.auto) fl.push('automated (no crew)'); if(d.eventOnly) fl.push('only met through events');
+      add(c, { id:'e_enemy_' + d.id, title:d.name, sub:`Enemy${d.tags && d.tags.length ? ' · ' + d.tags.join(', ') : ''}`, stats:[['Hull', d.hull], ...(d.sectors ? [['Sectors', `${d.sectors[0]}-${d.sectors[1]}`]] : []), ...(fl.length ? [['Notes', fl.join(', ')]] : [])], body:[d.desc || '', `Systems: ${Object.entries(d.systems || {}).map(([k, v]) => `${SYSN[k] || k} ${v}`).join(', ')}.`, d.weapons && d.weapons.length ? `Weapons: ${wNames(d.weapons, DATA.weapons)}.` : 'No weapons.', d.drones && d.drones.length ? `Drones: ${wNames(d.drones, DATA.drones)}.` : '', d.crew && d.crew.length ? `Crew: ${wNames(d.crew, DATA.races)}.` : ''].filter(Boolean), see:['l_weapons'] }); } }
+  { const c = cat('e', 'sectors', 'Sectors and hazards');
+    for(const [id, s] of Object.entries(DATA.sectors || {})){ if(!s || !s.name) continue; const hz = Object.entries(s.hazards || {}).map(([k, v]) => `${(typeof HAZARDS!=='undefined' && HAZARDS[k]) || k} ${wPct(v)}`).join(', ');
+      add(c, { id:'e_sec_' + id, title:s.name, sub:'Sector', stats:[...(s.mix ? [['Beacons', `${s.mix.event||0}% events, ${s.mix.combat||0}% fights, ${s.mix.empty||0}% quiet`]] : []), ...(s.fleetMult && s.fleetMult!==1 ? [['Fleet speed', wPct(s.fleetMult)]] : [])], body:[s.blurb || '', hz ? `Hazards: ${hz} of beacons.` : '', s.nebula ? `About ${wPct(s.nebula)} of beacons are inside the nebula.` : '', typeof STORE_KINDS!=='undefined' && STORE_KINDS[id] ? `Its stores: ${STORE_KINDS[id].title}.` : ''].filter(Boolean) }); }
+    const HZ = { asteroid:'Rocks hit both ships now and then. A good place to fish.', sun:'Flares start fires on both ships. Crops grow faster.', ionstorm:'Your reactor runs at half power. Crops don\'t grow.', pulsar:'Pulses knock out shields and systems on both ships.', nebula:'Sensors are blind, but the Fleet is slower and heat cools. A good place to fish.' };
+    if(typeof HAZARDS!=='undefined') for(const [k, n] of Object.entries(HAZARDS)) add(c, { id:'e_hz_' + k, title:n, sub:'Hazard', body:[HZ[k] || '', 'Hazards hurt the enemy too.'], see:['g_map_hazards_hazards'] }); }
+  { const c = cat('e', 'goods', 'Goods'); const G_ = Object.assign({}, typeof BASE!=='undefined' ? BASE.goods : {}, DATA.goods || {});
+    for(const [id, g] of Object.entries(G_).sort((a, b) => (a[1].name||'').localeCompare(b[1].name||''))){ if(!g || !g.name) continue; add(c, wGoodsPage(id, g)); } }
+  { const c = cat('e', 'food', 'Crops and meals');
+    if(typeof SEEDS!=='undefined') for(const [id, s] of Object.entries(SEEDS)) add(c, { id:'e_seed_' + id, title:s.name, sub:'Crop', stats:[['Grows in', `${s.grow} jumps`], ['Harvest', `${s.yield[0]}-${s.yield[1]}`], ['Seeds cost', s.cost]], body:[s.greenhouse ? 'Only grows in the Haven\'s Rest greenhouse. Seeds from the station market.' : s.only ? `Seeds only sold in ${wSec(s.only)} space.` : 'Seeds sold at most stores.', s.nebula ? 'Grows best in nebulas.' : ''].filter(Boolean), see:['g_garden', 'e_g_' + s.crop] });
+    if(typeof RECIPES!=='undefined') for(const [id, r] of Object.entries(RECIPES)) add(c, { id:'e_meal_' + id, title:wGood(id), sub:'Meal', stats:[['Needs', Object.entries(r.need).map(([k, n]) => `${n} ${wGood(k)}`).join(' + ')], ['Lasts', `${r.fed} fights`]], body:[`${r.name}: ${r.text}.`], see:['g_galley', 'e_g_' + id] }); }
+  { const c = cat('e', 'machines', 'Workshop machines');
+    if(typeof MACHINES!=='undefined') for(const [id, M] of Object.entries(MACHINES)) add(c, { id:'e_m_' + id, title:M.name, sub:'Workshop machine', stats:[['Cost', M.cost], ['Takes', `${M.jumps} jump${M.jumps > 1 ? 's' : ''}`], ['Makes', M.out==='seeds' ? 'seeds' : M.out==='parts' ? 'drone parts' : wGood(M.out)]], body:[M.text, M.deep ? 'Only works in deep space (not at stores or home).' : ''].filter(Boolean), see:['g_workshop'] }); }
+  { const c = cat('e', 'wings', 'Haven wings');
+    if(typeof HAVEN_WINGS!=='undefined') for(const w of HAVEN_WINGS){ const done = typeof havenDone==='function' && havenDone(w.id);
+      add(c, { id:'e_wing_' + w.id, title:w.name, sub:`Haven's Rest wing · ${done ? 'restored' : 'dark'}`, stats:[['Bundle', w.bundle], ['Or renown', w.renown]], body:['## What it gives', w.reward, '## What it needs', ...w.needs.map(([it, n]) => `• ${n} ${wGood(it)}${typeof havenGiven==='function' ? ` (${Math.min(n, havenGiven(w, it))} sent)` : ''}: ${typeof havenSrc==='function' ? havenSrc(it).long : ''}`), 'Send goods from any store: Trade → Send home.'], see:['g_haven_restore', ...w.needs.map(([it]) => 'e_g_' + it)] }); } }
+  { const c = cat('e', 'factions', 'Factions');
+    if(typeof FACTIONS!=='undefined') for(const [id, F] of Object.entries(FACTIONS)) add(c, { id:'e_fac_' + id, title:F.name, sub:'Faction', body:[`Likes: ${F.likes}`, `Hates: ${F.hates}`, G && G.rep && typeof repTier==='function' ? `This run you are ${repTier(id)[1]} (${rep(id)}).` : ''].filter(Boolean), see:['g_ow_factions'] }); }
+  { const c = cat('e', 'combos', 'Room combos');
+    if(typeof COMBOS!=='undefined') for(const C_ of COMBOS) add(c, { id:'e_combo_' + C_.id, title:C_.name, sub:'Room combo', stats:[['Rooms', C_.sys.map(g => g.map(k => SYSN[k] || k).join(' or ')).join(' + ')]], body:[C_.text, 'The two rooms must be joined by a door.'], see:['g_ow_layout'] }); }
+  { const c = cat('e', 'anoms', 'Anomalies and scars');
+    const AT = { fungus:'A fungus spreads through the vents over three stages. It mends a little hull every jump and freshens the air, but its glow draws the Fleet. Burn it out, or let it become part of the ship.', escort:'WARDEN-9, a rogue Enjinn drone carrier, decides to escort you. It fires on every enemy as a fight begins, but it starts making choices of its own.', crystal:'A crystal grows through the reactor: two super-shield points at the start of every fight, but the engines can\'t take more than two power.', blackmark:'The Pyrate King\'s mark. The Rebuff stop chasing you; Fedoration enforcers do instead, and lawful stores won\'t trade with you.', pacifist:'Voltan pilgrims ride with you and lend their Lattice. Destroying crewed ships angers them; winning peacefully pleases them.', fracture:'If the ship is destroyed in the next few jumps, time snaps back to where the fracture began. Once.', squid:'Red Dwarf campaign. Something is not quite right with what everyone is seeing.' };
+    if(typeof ANOM_INFO!=='undefined') for(const [id, a] of Object.entries(ANOM_INFO)) if(AT[id]) add(c, { id:'e_anom_' + id, title:a.name, sub:'Anomaly', body:[AT[id]], see:['g_anom_about'] });
+    if(typeof SCAR_KINDS!=='undefined') for(const [id, s] of Object.entries(SCAR_KINDS)) add(c, { id:'e_scar_' + id, title:`${s.icon} ${s.name}`, sub:'Ship scar', body:[s.text, 'Patch it at a store\'s dockyard (Supplies), or at half price at Haven\'s Rest.'], see:['g_scars'] }); }
+  { const c = cat('e', 'pets', 'Pets');
+    if(typeof PET_KINDS!=='undefined') for(const [id, n] of Object.entries(PET_KINDS)) add(c, { id:'e_pet_' + id, title:cap(n), sub:'Pet', body:['A ship\'s pet. It lifts the crew\'s spirits.', 'What you feed it decides what it grows into.'], see:['g_pets'] });
+    if(typeof PET_EVO!=='undefined') for(const [id, e] of Object.entries(PET_EVO)) add(c, { id:'e_evo_' + id, title:`${cap(e.name)} pet`, sub:'Pet form', body:[e.text], see:['g_pets'] }); }
+  { const c = cat('e', 'medals', 'Medals');
+    if(typeof ACHIEVEMENTS!=='undefined') for(const a of ACHIEVEMENTS){ const got = PROFILE.ach && PROFILE.ach[a.id]; add(c, { id:'e_ach_' + a.id, title:`${got ? '✓ ' : ''}${a.name}`, sub:got ? 'Medal · earned' : 'Medal', body:[a.desc || ''] }); } }
+  { const c = cat('e', 'challenges', 'Challenges');
+    for(const d of Object.values(DATA.challenges || {}).filter(d => d && d.name)){ const rec = PROFILE.challenges && PROFILE.challenges[d.id];
+      add(c, { id:'e_ch_' + d.id, title:d.name, sub:`Challenge${rec && rec.done ? ' · complete' : ''}`, stats:[['Ship', (DATA.ships[d.ship]||{}).name || d.ship || 'any'], ['Difficulty', cap(d.difficulty || 'normal')], ...(d.tier ? [['Tier', d.tier]] : [])], body:[d.desc || ''], see:['g_tactics_challenges'] }); } }
+  // link goods pages to anything that names them
+  for(const a of Object.values(A)) a.text = (a.title + ' ' + (a.sub||'') + ' ' + (a.body||[]).join(' ') + ' ' + (a.stats||[]).map(s => s.join(' ')).join(' ')).toLowerCase();
+  WIKI.built = { A, cats }; return WIKI.built;
+}
+const WIKI_CATLINK = { e_races:'races', e_quirks:'quirks', e_crops:'food', e_meals:'food', e_goods:'goods', e_pets:'pets', e_arms:'kit', e_items:'kit', e_wings:'wings', e_scars:'anoms', e_anoms:'anoms', e_factions:'factions', e_combos:'combos', e_machines:'machines', e_augs:'augments', e_enemies:'enemies' };
+function cap(s){ s = String(s || ''); return s ? s[0].toUpperCase() + s.slice(1) : ''; }
+function wSysExtra(k){ return ({ shields:['Shields need 2 power per layer, so upgrade to even numbers.'], engines:['Evasion also needs someone at the Helm.'], piloting:['Nobody at the Helm means no dodging and no escape.'], medbay:['Send hurt crew here. It needs power to work.'], oxygen:['If it is off, air slowly drains from every room.'], doors:['Tap any door to open or close it. Opening airlocks vents the air.'], teleporter:['Gather crew in its room and press Send to board the enemy.'] }[k]) || []; }
+function wCombosWith(k){ return typeof COMBOS==='undefined' ? [] : COMBOS.filter(C_ => C_.sys.some(g => g.includes(k))).map(C_ => 'e_combo_' + C_.id); }
+function wWeaponExtras(d){ const o = [];
+  if(d.fire) o.push(`fire ${wPct(d.fire)}`); if(d.breach) o.push(`breach ${wPct(d.breach)}`); if(d.stun) o.push(`stun ${wPct(d.stun)}`); if(d.ion) o.push(`ion ${d.ion}`); if(d.pierce) o.push(`pierces ${d.pierce} shield${d.pierce > 1 ? 's' : ''}`);
+  if(d.crewDamage) o.push(`crew damage ${d.crewDamage}`); if(d.sysDamage) o.push(`system damage ${d.sysDamage}`); if(d.rooms) o.push(`hits ${d.rooms} rooms`); if(d.radius) o.push(`blast radius ${d.radius}`);
+  if(d.heal) o.push('heals your crew'); if(d.gas) o.push('gas'); if(d.pin) o.push('pins crew'); if(d.drain) o.push('drains power'); if(d.fear) o.push('scares crew'); if(d.crit) o.push(`critical ${wPct(d.crit)}`); if(d.disrupt) o.push(`disrupts holograms ${d.disrupt}`);
+  return o.join(', '); }
+function wGoodsPage(id, g){
+  const body = [g.desc || ''], see = [];
+  if(typeof havenSrc==='function') body.push('## Where to get it', havenSrc(id).long);
+  if(g.from && g.from.length) body.push(`Cheap in ${g.from.map(wSec).join(', ')} space.`);
+  if(g.want && g.want.length) body.push(`Sells for more in ${g.want.map(wSec).join(', ')} space.`);
+  const uses = [];
+  if(typeof RECIPES!=='undefined') for(const [k, r] of Object.entries(RECIPES)) if(r.need[id]){ uses.push(`cooked into ${wGood(k)}`); see.push('e_meal_' + k); }
+  if(typeof MACHINES!=='undefined') for(const [k, M] of Object.entries(MACHINES)) { let ok = false; try{ ok = M.take(g, id); }catch(e){} if(ok){ uses.push(`goes in the ${M.name}`); see.push('e_m_' + k); } }
+  if(typeof HAVEN_WINGS!=='undefined') for(const w of HAVEN_WINGS){ const n = (w.needs.find(x => x[0]===id) || [])[1]; if(n){ uses.push(`${n} needed for ${w.name} at Haven's Rest`); see.push('e_wing_' + w.id); } }
+  if(typeof CONTRACT_GOODS!=='undefined' && CONTRACT_GOODS.includes(id)) uses.push('carried in delivery contracts');
+  if(uses.length) body.push('## Uses', ...uses.map(u => '• ' + cap(u) + '.'));
+  const lovers = []; if(typeof RACE_LOVES!=='undefined') for(const [r, l] of Object.entries(RACE_LOVES)) if(l.includes(id) && DATA.races[r]) lovers.push(DATA.races[r].name);
+  if(typeof GIFT_LOVES!=='undefined') for(const [q, l] of Object.entries(GIFT_LOVES)) if(l.includes(id)) lovers.push(((DATA.quirks||{})[q]||{}).name || q);
+  if(lovers.length) body.push(`Loved as a gift by: ${lovers.join(', ')}.`);
+  if(typeof GIFT_HATES!=='undefined' && GIFT_HATES[id]) body.push(GIFT_HATES[id]==='*' ? 'Nobody wants it as a gift.' : `Hated as a gift by: ${GIFT_HATES[id].map(q => ((DATA.quirks||{})[q]||{}).name || q).join(', ')}.`);
+  if(g.illegal) body.push('Illegal: Rebuff patrols may search your hold for it.');
+  return { id:'e_g_' + id, title:g.name, sub:`Goods · ${g.kind || 'trade'}`, stats:[['Base price', g.base]], body:body.filter(Boolean), see:see.concat(['g_map_hazards_trade_goods']) };
+}
+
+/* ---------------- the screen ---------------- */
+function openWiki(id, from){ if(from) UI.setFrom = from; UI.screen = 'help'; WIKI.built = null; const B = wikiBuild(); if(id && B.A[id]){ UI.wikiArt = id; UI.wikiCat = B.A[id].cat; UI.wikiHalf = (B.cats.find(c => c.id===B.A[id].cat) || {}).half || 'g'; UI.wikiView = 'art'; } UI.wikiScroll = 0; }
+function wikiOpenArt(id){ const B = wikiBuild(); if(!B.A[id]) return; UI.wikiArt = id; UI.wikiScroll = 0; UI.wikiView = 'art'; UI.wikiHist = (UI.wikiHist || []).concat(id).slice(-30); }
+function wikiList(B){
+  const q = (UI.wikiQ || '').trim().toLowerCase();
+  if(q){ const words = q.split(/\s+/); const hits = Object.values(B.A).filter(a => words.every(w => a.text.includes(w)));
+    hits.sort((a, b) => (b.title.toLowerCase().includes(q) ? 2 : 0) + (b.title.toLowerCase().startsWith(q) ? 1 : 0) - (a.title.toLowerCase().includes(q) ? 2 : 0) - (a.title.toLowerCase().startsWith(q) ? 1 : 0)); return hits; }
+  const c = B.cats.find(c => c.id===UI.wikiCat) || B.cats.find(c => c.half===(UI.wikiHalf||'g')); return c ? c.ids.map(id => B.A[id]) : [];
+}
+function wCatSub(B, a){ const cn = (B.cats.find(c => c.id===a.cat)||{}).name || ''; return a.sub && a.sub.toLowerCase().startsWith(cn.toLowerCase().replace(/s$/, '')) ? a.sub : cn + (a.sub ? ' · ' + a.sub : ''); }
+function drawWiki(){
+  const B = wikiBuild(), compact = !!(typeof MOB!=='undefined' && MOB.touch);
+  UI.wikiHalf = UI.wikiHalf || 'g'; if(!UI.wikiCat || !B.cats.some(c => c.id===UI.wikiCat)) UI.wikiCat = B.cats.find(c => c.half===UI.wikiHalf).id;
+  if(!UI.wikiArt || !B.A[UI.wikiArt]) UI.wikiArt = 'g_welcome';
+  label('Field manual', 40, 54, C.cyan, 'left', 16); T('Ship\'s wiki', 40, 100, { s:42, f:FD, w:700 });
+  T(`${Object.keys(B.A).length} pages`, 300, 98, { s:15, c:C.muted });
+  // search box
+  const sx = 420, sy = 56, sw = 760, sh = 54, q = UI.wikiQ || '';
+  rr(sx, sy, sw, sh, 10); ctx.fillStyle = '#0a1020'; ctx.fill(); ctx.strokeStyle = q ? C.cyan : C.line; ctx.lineWidth = 2; ctx.stroke();
+  T('🔍', sx+16, sy+36, { s:20 }); T(q ? q + (Math.floor(performance.now()/500) % 2 ? '_' : '') : (compact ? 'Tap to search every page' : 'Type to search every page'), sx+52, sy+35, { s:19, c: q ? C.ink : C.muted, max:sw-130 });
+  region(sx, sy, sw - (q ? 70 : 0), sh, () => { if(typeof openKeyboard==='function') openKeyboard({ title:'Search the wiki', value:UI.wikiQ || '', max:30, min:0, ok:'Search', onOk:v => { UI.wikiQ = v; UI.wikiLS = 0; UI.wikiView = 'list'; } }); }, 'search');
+  if(q) btn(sx+sw-64, sy+7, 56, 40, '✕', () => { UI.wikiQ = ''; UI.wikiLS = 0; }, { s:16 });
+  btn(W-360, 56, 320, 54, UI.setFrom==='game' && G ? 'Back to game' : UI.setFrom==='haven' ? 'Back to Haven\'s Rest' : 'Back', () => { if(UI.setFrom==='haven'){ UI.setFrom = null; UI.screen = 'haven'; } else backFromOptions(); }, { s:17 });
+  const list = wikiList(B), top = 136;
+  if(compact && UI.wikiView==='art'){ btn(40, top, 260, 52, '‹ Pages', () => { UI.wikiView = 'list'; }, { s:18 }); wikiArticle(B, 40, top+64, W-80, H-top-84, true); return; }
+  // halves and categories
+  if(!q){ tabs(40, top, [['g','Guides'],['e','Encyclopedia']], UI.wikiHalf, h => { UI.wikiHalf = h; UI.wikiCat = B.cats.find(c => c.half===h).id; UI.wikiLS = 0; }, 156); }
+  else T(`${list.length} result${list.length===1 ? '' : 's'} for "${q}"`, 40, top+30, { s:17, c:C.cyan, max:320 });
+  const cats = B.cats.filter(c => c.half===UI.wikiHalf), cw = compact ? 480 : 320, rh = compact ? 50 : 38;
+  const two = compact && cats.length*rh > H - top - 80, colW = two ? (cw - 8)/2 : cw, perCol = two ? Math.ceil(cats.length/2) : cats.length;
+  if(!q) cats.forEach((c, i) => { const col = Math.floor(i / perCol), x0 = 40 + col*(colW + 8), y = top + 58 + (i % perCol)*rh, cur = c.id===UI.wikiCat; if(y + rh > H - 10) return;
+    rr(x0, y, colW, rh - 4, 7); ctx.fillStyle = cur ? hexA(C.amber, .16) : 'rgba(255,255,255,.02)'; ctx.fill(); if(cur){ ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5; ctx.stroke(); }
+    T(c.name, x0 + 14, y + rh/2 + 4, { s: compact ? 17 : 16, f:FD, w:700, c: cur ? C.amber : C.ink, max:colW - (two ? 24 : 60) }); if(!two) T(String(c.ids.length), x0 + colW - 12, y + rh/2 + 4, { s:13, a:'right', c:C.muted });
+    region(x0, y, colW, rh - 4, () => { UI.wikiCat = c.id; UI.wikiLS = 0; }, 'wcat:' + c.id); });
+  // the page list
+  const lx = q ? 40 : 40 + cw + 16, lw = compact ? W - lx - 40 : (q ? 680 : 380), ly = top + (q ? 50 : 58), lh_ = compact ? 64 : 52, lH = H - ly - 30, n = Math.max(1, Math.floor(lH / lh_));
+  const maxS = Math.max(0, list.length - n); UI.wikiLS = clamp(UI.wikiLS || 0, 0, maxS); WIKI.listBox = [lx, ly, lw, n*lh_, lh_, maxS];
+  list.slice(UI.wikiLS, UI.wikiLS + n).forEach((a, i) => { const y = ly + i*lh_, cur = a.id===UI.wikiArt && !compact;
+    rr(lx, y, lw, lh_ - 6, 7); ctx.fillStyle = cur ? hexA(C.cyan, .14) : 'rgba(255,255,255,.025)'; ctx.fill(); if(cur){ ctx.strokeStyle = C.cyan; ctx.lineWidth = 1.5; ctx.stroke(); }
+    const subT = q ? wCatSub(B, a) : a.sub;
+    T(a.title, lx+14, y + (subT ? lh_*.42 : lh_*.58), { s: compact ? 19 : 16, f:FD, w:700, c: cur ? C.cyan : C.ink, max:lw-28 });
+    if(subT) T(subT, lx+14, y + lh_*.8, { s:12, c:C.muted, max:lw-28 });
+    region(lx, y, lw, lh_ - 6, () => wikiOpenArt(a.id), 'wart:' + a.id); });
+  if(!list.length) T(q ? 'Nothing matches. Try a shorter word.' : 'No pages here.', lx, ly + 30, { s:16, c:C.muted });
+  if(maxS > 0){ T(`${UI.wikiLS + 1}-${Math.min(list.length, UI.wikiLS + n)} of ${list.length}`, lx + lw, ly - 10, { s:13, a:'right', c:C.muted }); }
+  if(compact) return;
+  const ax = lx + lw + 20; wikiArticle(B, ax, top, W - ax - 40, H - top - 24, false);
+}
+function wikiArticle(B, x, y, w, h, big){
+  const a = B.A[UI.wikiArt]; if(!a) return; panel(x, y, w, h, 12);
+  const pad = 28, iw = w - pad*2 - 50, s = big ? 20 : 17, lh = big ? 30 : 26;
+  // lay the page out once per size
+  const lk = a.id + '|' + iw + '|' + (typeof MINF!=='undefined' ? MINF : 0) + '|' + s;
+  if(WIKI.layKey!==lk){ WIKI.layKey = lk; const L = [], font = sz => `400 ${typeof MINF!=='undefined' && MINF && sz < MINF ? Math.max(sz+3, Math.min(MINF, sz*1.35)) : sz}px ${FM}`;
+    L.push({ k:'sub', t:wCatSub(B, a), h:28 });
+    L.push({ k:'title', t:a.title, h:big ? 58 : 52 });
+    if(a.stats && a.stats.length){ for(const [k, v] of a.stats){ const ls = lines(`${k}: ${v}`, iw, font(s)); for(const l of ls) L.push({ k:'stat', t:l, h:lh }); } L.push({ k:'gap', h:12 }); }
+    for(const p of a.body || []){ if(!p) continue;
+      if(p.startsWith('## ')){ L.push({ k:'gap', h:8 }); L.push({ k:'head', t:p.slice(3), h:lh + 6 }); continue; }
+      const bul = p.startsWith('• '), txt = bul ? p.slice(2) : p, ls = lines(txt, iw - (bul ? 26 : 0), font(s));
+      ls.forEach((l, i) => L.push({ k:bul ? (i ? 'bcont' : 'bul') : 'p', t:l, h:lh })); L.push({ k:'gap', h:bul ? 4 : 12 }); }
+    const see = (a.see || []).filter(id => (B.A[id] || WIKI_CATLINK[id]) && id!==a.id); if(see.length){ L.push({ k:'gap', h:10 }); L.push({ k:'head', t:'See also', h:lh + 6 });
+      for(const id of see){ const ct = !B.A[id] && B.cats.find(c => c.id===WIKI_CATLINK[id]); if(B.A[id]) L.push({ k:'link', id, t:B.A[id].title, h:lh + 14 }); else if(ct) L.push({ k:'link', cat:ct.id, t:`Browse all: ${ct.name}`, h:lh + 14 }); } }
+    WIKI.lay = L; WIKI.layH = L.reduce((t, r) => t + r.h, 0); }
+  const L = WIKI.lay, viewH = h - pad*2, maxS = Math.max(0, WIKI.layH - viewH + 20); UI.wikiScroll = clamp(UI.wikiScroll || 0, 0, maxS); WIKI.artBox = [x, y, w, h, maxS];
+  ctx.save(); ctx.beginPath(); ctx.rect(x+2, y+pad-6, w-4, viewH+12); ctx.clip();
+  let yy = y + pad - UI.wikiScroll;
+  for(const r of L){ const ty = yy + r.h*.72, vis = yy + r.h > y + pad - 6 && yy < y + pad + viewH;
+    if(vis){
+      if(r.k==='sub') label(r.t, x+pad, ty, C.cyan, 'left', 13);
+      else if(r.k==='title') T(r.t, x+pad, ty, { s:big ? 36 : 32, f:FD, w:700, max:iw });
+      else if(r.k==='stat'){ const i = r.t.indexOf(': '); T(r.t.slice(0, i+1), x+pad, ty, { s, w:700, c:C.amber }); const fs_ = typeof MINF!=='undefined' && MINF && s < MINF ? Math.max(s+3, Math.min(MINF, s*1.35)) : s; ctx.font = `700 ${fs_}px ${FM}`; T(r.t.slice(i+1), x+pad + ctx.measureText(r.t.slice(0, i+1)).width, ty, { s, c:C.ink }); }
+      else if(r.k==='head') T(r.t, x+pad, ty, { s:s+3, f:FD, w:700, c:C.amber });
+      else if(r.k==='bul'){ ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(x+pad+7, yy + r.h*.5, 4, 0, 7); ctx.fill(); T(r.t, x+pad+26, ty, { s }); }
+      else if(r.k==='bcont') T(r.t, x+pad+26, ty, { s });
+      else if(r.k==='p') T(r.t, x+pad, ty, { s });
+      else if(r.k==='link'){ const lw = Math.min(iw, 560); rr(x+pad, yy+4, lw, r.h-8, 8); ctx.fillStyle = hexA(C.good, .1); ctx.fill(); ctx.strokeStyle = hexA(C.good, .5); ctx.lineWidth = 1.5; ctx.stroke();
+        T('→ ' + r.t, x+pad+14, yy + r.h*.62, { s, c:C.good, w:700, max:lw-28 });
+        const top_ = Math.max(yy+4, y+pad-6), bot = Math.min(yy+r.h-4, y+pad+viewH); if(bot - top_ > 10){ const id = r.id, ct = r.cat; region(x+pad, top_, lw, bot - top_, () => { if(ct){ UI.wikiQ = ''; UI.wikiHalf = 'e'; UI.wikiCat = ct; UI.wikiLS = 0; UI.wikiView = 'list'; } else wikiOpenArt(id); }, 'wlink:' + (id || ct)); } } }
+    yy += r.h; }
+  ctx.restore();
+  // scroll controls
+  if(maxS > 0){ const bx = x + w - 62; btn(bx, y+16, 46, 46, '▲', () => { UI.wikiScroll = Math.max(0, (UI.wikiScroll||0) - viewH*.7); }, { s:16, disabled:UI.wikiScroll <= 0 });
+    btn(bx, y+h-62, 46, 46, '▼', () => { UI.wikiScroll = Math.min(maxS, (UI.wikiScroll||0) + viewH*.7); }, { s:16, disabled:UI.wikiScroll >= maxS });
+    const th = y+70, tH = h-140; rr(bx+20, th, 6, tH, 3); ctx.fillStyle = C.line; ctx.fill(); const kh = Math.max(30, tH * viewH / WIKI.layH); rr(bx+20, th + (tH - kh) * (UI.wikiScroll / maxS), 6, kh, 3); ctx.fillStyle = C.cyan; ctx.fill(); }
+  // back through links you followed
+  const hist = UI.wikiHist || []; if(hist.length > 1 && hist[hist.length-1]===a.id){ btn(x + w - (maxS > 0 ? 220 : 170), y+16, 150, 40, '‹ Previous', () => { hist.pop(); UI.wikiArt = hist[hist.length-1]; UI.wikiScroll = 0; }, { s:14 }); }
+}
+// the old manual screen becomes the wiki
+drawHelpScreen = drawWiki;
+
+/* ---------------- typing, wheel and drag ---------------- */
+window.addEventListener('keydown', e => {
+  if(typeof UI==='undefined' || UI.screen!=='help' || (typeof KB!=='undefined' && KB.open) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.key==='Backspace'){ if(UI.wikiQ){ UI.wikiQ = UI.wikiQ.slice(0, -1); UI.wikiLS = 0; } e.preventDefault(); e.stopImmediatePropagation(); return; }
+  if(e.key==='Escape' && UI.wikiQ){ UI.wikiQ = ''; e.preventDefault(); e.stopImmediatePropagation(); return; }
+  if(e.key==='PageDown' || e.key==='ArrowDown'){ UI.wikiScroll = (UI.wikiScroll||0) + (e.key==='PageDown' ? 500 : 60); e.preventDefault(); e.stopImmediatePropagation(); return; }
+  if(e.key==='PageUp' || e.key==='ArrowUp'){ UI.wikiScroll = Math.max(0, (UI.wikiScroll||0) - (e.key==='PageUp' ? 500 : 60)); e.preventDefault(); e.stopImmediatePropagation(); return; }
+  if(e.key.length===1 && (UI.wikiQ || e.key!==' ')){ UI.wikiQ = ((UI.wikiQ || '') + e.key).slice(0, 30); UI.wikiLS = 0; e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+function wikiIn(b, p){ return b && p.x >= b[0] && p.x <= b[0] + b[2] && p.y >= b[1] && p.y <= b[1] + b[3]; }
+(function(){ const cv = document.getElementById('game'); if(!cv || typeof screenToGame!=='function' && typeof evGame!=='function') return;
+  const toG = e => (typeof evGame==='function' ? evGame(e) : screenToGame(e.clientX, e.clientY));
+  cv.addEventListener('wheel', e => { if(UI.screen!=='help') return; const p = toG(e);
+    if(wikiIn(WIKI.listBox, p)){ UI.wikiLS = clamp((UI.wikiLS||0) + (e.deltaY > 0 ? 2 : -2), 0, WIKI.listBox[5]); }
+    else UI.wikiScroll = Math.max(0, (UI.wikiScroll||0) + e.deltaY * .8);
+    e.preventDefault(); e.stopImmediatePropagation(); }, { passive:false, capture:true });
+  let D = null;
+  cv.addEventListener('pointerdown', e => { if(UI.screen!=='help' || e.pointerType==='mouse') return; const p = toG(e);
+    D = wikiIn(WIKI.listBox, p) ? { k:'list', y0:p.y, s0:UI.wikiLS||0, id:e.pointerId } : wikiIn(WIKI.artBox, p) ? { k:'art', y0:p.y, s0:UI.wikiScroll||0, id:e.pointerId } : null; }, true);
+  cv.addEventListener('pointermove', e => { if(!D || D.id!==e.pointerId || UI.screen!=='help') return; const p = toG(e), dy = p.y - D.y0;
+    if(!D.on && Math.abs(dy) > 14){ D.on = true; if(typeof MOB!=='undefined' && MOB.press){ MOB.press.drag = true; clearTimeout(MOB.press.timer); } }
+    if(D.on){ if(D.k==='art') UI.wikiScroll = Math.max(0, D.s0 - dy); else UI.wikiLS = clamp(Math.round(D.s0 - dy / (WIKI.listBox[4] || 50)), 0, WIKI.listBox[5]); e.stopImmediatePropagation(); } }, true);
+  const end = e => { if(D && D.id===e.pointerId) D = null; }; cv.addEventListener('pointerup', end, true); cv.addEventListener('pointercancel', end, true);
+})();

@@ -87,16 +87,19 @@ function drawStation(x, y, R){
 function drawHavenVisit(m){
   const f = mframe(1440, 880, 'Haven\'s Rest'), V = G.havenVisit || (G.havenVisit = { node:m.node }), s = G.ship, cx = f.x+32, W2 = f.w-64;
   T(`Scrap ${G.scrap}`, f.x+f.w-230, f.y+52, { s:26, f:FD, w:700, c:C.amber });
-  const tabsL = [['home','Home'],['bunks','Bunks'],['drydock','Drydock'],['greenhouse','Greenhouse'],['cantina','Cantina'],['market','Market'],['board','Noticeboard']];
-  tabs(cx, f.y+76, tabsL, UI.havenTab || 'home', t => UI.havenTab = t, 186);
+  const tabsL = [['home','Home'],['restore','Restore wings'],['bunks','Bunks'],['drydock','Drydock'],['greenhouse','Greenhouse'],['cantina','Cantina'],['market','Market'],['board','Noticeboard']];
+  tabs(cx, f.y+76, tabsL, UI.havenTab || 'home', t => UI.havenTab = t, 160);
   const y0 = f.y+146, tab = UI.havenTab || 'home';
   if(tab==='home'){
     para(`Great-uncle Tobiah's station, ${HAVEN_WINGS.filter(w => havenDone(w.id)).length} of ${HAVEN_WINGS.length} wings working${haven().leased ? ', on lease to Madame Ossery' : ''}. The relay holds a jump open: when you leave, you're back at the beacon you came from.`, cx, y0+16, W2, { s:17, lh:24 });
     HAVEN_WINGS.forEach((w, i) => { const x = cx + (i % 4)*(W2/4 + 2), y = y0 + 76 + Math.floor(i/4)*70, done = havenDone(w.id); panel(x, y, W2/4 - 8, 62, 8);
       T(w.name.replace(/^The /, ''), x+14, y+26, { s:16, f:FD, w:700, c: done ? '#9fdc7a' : C.muted }); T(done ? 'working' : 'dark: ' + w.bundle, x+14, y+48, { s:12, c: done ? C.ink : C.muted, max:W2/4 - 30 }); });
     const res = haven().residents || []; T(res.length ? `Residents: ${res.join(', ')}` : 'No residents yet.', cx, y0+240, { s:15, c:C.ink });
-    drawHavenDeliver(cx, y0+266, W2/2);
+    const cs = havenCanSend(); label('Restoring the dark wings', cx, y0+290, '#9fdc7a', 'left', 15);
+    para(cs ? `You're carrying things the wings need, such as ${needName(cs.it)} for ${cs.w.name}.` : 'Each dark wing needs a set of goods. The Restore wings tab shows what, and where to get it.', cx, y0+316, W2/2, { s:15, lh:21 });
+    btn(cx, y0+372, 320, 56, cs ? 'Send them home' : 'What do they need?', () => { UI.havenTab = 'restore'; }, { s:16, col:'#9fdc7a', fill:!!cs });
     drawStation(cx + W2*.76, y0 + 440, 150);
+  } else if(tab==='restore'){ drawHavenNeeds(cx, y0, W2);
   } else if(tab==='board' && typeof drawContracts==='function'){ if(!V.jobs) V.jobs = makeOffers(`haven${G.sector}n${G.map.cur}`); drawContracts(V.jobs, cx, y0, W2, true);
   } else if(tab==='bunks'){
     para('The bunks are old and the blankets smell of somebody else\'s great-uncle, but it\'s home. A night here heals everyone, cures cabin fever and brings the crew closer. The Rebuff Fleet won\'t wait while you sleep.', cx, y0+16, W2, { s:17, lh:24 });
@@ -141,4 +144,41 @@ function drawHavenVisit(m){
         T(`${goodsDef(id).name} ×${G.bay[id]}`, x2, y+30, { s:15 }); btn(x2 + W2/2 - 210, y+6, 190, 42, `Sell · ${pr}`, () => { if(takeGoods(id, 1)){ G.scrap += pr; G.stats.scrap += pr; sfx('sell'); } }, { s:14 }); }); }
   }
   btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; G.havenVisit = null; save(); });
+}
+
+/* ---------------- restoring wings: what each needs, where to get it, and sending it home ---------------- */
+function havenSrc(item){
+  const secN = k => ((DATA.sectors && DATA.sectors[k] && DATA.sectors[k].name) || (k[0].toUpperCase() + k.slice(1))).replace(/ Sector$/, '');
+  if(item==='scrap') return { tag:'fights', short:'Win fights, sell goods', long:'Scrap comes from fights, wrecks and selling goods at stores.' };
+  if(item==='fuel') return { tag:'stores', short:'Buy at stores (keep 3)', long:'Buy fuel at stores. You can send anything above 3, so you never strand yourself.' };
+  if(item==='parts') return { tag:'stores', short:'Buy at stores, loot', long:'Drone parts are sold at stores (Supplies) and dropped by beaten ships.' };
+  const sd = typeof SEEDS!=='undefined' && Object.keys(SEEDS).find(k => SEEDS[k].crop===item);
+  if(sd) return { tag:'grow', short:`Grow: ${SEEDS[sd].name} seeds`, long:`Grow it. Buy ${SEEDS[sd].name} seeds at a store (Trade → Goods), plant them in Ship → Cargo → Garden and harvest after ${SEEDS[sd].grow} jumps.${SEEDS[sd].nebula ? ' Grows best in nebulas.' : ''}` };
+  if(typeof RECIPES!=='undefined' && RECIPES[item]){ const ns = Object.keys(RECIPES[item].need).map(k => needName(k)).join(' + ');
+    return { tag:'cook', short:`Cook: ${ns}`, long:`Cook it in the galley (Ship → Cargo → Garden) from ${ns}. A crew member with the Cook quirk sometimes makes it on their own.` }; }
+  const mk = typeof MACHINES!=='undefined' && Object.keys(MACHINES).find(k => MACHINES[k].out===item);
+  if(mk) return { tag:'workshop', short:`Workshop: ${MACHINES[mk].name}`, long:`Buy a ${MACHINES[mk].name} at a store (Ship → Cargo → Workshop), load it and keep jumping. ${MACHINES[mk].text}` };
+  if(item==='space_fish') return { tag:'fish', short:'Fishing, or Nebula stores', long:'Buy a fishing rod at a store (Supplies), then fish at nebula and asteroid beacons. Nebula stores sometimes sell it too.' };
+  if(item==='deep_eel') return { tag:'fish', short:'Rare catch when fishing', long:'A rare catch when you go fishing at nebula and asteroid beacons. Bring a rod.' };
+  if(item==='epic_poem') return { tag:'poet', short:'Written by a Poet crew', long:'A crew member with the Poet quirk writes one now and then between jumps. Hire one at a store or bar.' };
+  const g = goodsDef(item); if(g && g.from && g.from.length){ const ns = g.from.map(secN).join(', ');
+    return { tag:'buy', short:`Buy: ${ns} stores`, long:`Buy it at stores in ${ns} space (Trade → Goods). Ships and events sometimes drop it too.` }; }
+  return { tag:'found', short:'Found on your travels', long:'Turns up in events, wrecks and mystery crates.' };
+}
+function havenOpen(){ return HAVEN_WINGS.filter(w => !havenDone(w.id)); }
+function havenCanSend(){ for(const w of havenOpen()) for(const [it, n] of w.needs) if(havenGiven(w, it) < n && haveForHaven(it) > 0) return { w, it }; return null; }
+function drawHavenNeeds(x, y, w, intro){
+  const here = atStore(), open = havenOpen(), RH = 78, LW = 300, cw = (w - LW) / 4;
+  T(intro || (here ? 'Send what Haven\'s Rest needs. Everything you send is kept for good, even if this run ends badly.' : 'Send goods home from any store (Trade → Send home) or from Haven\'s Rest.'), x, y+18, { s:15, c:C.ink, max:w-250 });
+  if(typeof openWiki==='function') btn(x+w-230, y-4, 230, 36, '? How it works', () => openWiki('g_haven_restore', 'game'), { s:13, col:C.cyan });
+  if(!open.length){ T('Every wing is restored. Nothing more to send.', x, y+60, { s:16, c:'#9fdc7a' }); return; }
+  open.forEach((W_, i) => { const yy = y + 34 + i*RH; panel(x, yy, w, RH - 8, 8);
+    T(W_.name.replace(/^The /, ''), x+14, yy+28, { s:17, f:FD, w:700, c:'#9fdc7a', max:LW-24 });
+    T(W_.reward.includes(':') ? W_.reward.split(':')[0] : 'Free rod and fish each run', x+14, yy+52, { s:12, c:C.muted, max:LW-24 }); tip(x, yy, LW, RH-8, W_.name, W_.reward);
+    W_.needs.forEach(([it, n], j) => { const cx = x + LW + j*cw, gv = Math.min(n, havenGiven(W_, it)), have = haveForHaven(it), src = havenSrc(it), full = gv >= n;
+      T(`${needName(it)} ${gv}/${n}`, cx, yy+26, { s:14, w:700, c: full ? '#9fdc7a' : C.ink, max:cw-12 });
+      if(full) T('✓ all sent', cx, yy+52, { s:12, c:'#9fdc7a' });
+      else if(have > 0 && here) btn(cx, yy+34, Math.min(cw-12, 170), 30, `Send ${Math.min(n - gv, have)}`, () => havenGive(W_, it, n), { s:13, col:'#9fdc7a', fill:true });
+      else T(have > 0 ? `You have ${have} · send at a store` : src.short, cx, yy+52, { s:12, c: have > 0 ? C.cyan : C.muted, max:cw-12 });
+      tip(cx, yy, cw-8, RH-8, needName(it), `${src.long}${have > 0 ? ` You have ${have} aboard.` : ''}`); }); });
 }
