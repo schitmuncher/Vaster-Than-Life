@@ -58,13 +58,13 @@ function campaignStart(){ const C = campDef(); if(!C) return;
 const RANKS = [
   { name:'Cadet',                at:0 },
   { name:'Ensign',               at:60,   reward:'Admiral Hale offers three send-off gifts, not two' },
-  { name:'Lieutenant',           at:160,  reward:'Ship requisition: the next locked ship is yours', ship:true },
+  { name:'Lieutenant',           at:160,  reward:'A requisition token: unlock any ship you choose', ship:true },
   { name:'Lieutenant Commander', at:320,  reward:'Better send-off gifts: weapons, crew, refits' },
-  { name:'Commander',            at:540,  reward:'Ship requisition: the next locked ship is yours', ship:true },
+  { name:'Commander',            at:540,  reward:'A requisition token: unlock any ship you choose', ship:true },
   { name:'Captain',              at:820,  reward:'Ask Hale for different gifts, once a run' },
-  { name:'Commodore',            at:1160, reward:'Ship requisition: the next locked ship is yours', ship:true },
+  { name:'Commodore',            at:1160, reward:'A requisition token: unlock any ship you choose', ship:true },
   { name:'Rear Admiral',         at:1560, reward:'The best send-off gifts: augments, drones, reactor tuning' },
-  { name:'Vice Admiral',         at:2040, reward:'Ship requisition: the next locked ship is yours', ship:true },
+  { name:'Vice Admiral',         at:2040, reward:'A requisition token: unlock any ship you choose', ship:true },
   { name:'Admiral',              at:2600, reward:'Four send-off gifts to choose from, and Hale salutes you first' }
 ];
 function renownNow(){ return PROFILE.renown || 0; }
@@ -283,7 +283,8 @@ function campaignRunEnd(win, reason){
   const mults = []; if(dm !== 1) mults.push([`${(DIFFICULTY[G.diff]||{}).name || G.diff} difficulty`, `×${dm}`]); if(am !== 1) mults.push([`Rebuff alert ${alertLv()}`, `×${am.toFixed(2).replace(/0$/, '')}`]);
   const before = renownNow(), r0 = rankIdx(before); PROFILE.renown = before + total; const r1 = rankIdx();
   const unlocks = [];
-  for(let i = r0+1; i <= r1; i++){ PROFILE.newRank = i; if(RANKS[i].ship){ const d = nextRequisition(); if(d){ PROFILE.unlocked = PROFILE.unlocked || {}; PROFILE.unlocked[d.id] = true; unlocks.push(`New ship: ${d.name} (${d.cls || ''})`); } } }
+  for(let i = r0+1; i <= r1; i++){ PROFILE.newRank = i; if(RANKS[i].ship) unlocks.push('Requisition token: unlock any ship you like in the hangar'); }
+  if(typeof shipyardDebrief==='function') shipyardDebrief(unlocks, before, PROFILE.renown);
   if(r1 >= 4) grant('rank_cmdr'); if(r1 >= RANKS.length-1) grant('rank_admiral'); if(r1 >= 2) grant('rank_lt');
   // the alert ladder: win at your highest level on Normal or Hard to open the next one
   if(win && campaignPure() && G.diff !== 'easy'){ const cur = PROFILE.alert || 0; PROFILE.alertBest = PROFILE.alertBest || {}; PROFILE.alertBest[G.shipDef] = Math.max(PROFILE.alertBest[G.shipDef]||0, alertLv());
@@ -365,7 +366,7 @@ function drawCareer(){
 /* a small rank card for the title screen (inside the Captain's record panel) */
 function drawRankCard(x, y, w){
   const r = renownNow(), ri = rankIdx(), nx = nextRank();
-  T(rankName(), x, y, { s:24, f:FD, w:700, c:C.amber, max:w-150 });
+  T(rankName() + (typeof pilotLevel==='function' ? ` · Lv ${pilotLevel()}` : ''), x, y, { s:24, f:FD, w:700, c:C.amber, max:w-150 });
   const frac = nx ? (r - RANKS[ri].at)/(nx.at - RANKS[ri].at) : 1; rr(x, y+12, w, 10, 5); ctx.fillStyle = 'rgba(6,9,18,.8)'; ctx.fill(); rr(x, y+12, Math.max(10, w*clamp(frac,0,1)), 10, 5); ctx.fillStyle = C.amber; ctx.fill();
   T(nx ? `${fmtNum(r)} / ${fmtNum(nx.at)} renown · next: ${nx.name}` : `${fmtNum(r)} renown`, x, y+44, { s:13, c:C.muted, max:w });
 }

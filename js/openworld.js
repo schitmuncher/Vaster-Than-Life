@@ -85,7 +85,7 @@ function exitHomeButton(f){ if(!havenPerksOn() || G.sector+1 >= R.sectors) retur
   tip(f.x+32, f.y+f.h-82, 320, 56, 'Home first', 'Visit Haven\'s Rest before the next sector: rest, repair, sell, store guns, take contracts. Leaving brings you back to this exit.'); }
 
 /* ---------------- faction ships, Pip's intel ---------------- */
-function factionShipFor(f){ const want = f==='pebblekin' ? 'pebble' : f; return Object.keys(DATA.ships).find(id => { const d = DATA.ships[id]; if(!d.unlock || (PROFILE.unlocked||{})[id]) return false; try{ return typeof shipStyle==='function' && shipStyle({ id, cls:d.cls, name:d.name })===want; }catch(e){ return false; } }); }
+function factionShipFor(f){ const want = f==='pebblekin' ? 'pebble' : f; return Object.keys(DATA.ships).find(id => { const d = DATA.ships[id]; if(typeof shipUnlocked==='function' ? shipUnlocked(d) : (!d.unlock || (PROFILE.unlocked||{})[id])) return false; try{ return typeof shipStyle==='function' && shipStyle({ id, cls:d.cls, name:d.name })===want; }catch(e){ return false; } }); }
 function factionRevered(f){ if(!havenPerksOn()) return; const id = factionShipFor(f); if(!id) return; PROFILE.unlocked = PROFILE.unlocked || {}; PROFILE.unlocked[id] = true; saveProfile(); toast(`The ${FACTIONS[f].name} give you the plans for the ${DATA.ships[id].name}. It's in your hangar now.`); }
 function pipIntel(e){ const R_ = (PROFILE.haven && PROFILE.haven.residents) || []; if(!R_.includes('Pip') || !havenPerksOn()) return; e.hull = Math.max(6, e.hull - 3); if(e.systems.weapons) ionize(e, 'weapons', 2); toast('Pip, at home in Haven\'s Rest, has decoded the Flaggship\'s defences: its guns stutter and its hull is weaker.'); }
 

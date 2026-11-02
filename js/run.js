@@ -459,7 +459,7 @@ function finishCombat(kind, offer){
       if(G.scrap < 15){ const v = ri(8, 14) + G.sector*2; G.scrap += v; G.stats.scrap += v; extra += ` As they go, your crew nets some drifting debris: +${v} scrap.`; } }   // a little mercy for a ship that is stuck and broke
     G.modal = { type:'msg', title:'They got away', text:`The ${e.name} jumps away before you can finish it.${extra}${lf.length ? ' ' + lf.join(' ') : ''}` }; if(typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(e, 'by jumping out before the crew could finish them'); save(); return; }
   if(wasBoss){ flagDefeated(); return; }
-  G.stats.kills++; PROFILE.kills++; saveProfile(); if(PROFILE.kills>=25) grant('kills25'); if(PROFILE.kills>=100) grant('kills100');
+  G.stats.kills++; PROFILE.kills++; if(typeof shipCountKill==='function') shipCountKill(); saveProfile(); if(PROFILE.kills>=25) grant('kills25'); if(PROFILE.kills>=100) grant('kills100');
   if(kind!=='surrender' && (G.combatT||0) < 20) grant('quickdraw');
   if(G.ship.hull >= (G.hull0 ?? 0)){ G.stats.flawless = (G.stats.flawless||0) + 1; if(G.stats.flawless >= 5) grant('flawless5'); }
   if(kind==='crew') grant('boardkill'); if(kind==='surrender') grant('surrender');

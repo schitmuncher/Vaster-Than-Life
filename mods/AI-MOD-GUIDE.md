@@ -158,7 +158,9 @@ Give a weapon one special trick, two at most, so it feels different from the bas
 | `crew` | Race ids, 2–4 of them |
 | `fuel`, `missiles`, `parts` | Starting supplies (fuel 12–20, missiles 0–10, parts 0–8) |
 | `pattern` | The layout as columns from tail to nose: `T` tail (1 room), `A` small + big + small (3 rooms), `B` two big rooms (2), `C` one big room (1), `D` two narrow rooms (2), `N` nose (1). Example `"TABAN"` = 8 rooms. It needs at least as many rooms as systems plus reserve |
-| `unlock` | Optional: `{"sector":3}`, `{"win":"shipId"}`, `{"ach":"achievementId"}` or `{"kills":25}`. Leave out to make it available at once |
+| `lvl` | Optional: the pilot level needed (1-50). Pilot level comes from renown: level = 1 + √(renown/4) |
+| `ch` | Optional challenge, every part must be met: `{"win":"shipId"}`, `{"wins":3}`, `{"sector":5}`, `{"kills":40}`, `{"ach":"achievementId"}`, `{"shipSector":["shipId",5]}` (reach sector 5 flying it), `{"shipKills":["shipId",25]}` (destroy 25 ships flying it) |
+| `unlock` | Older form, still read when `lvl`/`ch` are missing: `{"sector":3}`, `{"win":"shipId"}`, `{"ach":"achievementId"}` or `{"kills":25}`. With none of these the ship is free from the start |
 
 A good starting ship: 2 shield, 2 engine, 1 oxygen, 3 weapon power, 2 starting weapons worth about 4 power, 3 crew.
 

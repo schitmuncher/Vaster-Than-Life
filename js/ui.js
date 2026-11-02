@@ -234,6 +234,7 @@ function drawHangar(){
   label('Choose your ship', 60, 70, C.cyan, 'left', 18);
   if(typeof drawCampaignPicker==='function' && !NET.on) drawCampaignPicker(760, 64);
   T('Hangar', 60, 122, { s:50, f:FD, w:700 });
+  if(typeof pilotLevel==='function' && !NET.on){ const nOpen = Object.values(DATA.ships).filter(d => d && !d.secret && shipUnlocked(d)).length, nAll = Object.values(DATA.ships).filter(d => d && !d.secret).length; T(`Pilot level ${pilotLevel()} · ${nOpen}/${nAll} ships${tokensLeft() ? ` · ${tokensLeft()} requisition token${tokensLeft()>1?'s':''}` : ''}`, 300, 118, { s:16, c:C.cyan }); }
   const groups = classGroups(), names = Object.keys(groups);
   const per = 8; const pages = Math.max(1, Math.ceil(names.length/per)); UI.page = clamp(UI.page, 0, pages-1);
   const show = names.slice(UI.page*per, UI.page*per+per);
@@ -248,9 +249,9 @@ function drawHangar(){
     const th = hangarThumb(ids.find(id => shipUnlocked(DATA.ships[id])) || ids[0]);
     if(th){ drawShip(th, { x:x+w-184, y:y+40, w:176, h:58 }, 1, false, true); ctx.globalAlpha = 1; if(!anyOpen){ rr(x+w-200, y+40, 192, 56, 8); ctx.fillStyle = 'rgba(9,14,28,.62)'; ctx.fill(); } }
     T(cls.replace(/ Cruiser$/, ''), x+18, y+36, { s:22, f:FD, w:700, c: anyOpen ? (DATA.ships[ids[0]].color||C.amber) : C.muted, max:150 });
-    tip(x, y, w, h, cls, anyOpen ? `${ids.length} layout${ids.length>1?'s':''}. Click to see ${ids.length>1?'them':'it'} below.` : `Locked. ${unlockText(DATA.ships[ids[0]].unlock)}`);
+    tip(x, y, w, h, cls, anyOpen ? `${ids.length} layout${ids.length>1?'s':''}. Click to see ${ids.length>1?'them':'it'} below.` : `Locked. ${unlockText(DATA.ships[ids[0]])}`);
     let lx = x+18; ids.forEach((id,k) => { const op = shipUnlocked(DATA.ships[id]), t_ = (k ? '·  ' : '') + (DATA.ships[id].layout||'A'); T(t_, lx, y+66, { s:16, c: op ? C.ink : hexA(C.muted,.45) }); lx += ctx.measureText(t_).width + 10; });
-    if(!anyOpen) T('Locked', lx + 4, y+66, { s:13, c:C.muted });
+    if(!anyOpen) T(typeof shipProg==='function' ? `🔒 Lv ${Math.min(...ids.map(id => shipProg(DATA.ships[id]).lvl))}` : 'Locked', lx + 4, y+66, { s:13, c:C.muted });
     const bests = ids.map(id => PROFILE.best?.[id]).filter(Boolean), wins = bests.reduce((a,b) => a + (b.wins||0), 0), far = bests.reduce((a,b) => Math.max(a, b.sector||0), 0);
     if(bests.length) T(wins ? `Won ×${wins}` : `Best: sector ${far}`, x+18, y+88, { s:13, c: wins ? C.amber : C.good });
   });
@@ -276,7 +277,7 @@ function drawHangar(){
       btn(bx, by, bw, bh, '✎  Name your crew', () => { UI.crewPanel = true; PROFILE.namedCrew = 1; saveProfile(); }, { fill:true, s:17, col:C.amber });
       tip(bx, by, bw, bh, 'Your crew', `Name them and pick their personalities before you launch.${SET.lastCrew && SET.lastCrew.names && SET.lastCrew.names.length ? ' The names you used last time are filled in for you.' : ''}`); }
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
-  if(!open){ ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def.unlock), 1135, y0+212, { s:18, a:'center', c:C.ink }); }
+  if(!open){ if(typeof drawShipLock==='function') drawShipLock(def, 740, y0+56, 790, 280); else { ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def), 1135, y0+212, { s:18, a:'center', c:C.ink }); } }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
@@ -523,7 +524,7 @@ const HELP_PAGES = [
   ['Career', [
     ['Renown & ranks', 'Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story all count, and harder runs earn more. Renown raises your Admiralty rank, from Cadet to Admiral. See Career on the title screen.'],
     ['The send-off', 'Admiral Hale sees you off at the start of each run with a choice of gifts. Higher ranks mean more choices and better gifts, and some gifts come with a price. Hale remembers how your last run went.'],
-    ['Ship requisitions', 'Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing. Medals still unlock them sooner.'],
+    ['Unlocking ships', 'You start with the Pestrel. Every other ship needs a pilot level (renown is your experience) and usually a challenge, often done in another ship. Lieutenant, Commander, Commodore and Vice Admiral each give a requisition token that unlocks any ship at once, and once you are the right level you can buy a ship with renown instead. The hangar shows your progress on each one.'],
     ['Stories', 'Each run follows one of 24 stories, from Pip the data core to a heist, a haunting, a wedding and a saboteur to unmask. Most have a hidden twist rolled fresh each run. Its scenes come once a sector. How you treat its people changes the last sector, the Flaggship fight and how a win ends. Pick one in the hangar, or let "Surprise me" give you one you have not seen.'],
     ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
     ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
