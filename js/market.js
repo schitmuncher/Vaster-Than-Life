@@ -317,7 +317,9 @@ function drawStoreCrew(st, m, cx, y0, W2){
     T(cand.name, cx+112, y+44, { s:24, f:FD, w:700, max:half-130 }); T(`${race.name || cand.race} · ${pronouns(cand)}${tr ? ' · ' + tr.name : ''}`, cx+112, y+70, { s:15, c:race.color||C.ink, max:half-130 });
     if(qd){ T(qd.name, cx+112, y+96, { s:16, f:FD, w:700, c:C.amber }); para(`${qd.desc} ${QUIRK_PERK_TEXT[cand.quirk] || ''}`, cx+20, y+124, half-40, { s:14, lh:18, c:C.muted, max:3 }); }
     const hp = hirePrice(cand, st);
+    const refuse = typeof repRefuses==='function' ? repRefuses(cand.race) : null;
     if(hired) T('Hired', cx+20, y+214, { s:18, c:C.good });
+    else if(refuse) T(`Won't sign on: the ${refuse} don't like you.`, cx+20, y+208, { s:15, c:C.hostile, max:half-40 });
     else if(!full) btn(cx+20, y+178, 240, 50, `Hire · ${hp}`, () => spend(hp, () => { joinCrew(cand); (st.hired = st.hired || []).push(cand.id); toast(`${cand.name} joins the crew.`); }), { disabled:G.scrap < hp, fill:G.scrap >= hp, col:C.good });
     else { const low = Math.min(...mine.map(c => crewSellPrice(c, st))), sc = Math.max(0, hp - low), node = m.node;
       btn(cx+20, y+178, 280, 50, `Swap someone · ${sc}`, () => openSwap(cand, sc, ok => { if(ok) (st.hired = st.hired || []).push(cand.id); G.modal = { type:'store', node }; UI.storeTab = 'crew'; }), { disabled:G.scrap < sc, fill:G.scrap >= sc, col:C.good });

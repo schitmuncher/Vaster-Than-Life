@@ -51,6 +51,7 @@ const HINTS = {
   standing:  { title:'They remember you', text:'That changed how a faction sees you. Ship → Factions shows your standing: it sets their store prices, and whether their ships talk or shoot.', at:()=>RECT.ship },
   heat:      { title:'You are getting noticed', text:'Heat shows how much the Rebuff are paying attention (the chip under your ship). Quiet beacons, nebulas and a trip home cool it. Let it reach 70 and hunter-killers come looking; at 90 the exit is blockaded.' },
   sendhome:  { title:'Send it home', text:'You\'re carrying something Haven\'s Rest needs to restore a wing. Open Trade → Send home to ship it there. What you send is kept for good.' },
+  facility:  { title:'Empty rooms', text:'You can fit an empty room with a facility here: Ship → Ship → Layout, tap an empty room. A lounge, a galley, a hydroponics bay... and they make combos.' },
   home:      { title:'You can go home', text:'The green HOME beacon on the map is the Haven\'s Rest relay. Jump there to rest the crew, repair cheaply, store guns for future runs and tend the greenhouse.', at:()=>RECT.map },
   fever:     { title:'Cabin fever', text:'Eleven jumps without a port: the crew lose hearts every jump and repair slower. Any store, or a trip home, cures it.' },
   scar:      { title:'Your ship is scarred', text:'Some damage doesn\'t go away by itself: a leaking room, a jammed system, sparking wiring, or a system locked out. Hover the little badge on a room to see what\'s wrong. Any store\'s dockyard can patch it (Supplies), and some crew know other ways.' },
@@ -92,7 +93,7 @@ function checkHints(dt){
   if(!m && G.stats.jumps===0 && !G.enemy) hint('welcome');
   if(m?.type==='map'){ hint('map'); if(G.map.nodes.some(n => n.type==='haven')) hint('home'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
   if(typeof inXR==='function' && inXR()){ hint('vr'); }
-  if(m?.type==='store'){ hint('store'); if(typeof havenCanSend==='function' && havenCanSend()) hint('sendhome'); if(G.stats.jumps >= 4) hint('workshop'); if(s.hull < s.maxHull*.6) hint('hull'); }
+  if(m?.type==='store'){ hint('store'); if(typeof havenCanSend==='function' && havenCanSend(true)) hint('sendhome'); if(G.stats.jumps >= 6 && typeof facRoomOk==='function' && s.rooms.some((r, i) => facRoomOk(s, i) && !r.fac)) hint('facility'); if(G.stats.jumps >= 4) hint('workshop'); if(s.hull < s.maxHull*.6) hint('hull'); }
   if(m?.type==='event') hint('event');
   if(m?.type==='surrender') hint('surrender');
   if(e && !m){

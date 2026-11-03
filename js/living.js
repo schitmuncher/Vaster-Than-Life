@@ -65,12 +65,17 @@ const COMBOS = [
   { id:'gun_deck',    name:'Gun Deck',        sys:[['weapons'], ['shields']],            fx:{ sysRes:.1 },  text:'10% chance hits on any system do no system damage: the gunners brace it.' },
   { id:'engine_bay',  name:'Engine Bay',      sys:[['engines'], ['oxygen']],             fx:{ speed:.08 },  text:'Crew move 8% faster on warm, thick air.' }
 ];
+function comboPartName(k){ return k.startsWith('f:') ? ((typeof FACILITIES!=='undefined' && FACILITIES[k.slice(2)]) || {}).name || k.slice(2) : SYSN[k] || k; }
 function linked(sh, a, b){ if(a < 0 || b < 0) return false; return sh.doors.some(d => (d.a===a && d.b===b) || (d.a===b && d.b===a)); }
+/* the rooms that count for one part of a combo: an installed system, or a facility ("f:lounge") fitted in a room (frontier.js) */
+function roomsFor(sh, k){ if(k.startsWith('f:')){ const f = k.slice(2), out = []; sh.rooms.forEach((r, i) => { if(r.fac===f) out.push(i); }); return out; } return sh.systems[k] ? [roomOf(sh, k)].filter(i => i >= 0) : []; }
+/* two rooms work together when a door joins them, or when a vending machine sits between them (a "bridge" room) */
+function comboLinked(sh, a, b){ if(linked(sh, a, b)) return true; return sh.rooms.some((r, v) => r.fac==='vending' && v!==a && v!==b && linked(sh, a, v) && linked(sh, v, b)); }
 function combosOf(sh){
-  if(!sh || !sh.rooms) return []; const key = sh.rooms.map(r => r.sys || '-').join(',');
+  if(!sh || !sh.rooms) return []; const key = sh.rooms.map(r => (r.sys || '-') + (r.fac ? '+' + r.fac : '')).join(',');
   if(sh._comboKey===key && sh._combos) return sh._combos;
-  const out = []; for(const C_ of COMBOS){ const A = C_.sys[0].filter(k => sh.systems[k]).map(k => roomOf(sh, k)).filter(i => i >= 0), B = C_.sys[1].filter(k => sh.systems[k]).map(k => roomOf(sh, k)).filter(i => i >= 0);
-    if(A.some(a => B.some(b => linked(sh, a, b)))) out.push(C_); }
+  const out = []; for(const C_ of COMBOS){ const A = [].concat(...C_.sys[0].map(k => roomsFor(sh, k))), B = [].concat(...C_.sys[1].map(k => roomsFor(sh, k)));
+    if(A.some(a => B.some(b => a!==b && comboLinked(sh, a, b)))) out.push(C_); }
   sh._comboKey = key; sh._combos = out; return out; }
 function comboFx(sh, k){
   if(!G || sh!==G.ship) return 0; let v = 0; for(const C_ of combosOf(sh)) if(typeof C_.fx[k]==='number') v += C_.fx[k];
@@ -175,10 +180,10 @@ function livingRunEnd(win, reason){
   if(!win && havenPerksOn() && !G.noSave){ PROFILE.lastWreck = { name:G.ship.name, def:G.shipDef, weapons:G.ship.weapons.map(w => w.id).slice(0, 3), crew:[...(G.lost || []), ...G.ship.crew.filter(c => c.owner==='p' && !c.drone).map(c => c.name)].slice(0, 6), sector:G.sector, boarded:/crew/.test(reason || '') }; }
 }
 function livingArrive(node, first){
-  if(!G) return; machineJump(node); crewDowntime(); if(typeof heatArrive==='function'){ heatArrive(node, first); jobsArrive(node, first); } if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump();
+  if(!G) return; machineJump(node); crewDowntime(); if(typeof heatArrive==='function'){ heatArrive(node, first); jobsArrive(node, first); } if(typeof feverJump==='function') feverJump(node); if(typeof havenJump==='function') havenJump(); if(typeof frontierArrive==='function') frontierArrive(node, first);
   if(havenDone('biodome') && havenPerksOn() && G.garden && G.hazard!=='ionstorm') for(const p of G.garden.plots) if(p) p.g += .25;
   if(G._shop){ const spent = (G.spent||0) - G._shop.spent; if(spent > 0){ const k = G._shop.kind, gain = Math.floor(spent / 25) * (k==='sloog' ? 2 : 1); if(FACTIONS[k]) repAdd(k, gain, 'good business'); if(k==='nebula') repAdd('pyrate', Math.floor(spent / 40)); } G._shop = null; }
-  if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; const cs = typeof havenCanSend==='function' && havenCanSend(); if(cs) toast(`You're carrying ${needName(cs.it)} for ${cs.w.name}. Send it home: Trade → Send home.`); }
+  if(node && node.type==='store'){ const kind = STORE_KINDS[G.sectorType] ? G.sectorType : 'civilian'; G._shop = { kind, spent:G.spent||0 }; const cs = typeof havenCanSend==='function' && havenCanSend(true); if(cs) toast(`You're carrying ${needName(cs.it)} for ${cs.w.name}. Send it home: Trade → Send home.`); }
 }
 function livingStock(st){ if(havenDone('promenade') && havenPerksOn()){ const extra = Object.keys(DATA.augments).filter(k => !DATA.augments[k].noLoot && !st.augments.includes(k) && !G.ship.augments.includes(k)); if(extra.length) st.augments.push(pick(extra)); } return st; }
 function livingSellMult(){ return havenDone('fence') && havenPerksOn() ? 1.1 : 1; }
@@ -198,28 +203,34 @@ function drawLayoutTab(f, cx, y0){
   // your ship, drawn: tap two rooms to swap their systems
   label('Your ship', cx, y0+10, C.amber, 'left', 15);
   T(here ? `Tap a room, then another, to swap their systems: ${swapCost()} scrap.` : 'Room swaps happen at a store or at home. Glowing links are active combos.', cx + 130, y0+12, { s:14, c: here ? C.ink : C.muted, max:LW-140 });
-  const key = s.rooms.map(r => r.sys || '-').join(','); if(!UI.layoutShip || UI.layoutShip._key!==key || UI.layoutShip._src!==s){ UI.layoutShip = Object.assign({}, s, { crew:[], _rects:null, _src:s, _key:key, _style:s._style }); UI.layoutShip._src = s; UI.layoutShip._key = key; }
+  const key = s.rooms.map(r => (r.sys || '-') + (r.fac || '')).join(','); if(!UI.layoutShip || UI.layoutShip._key!==key || UI.layoutShip._src!==s){ UI.layoutShip = Object.assign({}, s, { crew:[], _rects:null, _src:s, _key:key, _style:s._style }); UI.layoutShip._src = s; UI.layoutShip._key = key; }
   const T_ = UI.layoutShip; T_.rooms = s.rooms; T_.systems = s.systems;
   drawShip(T_, { x:cx, y:y0+40, w:LW, h:380 }, 1, false, false); ctx.globalAlpha = 1;
   const R_ = T_._rects || [], ctr = q => [q.x + q.w/2, q.y + q.h/2];
   // combo links
-  for(const C_ of act){ const A = C_.sys[0].filter(k => s.systems[k]).map(k => roomOf(s, k)).filter(i => i >= 0), B = C_.sys[1].filter(k => s.systems[k]).map(k => roomOf(s, k)).filter(i => i >= 0);
-    for(const a of A) for(const b of B) if(linked(s, a, b) && R_[a] && R_[b]){ const [x1, y1] = ctr(R_[a]), [x2, y2] = ctr(R_[b]); const pl = .55 + .45*Math.sin(performance.now()/300);
+  for(const C_ of act){ const A = [].concat(...C_.sys[0].map(k => roomsFor(s, k))), B = [].concat(...C_.sys[1].map(k => roomsFor(s, k)));
+    for(const a of A) for(const b of B) if(a!==b && comboLinked(s, a, b) && R_[a] && R_[b]){ const [x1, y1] = ctr(R_[a]), [x2, y2] = ctr(R_[b]); const pl = .55 + .45*Math.sin(performance.now()/300);
       ctx.save(); ctx.strokeStyle = hexA(C.good, .5 + .4*pl); ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.shadowColor = C.good; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
       const mx = (x1+x2)/2, my = (y1+y2)/2; ctx.font = `700 13px ${FD}`; const tw = ctx.measureText(C_.name).width + 14; rr(mx - tw/2, my - 11, tw, 22, 11); ctx.fillStyle = 'rgba(6,20,14,.92)'; ctx.fill(); T(C_.name, mx, my + 5, { s:13, a:'center', c:C.good, w:700 }); } }
   // tap targets on each room
   R_.forEach((q, i) => { if(!q) return; const r = s.rooms[i], sel = UI.swapA===i;
     if(sel){ ctx.save(); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.setLineDash([8, 5]); ctx.lineDashOffset = -performance.now()/40; ctx.strokeRect(q.x+2, q.y+2, q.w-4, q.h-4); ctx.restore(); }
     region(q.x, q.y, q.w, q.h, () => { if(!here){ toast('Dock at a store or at home to swap rooms.'); return; } if(UI.swapA==null){ UI.swapA = i; return; } if(UI.swapA===i){ UI.swapA = null; return; }
-      const a = UI.swapA; UI.swapA = null; if(!s.rooms[a].sys && !r.sys) return; spend(swapCost(), () => { swapRooms(a, i); toast(`Swapped. ${combosOf(s).length} combo${combosOf(s).length===1 ? '' : 's'} active.`); }); }, 'room:' + i);
-    tip(q.x, q.y, q.w, q.h, r.sys ? (SYSN[r.sys] || r.sys) + (s.systems[r.sys] ? '' : ' (not installed)') : 'Empty room', here ? (UI.swapA==null ? 'Tap to pick this room, then tap another to swap.' : 'Tap to swap with the picked room.') : 'Swaps only at a store or at home.'); });
-  if(UI.swapA!=null && s.rooms[UI.swapA]){ const r = s.rooms[UI.swapA]; T(`Picked: ${r.sys ? SYSN[r.sys] || r.sys : 'empty room'}. Now tap the room to swap with.`, cx, y0+468, { s:16, c:C.amber }); }
-  // the combo list
-  const rx = cx + LW + 24, rw = W2 - LW - 24; label(`Room combos · ${act.length} active`, rx, y0+10, C.amber, 'left', 15);
-  COMBOS.forEach((C_, i) => { const y = y0 + 24 + i*72, on = act.includes(C_), has = C_.sys.every(g => g.some(k => s.systems[k]));
-    panel(rx, y, rw, 64, 8); if(on){ rr(rx, y, rw, 64, 8); ctx.strokeStyle = C.good; ctx.lineWidth = 2; ctx.stroke(); }
-    T(C_.name, rx+14, y+24, { s:16, f:FD, w:700, c: on ? C.good : has ? C.ink : C.muted }); T(on ? 'ACTIVE' : has ? 'not linked' : 'missing a system', rx+rw-14, y+24, { s:12, a:'right', w:700, c: on ? C.good : C.muted });
-    T(`${C_.sys.map(g => g.map(k => SYSN[k] || k).join('/')).join(' + ')}: ${C_.text}`, rx+14, y+48, { s:12, c: on ? C.ink : C.muted, max:rw-28 }); });
+      const a = UI.swapA; UI.swapA = null; if(!s.rooms[a].sys && !r.sys && !s.rooms[a].fac && !r.fac) return; spend(swapCost(), () => { swapRooms(a, i); toast(`Swapped. ${combosOf(s).length} combo${combosOf(s).length===1 ? '' : 's'} active.`); }); }, 'room:' + i);
+    tip(q.x, q.y, q.w, q.h, (r.sys ? (SYSN[r.sys] || r.sys) + (s.systems[r.sys] ? '' : ' (not installed)') : 'Empty room') + (r.fac && typeof FACILITIES!=='undefined' && FACILITIES[r.fac] ? ' · ' + FACILITIES[r.fac].name : ''), here ? (UI.swapA==null ? 'Tap to pick this room, then tap another to swap.' : 'Tap to swap with the picked room.') : 'Swaps only at a store or at home.'); });
+  if(UI.swapA!=null && s.rooms[UI.swapA]){ const r = s.rooms[UI.swapA]; T(`Picked: ${r.sys && s.systems[r.sys] ? SYSN[r.sys] || r.sys : r.sys ? 'empty room (kept for ' + (SYSN[r.sys] || r.sys) + ')' : r.fac && typeof FACILITIES!=='undefined' ? FACILITIES[r.fac].name : 'empty room'}. Tap another room to swap with it.`, cx, y0+452, { s:16, c:C.amber, max:LW });
+    if(typeof drawFacilityPicker==='function') drawFacilityPicker(s, UI.swapA, cx, y0+468, LW, here); }
+  else if(typeof drawFacilityPicker==='function') T(here ? 'Pick an empty room to fit a facility (a lounge, a galley...).' : 'Facilities are fitted at a store or at home.', cx, y0+452, { s:14, c:C.muted, max:LW });
+  // the combo list, a page at a time
+  const rx = cx + LW + 24, rw = W2 - LW - 24, per = 9, pages = Math.ceil(COMBOS.length / per), pg = clamp(UI.comboPg || 0, 0, pages - 1);
+  label(`Room combos · ${act.length} active`, rx, y0+10, C.amber, 'left', 15);
+  if(pages > 1){ btn(rx + rw - 104, y0-8, 48, 34, '‹', () => { UI.comboPg = pg - 1; }, { s:14, disabled:pg <= 0 }); btn(rx + rw - 50, y0-8, 48, 34, '›', () => { UI.comboPg = pg + 1; }, { s:14, disabled:pg >= pages - 1 }); }
+  const list = COMBOS.slice().sort((a, b) => (act.includes(b) ? 1 : 0) - (act.includes(a) ? 1 : 0)).slice(pg*per, pg*per + per);
+  list.forEach((C_, i) => { const y = y0 + 32 + i*58, on = act.includes(C_), has = C_.sys.every(g => g.some(k => roomsFor(s, k).length));
+    panel(rx, y, rw, 52, 8); if(on){ rr(rx, y, rw, 52, 8); ctx.strokeStyle = C.good; ctx.lineWidth = 2; ctx.stroke(); }
+    T(C_.name, rx+12, y+21, { s:15, f:FD, w:700, c: on ? C.good : has ? C.ink : C.muted }); T(on ? 'ACTIVE' : has ? 'not linked' : 'missing a room', rx+rw-12, y+21, { s:11, a:'right', w:700, c: on ? C.good : C.muted });
+    T(`${C_.sys.map(g => g.map(k => comboPartName(k)).join('/')).join(' + ')}: ${C_.text}`, rx+12, y+42, { s:11, c: on ? C.ink : C.muted, max:rw-24 });
+    tip(rx, y, rw, 52, C_.name, `${C_.sys.map(g => g.map(k => comboPartName(k)).join(' or ')).join(' next to ')}. ${C_.text} The rooms must share a door, or have a vending machine room between them.`); });
 }
 function drawWorkshopTab(f, cx, y0){
   const W2 = f.w - 64, ms = machines(), here = atStore();

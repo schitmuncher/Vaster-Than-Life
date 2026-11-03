@@ -350,6 +350,7 @@ function applyEffect(e){
   if(typeof anomEffect==='function') anomEffect(e, L);
   if(typeof livingEffect==='function') livingEffect(e, L);
   if(typeof openEffect==='function') openEffect(e, L);
+  if(typeof frontierEffect==='function') frontierEffect(e, L);   // grief, the Long Lights, the blockade (frontier.js)
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }
@@ -383,6 +384,7 @@ function finishSwap(m, swapped){ G.modal = null; if(m.done) m.done(swapped); els
 function closeResult(m){
   G.modal = null; const a = m.after || {};
   if(G.petNaming){ G.petNaming = false; if(typeof sagaNamePet==='function') sagaNamePet(); }
+  if(G.openExit && !a.fight){ G.openExit = false; G.modal = { type:'exit', opts:sectorOptions() }; save(); return; }   // past the blockade (frontier.js)
   if(G.openClinic){ G.openClinic = false; G.modal = { type:'clinic' }; return; }   // Doctor Oddly (travellers.js)
   if(G.openMags){ G.openMags = false; G.modal = { type:'store', node:G.map.cur, mags:true }; UI.storeTab = 'goods'; return; }   // Mags's caravan (market.js)   // a new pet needs a name
   if(G.recruitOffer){ const cand = G.recruitOffer; G.recruitOffer = null; openSwap(cand, 0, () => closeResult({ after:a })); return; }

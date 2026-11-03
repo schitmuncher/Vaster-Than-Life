@@ -255,6 +255,7 @@ An event is a scene with choices.
 - Pets: `pet` (`"random"`, a kind, or `{"name":"Biscuit","kind":"kitten"}`; only if the ship has none)
 - Heat (how hard the Rebuff hunt you, 0-100): `heat` (raise it, 5-20), `heatDrop` (lower it, 10-40)
 - Anomalies (multi-sector situations, see Reference): `anom` (`{"fungus":1}` starts one, `{"fungus":null}` ends it). Use sparingly: they change the whole run
+- Frontier: `longLight` (true: a "Relay home" button for this sector), `openExit` (true: the sector exit opens after the outcome, e.g. after getting past a blockade)
 - Captain's log: `saga` (one line written into the run's story log, e.g. `"{crew} kept the strange egg."`)
 - Meta: `unlock` (a ship id the player keeps for good: a big reward, use at most once per mod), `achievement` (a medal id)
 - Factions: `rep` (`{"mantlis":15}` or `{"enemy":-20}` for the ship you are facing; factions: `mantlis`, `sloog`, `voltan`, `pyrate`, `enjinn`, `pebblekin`)

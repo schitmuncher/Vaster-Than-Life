@@ -166,7 +166,7 @@ function havenSrc(item){
   return { tag:'found', short:'Found on your travels', long:'Turns up in events, wrecks and mystery crates.' };
 }
 function havenOpen(){ return HAVEN_WINGS.filter(w => !havenDone(w.id)); }
-function havenCanSend(){ for(const w of havenOpen()) for(const [it, n] of w.needs) if(havenGiven(w, it) < n && haveForHaven(it) > 0) return { w, it }; return null; }
+function havenCanSend(goodsOnly){ for(const w of havenOpen()) for(const [it, n] of w.needs) if(havenGiven(w, it) < n && haveForHaven(it) > 0 && !(goodsOnly && ['scrap','fuel','parts'].includes(it))) return { w, it }; return null; }
 function drawHavenNeeds(x, y, w, intro){
   const here = atStore(), open = havenOpen(), RH = 78, LW = 300, cw = (w - LW) / 4;
   T(intro || (here ? 'Send what Haven\'s Rest needs. Everything you send is kept for good, even if this run ends badly.' : 'Send goods home from any store (Trade → Send home) or from Haven\'s Rest.'), x, y+18, { s:15, c:C.ink, max:w-250 });

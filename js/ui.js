@@ -836,9 +836,10 @@ function drawShip(sh, box, facing, isEnemy, mini){
         if(live && Math.random()<.12) ember(fx_, fy - cell*.25); }
       for(let k=0; k<r.breach; k++){ const bx = q.x + q.w - (k+.5)*Math.min(cell*.5, 22) - 4, by = q.y + q.h - 12; ctx.beginPath(); ctx.arc(bx, by, Math.min(9, cell*.14), 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 2; ctx.stroke(); if(live && Math.random()<.25) vent(bx, by, (Math.random()-.5), -1); }
       if(typeof drawScar==='function') drawScar(sh, i, q, cell);
+      if(typeof drawFacility==='function') drawFacility(sh, i, q, cell);
     }
     if(!mini && G && seen && !selW && !UI.mode && !UI.selCrew){ const parts = []; if(s){ parts.push(`Level ${s.max}${SUB.includes(r.sys) ? '' : `, power ${s.power}`}${s.dmg ? `, ${s.dmg} damaged` : ''}${s.ionT>0 ? ', ion locked' : ''}.`); }
-      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`); { const st_ = typeof scarText==='function' ? scarText(sh, i) : ''; if(st_) parts.push(st_); }
+      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`); { const st_ = typeof scarText==='function' ? scarText(sh, i) : ''; if(st_) parts.push(st_); } { const ft = typeof facilityText==='function' && sh===G.ship ? facilityText(sh, i) : ''; if(ft) parts.push(ft); }
       const here = sh.crew.filter(c => c.room===i); if(here.length) parts.push(`Crew here: ${here.map(c => c.drone ? 'drone' : c.name).slice(0,4).join(', ')}.`);
       if(isEnemy) parts.push('Select a weapon, then click here to target it.');
       tip(q.x, q.y, q.w, q.h, r.sys ? SYSN[r.sys] + (isEnemy ? ' (enemy)' : '') : (isEnemy ? 'Enemy room' : 'Room'), parts.join(' ')); }
@@ -1357,6 +1358,7 @@ function drawMapModal(){
   if(fleetPx > ax + 4) label(typeof camText==='function' ? camText('Rebuff Fleet') : 'Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
+  if(typeof drawRelayButton==='function') drawRelayButton(f, ay, ah);
   // legend in the header
   { let lx = f.x + f.w - 32; for(const [k, name, c] of [['exit','Exit',C.good],['sun','Hazard',HZCOL.sun],['elite','Veteran','#ff9f43'],['quest','Quest',C.warn],['distress','Distress',C.warn],['hostile','Hostile',C.hostile],['store','Store',C.good], ...(G.map.nodes.some(n => n.type==='haven') ? [['haven','Home','#9fdc7a']] : [])]){
       T(name, lx, f.y+45, { s:14, c:C.muted, a:'right' }); const tw = ctx.measureText(name).width; mapIcon(k, lx - tw - 16, f.y+40, 16, c); lx -= tw + 50; } }
