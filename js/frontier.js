@@ -141,5 +141,5 @@ function repRefuses(race){ const f = RACE_FACTION[race]; if(!f || typeof repTier
 (function(){ if(typeof jumpTo!=='function') return; const j0 = jumpTo; jumpTo = function(i){ const fleeing = G && G.enemy && !G.enemy.dead && !G.boss && canJump() && G.fuel > 0; j0(i); if(fleeing && typeof repAdd==='function' && havenPerksOn()) repAdd('mantlis', -3, 'running from a fight'); }; })();
 
 /* ---------------- hooks ---------------- */
-function frontierArrive(node, first){ if(!G || !G.ship) return; facilityJump(); griefJump(); if(havenPerksOn()){ G.flags = G.flags || {}; G.flags.havenOn = true; shortageGood(); } }
+function frontierArrive(node, first){ if(!G || !G.ship) return; if(typeof economyArrive==='function') economyArrive(); if(typeof expeditionArrive==='function') expeditionArrive(node, first); facilityJump(); griefJump(); if(havenPerksOn()){ G.flags = G.flags || {}; G.flags.havenOn = true; shortageGood(); } }
 if(typeof HAVEN_WINGS!=='undefined'){ const w = HAVEN_WINGS.find(x => x.id==='relay'); if(w) w.reward = 'The Gate Network: every run starts with +4 fuel and the first sector\'s map revealed, and the relay can call you home from any beacon once a sector.'; }

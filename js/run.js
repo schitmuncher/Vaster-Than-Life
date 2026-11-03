@@ -350,7 +350,8 @@ function applyEffect(e){
   if(typeof anomEffect==='function') anomEffect(e, L);
   if(typeof livingEffect==='function') livingEffect(e, L);
   if(typeof openEffect==='function') openEffect(e, L);
-  if(typeof frontierEffect==='function') frontierEffect(e, L);   // grief, the Long Lights, the blockade (frontier.js)
+  if(typeof frontierEffect==='function') frontierEffect(e, L);
+  if(typeof economyEffect==='function') economyEffect(e, L);   // convoys (economy.js)   // grief, the Long Lights, the blockade (frontier.js)
   return L;
 }
 function checkCrewAch(){ if(G.ship.crew.filter(c=>c.owner==='p'&&!c.drone).length>=8) grant('fullcrew'); if(G.ship.augments.length>=3) grant('augs3'); }

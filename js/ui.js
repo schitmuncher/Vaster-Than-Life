@@ -279,6 +279,7 @@ function drawHangar(){
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ if(typeof drawShipLock==='function') drawShipLock(def, 740, y0+56, 790, 280); else { ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def), 1135, y0+212, { s:18, a:'center', c:C.ink }); } }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
+  if(typeof drawModePicker==='function') drawModePicker(760, y0+430);
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
   if((PROFILE.alert||0) > 0 && typeof ALERTS!=='undefined'){ const A = PROFILE.alert, cur = clamp(SET.alert||0, 0, A);
@@ -1172,7 +1173,7 @@ function drawModal(){
     case 'store': drawStoreModal(m); break;
     case 'haven': if(typeof drawHavenVisit==='function') drawHavenVisit(m); else G.modal = null; break;
     case 'ship': drawShipModal(); break;
-    case 'exit': { const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 680, 'Exit beacon', C.good);
+    case 'exit': { if(typeof expOn==='function' && expOn()){ drawExpeditionChart(m); break; } const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 680, 'Exit beacon', C.good);
       para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
       const cw = (f.w-64-(opts.length-1)*20)/opts.length, ch = 400;
       opts.forEach((t,i) => { const sd = DATA.sectors[t]; if(!sd) return; const bx = f.x+32 + i*(cw+20), by = f.y+150, col = sd.color||C.cyan;
@@ -1355,6 +1356,7 @@ function drawMapModal(){
       tip(x-26, y-26, 52, 52, name, bits.join(' ')); }
   });
   if(typeof mpMapOverlay==='function' && NET.on) mpMapOverlay(mx, my, nodes, f);
+  if(typeof drawConvoys==='function') drawConvoys(mx, my, nodes, t);
   if(fleetPx > ax + 4) label(typeof camText==='function' ? camText('Rebuff Fleet') : 'Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
@@ -1368,7 +1370,7 @@ function drawMapModal(){
   if(G.flag) bits.push(exitD===0 ? 'The Flaggship is here' : `Flaggship ${exitD} jump${exitD===1?'':'s'} away: jump onto it to fight (${G.flag.phase+1} of 3)`);
   else if(exitD===0) bits.push('You are at the exit beacon');
   else if(exitD>0) bits.push(`Exit ${exitD} jump${exitD===1?'':'s'} away`);
-  bits.push(margin <= 0 ? 'The fleet has caught you' : margin < 1.6 ? 'The fleet reaches you next jump' : `Fleet about ${Math.floor(margin)} jumps behind`);
+  if(typeof expOn==='function' && expOn()) bits.push(`No Fleet · heat ${typeof heat==='function' ? heat() : 0}`); else bits.push(margin <= 0 ? 'The fleet has caught you' : margin < 1.6 ? 'The fleet reaches you next jump' : `Fleet about ${Math.floor(margin)} jumps behind`);
   if(exitD > 0 && G.fuel < exitD) bits.push(`only ${G.fuel} fuel`);
   T(bits.join('  ·  '), f.x+32, f.y+f.h-58, { s:19, f:FD, w:600, c: margin < 1.6 || (exitD > 0 && G.fuel < exitD) ? C.warn : C.ink, max:f.w - 470 });
   label(jumpable ? 'Choose a connected beacon. Each jump costs 1 fuel.' : 'The VTL drive must charge before you can jump out of combat.', f.x+32, f.y+f.h-26, jumpable ? C.muted : C.warn, 'left', 13);

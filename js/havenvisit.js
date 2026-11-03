@@ -143,7 +143,7 @@ function drawHavenVisit(m){
       Object.keys(G.bay || {}).filter(id => G.bay[id] > 0 && goodsDef(id)).slice(0, 8).forEach((id, i) => { const y = y0 + 26 + i*56, pr = Math.round(goodsPrice(id, { kind:'laststand' }, true) * 1.2);
         T(`${goodsDef(id).name} ×${G.bay[id]}`, x2, y+30, { s:15 }); btn(x2 + W2/2 - 210, y+6, 190, 42, `Sell · ${pr}`, () => { if(takeGoods(id, 1)){ G.scrap += pr; G.stats.scrap += pr; sfx('sell'); } }, { s:14 }); }); }
   }
-  btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { G.modal = null; G.havenVisit = null; save(); });
+  btn(f.x+f.w-232, f.y+f.h-80, 200, 56, 'Leave', () => { const fe = G.havenVisit && G.havenVisit.fromExit; G.modal = null; G.havenVisit = null; save(); if(fe && typeof expOn==='function' && expOn() && G.map.nodes[G.map.cur].type==='exit') G.modal = { type:'exit', opts:[] }; });
 }
 
 /* ---------------- restoring wings: what each needs, where to get it, and sending it home ---------------- */
