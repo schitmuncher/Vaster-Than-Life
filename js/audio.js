@@ -11,10 +11,14 @@ let hapticFn = null;
 function haptic(v, ms){ if(typeof inXR==='function' && inXR() && hapticFn){ try{ hapticFn(v, ms); }catch(e){} } else if(typeof mobileHaptic==='function') mobileHaptic(v, ms); }
 function ensureAudio(){
   if(!AC){ try{
-    AC = new (window.AudioContext||window.webkitAudioContext)();
-    COMP = AC.createDynamicsCompressor(); COMP.threshold.value = -16; COMP.ratio.value = 4; COMP.connect(AC.destination);
+    // phones and headsets get a bigger audio buffer: a little more latency, but no crackle when the CPU is busy
+    const slow = (typeof MOB!=='undefined' && MOB.touch) || /OculusBrowser|Quest|Android/i.test(navigator.userAgent);
+    const Ctor = window.AudioContext||window.webkitAudioContext; try{ AC = new Ctor({ latencyHint: slow ? 'playback' : 'balanced' }); }catch(e){ AC = new Ctor(); }
+    // the master bus: a little headroom, then a gentle limiter so loud moments (explosions over the music) never clip
+    COMP = AC.createDynamicsCompressor(); COMP.threshold.value = -10; COMP.knee.value = 8; COMP.ratio.value = 12; COMP.attack.value = .004; COMP.release.value = .25; COMP.connect(AC.destination);
     MASTER = AC.createGain(); MASTER.connect(COMP);
-    REVERB = AC.createConvolver(); REVERB.buffer = makeImpulse(2.8, 2.2); const rv = AC.createGain(); rv.gain.value = .35; REVERB.connect(rv); rv.connect(MASTER);
+    REVERB = AC.createConvolver(); REVERB.buffer = makeImpulse(2.6, 2.4); const rv = AC.createGain(); rv.gain.value = .28; REVERB.connect(rv); rv.connect(MASTER);
+    makeWarmWaves();
     SFXG = AC.createGain(); SFXG.connect(MASTER);
     MUSG = AC.createGain(); MUSG.connect(MASTER);
     AMBG = AC.createGain(); AMBG.connect(MASTER);
@@ -23,15 +27,24 @@ function ensureAudio(){
   if(AC && AC.state==='suspended') AC.resume();
   if(AC) startMusic();
 }
-function makeImpulse(sec, decay){ const n = Math.floor(AC.sampleRate*sec), b = AC.createBuffer(2, n, AC.sampleRate);
-  for(let ch=0; ch<2; ch++){ const d = b.getChannelData(ch); for(let i=0;i<n;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/n, decay); } return b; }
+/* a smooth space reverb: noise that gets darker as it fades (raw white noise makes every tail sound grainy) */
+function makeImpulse(sec, decay){ const sr = AC.sampleRate, n = Math.floor(sr*sec), b = AC.createBuffer(2, n, sr);
+  for(let ch=0; ch<2; ch++){ const d = b.getChannelData(ch); let lp = 0, lp2 = 0;
+    for(let i=0;i<n;i++){ const x = i/n, k = .55 - .47*x;   // one-pole low-pass that closes over the tail
+      lp += k*((Math.random()*2-1) - lp); lp2 += k*(lp - lp2); const fadeIn = Math.min(1, i/(sr*.012));
+      d[i] = lp2 * Math.pow(1 - x, decay) * fadeIn * 1.6; } } return b; }
+/* softer versions of square and sawtooth for the music: the same notes without the buzzy top end */
+const WARM = {};
+function makeWarmWaves(){ const mk = (odd) => { const N = 24, re = new Float32Array(N), im = new Float32Array(N);
+    for(let h = 1; h < N; h++){ if(odd && h % 2 === 0) continue; im[h] = (1/h) * Math.exp(-h/7); } return AC.createPeriodicWave(re, im); };
+  try{ WARM.sawtooth = mk(false); WARM.square = mk(true); }catch(e){} }
 function applyVolumes(){ if(!AC) return; MASTER.gain.value = SET.master ?? 1; SFXG.gain.value = SET.sfx; MUSG.gain.value = SET.music*.6; AMBG.gain.value = (SET.amb ?? .5); }
 const now = () => AC.currentTime;
 
 /* ---------------- synth building blocks ---------------- */
 function env(g, t, a, peak, d){ g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); }
 function osc(type, f, t, dur, peak, o={}){ if(!AC) return;
-  const s = AC.createOscillator(), g = AC.createGain(); s.type = type; s.frequency.setValueAtTime(f, t);
+  const s = AC.createOscillator(), g = AC.createGain(); if(o.warm && WARM[type]) s.setPeriodicWave(WARM[type]); else s.type = type; s.frequency.setValueAtTime(f, t);
   if(o.to) s.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t + (o.slide || dur));
   if(o.detune) s.detune.value = o.detune;
   env(g, t, o.a ?? .005, peak, dur);
@@ -160,7 +173,9 @@ function musicTick(){
   if(typeof mediaActive==='function' && mediaActive()){ MUS.next = now() + .1; return; }   // the soundtrack is playing instead of the synth
   while(MUS.next < now() + .3){ playStep(MUS.step, MUS.next, M, step); MUS.next += step; MUS.step++; }
 }
-function mnote(f, t, d, type, v, o={}){ osc(type, f, t, d, v, Object.assign({ dest:MUSG, a:o.a ?? Math.min(1.2, d*.3) }, o)); }
+/* a music note: warm waveforms, and a voice limit so busy passages can't overload a phone or headset */
+let MUSV = 0;
+function mnote(f, t, d, type, v, o={}){ if(MUSV > 40) return; const s = osc(type, f, t, d, v, Object.assign({ dest:MUSG, a:o.a ?? Math.min(1.2, d*.3), warm:true }, o)); if(s){ MUSV++; s.onended = () => { MUSV--; }; } return s; }
 function playStep(s, t, M, step){
   const sector = (typeof G!=='undefined' && G) ? G.sector : 1;
   const root = M.root * Math.pow(2, ((sector*5) % 12 - 5)/12 * .5);

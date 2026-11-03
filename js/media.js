@@ -48,11 +48,14 @@ function drawGallery(){
 
 /* ---------------- soundtrack ---------------- */
 const MEDIA = { t:{}, cur:null, fail:false, battle:0, lastBattle:-1, timer:null };
+/* the soundtrack files are compressed, which can leave a fizzy, crunchy top end: a gentle shelf takes the edge off */
+function mediaTone(){ if(MEDIA.tone) return MEDIA.tone; const sh = AC.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 9000; sh.gain.value = -5;
+  const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 15500; lp.Q.value = .5; sh.connect(lp); lp.connect(MUSG); return MEDIA.tone = sh; }
 function mediaTrack(n){
   if(MEDIA.t[n]) return MEDIA.t[n];
   const el = new Audio(); el.preload = 'auto'; el.loop = !/^battle/.test(n); el.src = `assets/music/${n}.mp3`;
   const T_ = MEDIA.t[n] = { n, el, g:null, vis:false };
-  try{ const src = AC.createMediaElementSource(el); T_.g = AC.createGain(); T_.g.gain.value = 0; src.connect(T_.g); T_.g.connect(MUSG); }catch(e){ MEDIA.fail = true; }
+  try{ const src = AC.createMediaElementSource(el); T_.g = AC.createGain(); T_.g.gain.value = 0; src.connect(T_.g); T_.g.connect(mediaTone()); }catch(e){ MEDIA.fail = true; }
   el.addEventListener('error', () => { MEDIA.fail = true; });
   el.addEventListener('ended', () => { if(MEDIA.cur===n && /^battle/.test(n)) MEDIA.cur = null; });
   return T_;
