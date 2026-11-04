@@ -107,7 +107,8 @@ function drawTip(){
       if(x+w > W-8) x = p.x-w-20; if(y+h > H-8) y = p.y-h-20;
       panel(x,y,w,h,8); T(t.title, x+16, y+28, { s:17, f:FD, w:700, c:C.amber }); ls.forEach((l,k) => T(l, x+16, y+52+k*20, { s:15 })); return; } }
 }
-function typed(m, text){ if(!m || m._skip) return text; if(!m._t0) m._t0 = performance.now(); const n = Math.floor((performance.now() - m._t0)*.11); if(n >= text.length){ m._skip = true; return text; } return text.slice(0, n); }
+/* VR shows the whole text at once, so the first trigger pull picks a choice instead of only finishing the typing */
+function typed(m, text){ if(!m || m._skip || (typeof inXR==='function' && inXR())) return text; if(!m._t0) m._t0 = performance.now(); const n = Math.floor((performance.now() - m._t0)*.11); if(n >= text.length){ m._skip = true; return text; } return text.slice(0, n); }
 function drawBubbles(){
   for(const bub of (G.chat||[])){
     if(bub.t<=0 || bub.d>0) continue; let x, y;

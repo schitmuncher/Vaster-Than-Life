@@ -72,11 +72,12 @@ function deckPopSource(){
     if(typeof KB!=='undefined' && KB.open && UI.kbRect) return { r:UI.kbRect, key:'kb' };
     // standing at the holotable with the 3D star map up: no need for a flat copy of the map floating in front of you
     if(G.modal && G.modal.type==='map' && deckMapActive() && holo.group.getWorldPosition(_dv()).distanceTo(headWorld()) < 2.5) return null;
-    if(G.modal && UI.modalRect) return { r:UI.modalRect, key:G.modal }; if(UI.hint && UI.hintRect) return { r:UI.hintRect, key:UI.hint }; return null; }
+    if(G.modal && UI.modalRect) return { r:UI.modalRect, key:G.modal }; if(UI.hint && UI.hintRect && !deckPanelInView()) return { r:UI.hintRect, key:UI.hint }; return null; }   // a tip only floats out when the main screen is out of view: in front of it, it would catch the clicks meant for the screen
   const pp = panelGroup.getWorldPosition(_dv()), h = headWorld();
   if(!panelGroup.visible || pp.distanceTo(h) > 3.4) return { r:{ x:0, y:0, w:W, h:H }, key:'menu' };
   return null;
 }
+function deckPanelInView(){ if(!panelGroup.visible) return false; const h = headWorld(), pp = panelGroup.getWorldPosition(_dv()), to = pp.clone().sub(h), dist = to.length(); to.y = 0; to.normalize(); return dist < 3 && to.dot(camFlat()) > .82; }
 function deckPopTarget(){
   const h = headWorld(), d = camFlat();
   if(panelGroup.visible){ const pp = panelGroup.getWorldPosition(_dv()), to = pp.clone().sub(h), dist = to.length(); to.y = 0; to.normalize();
