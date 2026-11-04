@@ -127,7 +127,7 @@ function draw(){
   drawBG(); drawStars();
   switch(UI.screen){
     case 'title': drawTitle(); break;
-    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); break;
+    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); if(typeof drawModeOverlay==='function') drawModeOverlay(); break;
     case 'mods': drawModsScreen(); break;
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
@@ -840,7 +840,7 @@ function drawShip(sh, box, facing, isEnemy, mini){
       if(typeof drawFacility==='function') drawFacility(sh, i, q, cell);
     }
     if(!mini && G && seen && !selW && !UI.mode && !UI.selCrew){ const parts = []; if(s){ parts.push(`Level ${s.max}${SUB.includes(r.sys) ? '' : `, power ${s.power}`}${s.dmg ? `, ${s.dmg} damaged` : ''}${s.ionT>0 ? ', ion locked' : ''}.`); }
-      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`); { const st_ = typeof scarText==='function' ? scarText(sh, i) : ''; if(st_) parts.push(st_); } { const ft = typeof facilityText==='function' && sh===G.ship ? facilityText(sh, i) : ''; if(ft) parts.push(ft); }
+      parts.push(`Air ${Math.round(r.o2)}%.`); if(r.fire) parts.push(`On fire (${r.fire}).`); if(r.breach) parts.push(`Hull breach (${r.breach}).`); { const st_ = typeof scarText==='function' ? scarText(sh, i) : ''; if(st_) parts.push(st_); } { const ft = typeof facilityText==='function' && sh===G.ship ? facilityText(sh, i) : ''; if(ft) parts.push(ft); } { const dt_ = typeof deckText==='function' ? deckText(sh, i) : ''; if(dt_) parts.push(dt_); }
       const here = sh.crew.filter(c => c.room===i); if(here.length) parts.push(`Crew here: ${here.map(c => c.drone ? 'drone' : c.name).slice(0,4).join(', ')}.`);
       if(isEnemy) parts.push('Select a weapon, then click here to target it.');
       tip(q.x, q.y, q.w, q.h, r.sys ? SYSN[r.sys] + (isEnemy ? ' (enemy)' : '') : (isEnemy ? 'Enemy room' : 'Room'), parts.join(' ')); }
@@ -868,6 +868,7 @@ function drawShip(sh, box, facing, isEnemy, mini){
       }
     }
   });
+  if(typeof drawLadders==='function') drawLadders(sh, cell, mini);
   if(!mini) for(const d of sh.doors){
     const a = cellXY(sh, d.ca[0], d.ca[1]), bb = cellXY(sh, d.cb[0], d.cb[1]);
     const mx = (a.x+bb.x)/2, my = (a.y+bb.y)/2, horiz = Math.abs(a.y-bb.y) < 1;

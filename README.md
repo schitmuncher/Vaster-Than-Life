@@ -175,6 +175,8 @@ If the host's connection drops, guests in a shared game can **keep playing the r
 - **Faction ships.** Become Revered by a faction and it gives you one of its ship designs for good.
 - **Cabin fever.** Eleven jumps without a port and the crew lose hearts every jump and repair 10% slower; after sixteen, things start to rattle loose. Any store or a trip home cures it.
 - **Madame Ossery** will lease the whole station: every wing restored at once, but she takes rent every run and a fee every time you dock, and no ally will move into a station she owns.
+- **Game modes.** Hangar → Mode: Classic (Fleet chase, standard ship), Explorer (open galaxy), Admiral (Fleet chase in a two-deck capital ship) or Grand Voyage (both), or mix the two switches yourself.
+- **Capital ships.** A lower deck of three rooms under the main deck, joined by ladders, drawn as a cutaway. Only missiles and bombs reach it (other shots hit the room above), so vital systems are safe down there at the cost of longer walks. Crew at the top of a ladder fire down on enemies below, and a Gravity Hammer can knock foes through the floor. Veterans, hunters, the Flaggship and some later enemies are capitals too, with their oxygen and medbay below decks.
 - **Convoys.** Faction freighters and Rebuff payroll barges crawl across each sector towards a store, shown on the map with their route. Raid one (its faction is furious unless you run dark behind a cloak or stealth plating), escort it for pay and standing, or trade with it. A raided store pays 2.5 times as much for the cargo that never came; an escorted one is well stocked.
 - **Expedition mode.** Pick it in the hangar. No Rebuff Fleet: heat rises as you travel and the Rebuff hunt you harder the hotter you run. Haven's Rest is the hub, and every exit opens a galaxy chart of Near, Far and Deep spokes (1, 2 and 4 fuel). Deep spokes hold Precursor keys; three open the final assault early, and each key held weakens the Flaggship. Classic mode is unchanged.
 - **Ship facilities.** Fit empty rooms (Ship → Layout, at a store or home) with a Hydroponics Bay, Crew Lounge, Galley, Armoury Rack or Vending Machine. Each helps between jumps (planters and growth, hearts and later cabin fever, extra meal portions, kit repairs), and six new room combos use them (The Oasis, Botanist's Delight, Triage Centre, The Galley Garden, Mess Hall, Snack Corner). A vending machine is a bridge: the rooms either side of it count as linked.
@@ -561,6 +563,8 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/frontier.js` | Ship facilities and their combos, grief, the Long Lights relay, shortages and flooded markets, the blockade wormhole, faction recruit refusals |
 | `js/economy.js` | Convoys on the map: raiding, escorting and trading, store shortages and surpluses |
 | `js/expedition.js` | Expedition mode: no Fleet, Haven's Rest as the hub, near/far/deep spokes, Precursor keys |
+| `js/decks.js` | Capital ships: lower decks, ladders, deck protection, firing down the hatch, falls |
+| `js/modes.js` | The game mode chooser (Classic, Explorer, Admiral, Grand Voyage) |
 | `js/shipyard.js` | Earning ships: pilot levels, ship challenges, requisition tokens and buying ships with renown |
 | `js/wiki.js` | The ship's wiki: hand-written guides plus an encyclopedia generated from DATA, with search, links and scrolling |
 | `js/havenvisit.js` | Visiting Haven's Rest during a run: the relay beacon, bunks, drydock and weapon locker, greenhouse, cantina, market, cabin fever, Ossery's lease |
