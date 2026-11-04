@@ -13,7 +13,7 @@ const RECT = {
 function roomRect(sh, sys){ if(!sh || !sh._rects) return null; const i = roomOf(sh, sys); const q = sh._rects[i]; if(!q) return null;
   if(typeof svOn==='function' && svOn()){ const a = svToScreen(q.x, q.y); return [a.x, a.y, q.w*SV.z, q.h*SV.z]; } return [q.x, q.y, q.w, q.h]; }
 const HINTS = {
-  welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Rebuff Fleet, then defeat the Flaggship. Each jump uses 1 fuel. Press Map (or M) to choose your first beacon.', at:()=>RECT.map },
+  welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Rebuff Fleet, then defeat the Flaggship. Each jump uses 1 fuel. On the map (Map, or M), pick a beacon joined to yours and jump.', at:()=>RECT.map },
   vr:        { title:'You\'re on the bridge', text:'Playing seated or lying down? Pause (A) and pick your play position, or choose it in Settings. Walk with the left stick, or aim at the floor and pull the trigger to teleport. Right stick turns. Look at a controller to see what its buttons do. Click the left stick to toggle the magnifier over this console.' },
   interior:  { title:'Your ship is behind you', text:'Walk through the door at the back of the bridge to go down the corridor into your ship. You\'ll see your crew at work. Point at crew and pull the trigger to select them, point at a floor to send them there, and point at doors to open or close them. During fights you can beam over to the enemy ship from your teleporter.' },
   jumpdmg:   { title:'Damage comes with you', text:'Fires, breaches and intruders don\'t stay behind when you jump. Deal with them first unless you\'re fleeing.', at:()=>RECT.map },
@@ -69,12 +69,24 @@ function hint(id, force){
   UI.hintQ.push(id); return true;
 }
 /* general advice waits a few seconds after the last tip, so tips don't arrive in a barrage; tips about what is on screen right now don't wait */
-const HINT_CALM = new Set(['garden','harvest','goods','hearts','skills','upgrade','power','shields2','fuel','fleet','sector','volley','missile','beam','medbay','hull','welcome']);
+const HINT_CALM = new Set(['garden','harvest','goods','hearts','skills','upgrade','power','shields2','fuel','fleet','sector','volley','missile','beam','medbay','hull']);
+/* a tip only shows while what it talks about is on screen: a map tip waits for the map, combat tips for a fight,
+   and general advice never pops up over an event or a store. Tips that can no longer apply are dropped. */
+const HINT_MODAL = { map:'map', home:'map', jumpdmg:'map', store:'store', sendhome:'store', facility:'store', workshop:'store', event:'event', surrender:'surrender' };
+const HINT_FIGHT = new Set(['combat','notarget','volley','missile','beam','outgunned','flee','mind']);
+function hintFits(id){ const m = G.modal, e = G.enemy && !G.enemy.dead;
+  if(id==='welcome') return (!m || m.type==='map') && !e;
+  if(HINT_MODAL[id]) return !!m && m.type===HINT_MODAL[id];
+  if(HINT_FIGHT.has(id)) return e && !m;
+  return !m; }
+function hintStale(id){ return id==='welcome' ? (G.stats && G.stats.jumps > 0) || (G.enemy && !G.enemy.dead) : false; }
 function showNextHint(){
   if(UI.hint || !UI.hintQ || !UI.hintQ.length || !G) return;
   if(G.warp>0) return;
-  if(performance.now() < (UI.hintNext||0)){ const urgent = UI.hintQ.findIndex(h => !HINT_CALM.has(h)); if(urgent < 0) return; UI.hintQ.unshift(UI.hintQ.splice(urgent, 1)[0]); }
-  const id = UI.hintQ.shift(); const H_ = HINTS[id];
+  UI.hintQ = UI.hintQ.filter(h => !hintStale(h)); const fit = UI.hintQ.filter(hintFits); if(!fit.length) return;
+  let pickId = fit[0];
+  if(performance.now() < (UI.hintNext||0)){ const urgent = fit.find(h => !HINT_CALM.has(h)); if(!urgent) return; pickId = urgent; }
+  UI.hintQ.splice(UI.hintQ.indexOf(pickId), 1); const id = pickId; const H_ = HINTS[id];
   UI.hint = { id, t:0, paused:false };
   if(H_.pause && G.enemy && !G.enemy.dead && !G.paused && !G.modal && !(typeof SYNC!=='undefined' && SYNC.on)){ G.paused = true; UI.hint.paused = true; }   // never pause a shared game for one player's tip
   (PROFILE.hintsSeen = PROFILE.hintsSeen || {})[id] = 1; saveProfile();
@@ -90,8 +102,8 @@ function checkHints(dt){
   if(UI.hint) UI.hint.t += dt;
   if((hintT -= dt) > 0) { showNextHint(); return; } hintT = .4;
   const s = G.ship, e = G.enemy && !G.enemy.dead ? G.enemy : null, m = G.modal;
-  if(!m && G.stats.jumps===0 && !G.enemy) hint('welcome');
-  if(m?.type==='map'){ hint('map'); if(G.map.nodes.some(n => n.type==='haven')) hint('home'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
+  if((!m || m.type==='map') && G.stats.jumps===0 && !G.enemy) hint('welcome');
+  if(m?.type==='map'){ hint('map'); if(G.stats.jumps >= 3 && G.map.nodes.some(n => n.type==='haven')) hint('home'); if(s.rooms.some(r=>r.fire>0 || r.breach>0) || s.crew.some(c=>crewSide(c)!=='p')) hint('jumpdmg'); }
   if(typeof inXR==='function' && inXR()){ hint('vr'); }
   if(m?.type==='store'){ hint('store'); if(typeof havenCanSend==='function' && havenCanSend(true)) hint('sendhome'); if(G.stats.jumps >= 6 && typeof facRoomOk==='function' && s.rooms.some((r, i) => facRoomOk(s, i) && !r.fac)) hint('facility'); if(G.stats.jumps >= 4) hint('workshop'); if(s.hull < s.maxHull*.6) hint('hull'); }
   if(m?.type==='event') hint('event');
@@ -144,7 +156,7 @@ function drawHint(){
     ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = C.cyan; ctx.lineWidth = 3 + pulse*2; ctx.setLineDash([12,8]); ctx.lineDashOffset = -performance.now()/40; rr(x-6, y-6, w+12, hh+12, 10); ctx.stroke(); ctx.setLineDash([]); glow(x+w/2, y+hh/2, Math.max(w,hh)*.7, C.cyan, .12*pulse); ctx.restore(); }
   const side = at && !G.modal && at[1] < 560 ? (at[0] + at[2]/2 > W/2 ? -1 : 1) : 0;
   const bw = side ? 700 : 820; const htitle = typeof SYNC!=='undefined' && SYNC.on ? H_.title.replace(' (game paused)', '') : H_.title; ctx.font = `400 20px ${FM}`; const L = lines(H_.text, bw-280, `400 20px ${FM}`);
-  const bh = 92 + L.length*27; const bx = side<0 ? 40 : side>0 ? W - bw - 40 : W/2 - bw/2; const by = G.modal ? H - bh - 20 : 96;
+  const bh = 92 + L.length*27; const bx = side<0 ? 40 : side>0 ? W - bw - 40 : W/2 - bw/2; const by = G.modal ? (G.modal.type==='event' ? 12 : H - bh - 20) : 96;   // over an event, sit at the top so the choices stay clear
   ctx.save(); ctx.globalAlpha = a;
   UI.hintRect = { x:bx-8, y:by-8, w:bw+16, h:bh+16 };   // VR shows the tip as a pop-out window
   rr(bx, by, bw, bh, 12); ctx.fillStyle = 'rgba(10,22,40,.97)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = C.cyan; ctx.stroke();

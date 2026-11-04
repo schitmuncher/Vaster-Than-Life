@@ -723,7 +723,9 @@ function drawGame(){
   if(G.flash>0){ ctx.fillStyle = `rgba(255,200,120,${G.flash*.35})`; ctx.fillRect(0,0,W,H); }
   if(G.warp>0) drawWarp2D();
   if(G.banner && typeof drawBanner==='function') drawBanner();
-  if(G.paused && !G.modal && !UI.hint && SET.pauseMin){   // collapsed: a small tab that leaves the ships in view
+  const tutRead = !!(G.tut && typeof tutStep==='function' && tutStep() && tutStep().read);   // a tutorial page is open: it paused the game, not the player
+  if(tutRead){}
+  else if(G.paused && !G.modal && !UI.hint && SET.pauseMin){   // collapsed: a small tab that leaves the ships in view
     const py = 142; panel(W/2-190, py, 380, 50, 10); T('PAUSED', W/2-176, py+34, { s:24, f:FD, w:700, c:C.amber, ls:4 });
     btn(W/2-28, py+8, 104, 34, 'Menu ▾', () => { SET.pauseMin = false; saveProfile(); }, { s:14 });
     btn(W/2+82, py+8, 98, 34, 'Resume', () => { G.paused = false; }, { s:14, fill:true });
