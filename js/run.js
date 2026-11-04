@@ -646,5 +646,5 @@ function updateGame(dt){
   if(typeof mpGameTick==='function' && mpGameTick(dt)) return;
   if(UI.screen==='game' && G.ship.hull<=0 && typeof anomRescue==='function' && anomRescue()) return;   // a time fracture snaps back (anomalies.js)
   if(UI.screen==='game' && (G.ship.hull<=0 || ownerCrewCount('p')===0)){
-    endRun(false, G.ship.hull<=0 ? 'Your hull gave out. The Rebuff Fleet collects the pieces.' : 'Your last crew member is gone. The ship drifts on, empty.'); }
+    endRun(false, G.ship.hull<=0 ? `Your hull gave out. ${(() => { const C = typeof campDef==='function' && campDef(); return C && C.fleet ? C.fleet.charAt(0).toUpperCase() + C.fleet.slice(1) : 'The Rebuff Fleet'; })()} collects the pieces.` : 'Your last crew member is gone. The ship drifts on, empty.'); }
 }

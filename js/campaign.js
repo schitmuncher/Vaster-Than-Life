@@ -156,6 +156,7 @@ function campaignSendOff(){
   const C = campDef(), intro = C && C.intro ? C.intro + (C.gifts===false ? '' : ' ' + (C.giftLine || '"Before you go: pick something from the stores."')) : haleGreeting();
   if(C && C.gifts===false){ G.modal = { type:'msg', title:C.host || C.title, text:C.intro || '', btn:'Open map', then:openMap }; return true; }
   G.modal = { type:'event', id:'c_sendoff', title: C ? (C.host || C.title) : null, inline:{ text:intro, choices, art: C && C.introArt || 'station' }, ctx:{ crew:randomCrewName() } };
+  if(C && C.beats && C.beats['1']) G.beat1 = true;   // a campaign mod's opening scene plays once the gift is picked
   return true;
 }
 
@@ -437,3 +438,4 @@ ACHIEVEMENTS.push(
   { id:'alert8',       name:'Total War',             desc:'Win at Rebuff alert 8.' },
   { id:'veteran3',     name:'Veteran Hunter',        desc:'Beat three veteran crews in one run.' }
 );
+

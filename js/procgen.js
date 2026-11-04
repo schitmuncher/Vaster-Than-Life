@@ -134,3 +134,7 @@ function storyLeft(){ if(!G || G.noStory || (typeof campaignSolo==='function' &&
 (function(){ if(typeof drawExpeditionChart!=='function') return; const d0 = drawExpeditionChart;
   drawExpeditionChart = function(m){ d0(m); const n = storyLeft(); if(!n || !expCanFinal()) return;
     T(`Your story has ${n} scene${n===1 ? '' : 's'} left. Each trip plays one or two.`, W/2, H/2 + 410 - 120, { s:15, a:'center', c:C.amber }); }; })();
+
+/* a campaign mod's sector-1 scene: plays when the send-off closes, before the first jump */
+(function(){ if(typeof closeResult!=='function') return; const f0 = closeResult; closeResult = function(m){ f0(m);
+  if(G && G.beat1 && G.sector===1 && (!G.modal || G.modal.type==='map') && !G.stats.jumps){ G.beat1 = false; const was = G.modal; G.modal = null; if(!campaignSector()) G.modal = was; } }; })();

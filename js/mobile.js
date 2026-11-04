@@ -12,6 +12,10 @@
    ========================================================================= */
 const MOB = { z:1, px:0, py:0, rot:0, gw:0, gh:0, cx:0, cy:0, ptrs:new Map(), pinch:null, press:null, taps:[], wake:null, touch:false };
 MOB.touch = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window);
+/* a headset's flat browser (Quest, Pico): the controller laser shakes a little, so a press is read the moment the trigger goes down
+   (no drag or long-press test to lose it) and lands on the nearest button within a small margin */
+MOB.laser = /OculusBrowser|Quest|Pico/i.test(navigator.userAgent || '');
+const laserPtr = e => MOB.laser && e.pointerType!=='pen' && !(typeof inXR==='function' && inXR());
 if(MOB.touch) document.documentElement.classList.add('touch');
 if(MOB.touch && PROFILE.settings && PROFILE.settings.textSize == null) SET.textSize = 'large';
 const stageEl = document.getElementById('stage');
@@ -94,7 +98,7 @@ function svGesture(g){ return typeof svZoomAt==='function' && SET.shipZoom !== f
 cv.addEventListener('contextmenu', e => e.preventDefault());
 cv.addEventListener('pointermove', e => {
   const p = evGame(e);
-  if(e.pointerType==='mouse'){ PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = true; return; }
+  if(e.pointerType==='mouse' || laserPtr(e)){ PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = true; return; }
   const P = MOB.ptrs.get(e.pointerId); if(!P) return; P.x = e.clientX; P.y = e.clientY;
   if(MOB.ptrs.size >= 2 && MOB.pinch){ pinchMove(); return; }
   const pr = MOB.press; if(!pr || pr.id!==e.pointerId) return;
@@ -104,11 +108,12 @@ cv.addEventListener('pointermove', e => {
   else if(pr.drag && (MOB.z > 1.01 || MOB.crop)){ if(MOB.autoZ){ MOB.userZoom = true; MOB.autoZ = false; } MOB.px = pr.px0 + (e.clientX - pr.sx); MOB.py = pr.py0 + (e.clientY - pr.sy); clampPan(); applyTransform(); PTR[0].on = false; }
   else if(!pr.drag || pr.long){ PTR[0].x = p.x; PTR[0].y = p.y; }   // hold-and-slide reads tooltips
 });
-cv.addEventListener('pointerleave', e => { if(e.pointerType==='mouse') PTR[0].on = false; });
+cv.addEventListener('pointerleave', e => { if(e.pointerType==='mouse' || laserPtr(e)) PTR[0].on = false; });
 cv.addEventListener('pointerdown', e => {
   e.preventDefault(); ensureAudio();
   const p = evGame(e);
-  if(e.pointerType==='mouse'){ PTR[0].x = p.x; PTR[0].y = p.y; click(p.x, p.y); MOB.taps.push({ x:p.x, y:p.y, t:.2, hit:true }); return; }
+  if(e.pointerType==='mouse' && !MOB.laser){ PTR[0].x = p.x; PTR[0].y = p.y; click(p.x, p.y); MOB.taps.push({ x:p.x, y:p.y, t:.2, hit:true }); return; }
+  if(laserPtr(e)){ if(performance.now() - (MOB.laserT||0) < 140) return; MOB.laserT = performance.now(); PTR[0].x = p.x; PTR[0].y = p.y; PTR[0].on = true; tapAt(p.x, p.y, 16); return; }   // one press per trigger pull, even if the browser sends it twice
   try{ cv.setPointerCapture(e.pointerId); }catch(err){}
   MOB.ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if(MOB.ptrs.size === 2){ // start pinch: cancel any tap in progress
@@ -124,7 +129,7 @@ cv.addEventListener('pointerdown', e => {
   pr.timer = setTimeout(() => { if(MOB.press===pr && !pr.drag){ pr.long = true; haptic(.15, 15); } }, 430);
 });
 function endPointer(e){
-  if(e.pointerType==='mouse') return;
+  if(e.pointerType==='mouse' || laserPtr(e)) return;
   MOB.ptrs.delete(e.pointerId);
   if(MOB.pinch){ if(MOB.ptrs.size < 2){ const P = MOB.pinch; MOB.pinch = null; MOB.pinchEnded = performance.now();
       // a quick two-finger tap (no pinch, no drag) pauses or resumes

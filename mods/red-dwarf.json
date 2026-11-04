@@ -1,6 +1,6 @@
 {
  "name": "Red Dwarf: Three Million Years Late",
- "version": "4.1",
+ "version": "5.0",
  "author": "Vaster Than Life team (unofficial fan campaign)",
  "campaign": {
   "id": "reddwarf",
@@ -59,36 +59,47 @@
    "rd_waxworks",
    "rd_backwards",
    "rd_timedrift",
-   "rd_trash"
+   "rd_trash",
+   "rd_mirrorsea"
   ],
   "noTravellers": true,
   "eventBias": 6,
   "beats": {
    "2": [
     "rd_curry",
-    "rd_rimmer_disc"
+    "rd_rimmer_disc",
+    "rd_laundry"
    ],
    "3": [
     "rd_exam",
-    "rd_cat_priest"
+    "rd_cat_priest",
+    "rd_birthday"
    ],
    "4": [
     "rd_mirror",
-    "rd_reality"
+    "rd_reality",
+    "rd_promotion"
    ],
    "5": [
     "rd_guilt",
-    "rd_head3"
+    "rd_head3",
+    "rd_rival"
    ],
    "6": [
     "rd_holly",
-    "rd_hollyhop"
+    "rd_hollyhop",
+    "rd_iq"
    ],
    "7": [
     "rd_skutters",
-    "rd_strike"
+    "rd_strike",
+    "rd_supper"
    ],
-   "final": "rd_final"
+   "final": "rd_final",
+   "1": [
+    "rd_wakeup",
+    "rd_drill"
+   ]
   },
   "bossLines": [
    "The Death Ship's commander appears on screen, all chrome and contempt. \"Organics. In a shuttle. Chasing a battle group. I shall enjoy cataloguing your remains.\"",
@@ -117,7 +128,23 @@
    "Kryten: The bazookoids are tracking beautifully, sir. They've already found three of your socks.",
    "Lister: The cannon's getting warm. That's either good or very bad.",
    "Rimmer's Scattergun has hit the target, the scenery and, briefly, Rimmer.",
-   "The toaster lobber has fired another crumpet. The crew ate it."
+   "The toaster lobber has fired another crumpet. The crew ate it.",
+   "Lister: I've found a guitar string. Not a guitar. Just the string. It's a start.",
+   "Rimmer: I've written my memoirs. Chapter one is called Being Right. Chapter two is also called Being Right.",
+   "Cat: I've decided my new look is 'heroic'. You can tell because of the cape.",
+   "Kryten: Sirs, I have made a laminated card of what to do in an emergency. Step one: don't eat the laminated card, Mr Lister.",
+   "Holly: I've noticed the stars are moving. Or we are. One of the two.",
+   "Lister: Holly, how far to Red Dwarf? ... Holly? ... She's asleep again.",
+   "Rimmer: When the Simulants catch us, I'll be negotiating. From the back. Behind the Cat.",
+   "Cat: Never jump on an empty stomach. Or a full one. Jump on someone else's.",
+   "Kryten: I've reorganised the spice rack by danger level, sirs. Mr Lister's vindaloo powder needed its own shelf. And a lock.",
+   "A skutter has fallen in love with the mop. The mop has not been consulted.",
+   "Holly: Bit of good news. The engines are fine. Bit of bad news. I don't know what the engines are.",
+   "Lister: If anyone sees my lucky can of beans, don't open it. It's lucky because it's never been opened.",
+   "Rimmer: I've put in a request for a bigger bunk. I'm a hologram. I don't use the bunk. It's the principle.",
+   "Cat: Kryten, is this jacket too much? ... Correct answer: it isn't enough.",
+   "Kryten: The toilet is making a noise again, sirs. I've given it a name to keep my spirits up.",
+   "The scanner picks up a Simulant distress call. It is a recording of someone laughing at you. It's quite well done."
   ],
   "win": {
    "title": "RED DWARF RECOVERED",
@@ -154,7 +181,8 @@
     "rd_spare_heads",
     "rd_stasis",
     "rd_guitar",
-    "rd_holo_shield"
+    "rd_holo_shield",
+    "rd_mirror_finish"
    ],
    "arms": [
     "rd_hand_bazookoid",
@@ -178,7 +206,8 @@
     "rd_psi",
     "rd_timedrift",
     "rd_backwards",
-    "rd_waxworks"
+    "rd_waxworks",
+    "rd_mirrorsea"
    ],
    "cues": {
     "hangar": "lounge",
@@ -910,6 +939,99 @@
     "human",
     "human"
    ]
+  },
+  {
+   "id": "rd_reflection",
+   "name": "Starbug's Reflection",
+   "tags": [
+    "rdmirror"
+   ],
+   "onlyTagged": true,
+   "hull": 11,
+   "sectors": [
+    1,
+    8
+   ],
+   "systems": {
+    "shields": 2,
+    "engines": 2,
+    "weapons": 3,
+    "oxygen": 1,
+    "piloting": 1,
+    "doors": 1
+   },
+   "weapons": [
+    "rd_starbug_cannon",
+    "basic"
+   ],
+   "crew": [
+    "human",
+    "rd_hologram",
+    "rd_mechanoid"
+   ],
+   "style": "pebble"
+  },
+  {
+   "id": "rd_gelf_canoe",
+   "name": "GELF War Canoe",
+   "tags": [
+    "rdgelf"
+   ],
+   "onlyTagged": true,
+   "hull": 8,
+   "sectors": [
+    1,
+    5
+   ],
+   "systems": {
+    "shields": 1,
+    "engines": 2,
+    "weapons": 2,
+    "teleporter": 1,
+    "oxygen": 1,
+    "piloting": 1
+   },
+   "weapons": [
+    "rd_gelf_harpoon"
+   ],
+   "crew": [
+    "rd_gelf",
+    "rd_gelf",
+    "rd_gelf"
+   ],
+   "style": "sloog"
+  },
+  {
+   "id": "rd_sim_salvager",
+   "name": "Simulant Salvage Tug",
+   "tags": [
+    "rdsim",
+    "rdtrash"
+   ],
+   "onlyTagged": true,
+   "hull": 12,
+   "sectors": [
+    3,
+    8
+   ],
+   "systems": {
+    "shields": 2,
+    "engines": 1,
+    "weapons": 3,
+    "oxygen": 1,
+    "medbay": 1,
+    "piloting": 1,
+    "doors": 1
+   },
+   "weapons": [
+    "rd_rivet_gun",
+    "rd_bazookoid2"
+   ],
+   "crew": [
+    "rd_simulant",
+    "rd_simulant"
+   ],
+   "style": "hive"
   }
  ],
  "sectors": [
@@ -1117,6 +1239,30 @@
    "nebula": 0,
    "intro": [
     "Holly confirms it: every bin bag the ship ever jettisoned is out here. Lister recognises a sock."
+   ]
+  },
+  {
+   "id": "rd_mirrorsea",
+   "name": "The Mirror Sea",
+   "color": "#8fb8de",
+   "blurb": "A stretch of space so still and polished that every ship sees itself coming. Some of the reflections fly better than you do.",
+   "mix": {
+    "event": 50,
+    "combat": 36,
+    "empty": 14
+   },
+   "tags": [
+    "rd",
+    "rdmirror"
+   ],
+   "enemyTags": [
+    "rdmirror",
+    "rdsim"
+   ],
+   "hazards": {},
+   "nebula": 0.3,
+   "intro": [
+    "Holly reports that the stars ahead look exactly like the stars behind. Kryten checks. They are the stars behind. Rimmer combs his hair in the viewscreen and is pleased with both of him."
    ]
   },
   {
@@ -3761,6 +3907,1064 @@
      }
     }
    ]
+  },
+  {
+   "id": "rd_wakeup",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "Starbug's alarm goes off. It is not the proximity alarm, or the hull alarm. It is Rimmer's revision alarm, set to wake everyone for a two-hour lecture on emergency procedure. The Simulant tow beacon blinks on the scanner, still pulling away.",
+   "choices": [
+    {
+     "text": "Sit through the lecture.",
+     "effect": {
+      "text": "Two hours later everyone knows where the fire extinguishers are, and nobody wants to live. It is surprisingly useful.",
+      "xp": {
+       "skill": "repair",
+       "amt": 25
+      }
+     }
+    },
+    {
+     "text": "Lister \"accidentally\" unplugs it.",
+     "effect": {
+      "text": "The lecture stops halfway through a slide called PANIC: WHEN AND HOW. Rimmer sulks for a sector, which is restful.",
+      "crewHeal": 20
+     }
+    },
+    {
+     "text": "Turn the lecture into the flight plan.",
+     "req": {
+      "race": "rd_hologram"
+     },
+     "effect": {
+      "text": "Buried in slide 214 is a genuinely clever short cut. Rimmer is so pleased someone listened that he forgets to finish.",
+      "fleetPush": -0.12
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_drill",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "Kryten has arranged a surprise evacuation drill. He forgot to tell anyone it was a drill, including himself.",
+   "choices": [
+    {
+     "text": "Play along.",
+     "effect": {
+      "text": "Everyone ends up in the escape pod with a toothbrush and a guitar. It turns out to be a very good team-building exercise.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 20
+      }
+     }
+    },
+    {
+     "text": "Calm Kryten down.",
+     "effect": {
+      "text": "It takes an hour and a cup of tea he can't drink. He's grateful, and irons everyone's socks as an apology.",
+      "crewHeal": 25
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_laundry",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "The laundry has achieved sentience. Not the machine: the laundry. A pile of Lister's socks has formed a small society in the corner of the sleeping quarters and is demanding representation.",
+   "choices": [
+    {
+     "text": "Negotiate.",
+     "effect": {
+      "text": "The socks want a drawer of their own. In exchange they agree to stop walking about at night. A fair deal, everyone agrees, and slightly sad.",
+      "crewHeal": 15,
+      "scrap": 15
+     }
+    },
+    {
+     "text": "Kryten does a hot wash.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten weeps a little, then sets the dial to ninety degrees. Peace returns. The socks, in the end, come out lovely.",
+      "xp": {
+       "skill": "repair",
+       "amt": 30
+      }
+     }
+    },
+    {
+     "text": "Recruit them as boarders.",
+     "chance": 0.5,
+     "success": {
+      "text": "The sock army swarms the next GELF canoe that docks. The GELFs leave and never speak of it.",
+      "missiles": 3,
+      "scrap": 20
+     },
+     "fail": {
+      "text": "The socks desert at the first sign of trouble and hide in the air vents. The air goes strange.",
+      "crewHurt": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_birthday",
+   "questOnly": true,
+   "once": true,
+   "art": "ship",
+   "text": "It's Lister's birthday. Nobody knows which one, because three million years makes the maths awkward. The Cat has decided it's his birthday too, just in case.",
+   "choices": [
+    {
+     "text": "Throw a party.",
+     "effect": {
+      "text": "Kryten bakes a cake shaped like a curry. The Cat wears three outfits. Rimmer gives a speech nobody hears. It is the best night anyone can remember.",
+      "crewHeal": 50,
+      "fleetPush": 0.05
+     }
+    },
+    {
+     "text": "Give Lister the day off.",
+     "effect": {
+      "text": "He spends it asleep in the hammock with a can on his chest. He wakes up a better shot, somehow.",
+      "xp": {
+       "skill": "weapons",
+       "amt": 25
+      }
+     }
+    },
+    {
+     "text": "Present: the last can of lager.",
+     "effect": {
+      "text": "Lister holds it to the light, opens it, and shares it out a thimble at a time. Kryten adds the empty can to the museum.",
+      "item": "rd_lager"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_promotion",
+   "questOnly": true,
+   "once": true,
+   "art": "space",
+   "text": "A Space Corps relay buoy has sent a message: a promotion board is being held, by recording, for any officer still alive. Rimmer has put on his best uniform and is practising his salute in the airlock window.",
+   "choices": [
+    {
+     "text": "Help Rimmer prepare.",
+     "chance": 0.4,
+     "success": {
+      "text": "The recording, after much consideration, promotes Rimmer to Second Technician, Senior. He is speechless for nearly a minute, which is a ship record.",
+      "crewHeal": 30,
+      "xp": {
+       "skill": "pilot",
+       "amt": 30
+      }
+     },
+     "fail": {
+      "text": "The board asks Rimmer to \"state your achievements\". He talks for six hours. The buoy runs out of power and the answer never comes.",
+      "fleetPush": 0.06
+     }
+    },
+    {
+     "text": "Have Kryten forge a certificate.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten's conscience nearly melts his head, but the certificate is magnificent. Rimmer frames it and is unbearable for weeks, in a good way.",
+      "crewHeal": 40
+     }
+    },
+    {
+     "text": "Strip the buoy for parts.",
+     "effect": {
+      "text": "Rimmer will never forgive you. The buoy's power cell, however, is excellent.",
+      "scrap": 35,
+      "parts": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_rival",
+   "questOnly": true,
+   "once": true,
+   "art": "space",
+   "text": "A second cat-person is on the scanner, flying a gold-plated escape pod and waving. He is, the Cat insists, nowhere near as good-looking as him.",
+   "choices": [
+    {
+     "text": "Let the Cat challenge him to a dance-off.",
+     "chance": 0.6,
+     "success": {
+      "text": "The Cat wins by a whisker, then by several. The stranger gives him a jacket and flies off in tears of admiration.",
+      "crewHeal": 30,
+      "scrap": 40
+     },
+     "fail": {
+      "text": "The stranger does a move the Cat has never seen. The Cat refuses to speak for a sector and has to be coaxed out of the cargo bay with fish.",
+      "crewHurt": 5
+     }
+    },
+    {
+     "text": "Ask him to join.",
+     "effect": {
+      "text": "He says he would, but there would be two of them, and that would be too much for the universe. He leaves a tin of sardines and goes.",
+      "crewHeal": 20,
+      "missiles": 2
+     }
+    },
+    {
+     "text": "Ignore him.",
+     "effect": {
+      "text": "The Cat cannot ignore him. The Cat watches him until he is a dot."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_iq",
+   "questOnly": true,
+   "once": true,
+   "art": "nebula",
+   "text": "Holly has tried to boost her IQ to save power. It worked, sort of. She is now a genius for exactly one hour, and then she'll be off for a while.",
+   "choices": [
+    {
+     "text": "Ask her to plot the fastest route.",
+     "effect": {
+      "text": "In fifty-eight minutes she plots a route through four gravity wells and a cupboard. Then she switches off mid-sentence.",
+      "fleetPush": -0.15,
+      "reveal": true
+     }
+    },
+    {
+     "text": "Ask her to fix the engines.",
+     "effect": {
+      "text": "She rewrites the drive firmware in iambic pentameter. It runs beautifully, and occasionally rhymes.",
+      "xp": {
+       "skill": "engines",
+       "amt": 40
+      }
+     }
+    },
+    {
+     "text": "Ask her the meaning of life.",
+     "effect": {
+      "text": "She thinks very hard, says \"Ah. Of course. It's obvious,\" and the hour runs out. She does not remember. Nobody sleeps that night.",
+      "crewHeal": 10,
+      "scrap": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_supper",
+   "questOnly": true,
+   "once": true,
+   "art": "fleet",
+   "text": "The Death Ship is close enough to see now: a black spike on the scanner, the Red Dwarf tow line running into it like a thread into a needle. Kryten suggests a last meal before the run in. \"In case it is a last meal, sirs. I've made trifle.\"",
+   "choices": [
+    {
+     "text": "Eat together.",
+     "effect": {
+      "text": "Nobody talks about what happens tomorrow. Lister plays three chords badly and everyone sings anyway. It helps more than anything else would.",
+      "crewHeal": 100
+     }
+    },
+    {
+     "text": "Skip it and prepare the guns.",
+     "effect": {
+      "text": "The trifle is eaten cold, standing up, at the weapons consoles. Everybody is very ready, and slightly sticky.",
+      "primeWeapons": true,
+      "xp": {
+       "skill": "weapons",
+       "amt": 30
+      }
+     }
+    },
+    {
+     "text": "Rimmer makes a battle plan.",
+     "req": {
+      "race": "rd_hologram"
+     },
+     "effect": {
+      "text": "For once, the plan is good. Rimmer is as surprised as anyone. He keeps the plan in a frame by his bunk afterwards.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 40
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_mirror_hail",
+   "hail": "rdmirror",
+   "text": "The ship ahead is Starbug. Your Starbug, down to the dent Lister made parking. The Lister on the other screen waves. Then he raises the guns, and he is smiling more than your Lister ever has.",
+   "choices": [
+    {
+     "text": "Fire first.",
+     "effect": {
+      "begin": true
+     }
+    },
+    {
+     "text": "Wave back.",
+     "chance": 0.35,
+     "success": {
+      "text": "The reflection hesitates, waves back, and dissolves like breath off a window.",
+      "dismiss": true
+     },
+     "fail": {
+      "text": "\"Wrong hand,\" it says. \"You always wave with the wrong hand.\" The guns fire.",
+      "begin": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_mirror_starbug",
+   "tags": [
+    "rdmirror"
+   ],
+   "weight": 1.6,
+   "once": true,
+   "art": "wreck",
+   "text": "You find a perfect copy of Starbug, empty and drifting, every switch in the same place as yours except backwards. The coffee in the cup on the dashboard is still warm.",
+   "choices": [
+    {
+     "text": "Strip it for parts.",
+     "effect": {
+      "text": "Everything you take off it fits your ship, if you hold it up to a mirror first. Kryten finds this deeply upsetting.",
+      "scrap": 45,
+      "parts": 2
+     }
+    },
+    {
+     "text": "Swap the hulls.",
+     "chance": 0.5,
+     "success": {
+      "text": "The new hull is shinier and a bit stronger. Nobody can find the toilet for a week.",
+      "maxHull": 2,
+      "hull": 4
+     },
+     "fail": {
+      "text": "Halfway through, the copy starts to fade. You get back aboard with seconds to spare and a hull plate that is now only theoretical.",
+      "hull": -4
+     }
+    },
+    {
+     "text": "Leave it alone.",
+     "effect": {
+      "text": "As you pull away, its lights come on."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_mirror_rimmer",
+   "tags": [
+    "rdmirror"
+   ],
+   "weight": 1.4,
+   "once": true,
+   "art": "space",
+   "text": "Rimmer has met his reflection in the Mirror Sea, and the reflection is a natural leader: brave, popular and good at maths. It has offered to take over. Rimmer is considering it, because it is the first person who has ever agreed with him.",
+   "choices": [
+    {
+     "text": "Let the reflection lead for a while.",
+     "effect": {
+      "text": "For two jumps, the ship runs like a dream. Then the reflection gets bored of everyone, and fades. Rimmer is quietly proud of himself.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 40
+      }
+     }
+    },
+    {
+     "text": "Talk Rimmer out of it.",
+     "effect": {
+      "text": "\"You're not that bad, Rimmer.\" It takes four people to say it convincingly. He seems to believe one of them.",
+      "crewHeal": 30
+     }
+    },
+    {
+     "text": "Smash the mirror.",
+     "effect": {
+      "text": "Seven years of bad luck, Kryten points out. You have already had three million, so who is counting.",
+      "scrap": 15,
+      "crewHurt": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_mirror_pool",
+   "tags": [
+    "rdmirror"
+   ],
+   "weight": 1.2,
+   "once": true,
+   "art": "nebula",
+   "text": "A puddle of liquid silver floats in space, as wide as a moon. Scans say it is fuel. Scans also say it is looking back at you.",
+   "choices": [
+    {
+     "text": "Skim fuel off the edge.",
+     "chance": 0.7,
+     "success": {
+      "text": "It tastes, according to the engines, of lemons. They have never run better.",
+      "fuel": 5
+     },
+     "fail": {
+      "text": "The puddle grabs the fuel line and keeps it. Kryten has to cut it loose.",
+      "fuel": -1,
+      "hull": -2
+     }
+    },
+    {
+     "text": "Cat looks into it.",
+     "req": {
+      "race": "rd_felis"
+     },
+     "effect": {
+      "text": "The Cat and the puddle admire each other for a long time. As a farewell gift it gives him a little of itself, in a jar.",
+      "goods": {
+       "nebula_crystal": 1
+      },
+      "fuel": 3
+     }
+    },
+    {
+     "text": "Fly on.",
+     "effect": {
+      "text": "It ripples as you pass, as if it is waving."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_hologram_disc",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "wreck",
+   "text": "A spare hologram disc is spinning in the wreck of a Space Corps survey pod. The label reads HATTIE VOSS, NAVIGATOR (DO NOT ACTIVATE BEFORE COFFEE).",
+   "choices": [
+    {
+     "text": "Activate her (with coffee).",
+     "effect": {
+      "text": "Hattie Voss flickers into being, drinks the coffee she cannot taste, and starts correcting your star charts before anyone has said hello.",
+      "cmp": {
+       "join": {
+        "race": "rd_hologram",
+        "name": "Hattie Voss",
+        "quirk": "bookworm",
+        "sk": {
+         "pilot": 1
+        }
+       }
+      }
+     }
+    },
+    {
+     "text": "Sell the disc.",
+     "effect": {
+      "text": "A GELF trader pays well, and says she will make a lovely ornament.",
+      "scrap": 40
+     }
+    },
+    {
+     "text": "Leave her sleeping.",
+     "effect": {
+      "text": "Rimmer insists. One hologram aboard is quite enough, he says. Nobody argues, because he has a point."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_defector",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.8,
+   "once": true,
+   "art": "space",
+   "text": "A Simulant lifepod is drifting with its beacon on. Inside, a battered Simulant raises one hand. \"I have... reconsidered organics. You are disgusting, but interesting. I would like to stop killing you.\"",
+   "choices": [
+    {
+     "text": "Take it aboard.",
+     "chance": 0.7,
+     "success": {
+      "text": "It calls itself Unit Twelve, refuses to share the hammock, and turns out to be the best shot on the ship.",
+      "cmp": {
+       "join": {
+        "race": "rd_simulant",
+        "name": "Unit Twelve",
+        "quirk": "grump",
+        "sk": {
+         "combat": 2
+        }
+       }
+      }
+     },
+     "fail": {
+      "text": "Halfway through the airlock it changes its mind about reconsidering. Kryten wins the fight, but the airlock is dented.",
+      "crewHurt": 25,
+      "hull": -2
+     }
+    },
+    {
+     "text": "Ask what it knows.",
+     "effect": {
+      "text": "It tells you where the battle group refuels. You use that to get ahead, then leave it a flask of oil and a polite note.",
+      "fleetPush": -0.1
+     }
+    },
+    {
+     "text": "Shoot the pod.",
+     "effect": {
+      "text": "It does not look surprised.",
+      "scrap": 20
+     }
+    }
+   ],
+   "minSector": 2
+  },
+  {
+   "id": "rd_quiz",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.1,
+   "once": true,
+   "art": "station",
+   "text": "An abandoned game-show station is still broadcasting. Its host, a robot with a sequinned jacket, demands a contestant. The prize is a full refit. The penalty is described only as \"the Gunge\".",
+   "choices": [
+    {
+     "text": "Send Kryten, who knows everything.",
+     "chance": 0.6,
+     "success": {
+      "text": "Kryten wins on the last question, which is about cleaning products. The host weeps oil and hands over the prize.",
+      "scrap": 50,
+      "hull": 6
+     },
+     "fail": {
+      "text": "Kryten freezes on a question about feelings. The Gunge is green, warm and smells of soup.",
+      "crewHurt": 5,
+      "scrap": 10
+     }
+    },
+    {
+     "text": "Send the Cat, who looks best on camera.",
+     "req": {
+      "race": "rd_felis"
+     },
+     "effect": {
+      "text": "The Cat answers every question with \"Me\". The host, moved, rules this correct three times. The audience droids go wild.",
+      "scrap": 40,
+      "missiles": 2
+     }
+    },
+    {
+     "text": "Change the channel.",
+     "effect": {
+      "text": "The host keeps broadcasting at you for two sectors. You learn a lot about tinned fruit."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_hot_tub",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.0,
+   "once": true,
+   "art": "station",
+   "text": "A luxury leisure liner, empty except for a hot tub that has been bubbling for three million years. The water is perfectly warm. There is a rubber duck.",
+   "choices": [
+    {
+     "text": "Everybody in.",
+     "effect": {
+      "text": "For one hour, there are no Simulants, no GELFs and no curry shortages. Everyone gets out wrinkled and happy.",
+      "crewHeal": 70,
+      "fleetPush": 0.05
+     }
+    },
+    {
+     "text": "Salvage the heaters.",
+     "effect": {
+      "text": "Lister cries. The heaters are brilliant.",
+      "scrap": 35,
+      "parts": 1
+     }
+    },
+    {
+     "text": "Take the duck.",
+     "effect": {
+      "text": "It sits on the dashboard from now on. Nobody can explain why everyone feels luckier.",
+      "xp": {
+       "skill": "pilot",
+       "amt": 15
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_weevils",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "ship",
+   "text": "The flour has weevils. Not ordinary weevils: these ones are organised, and they have taken the whole galley. They appear to have elected the largest one as king.",
+   "choices": [
+    {
+     "text": "Eat the flour anyway.",
+     "effect": {
+      "text": "Lister says it's extra protein. Kryten says nothing, very loudly.",
+      "crewHeal": 10,
+      "goods": {
+       "rations": 2
+      }
+     }
+    },
+    {
+     "text": "Negotiate with the king.",
+     "chance": 0.5,
+     "success": {
+      "text": "The weevils agree to move to the cargo hold in return for a share of the cream crackers. They make excellent quiet neighbours.",
+      "goods": {
+       "rations": 3
+      },
+      "crewHeal": 15
+     },
+     "fail": {
+      "text": "The king declares war. You win, but the galley needs repainting.",
+      "crewHurt": 10
+     }
+    },
+    {
+     "text": "Vent the galley.",
+     "effect": {
+      "text": "Effective, and final. The cream crackers go too.",
+      "goods": {
+       "rations": -2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_bodyswap",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.8,
+   "once": true,
+   "art": "wreck",
+   "text": "A medical salvage ship has a working mind-swap booth. Lister and Kryten went in to look at it. Only one of them meant to.",
+   "choices": [
+    {
+     "text": "Leave them swapped for a sector.",
+     "effect": {
+      "text": "Kryten, in Lister's body, cleans the ship to a mirror shine. Lister, in Kryten's, eats nothing and enjoys it. Both learn a lot.",
+      "xp": {
+       "skill": "repair",
+       "amt": 35
+      }
+     }
+    },
+    {
+     "text": "Swap them back at once.",
+     "chance": 0.8,
+     "success": {
+      "text": "Everyone is back where they should be, mostly. Lister has started folding his socks.",
+      "crewHeal": 10
+     },
+     "fail": {
+      "text": "Everyone is back, mostly. For a sector, Lister apologises to doors.",
+      "crewHurt": 5
+     }
+    },
+    {
+     "text": "Sell the booth.",
+     "effect": {
+      "text": "A GELF chieftain buys it with a sack of scrap and a worrying smile.",
+      "scrap": 55
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_postcard",
+   "tags": [
+    "rdtime"
+   ],
+   "weight": 1.3,
+   "once": true,
+   "art": "star",
+   "text": "A postcard is stuck to the windscreen. It is from you, three weeks from now. \"Wish you were here,\" it says, in Lister's handwriting. \"Don't take the left fork. Love, us.\"",
+   "choices": [
+    {
+     "text": "Take the right fork.",
+     "effect": {
+      "text": "Nothing happens on the right fork. That was, presumably, the point.",
+      "fleetPush": -0.06,
+      "hull": 3
+     }
+    },
+    {
+     "text": "Take the left fork, out of spite.",
+     "chance": 0.5,
+     "success": {
+      "text": "You find a cache of supplies left there, quite clearly, by yourselves. There is a second postcard: \"Fine, then.\"",
+      "scrap": 45,
+      "missiles": 2
+     },
+     "fail": {
+      "text": "There is a GELF ambush on the left fork. Future-you was right, and future-you will not let you forget it.",
+      "fight": "rd_gelf_canoe"
+     }
+    },
+    {
+     "text": "Write one back.",
+     "effect": {
+      "text": "Rimmer writes \"Good advice, signed, the Captain\". It disappears. Somewhere, in three weeks, he is very pleased with himself.",
+      "crewHeal": 15
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_trash_choir",
+   "tags": [
+    "rdtrash"
+   ],
+   "weight": 1.2,
+   "once": true,
+   "art": "asteroid",
+   "text": "A cluster of Red Dwarf's old garbage pods is drifting in formation, and somewhere inside them, something is singing. It is surprisingly good. It is the vending machines.",
+   "choices": [
+    {
+     "text": "Join in.",
+     "effect": {
+      "text": "Lister knows the harmony. Rimmer knows the words. For one song, the whole ship agrees on something.",
+      "crewHeal": 40
+     }
+    },
+    {
+     "text": "Salvage the pods.",
+     "effect": {
+      "text": "The singing stops and becomes very cross humming. Good scrap, though.",
+      "scrap": 40
+     }
+    },
+    {
+     "text": "Record it for Holly.",
+     "effect": {
+      "text": "Holly plays it for the rest of the sector on the backup line. It helps her concentrate. It does not help anyone else.",
+      "xp": {
+       "skill": "engines",
+       "amt": 20
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_gelf_wrestle",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.1,
+   "once": true,
+   "art": "ship",
+   "text": "A GELF warlord has challenged your strongest crew member to an honour bout, to the floor or the airlock. Refusing is, he explains, also an option, but then he will eat the ship.",
+   "choices": [
+    {
+     "text": "Lister fights.",
+     "chance": 0.45,
+     "success": {
+      "text": "Lister wins by accident, mostly by falling over at the right time. The warlord gives him a necklace of teeth and his eternal respect.",
+      "scrap": 40,
+      "xp": {
+       "skill": "combat",
+       "amt": 30
+      }
+     },
+     "fail": {
+      "text": "Lister loses, but with such good grace that the warlord only bites him a little.",
+      "crewHurt": 20
+     }
+    },
+    {
+     "text": "Kryten fights, very politely.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten apologises before every throw. He wins every throw. The GELFs carry him round the canoe on their shoulders.",
+      "scrap": 50
+     }
+    },
+    {
+     "text": "Refuse.",
+     "effect": {
+      "text": "He does not eat the ship. He tries, though.",
+      "fight": "rd_gelf_canoe"
+     }
+    }
+   ],
+   "minSector": 2
+  },
+  {
+   "id": "rd_chef_skutter",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "ship",
+   "text": "One of the skutters has learned to cook from an old training video. It is very proud. It has made something. Nobody is sure what, but it has a lot of chillies in it.",
+   "choices": [
+    {
+     "text": "Eat it.",
+     "chance": 0.6,
+     "success": {
+      "text": "It is, against all odds, delicious. The skutter is promoted to galley chief and wears a tiny hat.",
+      "crewHeal": 45
+     },
+     "fail": {
+      "text": "Two of the crew are out of action for an afternoon. The skutter is crushed.",
+      "crewHurt": 15
+     }
+    },
+    {
+     "text": "Bottle it.",
+     "effect": {
+      "text": "Kryten seals it in a jar and labels it LAST RESORT. Lister puts it with his things.",
+      "item": "rd_fried_egg_chilli"
+     }
+    },
+    {
+     "text": "Encourage it to try toast.",
+     "effect": {
+      "text": "The toast is perfect. The skutter has found its calling.",
+      "crewHeal": 15
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_luggage",
+   "tags": [
+    "rd"
+   ],
+   "weight": 1.0,
+   "once": true,
+   "art": "station",
+   "text": "A luggage carousel from a long-dead space liner is still going round in deep space. Nobody ever came to collect anything.",
+   "choices": [
+    {
+     "text": "Grab whatever goes past.",
+     "effect": {
+      "text": "Three suitcases: one of scrap, one of shirts the Cat calls \"a crime\" and one of bazookoid shells.",
+      "scrap": 30,
+      "missiles": 3
+     }
+    },
+    {
+     "text": "Look for the lost property office.",
+     "chance": 0.4,
+     "success": {
+      "text": "You find it. It holds three million years of lost umbrellas, and one very good gun.",
+      "weapon": "random"
+     },
+     "fail": {
+      "text": "The office is guarded by a security droid that wants to see your ticket.",
+      "fight": "rd_wax"
+     }
+    },
+    {
+     "text": "Leave it going round.",
+     "effect": {
+      "text": "Lister watches it for a while. Somebody, somewhere, is waiting for that bag."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_ghost_crew",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "wreck",
+   "text": "A survey ship drifts past with all its lights on. Inside, a hologram crew is acting out the last day of their mission, again, for the millionth time. They wave you in for the party.",
+   "choices": [
+    {
+     "text": "Join the party.",
+     "effect": {
+      "text": "It is a really good party. At midnight it resets, and they do not remember you. You remember them.",
+      "crewHeal": 40
+     }
+    },
+    {
+     "text": "Fix their projector so they can stop.",
+     "req": {
+      "race": "rd_mechanoid"
+     },
+     "effect": {
+      "text": "Kryten finds the loop and gently breaks it. The crew thank you, look at the stars properly for the first time in ages, and give you everything they have.",
+      "scrap": 40,
+      "augment": "rd_mirror_finish"
+     }
+    },
+    {
+     "text": "Take their spare power cells.",
+     "effect": {
+      "text": "The party goes on, a little dimmer.",
+      "scrap": 30,
+      "fuel": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_tax",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "asteroid",
+   "text": "A Space Corps automated tax office on an asteroid has caught up with you. According to its records, the crew owe three million years of back pay deductions, plus interest, plus a fine for being late.",
+   "choices": [
+    {
+     "text": "Pay a token sum (15 scrap).",
+     "req": {
+      "scrap": 15
+     },
+     "cost": {
+      "scrap": 15
+     },
+     "effect": {
+      "text": "The office accepts it as \"a start\" and lets you go with a receipt the length of a corridor."
+     }
+    },
+    {
+     "text": "Rimmer files an appeal.",
+     "req": {
+      "race": "rd_hologram"
+     },
+     "effect": {
+      "text": "Rimmer argues for nine hours. The office, worn out, refunds everyone, plus interest, and asks him never to come back.",
+      "scrap": 50
+     }
+    },
+    {
+     "text": "Lister explains that he is dead, technically.",
+     "chance": 0.5,
+     "success": {
+      "text": "The office checks. It agrees. It removes his records, and somehow everyone else's too.",
+      "scrap": 20
+     },
+     "fail": {
+      "text": "The office declares him a fraudulent ghost and fires a fine at the hull. Literally.",
+      "hull": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_day_off",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.8,
+   "once": true,
+   "art": "ship",
+   "text": "Kryten has asked for a day off. He has never asked for anything. He seems frightened he might get it.",
+   "choices": [
+    {
+     "text": "Give him the day.",
+     "effect": {
+      "text": "He spends it cleaning the ship, for fun, very slowly, humming. He says it is the best day of his life.",
+      "crewHeal": 25,
+      "hull": 5
+     }
+    },
+    {
+     "text": "Give him a whole week.",
+     "effect": {
+      "text": "He lasts four hours, then begs for some washing up. Everyone pretends not to notice.",
+      "xp": {
+       "skill": "repair",
+       "amt": 25
+      }
+     }
+    },
+    {
+     "text": "Say there is too much to do.",
+     "effect": {
+      "text": "He says he understands, and goes to iron the anchor."
+     }
+    }
+   ]
+  },
+  {
+   "id": "rd_pool",
+   "tags": [
+    "rd"
+   ],
+   "weight": 0.9,
+   "once": true,
+   "art": "planet",
+   "text": "A zero-gravity pool hall, floating near a gas giant, is holding a tournament. The entry fee is 20 scrap. The prize is a crate of something that rattles.",
+   "choices": [
+    {
+     "text": "Enter Lister (20 scrap).",
+     "req": {
+      "scrap": 20
+     },
+     "cost": {
+      "scrap": 20
+     },
+     "chance": 0.55,
+     "success": {
+      "text": "Lister pots the black off three walls and a planet. The crate is full of missiles and one sock.",
+      "missiles": 5,
+      "scrap": 30
+     },
+     "fail": {
+      "text": "Lister loses to a GELF who plays with its tail. He swears it cheated. It definitely did."
+     }
+    },
+    {
+     "text": "Run a book on the matches.",
+     "effect": {
+      "text": "Rimmer runs the odds. He is good at this, it turns out. Too good: you leave quickly.",
+      "scrap": 35
+     }
+    },
+    {
+     "text": "Just watch.",
+     "effect": {
+      "text": "It is very relaxing, watching balls float.",
+      "crewHeal": 10
+     }
+    }
+   ]
   }
  ],
  "weapons": [
@@ -4112,6 +5316,15 @@
    "fx": {
     "heal": 0.25
    }
+  },
+  {
+   "id": "rd_mirror_finish",
+   "name": "Mirror Finish",
+   "cost": 55,
+   "desc": "Kryten polished the hull until enemy gunners kept aiming at their own reflection. +7% evasion.",
+   "fx": {
+    "evade": 7
+   }
   }
  ],
  "arms": [
@@ -4231,6 +5444,19 @@
    },
    "fights": 3,
    "desc": "Lister's masterpiece. For the next three fights: +60% hand-to-hand damage and +30% speed. Eyes water at fifty paces."
+  },
+  {
+   "id": "rd_fried_egg_chilli",
+   "name": "Triple Fried-Egg Chilli",
+   "kind": "buff",
+   "cost": 20,
+   "tier": 1,
+   "buff": {
+    "dmg": 0.35,
+    "spd": -0.1
+   },
+   "fights": 1,
+   "desc": "Lister's breakfast. One fight of fury, then a long sit-down."
   }
  ]
 }

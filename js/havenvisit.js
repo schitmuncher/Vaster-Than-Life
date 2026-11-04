@@ -178,7 +178,12 @@ function drawHavenNeeds(x, y, w, intro){
     W_.needs.forEach(([it, n], j) => { const cx = x + LW + j*cw, gv = Math.min(n, havenGiven(W_, it)), have = haveForHaven(it), src = havenSrc(it), full = gv >= n;
       T(`${needName(it)} ${gv}/${n}`, cx, yy+26, { s:14, w:700, c: full ? '#9fdc7a' : C.ink, max:cw-12 });
       if(full) T('✓ all sent', cx, yy+52, { s:12, c:'#9fdc7a' });
-      else if(have > 0 && here) btn(cx, yy+34, Math.min(cw-12, 170), 30, `Send ${Math.min(n - gv, have)}`, () => havenGive(W_, it, n), { s:13, col:'#9fdc7a', fill:true });
+      else if(have > 0 && here){ const mx = Math.min(n - gv, have), key = W_.id + ':' + it; UI.hsAmt = UI.hsAmt || {};   // pick how many to send: − amount +, then Send
+        const a = UI.hsAmt[key] = clamp(UI.hsAmt[key] == null ? mx : UI.hsAmt[key], 1, mx), sw = Math.max(64, Math.min(cw - 140, 100));
+        btn(cx, yy+34, 32, 30, '−', () => { UI.hsAmt[key] = Math.max(1, a - (a > 20 ? 10 : 1)); }, { s:16, col:'#9fdc7a', disabled:a <= 1 });
+        T(String(a), cx + 52, yy+55, { s:16, w:700, a:'center', c:C.ink });
+        btn(cx + 72, yy+34, 32, 30, '+', () => { UI.hsAmt[key] = Math.min(mx, a + (a >= 20 ? 10 : 1)); }, { s:16, col:'#9fdc7a', disabled:a >= mx });
+        btn(cx + 110, yy+34, sw, 30, `Send ${a}`, () => { havenGive(W_, it, gv + a); UI.hsAmt[key] = null; }, { s:13, col:'#9fdc7a', fill:true }); }
       else T(have > 0 ? `You have ${have} · send at a store` : src.short, cx, yy+52, { s:12, c: have > 0 ? C.cyan : C.muted, max:cw-12 });
       tip(cx, yy, cw-8, RH-8, needName(it), `${src.long}${have > 0 ? ` You have ${have} aboard.` : ''}`); }); });
 }
