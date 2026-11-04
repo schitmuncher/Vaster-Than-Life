@@ -53,6 +53,10 @@ function rosterExport(list, name){ const json = JSON.stringify({ vtlCrew:1, crew
   try{ navigator.clipboard && navigator.clipboard.writeText(rosterCode(list)); toast(`Saved ${name || 'the file'}, and copied a crew code to the clipboard too.`); }catch(e){ toast('Crew file saved.'); } }
 function rosterImportFile(){ try{ const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json,text/plain'; inp.onchange = () => { const f = inp.files && inp.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => rosterImportText(r.result); r.readAsText(f); }; inp.click(); }catch(e){ toast('This browser can\'t open files here: use Paste code instead.'); } }
 function rosterPasteCode(){ if(typeof openKeyboard==='function') openKeyboard({ title:'Paste a crew code (Ctrl+V, or the Paste key)', value:'', max:60000, min:6, ok:'Import', onOk:v => rosterImportText(v) }); }
+/* the hangar: picked veterans replace the first seats in the crew line */
+function rosterHangarNames(temp){ const P = (UI.rosterPick || []).map(u => roster().find(x => x.uid===u)).filter(Boolean); if(!P.length || (typeof NET!=='undefined' && NET.on) || (typeof CAMP!=='undefined' && CAMP)) return null;
+  const base = hangarCrew(UI.selShip, temp).names.map((n, i) => `${n} (${DATA.races[temp.crew[i].race].name})`);
+  return base.map((t, i) => P[i] ? `★ ${P[i].name} (Lv ${P[i].lvl}${P[i].pres ? ' ★' + P[i].pres : ''})` : t).concat(P.slice(base.length).map(r => `★ ${r.name}`)).join(', '); }
 /* the hangar: the roster overlay */
 function drawRosterButton(x, y){ if(typeof NET!=='undefined' && NET.on) return; if(typeof CAMP!=='undefined' && CAMP) return; const n = (UI.rosterPick || []).length;
   btn(x, y, 230, 48, `Crew roster${n ? ` · ${n} picked` : ` (${roster().length})`}`, () => { UI.rosterOpen = true; }, { s:15, col:C.cyan, fill:n > 0 });

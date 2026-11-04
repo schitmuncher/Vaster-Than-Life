@@ -282,57 +282,63 @@ function loSetAbil(c, i, id){ c.abil = c.abil || []; const old = c.abil[i]; if(o
 function loCycle(list, cur, dir){ const i = list.indexOf(cur); return list[(i + dir + list.length) % list.length]; }
 function drawLoadoutView(f, cx, y0){
   const s = G.ship, crew = s.crew.filter(c => c.owner==='p' && !c.drone), W2 = f.w - 64; if(!crew.length) return;
+  // phones: bigger rows and text, using the space the help line would take
+  const K = typeof readScale==='function' && readScale() > 1 ? 1.24 : 1, z = n => Math.round(n*K), ts = n => Math.round(n*(K > 1 ? 1.4 : 1));
   let c = crew.find(x => x.id===UI.loCrew) || crew[0]; UI.loCrew = c.id;
   // the crew list
-  crew.slice(0, 8).forEach((o, i) => { const y = y0 + 30 + i*66, on = o===c; rr(cx, y, 270, 58, 8); ctx.fillStyle = on ? hexA(C.amber, .14) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = on ? C.amber : C.line; ctx.lineWidth = on ? 2 : 1; ctx.stroke();
-    drawPortrait(cx + 28, y + 29, 20, o, false); T(o.name, cx + 58, y + 24, { s:16, f:FD, w:700, max:150 }); T(`Lv ${loLvl(o)}${o.pres ? '  ' + '★'.repeat(Math.min(5, o.pres)) + (o.pres > 5 ? '+' : '') : ''}`, cx + 58, y + 46, { s:13, c:C.amber });
-    region(cx, y, 270, 58, () => { UI.loCrew = o.id; }, 'lo:' + o.id); });
-  const x = cx + 290, w = W2 - 290, L = loLvl(c);
+  const LW = K > 1 ? 230 : 270, LH = z(58);
+  crew.slice(0, 8).forEach((o, i) => { const y = y0 + 30 + i*(LH + 8), on = o===c; rr(cx, y, LW, LH, 8); ctx.fillStyle = on ? hexA(C.amber, .14) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = on ? C.amber : C.line; ctx.lineWidth = on ? 2 : 1; ctx.stroke();
+    drawPortrait(cx + 28, y + LH/2, 20, o, false); T(o.name, cx + 58, y + LH/2 - 5, { s:ts(16), f:FD, w:700, max:LW - 66 }); T(`Lv ${loLvl(o)}${o.pres ? '  ' + '★'.repeat(Math.min(5, o.pres)) + (o.pres > 5 ? '+' : '') : ''}`, cx + 58, y + LH/2 + ts(17), { s:ts(13), c:C.amber });
+    region(cx, y, LW, LH, () => { UI.loCrew = o.id; }, 'lo:' + o.id); });
+  const x = cx + LW + 20, w = W2 - LW - 20, L = loLvl(c);
   // header: level, xp, prestige, roster
-  T(c.name, x, y0 + 20, { s:26, f:FD, w:700, max:300 }); T(`Level ${L}${c.pres ? ` · Prestige ★${c.pres}` : ''}`, x + 310, y0 + 18, { s:17, f:FD, w:700, c:C.amber });
-  const need = loNeed(L), fr = L >= LO_MAXL ? 1 : clamp((c.cxp || 0) / need, 0, 1); bar(x, y0 + 32, 520, 8, fr, C.amber, 'rgba(255,255,255,.08)'); T(L >= LO_MAXL ? 'Max level' : `${Math.floor(c.cxp || 0)} / ${need} xp`, x + 530, y0 + 41, { s:12, c:C.muted });
-  if(L >= LO_MAXL && (c.pres||0) < 10) btn(x + w - 420, y0 - 2, 200, 44, '★ Prestige', () => { if(!UI.presAsk){ UI.presAsk = c.id; return; } UI.presAsk = null; loPrestige(c); }, { s:15, col:C.violet || '#c48bff', fill:UI.presAsk===c.id });
-  if(typeof rosterSave==='function') btn(x + w - 210, y0 - 2, 210, 44, 'Save to roster', () => rosterSave(c), { s:14, col:C.cyan });
+  T(c.name, x, y0 + 20, { s:ts(26), f:FD, w:700, max:260 }); T(`Level ${L}${c.pres ? ` · ★${c.pres}` : ''}`, x + 280, y0 + 18, { s:ts(17), f:FD, w:700, c:C.amber, max:w - 720 });
+  const need = loNeed(L), fr = L >= LO_MAXL ? 1 : clamp((c.cxp || 0) / need, 0, 1); bar(x, y0 + 32, 480, 8, fr, C.amber, 'rgba(255,255,255,.08)'); T(L >= LO_MAXL ? 'Max level' : `${Math.floor(c.cxp || 0)} / ${need} xp`, x + 490, y0 + 41, { s:ts(12), c:C.muted });
+  if(L >= LO_MAXL && (c.pres||0) < 10) btn(x + w - 420, y0 - 2, 200, z(44), UI.presAsk===c.id ? 'Sure? Tap again' : '★ Prestige', () => { if(UI.presAsk!==c.id){ UI.presAsk = c.id; return; } UI.presAsk = null; loPrestige(c); }, { s:ts(15), col:C.violet || '#c48bff', fill:UI.presAsk===c.id });
+  if(typeof rosterSave==='function') btn(x + w - 210, y0 - 2, 210, z(44), 'Save to roster', () => rosterSave(c), { s:ts(14), col:C.cyan });
   // rows
-  const row = (y, title, locked, body) => { rr(x, y, w, 62, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); label(title, x + 14, y + 22, locked ? C.muted : C.amber, 'left', 12);
-    if(locked){ T(`Unlocks at level ${locked}`, x + 14, y + 46, { s:14, c:C.muted }); return; } body(y); };
-  const locker = armLocker();
+  const RH = z(62), RG = 6, BH = z(38), by = (yy) => yy + (RH - BH)/2;
+  const row = (y, title, locked, body) => { rr(x, y, w, RH, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); label(title, x + 14, y + ts(12) + 8, locked ? C.muted : C.amber, 'left', ts(12));
+    if(locked){ T(`Unlocks at level ${locked}`, x + 14, y + RH - 14, { s:ts(14), c:C.muted }); return; } body(y); };
+  const locker = armLocker(), AX = K > 1 ? 470 : 500;   // where the attachment / grenade columns start
+  const cyc = (bx, yy, bw, cur, sub, onL, onR, col) => { btn(bx, by(yy), 34*K, BH, '‹', onL, { s:ts(14) }); btn(bx + bw - 34*K, by(yy), 34*K, BH, '›', onR, { s:ts(14) });
+    T(cur.t, bx + bw/2, yy + RH/2 - (K > 1 ? 2 : 1), { s:ts(13), a:'center', c:cur.c, max:bw - 84*K }); T(sub, bx + bw/2, yy + RH/2 + ts(14), { s:ts(11), a:'center', c:C.muted, max:bw - 84*K }); };
   const weaponRow = (y, slot, key) => row(y, slot==='primary' ? 'Primary' : 'Secondary', slot==='secondary' && L < LO_UNLOCK.secondary ? LO_UNLOCK.secondary : 0, yy => {
     const it = c[key], d = it && armDef(it), opts = [null, ...locker.filter(o => armDef(o) && loFits(armDef(o), slot))]; if(it) opts.splice(1, 0, it);
-    T(d ? d.name : 'Empty', x + 14, yy + 46, { s:16, f:FD, w:700, c: d ? (it.dur > 0 ? C.ink : C.hostile) : C.muted, max:250 });
-    if(d){ T(`${(LO_CLASS[loClass(d)] || {}).name || ''} · Lv ${wpnLvl(it.id)}`, x + 270, yy + 22, { s:11, c:C.muted, max:124 }); bar(x + 270, yy + 36, 120, 6, armFrac(it), it.dur > 0 ? C.good : C.hostile, 'rgba(255,255,255,.08)'); tip(x, yy, 400, 62, d.name, `${d.desc} ${armStatLine(d)}`); }
-    btn(x + 400, yy + 12, 40, 38, '‹', () => loSwap(c, key, opts, -1), { s:15 }); btn(x + 444, yy + 12, 40, 38, '›', () => loSwap(c, key, opts, 1), { s:15 });
-    if(d){ const atts = attFor(d), lv = wpnLvl(it.id); it.att = it.att || []; for(let j = 0; j < 2; j++){ const ax = x + 500 + j*(w - 500)/2, aw = (w - 500)/2 - 10, cur = it.att[j] || null, A = cur && LO_ATT[cur];
+    T(d ? d.name : 'Empty', x + 14, yy + RH - 14, { s:ts(16), f:FD, w:700, c: d ? (it.dur > 0 ? C.ink : C.hostile) : C.muted, max:K > 1 ? 230 : 250 });
+    if(d){ if(K===1) T(`${(LO_CLASS[loClass(d)] || {}).name || ''} · Lv ${wpnLvl(it.id)}`, x + 270, yy + 22, { s:11, c:C.muted, max:124 }); else T(`Lv ${wpnLvl(it.id)}`, x + 250, yy + 24, { s:ts(11), c:C.muted });
+      bar(x + (K > 1 ? 250 : 270), yy + RH/2 + 4, K > 1 ? 110 : 120, 6, armFrac(it), it.dur > 0 ? C.good : C.hostile, 'rgba(255,255,255,.08)'); tip(x, yy, 400, RH, d.name, `${(LO_CLASS[loClass(d)] || {}).name || ''}. ${d.desc} ${armStatLine(d)}`); }
+    btn(x + AX - 100, by(yy), 40, BH, '‹', () => loSwap(c, key, opts, -1), { s:ts(15) }); btn(x + AX - 56, by(yy), 40, BH, '›', () => loSwap(c, key, opts, 1), { s:ts(15) });
+    if(d){ const atts = attFor(d), lv = wpnLvl(it.id); it.att = it.att || []; for(let j = 0; j < 2; j++){ const ax = x + AX + j*(w - AX)/2, aw = (w - AX)/2 - 10, cur = it.att[j] || null, A = cur && LO_ATT[cur];
       const free = [null, ...atts.filter(k => LO_ATT[k].lvl <= lv && !it.att.includes(k)) ]; if(cur) free.splice(1, 0, cur);
-      btn(ax, yy + 12, 34, 38, '‹', () => { const v = loCycle(free, cur, -1); it.att[j] = v; it.att = it.att.filter(Boolean); }, { s:14 }); btn(ax + aw - 34, yy + 12, 34, 38, '›', () => { const v = loCycle(free, cur, 1); it.att[j] = v; it.att = it.att.filter(Boolean); }, { s:14 });
-      T(A ? A.name : 'No attachment', ax + aw/2, yy + 30, { s:13, a:'center', c: A ? C.good : C.muted, max:aw - 80 }); T(A ? A.text : `${atts.filter(k => LO_ATT[k].lvl <= lv).length}/${atts.length} unlocked`, ax + aw/2, yy + 48, { s:11, a:'center', c:C.muted, max:aw - 80 }); } } });
-  let y = y0 + 56; weaponRow(y, 'primary', 'arm'); y += 68; weaponRow(y, 'secondary', 'side'); y += 68;
+      const set = dir => { const v = loCycle(free, cur, dir); it.att[j] = v; it.att = it.att.filter(Boolean); };
+      cyc(ax, yy, aw, { t:A ? A.name : 'No attachment', c:A ? C.good : C.muted }, A ? A.text : `${atts.filter(k => LO_ATT[k].lvl <= lv).length}/${atts.length} unlocked`, () => set(-1), () => set(1)); } } });
+  let y = y0 + 56 + (K > 1 ? 6 : 0); weaponRow(y, 'primary', 'arm'); y += RH + RG; weaponRow(y, 'secondary', 'side'); y += RH + RG;
   row(y, 'Armour', 0, yy => { const it = c.suit, d = it && armDef(it), opts = [null, ...locker.filter(o => armDef(o) && armDef(o).kind==='suit')]; if(it) opts.splice(1, 0, it);
-    T(d ? d.name : 'None', x + 14, yy + 46, { s:16, f:FD, w:700, c: d ? C.ink : C.muted, max:360 }); btn(x + 400, yy + 12, 40, 38, '‹', () => loSwap(c, 'suit', opts, -1), { s:15 }); btn(x + 444, yy + 12, 40, 38, '›', () => loSwap(c, 'suit', opts, 1), { s:15 });
+    T(d ? d.name : 'None', x + 14, yy + RH - 14, { s:ts(16), f:FD, w:700, c: d ? C.ink : C.muted, max:AX - 120 }); btn(x + AX - 100, by(yy), 40, BH, '‹', () => loSwap(c, 'suit', opts, -1), { s:ts(15) }); btn(x + AX - 56, by(yy), 40, BH, '›', () => loSwap(c, 'suit', opts, 1), { s:ts(15) });
     // grenades
-    const half = (w - 500)/2 - 10; [['lethal', LO_LETHAL, LO_UNLOCK.lethal, 'Lethal'], ['tactical', LO_TACT, LO_UNLOCK.tactical, 'Tactical']].forEach(([key, LIST, need_, nm], j) => { const gx = x + 500 + j*(half + 10);
-      if(L < need_){ T(`${nm}: level ${need_}`, gx + half/2, yy + 38, { s:13, a:'center', c:C.muted }); return; }
+    const half = (w - AX)/2 - 10; [['lethal', LO_LETHAL, LO_UNLOCK.lethal, 'Lethal'], ['tactical', LO_TACT, LO_UNLOCK.tactical, 'Tactical']].forEach(([key, LIST, need_, nm], j) => { const gx = x + AX + j*(half + 10);
+      if(L < need_){ T(`${nm}: level ${need_}`, gx + half/2, yy + RH/2 + 6, { s:ts(13), a:'center', c:C.muted }); return; }
       const opts_ = [null, ...Object.keys(LIST).filter(k => LIST[k].lvl <= L)], cur = c[key] || null, G_ = cur && LIST[cur];
-      btn(gx, yy + 12, 34, 38, '‹', () => { c[key] = loCycle(opts_, cur, -1); }, { s:14 }); btn(gx + half - 34, yy + 12, 34, 38, '›', () => { c[key] = loCycle(opts_, cur, 1); }, { s:14 });
-      T(G_ ? G_.name : `No ${nm.toLowerCase()}`, gx + half/2, yy + 30, { s:13, a:'center', c: G_ ? (key==='lethal' ? C.hostile : C.cyan) : C.muted, max:half - 80 }); T(G_ ? G_.text : nm, gx + half/2, yy + 48, { s:11, a:'center', c:C.muted, max:half - 80 }); }); });
-  y += 68;
+      cyc(gx, yy, half, { t:G_ ? G_.name : `No ${nm.toLowerCase()}`, c:G_ ? (key==='lethal' ? C.hostile : C.cyan) : C.muted }, G_ ? G_.text : nm, () => { c[key] = loCycle(opts_, cur, -1); }, () => { c[key] = loCycle(opts_, cur, 1); }); }); });
+  y += RH + RG + 2;
   // perks
-  const pw = (w - 20)/3; [1, 2, 3].forEach(sl => { const px = x + (sl - 1)*(pw + 10), need_ = LO_UNLOCK['perk' + sl]; c.perks = c.perks || [];
-    rr(px, y, pw, 92, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); label(`Perk ${sl}`, px + 12, y + 20, [0, '#5fd3e6', '#ff5a7a', '#ffd166'][sl], 'left', 12);
-    if(L < need_){ T(`Unlocks at level ${need_}`, px + 12, y + 50, { s:14, c:C.muted }); return; }
+  const PH = z(92), pw = (w - 20)/3; [1, 2, 3].forEach(sl => { const px = x + (sl - 1)*(pw + 10), need_ = LO_UNLOCK['perk' + sl]; c.perks = c.perks || [];
+    rr(px, y, pw, PH, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); label(`Perk ${sl}`, px + 12, y + ts(12) + 8, [0, '#5fd3e6', '#ff5a7a', '#ffd166'][sl], 'left', ts(12));
+    if(L < need_){ T(`Unlocks at level ${need_}`, px + 12, y + PH/2 + 8, { s:ts(14), c:C.muted }); return; }
     const opts = [null, ...Object.keys(LO_PERKS).filter(k => LO_PERKS[k].slot===sl)], cur = c.perks[sl - 1] || null, P = cur && LO_PERKS[cur];
-    btn(px + pw - 82, y + 6, 36, 30, '‹', () => { c.perks[sl - 1] = loCycle(opts, cur, -1); }, { s:13 }); btn(px + pw - 42, y + 6, 36, 30, '›', () => { c.perks[sl - 1] = loCycle(opts, cur, 1); }, { s:13 });
-    T(P ? P.name + (perkPro(cur) ? '  PRO' : '') : 'Choose…', px + 12, y + 50, { s:15, f:FD, w:700, c: P ? (perkPro(cur) ? C.amber : C.ink) : C.muted, max:pw - 24 });
-    if(P){ T(perkPro(cur) ? P.pro : P.text, px + 12, y + 70, { s:11, c:C.muted, max:pw - 24 }); const prog = (PROFILE.perkProgress || {})[cur] || 0; if(!perkPro(cur)) T(`Pro: ${Math.floor(prog)}/${P.goal} ${P.stat==='heal' ? 'health healed' : P.stat==='fixes' ? 'repairs' : 'kills'} with it`, px + 12, y + 86, { s:10, c:C.cyan, max:pw - 24 }); tip(px, y, pw, 92, P.name, `${P.text} ${P.pro}`); } });
-  y += 100;
+    btn(px + pw - 82*K, y + 6, 36*K, 30*K, '‹', () => { c.perks[sl - 1] = loCycle(opts, cur, -1); }, { s:ts(13) }); btn(px + pw - 42*K, y + 6, 36*K, 30*K, '›', () => { c.perks[sl - 1] = loCycle(opts, cur, 1); }, { s:ts(13) });
+    T(P ? P.name + (perkPro(cur) ? '  PRO' : '') : 'Choose…', px + 12, y + z(50), { s:ts(15), f:FD, w:700, c: P ? (perkPro(cur) ? C.amber : C.ink) : C.muted, max:pw - 24 });
+    if(P){ T(perkPro(cur) ? P.pro : P.text, px + 12, y + z(70), { s:ts(11), c:C.muted, max:pw - 24 }); const prog = (PROFILE.perkProgress || {})[cur] || 0; if(!perkPro(cur)) T(`Pro: ${Math.floor(prog)}/${P.goal} ${P.stat==='heal' ? 'health healed' : P.stat==='fixes' ? 'repairs' : 'kills'}`, px + 12, y + z(87), { s:ts(10), c:C.cyan, max:pw - 24 }); tip(px, y, pw, PH, P.name, `${P.text} ${P.pro}`); } });
+  y += PH + 8;
   // abilities
-  const aw = (w - 30)/4; LO_ABIL_L.forEach((need_, j) => { const ax = x + j*(aw + 10); c.abil = c.abil || []; rr(ax, y, aw, 76, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke();
-    label(`Ability ${j + 1}`, ax + 12, y + 20, C.violet || '#c48bff', 'left', 12);
-    if(L < need_ && !c.abil[j] && !c.pres){ T(`Level ${need_}`, ax + 12, y + 50, { s:14, c:C.muted }); return; }
+  const AH = z(76), aw = (w - 30)/4; LO_ABIL_L.forEach((need_, j) => { const ax = x + j*(aw + 10); c.abil = c.abil || []; rr(ax, y, aw, AH, 8); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke();
+    label(`Ability ${j + 1}`, ax + 12, y + ts(12) + 8, C.violet || '#c48bff', 'left', ts(12));
+    if(L < need_ && !c.abil[j] && !c.pres){ T(`Level ${need_}`, ax + 12, y + AH/2 + 12, { s:ts(14), c:C.muted }); return; }
     const taken = c.abil.filter((a, k) => k!==j), opts = [null, ...Object.keys(LO_ABIL).filter(k => !taken.includes(k))], cur = c.abil[j] || null, A = cur && LO_ABIL[cur];
-    btn(ax + aw - 74, y + 6, 32, 28, '‹', () => loSetAbil(c, j, loCycle(opts, cur, -1)), { s:12 }); btn(ax + aw - 38, y + 6, 32, 28, '›', () => loSetAbil(c, j, loCycle(opts, cur, 1)), { s:12 });
-    T(A ? A.name : 'Choose…', ax + 12, y + 50, { s:14, f:FD, w:700, c: A ? C.ink : C.muted, max:aw - 24 }); if(A){ T(A.text, ax + 12, y + 68, { s:10, c:C.muted, max:aw - 24 }); tip(ax, y, aw, 76, A.name, A.text); } });
-  y += 86; para('Crew level up by fighting, repairing and manning stations, in every run. Weapons level up across all your runs, unlocking attachments. Use a perk enough and its Pro version unlocks for everyone. At level 30, prestige for a permanent edge.', x, y + 14, w, { s:12, lh:17, c:C.muted, max:2 });
+    btn(ax + aw - 74*K, y + 6, 32*K, 28*K, '‹', () => loSetAbil(c, j, loCycle(opts, cur, -1)), { s:ts(12) }); btn(ax + aw - 38*K, y + 6, 32*K, 28*K, '›', () => loSetAbil(c, j, loCycle(opts, cur, 1)), { s:ts(12) });
+    T(A ? A.name : 'Choose…', ax + 12, y + z(50), { s:ts(14), f:FD, w:700, c: A ? C.ink : C.muted, max:aw - 24 }); if(A){ if(K===1) T(A.text, ax + 12, y + 68, { s:10, c:C.muted, max:aw - 24 }); else T('Tap for details', ax + 12, y + z(68), { s:ts(10), c:C.muted }); tip(ax, y, aw, AH, A.name, A.text); } });
+  y += AH + 10; if(K===1) para('Crew level up by fighting, repairing and manning stations, in every run. Weapons level up across all your runs, unlocking attachments. Use a perk enough and its Pro version unlocks for everyone. At level 30, prestige for a permanent edge.', x, y + 14, w, { s:12, lh:17, c:C.muted, max:2 });
 }
 function loSwap(c, key, opts, dir){ const cur = c[key] || null, next = loCycle(opts, cur, dir), L = armLocker();
   if(cur) L.push(cur); if(next){ const i = L.indexOf(next); if(i >= 0) L.splice(i, 1); } c[key] = next; sfx && sfx('click'); }

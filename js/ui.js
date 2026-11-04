@@ -269,7 +269,7 @@ function drawHangar(){
     drawShip(temp, { x:760, y:y0+70, w:760, h:240 }, 1, false, true);
     const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
       ['Drones', temp.drones.map(d=>DATA.drones[d.id].name).join(', ')||'None'], ['Systems', Object.keys(temp.systems).filter(k=>!SUB.includes(k)).map(k=>SYSN[k]).join(', ')],
-      ['Crew', hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
+      ['Crew', (typeof rosterHangarNames==='function' && rosterHangarNames(temp)) || hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
     rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, 520, { s:15, lh:18, max:1 }); });
     if(open && !NET.on && !(typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew)){   // naming the crew: big, near the top, and it glows until you have used it once
       const bx = 520, by = y0+20, bw = 226, bh = 48;
