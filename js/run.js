@@ -593,7 +593,7 @@ function updateGame(dt){
   if(G.warp>0){ G.warp -= dt;
     if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
       if(typeof n==='string' && n.startsWith('sector:')){ const t = n.slice(7); genSector(G.sector+1, t);
-        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : 'The Rebuff Fleet is already plotting its pursuit.') + (typeof situLine==='function' ? situLine() : ''), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
+        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : (typeof expOn==='function' && expOn() ? 'No Fleet out here: only the heat you make, and whatever is waiting.' : 'The Rebuff Fleet is already plotting its pursuit.')) + (typeof situLine==='function' ? situLine() : ''), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
       else arrive(n); } }
   const live = !G.paused && !blockingModal() && G.warp<=0 && !(typeof mpHold==='function' && mpHold());
   if(live){

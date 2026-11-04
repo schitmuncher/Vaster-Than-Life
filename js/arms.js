@@ -111,7 +111,7 @@ function armsEffect(e, L){
 /* fixing kit: a drone part each, out in the field */
 function armRepairItem(it){ const d = armDef(it); if(!d || it.dur >= d.dur) return false; if(G.parts < 1){ toast('You need a drone part to repair kit.'); return false; } G.parts--; it.dur = d.dur; sfx('buy'); return true; }
 function armRepairPrice(it){ const d = armDef(it); return d ? Math.max(2, Math.round((1 - armFrac(it)) * (d.cost||30) * .35)) : 0; }
-function allKit(){ const out = []; for(const it of armLocker()) out.push({ it, where:'locker' }); for(const c of (G.ship.crew||[])) if(c.owner==='p' && !c.drone){ if(c.arm) out.push({ it:c.arm, where:c.name }); if(c.suit) out.push({ it:c.suit, where:c.name }); } return out; }
+function allKit(){ const out = []; for(const it of armLocker()) out.push({ it, where:'locker' }); for(const c of (G.ship.crew||[])) if(c.owner==='p' && !c.drone){ if(c.arm) out.push({ it:c.arm, where:c.name }); if(c.side) out.push({ it:c.side, where:c.name }); if(c.suit) out.push({ it:c.suit, where:c.name }); } return out; }
 
 /* ---------------- drawing: kit in hand ---------------- */
 function drawArmIcon(px, py, rad, c, face){

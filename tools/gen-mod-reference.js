@@ -23,7 +23,7 @@ for(const [id, s] of Object.entries(B.sectors)) out.push(`| \`${id}\` | ${md(s.n
 out.push('', '### Goods (cargo: `goods` effect, `req.goodsKind`, gifts, trade)', '', '| id | name | kind | base price | made in | wanted in |', '| --- | --- | --- | --- | --- | --- |');
 for(const [id, g] of Object.entries(B.goods)) out.push(`| \`${id}\` | ${md(g.name)} | ${g.kind} | ${g.base} | ${(g.from||[]).join(', ')} | ${(g.want||[]).join(', ')} |`);
 out.push('', 'Goods kinds: ' + [...new Set(Object.values(B.goods).map(g => g.kind))].map(k => '`' + k + '`').join(', ') + '.');
-out.push('', '### Personal kit (`arm` effect) and tonics (`item` effect)', '', 'Kit: ' + Object.entries(B.arms||{}).map(([id, a]) => `\`${id}\` ${md(a.name)} (${a.kind})`).join(' · '), '', 'Tonics: ' + Object.entries(B.items||{}).map(([id, a]) => `\`${id}\` ${md(a.name)} (${a.kind})`).join(' · '));
+out.push('', '### Personal kit (`arm` effect) and tonics (`item` effect)', '', 'Kit: ' + Object.entries(B.arms||{}).map(([id, a]) => `\`${id}\` ${md(a.name)} (${a.cls || a.kind})`).join(' · '), '', 'Tonics: ' + Object.entries(B.items||{}).map(([id, a]) => `\`${id}\` ${md(a.name)} (${a.kind})`).join(' · '));
 out.push('', '### Seeds (`seeds` effect)', '', Object.entries(SEEDS).filter(([k, s]) => !s.greenhouse).map(([id, s]) => `\`${id}\` ${s.name}`).join(' · '));
 out.push('', '### Medals (for `ch.ach` on ships and the `achievement` effect)', '', ACHIEVEMENTS.map(a => `\`${a.id}\``).join(' '));
 const ev = Object.values(B.events);

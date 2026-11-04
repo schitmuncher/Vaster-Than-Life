@@ -127,7 +127,7 @@ function draw(){
   drawBG(); drawStars();
   switch(UI.screen){
     case 'title': drawTitle(); break;
-    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); if(typeof drawModeOverlay==='function') drawModeOverlay(); break;
+    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); if(typeof drawModeOverlay==='function') drawModeOverlay(); if(typeof drawRosterOverlay==='function') drawRosterOverlay(); break;
     case 'mods': drawModsScreen(); break;
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
@@ -280,6 +280,7 @@ function drawHangar(){
   if(!open){ if(typeof drawShipLock==='function') drawShipLock(def, 740, y0+56, 790, 280); else { ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def), 1135, y0+212, { s:18, a:'center', c:C.ink }); } }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });
   if(typeof drawModePicker==='function') drawModePicker(760, y0+430);
+  if(typeof drawRosterButton==='function' && open) drawRosterButton(800, 902);
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
   if((PROFILE.alert||0) > 0 && typeof ALERTS!=='undefined'){ const A = PROFILE.alert, cur = clamp(SET.alert||0, 0, A);
@@ -451,6 +452,7 @@ function drawSettings(){
       btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
       head('Content');
+      choice('Story variety', 'storyMix', [['classic','Hand-made'],['mixed','Mixed'],['wild','Wild']], 'mixed', 'How many beacons are generated on the spot (new people, new trouble, choices built from your ship and crew) rather than hand-written. Mixed is about a third; Wild is most. Campaign mods always use their own events.');
       onoff('Unlock all ships', 'unlockAll', false, 'Skip the unlock conditions and pick any ship.');
       onoff('Allow mod scripts', 'allowScripts', false, 'Lets mods run their own JavaScript. Only turn this on for mods you trust.', () => applyMods());
       break;
@@ -1634,6 +1636,7 @@ function canvasXY(e){ const r = cv.getBoundingClientRect(); return { x:(e.client
 window.addEventListener('keydown', e => {
   if(UI.hint && (e.key==='Enter' || e.key==='Escape')){ closeHint(false); e.preventDefault(); return; }
   if(e.target && e.target.closest && e.target.closest('dialog,#modPanel,#renameDlg')) return;
+  if(e.key==='Escape' && UI.screen==='select' && (UI.rosterOpen || UI.modeOpen)){ UI.rosterOpen = false; UI.modeOpen = false; return; }
   if(UI.screen!=='game' || !G) return;
   if(typeof mpKey==='function' && mpKey(e)) return;
   if(e.code==='Space'){ e.preventDefault(); if(!G.modal) G.paused = !G.paused; }

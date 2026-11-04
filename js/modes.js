@@ -32,6 +32,9 @@ function drawModeOverlay(){
   const g = cur.galaxy, s = cur.ship, pickG = v => setMode({ galaxy:v, ship:s }), pickS = v => setMode({ galaxy:g, ship:v });
   T('Galaxy', f.x + 40, y2 + 46, { s:16, f:FD, w:700 }); btn(f.x + 150, y2 + 20, 200, 44, 'Fleet chase', () => pickG('chase'), { fill:g==='chase', s:15 }); btn(f.x + 360, y2 + 20, 200, 44, 'Open galaxy', () => pickG('expedition'), { fill:g==='expedition', s:15, col:'#9fdc7a' });
   T('Ship', f.x + 640, y2 + 46, { s:16, f:FD, w:700 }); btn(f.x + 720, y2 + 20, 200, 44, 'Standard', () => pickS('standard'), { fill:s==='standard', s:15 }); btn(f.x + 930, y2 + 20, 200, 44, 'Capital (2 decks)', () => pickS('capital'), { fill:s==='capital', s:15, col:C.cyan });
-  para('Dailies, challenges, campaign mods and multiplayer always play the classic way. Every mode earns renown, medals and Haven\'s Rest progress.', f.x + 40, y2 + 100, f.w - 380, { s:14, lh:20, c:C.muted });
+  if(typeof STORY_MIX!=='undefined'){ const sm = SET.storyMix || 'mixed'; T('Stories', f.x + 40, y2 + 116, { s:16, f:FD, w:700 });
+    STORY_MIX.forEach(([k, n], i) => btn(f.x + 150 + i*210, y2 + 90, 200, 44, n, () => { SET.storyMix = k; saveProfile(); }, { fill:sm===k, s:15 }));
+    T(storyMixText(), f.x + 790, y2 + 118, { s:14, c:C.muted, max:f.w - 1120 + 300 }); }
+  para('Dailies, challenges, campaign mods and multiplayer always play the classic way. Every mode earns renown, medals and Haven\'s Rest progress.', f.x + 40, y2 + 160, f.w - 380, { s:14, lh:20, c:C.muted });
   btn(f.x + f.w - 280, f.y + f.h - 90, 240, 60, 'Done', () => { UI.modeOpen = false; }, { fill:true, s:20 });
 }

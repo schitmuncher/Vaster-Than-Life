@@ -224,6 +224,11 @@ Good events offer a real decision: a safe small reward, a risky bigger one, and 
 ```
 `kind`: blunt, blade, gun, weird or suit. `dmg` multiplies melee damage (1.0 = bare hands, 2.0 = very strong). `dur` is how many seconds of fighting before it breaks. Tricks (pick one or two): `stun` (0–1 chance per second), `bleed` (damage per second for 4s), `knock` (chance to throw the foe out of the room), `reach` (0–1, guns: share of damage dealt to foes in neighbouring rooms), `fear`, `laugh`, `leech` (share of damage that heals the wielder), `heal` (heals friends in the room per second), `repair` and `fire` (multipliers on repairs and firefighting). Suits: `armor` (0–0.5, share of melee damage stopped), `vac` (breathe without air), `medpack` (heals that much once). Events can give kit with `"arm": "id"` or `"random"`.
 
+**Loadout weapons.** Give a weapon a `cls` and it joins the loadout system (primary/secondary slots, attachments, weapon levels): `ar`, `smg`, `lmg`, `shotgun`, `marksman`, `special` (primary) or `pistol`, `launcher`, `melee` (secondary). The class sets the slot; `slot` ("primary" or "secondary") overrides it. Extra loadout fields: `crit` (0–0.25, chance of a critical hit), `quick` (0–0.6, extra damage in the first 3 seconds of a fight), `splash` (launchers: damage to every foe in the target room, once a fight), `ignite` (0–0.1, chance per second to start a fire), `slow` (true: hits slow the foe), `spd` (-0.2–0.2, movement speed while it is in hand). Keep `dmg` near the class's usual range: rifles 1.4–1.6, SMGs 1.3–1.4, LMGs 1.6–1.8, shotguns 1.9–2.2, marksman 1.1–1.3, pistols 1.2–1.35.
+```json
+{ "id": "px_ar", "name": "Glacier Carbine", "kind": "gun", "cls": "ar", "dmg": 1.5, "reach": 0.5, "dur": 90, "cost": 60, "tier": 2, "slow": true, "desc": "Frost rounds that slow whoever they hit." }
+```
+
 ### items (tonics and treats for one crew member)
 ```json
 { "id": "px_tonic", "name": "Star Tonic", "kind": "perm", "cost": 40, "tier": 1, "dmg": 0.06, "desc": "One line." }
