@@ -7,7 +7,7 @@
      other and with systems. A vending machine is a "bridge": two rooms on
      either side of it count as linked.
    - Grief: lose a friend, sibling or sweetheart and the one left behind
-     works worse and loses hearts until time, home or a shared meal helps.
+     is furious: harder hits, slower repairs, until revenge or a few jumps.
    - The Long Lights: relight an old relay beacon (or restore the
      Communications Relay at Haven's Rest) and you can be called home from
      any beacon, once a sector.
