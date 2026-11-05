@@ -6,6 +6,8 @@ You command a Fedoration courier carrying data that could end the war. Cross eig
 
 It's a fan homage to *FTL: Faster Than Light*. The code, art, names and writing are all original, with plenty of puns.
 
+**In this README:** [Play](#play) · [Multiplayer](#multiplayer) · [Player's guide](#players-guide) (controls, the crew screen, levels, classes, perks, abilities, grenades, attachments, every crew weapon, health, food and hunger, skills, races, captain level and ranks, ships, Haven's Rest, difficulty, saves, the Red Dwarf campaign, troubleshooting) · [What's in the game](#whats-in-the-game) · [Mods](#mods) · [Tech](#tech) · [Credits](#credits)
+
 ## Play
 
 Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**. On a Quest, open the Pages link in the Meta Quest Browser and press **Enter VR**, or **Enter mixed reality** for passthrough.
@@ -92,6 +94,548 @@ Free, with no accounts and no game servers: players connect directly, browser to
 **Talking.** Quick chat (**T**, or the Chat button) sends calls like *Fire!* or *Jump now?* and emoji. **Voice** is optional: it asks for your microphone and sends your voice straight to the other players. Everyone sees where the others are pointing, with their name. In co-op, VR players see each other on the bridge as a helmet, hands and a name tag, and flat-screen players see a marker in the room a VR player is standing in.
 
 If the host's connection drops, guests in a shared game can **keep playing the run solo**, or rejoin with the same code. Leaving on purpose takes you back to the multiplayer menu. Players who join late are brought straight into the run in progress (or to the end screen, if the run just ended); in a race, late arrivals are asked to pick a ship if picking is still going on. Settings → Multiplayer has your name, which meeting servers to use, automatic score posting and an optional TURN relay server (only needed on networks that block direct connections).
+
+<!-- guide:start -->
+## Player's guide
+
+A detailed reference for everything you do in a run. The tables in this section are generated from the game's own data (`tools/gen-player-guide.js`), so the numbers are the ones the game uses. The in-game **Wiki** (title screen) has the same material with links between pages.
+
+### Contents
+
+- [Controls](#controls) · [The screen in a run](#the-screen-in-a-run) · [Your first run](#your-first-run)
+
+- [Crew: the crew screen](#crew-the-crew-screen) · [Crew levels](#crew-levels) · [Classes](#classes) · [Perks](#perks) · [Abilities](#abilities) · [Grenades](#grenades) · [Attachments](#attachments) · [Crew weapons](#crew-weapons)
+
+- [Health and healing](#health-and-healing) · [Food and hunger](#food-and-hunger) · [Skills](#skills) · [Races](#races)
+
+- [Captain level, rank and renown](#captain-level-rank-and-renown) · [Ships](#ships) · [Haven's Rest](#havens-rest) · [Difficulty](#difficulty)
+
+- [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)
+
+### Controls
+
+**Keyboard and mouse.** Click to do everything; hover anything for a tip.
+
+| Key | What it does |
+| --- | --- |
+| Space | Pause or resume (you can give every order while paused) |
+| M | Open or close the map |
+| S | Open or close the Ship screen |
+| 1–4 | Pick a powered weapon to aim |
+| V | Hold fire (let every weapon charge) / fire at will |
+| F | Autofire on or off |
+| C | Cloak (if you have Cloaking) |
+| H | Send all crew back to their stations |
+| + / − | Game speed up or down (50% to 125%) |
+| Esc | Close the window, or drop the current selection |
+| T or Enter | Quick chat (multiplayer) |
+| Arrow keys + Enter | Move between buttons and press them |
+
+**Touch (phones and tablets).** Tap to act; taps are forgiving and land on the nearest button. Press and hold anything to read its tip. Pinch to zoom (over the ships it zooms the battle view, elsewhere the whole screen), drag to pan while zoomed, double-tap empty space to zoom in or out, and tap with two fingers to pause. The Android back gesture closes the open window.
+
+**Game controller (flat screen).**
+
+| Button | What it does |
+| --- | --- |
+| Left stick | Free cursor |
+| D-pad | Jump between buttons and rooms |
+| A | Select |
+| B | Back / close |
+| X | Hold fire / fire at will |
+| Y | Map |
+| LB / RB | Step through powered weapons and park the cursor on the enemy |
+| LT | Crew back to stations |
+| RT | Autofire on or off |
+| Back / View | Ship screen |
+| Start / Menu | Pause |
+
+**Meta Quest, in VR.** Point and pull the trigger to press anything; one pull is one press. Grip while pointing at the console or holotable to move it (grip its edges or corners to resize, or use two hands). A or X pauses, B or Y opens the map. Click the left stick for the datapad (the whole game screen on a tablet in your hand); click the right stick to reset your position. You can also touch screens and buttons with the controller tip.
+
+**Meta Quest, flat browser (no headset session).** The laser pointer works like a mouse: a press counts the moment the trigger goes down, a shaky laser still lands on the nearest button, and a doubled press only counts once.
+
+### The screen in a run
+
+| Where | What it shows |
+| --- | --- |
+| Top left | Hull (your ship's life), shields (layers up), evasion and average oxygen |
+| Top middle | Scrap (money), fuel (one per jump), missiles, drone parts and food (meals for the crew) |
+| Top centre-right | Sector and its type; in the last sector, the Flaggship's progress |
+| VTL drive | Charges during a fight while someone flies the ship; when it is full you can jump away |
+| Jump / Map | Opens the map (it says Jump when the drive is charged in a fight) |
+| Crew | The crew screen: everyone's level, health, food, class, weapons, perks and abilities |
+| Ship | Systems and upgrades, weapons and cargo, crew, armoury, factions, hold, garden, workshop, log |
+| Pause | Pause; every order still works while paused |
+| Your ship (left) | Rooms, systems, fires, breaches, oxygen and crew. Click a crew member, then a room, to move them |
+| The enemy (right) | Their ship. Pick a weapon, then a room, to aim |
+| Crew row | Everyone aboard: tap once to select, tap the selected person again for their crew screen. A coloured dot means they are hungry |
+| Power | Reactor bars per system: + and − under each one |
+| Weapons and drones | Each weapon's charge; power, aim, Hold fire, Autofire |
+
+### Your first run
+
+1. **New run → pick a ship.** Easy is the gentle way in. The Admiral sends you off with a gift: take one.
+
+2. **Open the Map** and jump to a beacon joined to yours. Each jump costs 1 fuel, and the Rebuff Fleet follows you from the left; keep ahead of it.
+
+3. **Beacons** are events (?), fights, stores, quiet spots, distress calls and quests. Stores and exits are always marked.
+
+4. **In a fight**: power your weapons, pick one, then click an enemy room (shields first, then weapons). Pause whenever it gets busy.
+
+5. **Damage control**: send crew to fires, breaches and broken systems; hurt crew walk to the medbay.
+
+6. **Spend scrap** at stores and on upgrades (Ship → Systems). A second shield layer is the best early upgrade.
+
+7. **Feed the crew**: they eat between jumps from the Food count; buy more at stores (Supplies) before it runs low.
+
+8. **Reach the exit** of each sector, pick the next one, and in the last sector catch and beat the Flaggship three times.
+
+Every run earns captain xp and renown, win or lose. The **Tutorial** on the title screen (Guided practice) teaches all of this hands-on.
+
+### Crew: the crew screen
+
+Tap **Crew** in the top bar, or tap someone in the crew row twice. One page shows everything about them:
+
+- **Level and xp**, with what the next level brings.
+
+- **Health, food, damage, repair and speed**, and where each comes from (weapon, attachments, perks, level, prestige, food).
+
+- **Skills**: six of them, untrained → skilled → expert.
+
+- **Class**: tap a class to give it to them, or **+ Save class** to keep their set-up as your own.
+
+- **Slots**: primary and secondary weapons (two attachments each), armour, lethal and tactical grenades, three perks plus a wildcard, and four abilities. Tap any slot to see every option, what it does and when it unlocks.
+
+- **Feed** someone now, **Save to roster** to keep them for later runs, or **Rename** them.
+
+### Crew levels
+
+Crew earn xp for what they do: kills (10 each), every fight they live through (15, or 5 if the enemy got away), repairs, firefighting, and time spent manning the helm, engines, shields and weapons. They level up to 30. Every level makes them a bit better at everything, and some levels open slots.
+
+| Level | Total xp | Bonus over level 1 | Unlocks |
+| --- | --- | --- | --- |
+| 1 | 0 | +0 health, +0.0% damage, +0% repair | — |
+| 2 | 37 | +1 health, +0.6% damage, +1% repair | Lethal grenade slot |
+| 3 | 86 | +2 health, +1.2% damage, +2% repair | Secondary weapon |
+| 4 | 147 | +3 health, +1.8% damage, +3% repair | Perk slot 1 |
+| 5 | 220 | +4 health, +2.4% damage, +4% repair | Tactical grenade slot |
+| 6 | 305 | +5 health, +3.0% damage, +5% repair | Sticky Grenade |
+| 7 | 402 | +6 health, +3.6% damage, +6% repair | Perk slot 2 |
+| 8 | 511 | +7 health, +4.2% damage, +7% repair | Stim Shot |
+| 9 | 632 | +8 health, +4.8% damage, +8% repair | Perk slot 3 |
+| 10 | 765 | +9 health, +5.4% damage, +9% repair | Ability slot 1 |
+| 11 | 910 | +10 health, +6.0% damage, +10% repair | Incendiary Grenade |
+| 12 | 1,067 | +11 health, +6.6% damage, +11% repair | Smoke Grenade |
+| 15 | 1,610 | +14 health, +8.4% damage, +14% repair | Ability slot 2 |
+| 16 | 1,815 | +15 health, +9.0% damage, +15% repair | Plasma Grenade |
+| 17 | 2,032 | +16 health, +9.6% damage, +16% repair | Concussion |
+| 20 | 2,755 | +19 health, +11.4% damage, +19% repair | Ability slot 3 |
+| 21 | 3,020 | +20 health, +12.0% damage, +20% repair | Cluster Grenade |
+| 22 | 3,297 | +21 health, +12.6% damage, +21% repair | EMP Grenade |
+| 25 | 4,200 | +24 health, +14.4% damage, +24% repair | Ability slot 4 |
+| 30 | 5,945 | +29 health, +17.4% damage, +29% repair | Prestige |
+
+**Prestige** (at level 30, up to 10 times): back to level 1, losing the level bonus and the perk and grenade slots until they level again, but keeping their abilities. Each prestige adds +5 maximum health and +3% damage for good, and the first one opens a **wildcard perk slot** that takes any perk. Prestige shows as ★ next to their level.
+
+### Classes
+
+A class is a set-up you can give to anyone in one tap: perks, grenades and abilities as far as their level allows, and the matching weapons from the locker (best tier and weapon level first) if you have them. Six come with the game; save up to eight of your own from the crew screen (**+ Save class**, then name it). Your classes are kept for every run.
+
+| Class | Primary | Secondary | Perks | Grenades | Abilities | Good for |
+| --- | --- | --- | --- | --- | --- | --- |
+| Assault | Assault rifle | Pistol | Scavenger, Stopping Power, Steady Aim | Frag Grenade, Flashbang | War Cry, Second Wind, Breacher, Juggernaut | A rifle, a pistol and more damage. Good at everything. |
+| Medic | SMG | Pistol | Field Medic, Hardened, Tactical Mask | Frag Grenade, Stim Shot | Field Surgeon, Second Wind, Last Stand, Sprinter | Keeps everyone in the room alive. |
+| Engineer | SMG | Melee | Engineer, Hardened, Dead Silence | Incendiary Grenade, Smoke Grenade | Quartermaster, Second Wind, Juggernaut, Last Stand | Fast repairs and firefighting, and hard to kill while doing it. |
+| Breacher | Shotgun | Melee | Lightweight, Bloodlust, Dead Silence | Sticky Grenade, Concussion | Breacher, War Cry, Last Stand, Sprinter | Teleports over and clears rooms. |
+| Marksman | Marksman | Pistol | Scavenger, Stopping Power, Steady Aim | Frag Grenade, Smoke Grenade | Second Wind, Quartermaster, War Cry, Juggernaut | Shoots into the next room before boarders reach them. |
+| Tank | LMG | Launcher | Engineer, Hardened, Tactical Mask | Cluster Grenade, Smoke Grenade | Juggernaut, Last Stand, Second Wind, War Cry | Heavy guns and armour. Holds a door on their own. |
+
+### Perks
+
+Three slots (open at levels 4, 7 and 9), four perks each, plus a wildcard slot after the first prestige. Use a perk enough and its **Pro** version unlocks for everyone, for good.
+
+| Slot | Perk | Effect | Pro version | Pro unlocks after |
+| --- | --- | --- | --- | --- |
+| 1 | Scavenger | Each kill mends their weapon a little. | an extra grenade of each kind every fight. | 20 kills with it |
+| 1 | Lightweight | Move 10% faster. | move 20% faster. | 20 kills with it |
+| 1 | Field Medic | Heals people in the same room 1 health a second. | 2 a second. | 400 health healed with it |
+| 1 | Engineer | Repairs and fights fires 20% faster. | 35% faster. | 30 repairs with it |
+| 2 | Stopping Power | +12% damage. | +20% damage. | 25 kills with it |
+| 2 | Hardened | Take 12% less damage. | 20% less. | 25 kills with it |
+| 2 | Flak Jacket | Grenades hurt them half as much. | grenades barely scratch them (a quarter). | 15 kills with it |
+| 2 | Bloodlust | +8% damage for every kill this fight (up to 3). | up to 5 kills. | 25 kills with it |
+| 3 | Steady Aim | Shots into the next room do 30% more. | 50% more, and 5% critical hits. | 20 kills with it |
+| 3 | Tactical Mask | Flashbangs, smoke and concussion grenades don't affect them. | no weapon can stun them either. | 20 kills with it |
+| 3 | Dead Silence | For the first 4 seconds of a fight, foes can't hurt them. | 7 seconds. | 20 kills with it |
+| 3 | Sleight of Hand | Their secondary does 25% more. | 50% more, and it never wears out. | 20 kills with it |
+
+### Abilities
+
+One ability slot opens at each of levels 10, 15, 20, 25. Abilities are kept through prestige, and no one can take the same ability twice.
+
+| Ability | Effect |
+| --- | --- |
+| Second Wind | Once a fight, when badly hurt, they get 40 health back. |
+| Last Stand | Once a fight, a blow that would kill them leaves them on 1 health and untouchable for 2 seconds. |
+| War Cry | When a fight starts in their room, everyone on their side there does 20% more for 8 seconds. |
+| Field Surgeon | Everyone in their room heals 1.5 health a second. |
+| Breacher | +30% damage aboard an enemy ship. |
+| Quartermaster | All their kit wears out 30% slower. |
+| Juggernaut | +30 maximum health. |
+| Sprinter | Move 15% faster. |
+
+### Grenades
+
+Each crew member throws their lethal and tactical grenade once a fight, automatically, the first time they share a room with a foe. The Scavenger Pro perk gives an extra one of each.
+
+| Kind | Grenade | Level | Effect |
+| --- | --- | --- | --- |
+| Lethal | Frag Grenade | 2 | 25 damage to every foe in the room. |
+| Lethal | Sticky Grenade | 6 | 45 damage to one foe. |
+| Lethal | Incendiary Grenade | 11 | 12 damage to every foe and sets the room on fire. |
+| Lethal | Plasma Grenade | 16 | 30 damage to every foe, and their armour is wrecked. |
+| Lethal | Cluster Grenade | 21 | 18 damage to every foe in the room and the rooms next to it. |
+| Tactical | Flashbang | 5 | Stuns every foe in the room for 2.5 seconds. |
+| Tactical | Stim Shot | 8 | Heals them 35 and they move faster for a while. |
+| Tactical | Smoke Grenade | 12 | Foes in the room do half damage for 6 seconds. |
+| Tactical | Concussion | 17 | Foes are slowed for 5 seconds and stunned for 1. |
+| Tactical | EMP Grenade | 22 | Wrecks drones in the room and shuts down its system for 4 seconds. |
+
+### Attachments
+
+Crew weapons level up across all your runs (kills and time in fights with that weapon), up to level 10. Each weapon level opens attachments for its class; two can be fitted at once.
+
+| Attachment | Weapon level | Fits | Effect |
+| --- | --- | --- | --- |
+| Red Dot Sight | 1 | Assault rifle, SMG, LMG, Shotgun, Pistol, Marksman, Special | +6% damage. |
+| Light Stock | 2 | Assault rifle, SMG, Shotgun, Marksman | Move 6% faster. |
+| Foregrip | 2 | Assault rifle, LMG, SMG, Shotgun | +8% damage. |
+| Extended Mag | 3 | Assault rifle, SMG, LMG, Pistol, Marksman | Wears out 30% slower. |
+| Suppressor | 3 | Assault rifle, SMG, Pistol, Marksman | +30% damage in the first seconds of a fight. |
+| Monofilament Edge | 3 | Melee | Sharper. Much sharper. |
+| Scope | 4 | Assault rifle, Marksman, LMG | Shoots further into the next room. |
+| Laser Sight | 4 | Assault rifle, SMG, Pistol, Shotgun, LMG | 8% chance of a critical hit. |
+| Big Warhead | 4 | Launcher | A bigger bang. |
+| Bayonet | 5 | Assault rifle, Shotgun, Marksman | Close hits make foes bleed. |
+| Hollow Points | 5 | Assault rifle, SMG, Pistol, LMG, Marksman | +12% damage, but wears faster. |
+| Shock Wrap | 5 | Melee | A stun coil round the grip. |
+| Drum Mag | 6 | LMG, SMG, Shotgun, Launcher | Wears out 45% slower. |
+| Incendiary Rounds | 7 | Assault rifle, SMG, LMG, Shotgun, Pistol | Hits can start fires. |
+| Weighted Head | 7 | Melee | Heavier swings, sometimes knocking foes back. |
+| Stun Rounds | 8 | Assault rifle, SMG, Shotgun, Pistol, Marksman | Hits can stun. |
+
+### Crew weapons
+
+Primary weapons are what crew fight with; the secondary takes over when the primary breaks (from level 3). Weapons wear out with use: repair them in the Armoury with a drone part or at a store. Buy them at stores (Armoury tab) or take them from beaten boarders.
+
+| Weapon | Class | Slot | Tier | Cost | Damage | Notes | Description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kestrel AR-7 | Assault rifle | primary | 1 | 45 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | A dependable rifle. Every courier crew has one, and every one jams on a Tuesday. |
+| Vanguard Carbine | Assault rifle | primary | 1 | 50 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | Short and light. Good in narrow corridors. |
+| Lancer Battle Rifle | Assault rifle | primary | 2 | 70 | ×1.55 | +55% melee damage, shoots into neighbouring rooms. | Heavier rounds, slower fire. Hits like a door slamming. |
+| Fang Burst Rifle | Assault rifle | primary | 2 | 65 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | Three-round bursts. Now and then all three find the same spot. |
+| Ionclad Rifle | Assault rifle | primary | 2 | 75 | ×1.45 | +45% melee damage, stuns, shoots into neighbouring rooms. | Fires ionised slugs that make muscles twitch. |
+| Tempest AR | Assault rifle | primary | 3 | 95 | ×1.60 | +60% melee damage, shoots into neighbouring rooms. | Fedoration special forces issue. Spare parts not included. |
+| Harbinger Rifle | Assault rifle | primary | 3 | 100 | ×1.55 | +55% melee damage, cuts bleed 2/s, shoots into neighbouring rooms. | Serrated flechettes. Nasty. |
+| Cobalt Pulse Rifle | Assault rifle | primary | 3 | 105 | ×1.50 | +50% melee damage, stuns, shoots into neighbouring rooms. | A pulse weapon from the Enjinn foundries. Hums politely. |
+| Wasp SMG | SMG | primary | 1 | 40 | ×1.35 | +35% melee damage, shoots into neighbouring rooms. | Buzzes. Stings. Mostly hits the right person. |
+| Ferret Machine Pistol | SMG | primary | 1 | 38 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | Tiny, fast and hard to keep still. |
+| Hornet PDW | SMG | primary | 2 | 60 | ×1.42 | +42% melee damage, shoots into neighbouring rooms. | Personal defence weapon. Defends very personally. |
+| Vortex SMG | SMG | primary | 2 | 62 | ×1.35 | +35% melee damage, shoots into neighbouring rooms. | A spinning magazine and a spinning reputation. |
+| Scythe SMG | SMG | primary | 2 | 66 | ×1.35 | +35% melee damage, cuts bleed 1.5/s, shoots into neighbouring rooms. | Shreds armour and the people inside it. |
+| Blitz Auto | SMG | primary | 3 | 85 | ×1.50 | +50% melee damage, shoots into neighbouring rooms. | For crews who prefer to arrive first. |
+| Mirage Silenced SMG | SMG | primary | 3 | 88 | ×1.35 | +35% melee damage, shoots into neighbouring rooms. | Built-in suppressor. The first they hear of it is the last. |
+| Bulwark LMG | LMG | primary | 1 | 55 | ×1.65 | +65% melee damage, shoots into neighbouring rooms. | A wall of noise and brass. |
+| Ox Squad Gun | LMG | primary | 2 | 75 | ×1.72 | +72% melee damage, shoots into neighbouring rooms. | Needs two people to carry. One will do, grumbling. |
+| Thresher Minigun | LMG | primary | 3 | 110 | ×1.85 | +85% melee damage, shoots into neighbouring rooms. | Spins up, then never stops. Neither does the ringing in your ears. |
+| Warden Suppressor | LMG | primary | 2 | 72 | ×1.65 | +65% melee damage, stuns, shoots into neighbouring rooms. | Not so much aimed as poured. |
+| Hailstorm LMG | LMG | primary | 3 | 105 | ×1.75 | +75% melee damage, shoots into neighbouring rooms. | Tracer rounds. Lots of them. Things catch fire. |
+| Breacher Shotgun | Shotgun | primary | 1 | 45 | ×2.00 | +100% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Opens doors. Opens people. Opens debates. |
+| Mule Double-Barrel | Shotgun | primary | 1 | 40 | ×2.10 | +110% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Two barrels, two chances, then a long reload. |
+| Cyclone Auto-Shotgun | Shotgun | primary | 2 | 70 | ×1.90 | +90% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Drum-fed. Do not stand in front of it. Or near it. |
+| Dragon's Breath | Shotgun | primary | 2 | 72 | ×2.00 | +100% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Incendiary shells. Bring an extinguisher. |
+| Hammerhead Slug Gun | Shotgun | primary | 3 | 95 | ×2.20 | +120% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | One heavy slug. Throws people down corridors. |
+| Tidal Riot Gun | Shotgun | primary | 3 | 90 | ×1.80 | +80% melee damage, stuns, shoots into neighbouring rooms, knocks foes out of the room. | Rubber slugs, mostly. Painfully mostly. |
+| Needle Marksman | Marksman | primary | 1 | 50 | ×1.15 | +15% melee damage, shoots into neighbouring rooms. | Long, thin and very patient. |
+| Longshot DMR | Marksman | primary | 2 | 75 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | Picks off boarders two rooms away. Well, one room. It feels like two. |
+| Hawkeye Rifle | Marksman | primary | 2 | 78 | ×1.15 | +15% melee damage, shoots into neighbouring rooms. | An old hunting rifle with a very good scope. |
+| Personal Railgun | Marksman | primary | 3 | 120 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | Goes through the target, the wall and the target's opinion of you. |
+| Whisper Rifle | Marksman | primary | 3 | 100 | ×1.15 | +15% melee damage, shoots into neighbouring rooms. | Silent. Lethal. Smells faintly of lavender, for some reason. |
+| Hab Flamer | Special | primary | 1 | 55 | ×1.40 | +40% melee damage, shoots into neighbouring rooms. | Meant for burning out fungus. Works on everything. |
+| Arc Caster | Special | primary | 2 | 75 | ×1.30 | +30% melee damage, stuns, shoots into neighbouring rooms. | Throws lightning between people. Everyone dances. |
+| Cryo Projector | Special | primary | 2 | 70 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | Freezes boarders in their tracks. Literally, a bit. |
+| Grav Thrower | Special | primary | 3 | 95 | ×1.35 | +35% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | A little Gravity Hammer that works at range. |
+| Plasma Caster | Special | primary | 3 | 110 | ×1.70 | +70% melee damage, shoots into neighbouring rooms. | Glowing, hissing, lovely. Dangerous to everyone. |
+| Spore Projector | Special | primary | 2 | 65 | ×1.20 | +20% melee damage, cuts bleed 2.5/s, shoots into neighbouring rooms. | Grown, not built. Do not ask by whom. |
+| Fedoration Sidearm | Pistol | secondary | 1 | 25 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | Standard issue. Reliable, unremarkable, always there. |
+| Viper Revolver | Pistol | secondary | 1 | 30 | ×1.40 | +40% melee damage, shoots into neighbouring rooms. | Six shots. Each one a sentence. |
+| Dart Pistol | Pistol | secondary | 1 | 28 | ×1.25 | +25% melee damage, stuns, shoots into neighbouring rooms. | Tranquilliser darts. Very relaxing for the target. |
+| Hand Cannon | Pistol | secondary | 2 | 50 | ×1.55 | +55% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Heavier than it looks. Kicks like a Mantlis. |
+| Auto Pistol | Pistol | secondary | 2 | 45 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | A pistol that wishes it were an SMG. |
+| Flare Pistol | Pistol | secondary | 2 | 35 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | For signalling. And for starting fires on purpose. |
+| Ionic Repeater | Pistol | secondary | 3 | 70 | ×1.45 | +45% melee damage, stuns, shoots into neighbouring rooms. | A Voltan design. Hums a little hymn when it fires. |
+| Gilded Duelist | Pistol | secondary | 3 | 80 | ×1.50 | +50% melee damage, shoots into neighbouring rooms. | A pyrate captain's pride. Polished between shots. |
+| Tube Launcher | Launcher | secondary | 2 | 60 | ×1.00 | +0% melee damage, shoots into neighbouring rooms. | One rocket, one room, one very surprised boarding party. |
+| Grenade Launcher | Launcher | secondary | 2 | 65 | ×1.00 | +0% melee damage, shoots into neighbouring rooms. | Lobs grenades round corners. Mostly round corners. |
+| Swarm Launcher | Launcher | secondary | 3 | 95 | ×1.00 | +0% melee damage, shoots into neighbouring rooms. | A volley of micro-missiles that chase heat. Including yours. Careful. |
+| Foam Launcher | Launcher | secondary | 1 | 40 | ×1.00 | +0% melee damage, stuns, shoots into neighbouring rooms. | Sticky foam that sets in seconds. Non-lethal. Mostly. |
+| Combat Knife | Melee | secondary | 1 | 15 | ×1.40 | +40% melee damage, cuts bleed 1.5/s. | Quick and quiet. |
+| Boarding Hatchet | Melee | secondary | 1 | 22 | ×1.55 | +55% melee damage. | For doors, cables and anyone in the way. |
+| Shock Baton | Melee | secondary | 1 | 20 | ×1.20 | +20% melee damage, stuns. | Security's favourite argument. |
+| Pyrate Cutlass | Melee | secondary | 2 | 40 | ×1.60 | +60% melee damage, cuts bleed 2/s. | Swashbuckling, as advertised. |
+| Glass Shard Blade | Melee | secondary | 3 | 70 | ×1.80 | +80% melee damage, cuts bleed 3/s. | Sharpened by the Glassborn. Hums when it's hungry. |
+| Pebble Maul | Melee | secondary | 2 | 45 | ×1.70 | +70% melee damage, knocks foes out of the room. | A Pebblekin heirloom: a rock on a stick, but a very good rock. |
+| Mantlis Claw Gloves | Melee | secondary | 2 | 50 | ×1.50 | +50% melee damage, cuts bleed 2.5/s. | For people who miss having claws. |
+| Ceremonial Sabre | Melee | secondary | 3 | 75 | ×1.75 | +75% melee damage. | Fedoration officers carry them to parades. You carry one to boarding actions. |
+
+### Health and healing
+
+- **The medbay** heals crew standing in it; more power heals faster. Hurt crew walk there on their own when it is safe. It heals up to their *current* maximum health.
+
+- **Maximum health** comes from their race, plus their level (+1 a level), prestige (+5 each), the Juggernaut ability (+30), a Hearty meal while it lasts, and minus any hunger penalty.
+
+- **Healing in a fight**: the Field Medic perk and Field Surgeon ability heal everyone in their room; the Stim Shot grenade heals the thrower 35; Second Wind gives 40 back once a fight; Last Stand stops a killing blow once.
+
+- **Between fights**: a clone bay (if you have one) heals 20 every jump; stores sell full medical care (Supplies); events that rest or treat the crew heal them and also fill them up.
+
+- **Health rewards and hunger**: because hunger takes maximum health away and the medbay cannot feed anyone, food and the healing events are what get a worn-out crew back to full.
+
+### Food and hunger
+
+Crew eat between jumps, by themselves, hungriest first. Fullness runs from 0 to 100. Every jump costs 4; fighting hand to hand costs about 3.6 a minute; each repair costs 1.5; each kill 2. Anyone under 62 eats at the next jump.
+
+| Fullness | State | Effect |
+| --- | --- | --- |
+| 85+ | Well fed | 5% more damage and repair speed. |
+| 60–84 | Fed | no effect. |
+| 35–59 | Peckish | maximum health 10% lower until they eat. |
+| 15–34 | Hungry | maximum health 25% lower until they eat. |
+| 0–14 | Starving | maximum health 40% lower and 10% slower until they eat. |
+
+**What they eat**, in this order: meals from the ship's Food store (top bar; each fills 35), then the cheapest food in the hold. Goods that Haven's Rest still needs are only eaten by the starving; cooked meals are kept for feasts unless someone is starving (then they fill 70).
+
+| Food in the hold | Fills |
+| --- | --- |
+| Rebuff rations | 40 |
+| Star potato | 25 |
+| Ion berries | 15 |
+| Void pepper | 10 |
+| Moon melon | 45 |
+| Space fish | 30 |
+| Deep eel | 50 |
+| Starfruit | 40 |
+| Frostfire root | 30 |
+| Solar grapes | 20 |
+| Any cooked meal (only when starving) | 70 |
+
+**Getting food**: every run starts with about four meals per crew member; stores sell **Food ×5** under Supplies; half of all beaten ships leave 1–3 meals; events give food or heal-and-feed the crew. Tap **Feed** on the crew screen to feed someone straight away.
+
+**Appetite** depends on race (see Races below): 1 is normal, more means they get hungry faster, 0 means they never eat. Hunger can be turned off in **Settings → Gameplay → Crew hunger**. The tutorial never uses it.
+
+### Skills
+
+Crew improve at what they do. Each skill has two steps, skilled and expert.
+
+| Skill | Practised by | Skilled at | Expert at | Untrained / skilled / expert |
+| --- | --- | --- | --- | --- |
+| Piloting | flying (manning the helm in fights) | 60 | 150 | +5% evasion at the helm / +7% evasion / +10% evasion |
+| Engines | manning engines in fights | 60 | 150 | +5% evasion in Engines / +7% evasion / +10% evasion |
+| Shields | manning shields as they recharge | 20 | 50 | Shields recharge 10% faster / 20% faster / 30% faster |
+| Weapons | manning weapons as they fire | 25 | 60 | Weapons charge 10% faster / 15% faster / 20% faster |
+| Repair | fixing systems, patching breaches | 15 | 40 | Normal repair speed / Repairs 10% faster / Repairs 20% faster |
+| Combat | kills in hand-to-hand fights | 6 | 15 | Normal melee damage / 10% more melee damage / 20% more melee damage |
+
+### Races
+
+| Race | Health | Repair | Combat | Speed | Appetite | Traits |
+| --- | --- | --- | --- | --- | --- | --- |
+| Human | 100 | +0% | +0% | +0% | ×1 | Perfectly average. Learns skills a bit faster. Proud of it. |
+| Pebblekin | 150 | -50% | +0% | -50% | ×1.3 | Huge health and fireproof. Slow on their feet and slower with a wrench. |
+| Enjinn | 100 | +100% | -50% | +0% | ×1 | Wish-granting mechanics. Repair twice as fast, fight like a wet towel. |
+| Voltan | 70 | +0% | +0% | +0% | ×0.5 | Add 1 free power to the system they stand in. Explode when they die. |
+| Sloog | 100 | +0% | +0% | +0% | ×1 | Telepathic: always see enemy crew. Immune to mind control. Smug. |
+| Mantlis | 100 | -50% | +50% | +25% | ×1.2 | Born brawlers. Fast and deadly in a fight, hopeless with tools. |
+| Squawkling | 90 | +50% | +0% | +20% | ×1 | Repeats every order. Repairs fairly fast. |
+| Prismari | 80 | +0% | -20% | +0% | ×0.5 | Crystal people. Immune to mind control, brittle in a fight. |
+| Hivelings | 60 | -20% | +0% | +50% | ×0.8 | Small, quick, learn fast. Fall over easily. |
+| Ember Kin | 110 | -40% | +30% | +0% | ×1 | Walk through fire. Hate vacuum. |
+| Menders | 90 | +20% | -50% | +0% | ×1 | Gentle healers who patch nearby crew. |
+| Vesperi | 75 | +0% | -10% | +35% | ×1 | Small, quick winged folk who pick up any skill twice as fast as they put it down. |
+| Ironclad | 120 | +10% | +10% | -25% | ×0.6 | Walking foundries. Shrug off 30% of weapon damage, move like it too. |
+| Lumen | 85 | -10% | -40% | +0% | never eats | Beings of soft light who slowly heal everyone in the room with them. |
+| Gloomkin | 95 | +0% | +20% | +10% | ×0.7 | Shadow-dwellers who need no air and no one inside their heads. |
+| Archon | 140 | +40% | -50% | -35% | never eats | Builder-constructs left behind by the Precursors. Slow and gentle, but tough, fireproof, need no air and fix anything. |
+| Wisp | 70 | +10% | -30% | +40% | never eats | Drifting will-o'-the-wisps. Fragile, quick, need no air and cannot burn. |
+| Burrowkin | 110 | +30% | -10% | -10% | ×1 | Stocky diggers who fix things by instinct and learn quickly. |
+| Flitter | 60 | -20% | -20% | +60% | ×0.8 | Tiny, fast and very nervous. Great for running errands across the ship. |
+
+### Captain level, rank and renown
+
+**Captain level** rises every run, win or lose, up to 55. Then you can prestige (Career screen) to start again at level 1 with a ★; up to 10 times. Levels clear new ships for the hangar, and prestiges count towards those, so nothing locks again. The title screen shows your level, the bar to the next one and what you earned last run.
+
+| You get xp for | Xp |
+| --- | --- |
+| Each jump | 10 |
+| Each event choice | 12 |
+| Each ship beaten (escaped: 10) | 40 + 10 × sector |
+| Each new sector | 100 |
+| Each Flaggship phase beaten | 250 |
+| Winning the run | 1000 |
+| Losing a run | 50 + 25 per sector crossed |
+| Each boarder killed | 5 |
+| Each repair | 2 |
+| A crew member levelling up | 20 |
+| Each new medal | 50 |
+| Difficulty | Easy ×0.8, Hard ×1.25 |
+
+| Captain level | Total xp |
+| --- | --- |
+| 2 | 125 |
+| 3 | 300 |
+| 5 | 800 |
+| 10 | 2,925 |
+| 15 | 6,300 |
+| 20 | 10,925 |
+| 25 | 16,800 |
+| 30 | 23,925 |
+| 40 | 41,925 |
+| 50 | 64,925 |
+| 55 | 78,300 |
+
+**Rank** (Cadet to Admiral) comes from **renown**, earned at the end of each run (sectors crossed, ships beaten, the Flaggship, a win, crew brought home, story scenes and new endings, more on harder difficulty and alert levels). Ranks bring better send-off gifts and requisition tokens. Renown can also be spent rebuilding Haven's Rest wings without lowering your rank.
+
+| Rank | Renown | Reward |
+| --- | --- | --- |
+| Cadet | 0 | — |
+| Ensign | 60 | Admiral Hale offers three send-off gifts, not two |
+| Lieutenant | 160 | A requisition token: unlock any ship you choose |
+| Lieutenant Commander | 320 | Better send-off gifts: weapons, crew, refits |
+| Commander | 540 | A requisition token: unlock any ship you choose |
+| Captain | 820 | Ask Hale for different gifts, once a run |
+| Commodore | 1,160 | A requisition token: unlock any ship you choose |
+| Rear Admiral | 1,560 | The best send-off gifts: augments, drones, reactor tuning |
+| Vice Admiral | 2,040 | A requisition token: unlock any ship you choose |
+| Admiral | 2,600 | Four send-off gifts to choose from, and Hale salutes you first |
+
+### Ships
+
+41 ships, grouped into classes (layouts A, B and C of each design). The hangar shows what each one needs: a captain level, sometimes a challenge, or a requisition token from a rank.
+
+| Ship | Class | Hull | Reactor | Crew | Captain level | Also needs |
+| --- | --- | --- | --- | --- | --- | --- |
+| The Pestrel | Fedoration Cruiser | 30 | 8 | 3 | 1 | — |
+| The Red Tale | Fedoration Cruiser | 30 | 8 | 4 | 7 | Reach sector 6 flying The Pestrel |
+| The Taurus | Enjinn Cruiser | 30 | 8 | 3 | 4 | Defeat 15 ships in total |
+| The Bortex | Enjinn Cruiser | 30 | 9 | 3 | 10 | Destroy 25 ships flying The Taurus |
+| The Rolling Stone | Pebblekin Cruiser | 30 | 8 | 3 | 5 | Reach sector 4 in any run |
+| The Rock Bottom | Pebblekin Cruiser | 35 | 8 | 3 | 11 | Earn the medal "Fire Starter" |
+| The Zapjudicator | Voltan Cruiser | 28 | 8 | 3 | 8 | Reach sector 5 in any run |
+| The Volt Face | Voltan Cruiser | 26 | 7 | 3 | 13 | Earn the medal "Augmented Reality" |
+| The Slime of War | Sloog Cruiser | 30 | 9 | 3 | 11 | Earn the medal "Hostile Takeover" |
+| The Gastropod | Sloog Cruiser | 30 | 9 | 3 | 16 | Win a run flying The Slime of War |
+| The Preying Mantlis | Mantlis Cruiser | 30 | 9 | 4 | 14 | Earn the medal "Mind Over Matter" |
+| The Basil-isk | Mantlis Cruiser | 30 | 10 | 4 | 20 | Win a run flying The Preying Mantlis |
+| The Peekaboo | Stealth Cruiser | 30 | 8 | 3 | 15 | Reach sector 7 in any run |
+| The Now-You-Don't | Stealth Cruiser | 30 | 9 | 3 | 21 | Win a run flying The Peekaboo |
+| The Glass Cannon | Glassborn Cruiser | 24 | 9 | 3 | 19 | Earn the medal "Through the Looking Glass" |
+| The Pane in the Neck | Glassborn Cruiser | 30 | 8 | 3 | 23 | Win a run flying The Glass Cannon |
+| The Jolly Rover | Pirate Galleon | 28 | 9 | 3 | 17 | Reach sector 5 flying The Black Gull |
+| The Lantern | Scout Skiff | 24 | 7 | 2 | 3 | Reach sector 3 in any run |
+| The Dimmer | Scout Skiff | 26 | 7 | 2 | 9 | Reach sector 5 flying The Lantern |
+| The Anvil | Siege Hulk | 36 | 9 | 3 | 10 | Defeat 60 ships in total |
+| The Hammer | Siege Hulk | 32 | 9 | 2 | 15 | Destroy 30 ships flying The Anvil |
+| The Undertow | Ion Skirmisher | 28 | 8 | 2 | 9 | Destroy 15 ships flying The Taurus |
+| The Riptide | Ion Skirmisher | 28 | 8 | 2 | 14 | Reach sector 6 flying The Undertow |
+| The Beehive | Drone Carrier | 26 | 9 | 2 | 12 | Destroy 30 ships flying The Taurus |
+| The Swarm Queen | Drone Carrier | 26 | 9 | 2 | 17 | Destroy 30 ships flying The Beehive |
+| The Paper Kite | Frontier Courier | 22 | 7 | 2 | 2 | — |
+| The Night Post | Frontier Courier | 24 | 7 | 2 | 8 | Reach sector 4 flying The Paper Kite |
+| The Argument | Frontier Gunboat | 30 | 9 | 3 | 6 | Destroy 20 ships flying The Pestrel |
+| The Rebuttal | Frontier Gunboat | 30 | 9 | 3 | 12 | Destroy 30 ships flying The Argument |
+| The Long Haul | Frontier Ark | 34 | 8 | 5 | 13 | Reach sector 6 in any run |
+| The Second Chance | Frontier Ark | 32 | 8 | 4 | 18 | Reach sector 6 flying The Long Haul |
+| The Long Lance | Beam Frigate | 26 | 9 | 3 | 7 | Defeat 40 ships in total |
+| The Phantom | Infiltrator | 24 | 8 | 3 | 18 | Reach sector 6 flying The Peekaboo |
+| The Juggernaut | Rock Dreadnought | 40 | 8 | 3 | 26 | Defeat 250 ships in total |
+| The Puppeteer's Glove | Mind Cutter | 26 | 9 | 3 | 22 | Destroy 30 ships flying The Preying Mantlis |
+| The Black Gull | Pyrate Corsair | 28 | 8 | 3 | 16 | Defeat 120 ships in total |
+| The Gilded Debt | Pyrate Corsair | 30 | 8 | 3 | 19 | Destroy 30 ships flying The Black Gull |
+| The Crowbar | Boarding Cutter | 26 | 8 | 4 | 20 | Defeat 150 ships in total, Earn the medal "Hostile Takeover" |
+| The Can Opener | Boarding Cutter | 26 | 8 | 3 | 21 | Destroy 25 ships flying The Crowbar |
+| The Turncoat | Rebuff Defector | 32 | 8 | 3 | 24 | Win 3 runs in any ships |
+| The Whistleblower | Rebuff Defector | 26 | 9 | 2 | 25 | Reach sector 7 flying The Turncoat |
+
+### Haven's Rest
+
+Your great-uncle's old station, restored across runs. Collect each wing's goods in any run and send them home from any store (**Trade → Send home**: pick how many with − and +, then Send) or from the station itself. What you send is kept for good. Or rebuild a wing outright with renown.
+
+| Wing | Needs | Or renown | Gives |
+| --- | --- | --- | --- |
+| The Biodome | 5 Star potato, 5 Ion berries, 2 Moon melon | 900 | Grand Greenhouse: every run starts with a third planter and three seed packets, and crops grow faster. |
+| Aquaculture Bay | 6 Space fish, 1 Deep eel | 700 | Every run starts with a fishing rod and two space fish. |
+| The Promenade | 2 Space wine, 3 Sloog silk, 3 Star preserves, 1 Nebula crystal | 1200 | The Intergalactic Market: every store stocks one extra augment. |
+| The Engineering Deck | 400 Scrap, 12 Drone parts | 1200 | The Automated Shipyard: room swaps cost half, and every run starts with +3 max hull. |
+| The Communications Relay | 20 Fuel, 3 Voltan cells, 2 Old books | 1000 | The Gate Network: every run starts with +4 fuel and the first sector's map revealed, and the relay can call you home from any beacon once a sector. |
+| The Smuggler's Fence | 2 Contraband, 3 Pyrate rum, 6 Rebuff rations | 1000 | The Black Market Fence: goods you sell fetch 10% more. |
+| The Cellar | 2 Fruit wine, 1 Void vintage, 1 An epic poem | 1100 | The cellar sells well: every run starts with 60 extra scrap. |
+| The Cantina | 2 Star stew, 2 Space wine, 2 Pyrate rum | 1000 | The Cantina reopens: hire visiting specialists when you call home, and every run starts with one extra trained crew member. |
+
+### Difficulty
+
+| Setting | Scrap | Start scrap | Enemy hull | Your evasion | Fleet | Other |
+| --- | --- | --- | --- | --- | --- | --- |
+| Easy | ×1.4 | +20 | -2 | +10% | ×0.85 | patch 2 hull after fights, boarders ×0.75, Flaggship shields -2 |
+| Normal | ×1 | 0 | 0 | 0% | normal | — |
+| Hard | ×0.8 | -10 | +2 | -5% | normal | — |
+
+Rebuff alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.
+
+### Saves and your data
+
+- **Save slots**: Settings → Profile, or the save button next to Career on the title screen. Up to 5 separate careers on one device, each with its own record, medals, unlocks, captain level, roster, classes and run in progress. Settings are shared.
+
+- **Play this save** switches careers (the game reloads). **Rename** names a save. **Delete** removes another save; on the save you are playing it says **Clear this save** and starts it fresh. Both ask twice.
+
+- **Download all data** saves every save, your settings and your mods to one file. **Load data file** brings it back, on this device or another: the easy way to move from a phone to a Quest. Older single-career backup files (Record screen) still load into the save you are playing.
+
+- **Clear all data** deletes every save, setting and mod on this device (it asks twice).
+
+- The run saves itself between fights. Browsers can clear site data, so download your data now and then.
+
+### Red Dwarf campaign
+
+Red Dwarf: Three Million Years Late is a campaign mod in the library (unofficial fan campaign; all text original). Turn it on in **Mods**, then pick it with the Campaign arrows at the top of the hangar. Fly Starbug 1 or Blue Midget with Lister, Rimmer, Cat, Kryten, after the Simulants who towed Red Dwarf away. Hunger applies to the crew who eat (holograms and mechanoids don't).
+
+| Sector | What it is like |
+| --- | --- |
+| Deep Space | Three million years from Earth and nothing for light years in every direction. Except trouble. |
+| GELF Territory | Genetically engineered lifeforms, all of them armed and most of them cross. |
+| Psi-Moon Belt | Moons that read your mind and reshape themselves to match it. Bring a calm mind. Or any mind. |
+| Simulant Hunting Grounds | The battle group's own backyard. Heavy patrols, heavy guns, and no sense of humour. |
+| The Waxworks Drift | Abandoned theme-park planets, their wax droids still fighting a war nobody remembers starting. |
+| The Backwards Reach | A region where time flows the wrong way. It ends well. Or begins well. Hard to say. |
+| The Time Drift | Stasis leaks, white holes and echoes of things that haven't happened yet. Bring a watch. Bring two. |
+| The Garbage Trail | Three million years of Red Dwarf's rubbish, still drifting in a line across space. Some of it is valuable. Some of it is alive. |
+| The Mirror Sea | A stretch of space so still and polished that every ship sees itself coming. Some of the reflections fly better than you do. |
+
+It has 96 scenes (a story scene in every sector, picked from several each run, plus encounters), 19 enemy ships, 15 trick weapons, 3 drones, 11 augments and 6 personal weapons. Along the way you may meet people who will join you: a hologram navigator and a Simulant who has changed sides.
+
+### Troubleshooting
+
+- **Buttons need two presses in VR**: update to the latest version (tips no longer float in front of the screen and event text appears at once). If it still happens, tell us which screen.
+
+- **Quest flat browser feels hit and miss**: the latest version reads a press the moment the trigger goes down and snaps to the nearest button. Make sure the page has reloaded after an update.
+
+- **Text is too small**: Settings → Accessibility (text size), or Settings → VR console (text size and the magnifier) in VR.
+
+- **My progress is gone**: check the save button on the title screen (you may be on another save). If the browser cleared its data, load your last **Download all data** file.
+
+- **Not enough storage to switch saves**: download your data, then delete a save you no longer need.
+
+- **Crew keep losing health between fights**: they are probably hungry (dot on their chip); buy Food at a store.
+
+- **A mod broke something**: turn it off in Mods; Settings → Gameplay → Allow mod scripts stays off unless you trust a mod.
+
+<!-- guide:end -->
 
 ## What's in the game
 
@@ -574,6 +1118,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/hunger.js` | Crew hunger: food, appetite by race, eating between jumps, the max-health penalty |
 | `js/crewcard.js` | The crew screen: level stat gains, classes (presets and your own), slot pickers |
 | `js/career.js` | Captain level from xp every run, prestige, save slots, download / load / clear all data |
+| `tools/gen-player-guide.js` | Rebuilds this README's Player's guide tables from the game data (run it in the headless test harness) |
 | `js/loadout.js` | Loadouts: 57 crew weapons, classes, attachments and weapon levels, perks and Pro perks, grenades, crew levels, abilities and prestige |
 | `js/roster.js` | The crew roster: saving crew between runs, picking them in the hangar, export and import (file or code) |
 | `js/procgen.js` | Random encounters built from parts, the Story variety setting, and story pacing per game mode |
