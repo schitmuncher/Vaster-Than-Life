@@ -99,7 +99,7 @@ function drawCrewScreen(m){
     T(o.name, lx + 62, y + rh/2 - 8, { s:17, f:FD, w:700, max:lw - 70 });
     T(`Lv ${loLvl(o)}${o.pres ? ' ★' + o.pres : ''}${o.cls && loClassById(o.cls) ? ' · ' + loClassById(o.cls).name : ''}`, lx + 62, y + rh/2 + 12, { s:13, c:C.amber, max:lw - 70 });
     bar(lx + 62, y + rh/2 + 20, lw - 76, 5, o.hp/Math.max(1, o.maxHp), o.hp/o.maxHp > .5 ? C.good : o.hp/o.maxHp > .25 ? C.warn : C.hostile);
-    if(ht && ht.pen){ ctx.beginPath(); ctx.arc(lx + lw - 14, y + 14, 6, 0, 7); ctx.fillStyle = ht.col; ctx.fill(); tip(lx + lw - 24, y + 4, 20, 20, ht.name, ht.text); }
+    if(ht && ht.pen > 0){ ctx.beginPath(); ctx.arc(lx + lw - 14, y + 14, 6, 0, 7); ctx.fillStyle = ht.col; ctx.fill(); tip(lx + lw - 24, y + 4, 20, 20, ht.name, ht.text); }
     region(lx, y, lw, rh, () => { UI.ccCrew = o.id; UI.ccPick = null; }, 'ccl:' + o.id); });
   const x = lx + lw + 24, w = f.x + f.w - 24 - x; let y = f.y + 84;
   if(UI.ccPick){ drawCrewPicker(UI.ccPick, c, x, y, w, f.y + f.h - 20 - y); return; }
@@ -125,8 +125,8 @@ function drawCrewScreen(m){
   const B = loBonus(c), ht = typeof hungerTier==='function' ? hungerTier(c) : null, cw = (w - 40)/5;
   rr(x, y, w, 96, 10); ctx.fillStyle = 'rgba(6,9,18,.55)'; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke();
   const hpCol = c.hp/c.maxHp > .5 ? C.good : c.hp/c.maxHp > .25 ? C.warn : C.hostile;
-  ccStat(x + 16, y + 24, cw - 16, 'Health', `${Math.ceil(c.hp)} / ${c.maxHp}`, c.hungerHp ? `−${c.hungerHp} from hunger` : B.hp ? `+${B.hp} from level${c.pres ? ' and prestige' : ''}` : 'Medbay heals it', hpCol);
-  tip(x, y, cw, 96, 'Health', `Maximum ${c.maxHp + (c.hungerHp || 0)}${B.hp ? `, of which +${B.hp} from level and prestige` : ''}.${c.hungerHp ? ` Hunger is taking ${c.hungerHp} off until they eat.` : ''} The medbay heals up to the maximum; it can't feed anyone.`);
+  ccStat(x + 16, y + 24, cw - 16, 'Health', `${Math.ceil(c.hp)} / ${c.maxHp}`, c.hungerHp > 0 ? `−${c.hungerHp} from hunger` : c.hungerHp < 0 ? `+${-c.hungerHp} from being well fed` : B.hp ? `+${B.hp} from level${c.pres ? ' and prestige' : ''}` : 'Medbay heals it', hpCol);
+  tip(x, y, cw, 96, 'Health', `Maximum ${c.maxHp + (c.hungerHp || 0)}${B.hp ? `, of which +${B.hp} from level and prestige` : ''}.${c.hungerHp > 0 ? ` Hunger is taking ${c.hungerHp} off until they eat.` : c.hungerHp < 0 ? ` Being well fed adds ${-c.hungerHp}.` : ''} The medbay heals up to the maximum; it can't feed anyone.`);
   if(ht){ const fx = x + 16 + cw; ccStat(fx, y + 24, cw - 16, 'Food', ht.name, null, ht.col); bar(fx, y + 62, cw - 40, 8, fullness(c)/100, ht.col, 'rgba(255,255,255,.08)');
     T(`${Math.round(fullness(c))}/100 · ship has ${G.food || 0}`, fx, y + 84, { s:12, c:C.muted, max:cw - 20 });
     tip(fx - 8, y, cw, 96, `Food: ${ht.name}`, `${ht.text} Fighting and repairs make them hungrier. The crew eat by themselves between jumps.`);
@@ -155,10 +155,10 @@ function drawCrewScreen(m){
   // loadout cards
   const lw5 = (w - 4*12)/5, KH = 128, locker = armLocker();
   const wcard = (i, key, slot) => { const cx2 = x + i*(lw5 + 12), it = c[key], d = it && armDef(it), lockL = slot==='secondary' && L < LO_UNLOCK.secondary ? LO_UNLOCK.secondary : 0;
-    ccCard(cx2, y, lw5, KH, { label:slot==='primary' ? 'Primary' : slot==='secondary' ? 'Secondary' : 'Armour', title:lockL ? `Level ${lockL}` : d ? d.name : 'Empty', locked:!!lockL, tc: d ? (it.dur > 0 ? C.ink : C.hostile) : C.muted,
-      subMax:d ? 1 : 2, sub: d ? `${(LO_CLASS[loClass(d)] || {}).name || (d.kind==='suit' ? 'Armour' : '')}${d.kind!=='suit' ? ' · Lv ' + wpnLvl(it.id) : ''}${it.dur > 0 ? '' : ' · BROKEN'}` : `${locker.filter(o => armDef(o) && loFits(armDef(o), slot==='armour' ? 'suit' : slot)).length} in the locker`,
+    ccCard(cx2, y, lw5, KH, { label:slot==='primary' ? 'Primary' : slot==='secondary' ? 'Secondary' : 'Armour', title:lockL ? `Level ${lockL}` : d ? d.name : 'Empty', locked:!!lockL, tc: d ? (armWorn(it) ? C.warn : C.ink) : C.muted,
+      subMax:d ? 1 : 2, sub: d ? `${(LO_CLASS[loClass(d)] || {}).name || (d.kind==='suit' ? 'Armour' : '')}${d.kind!=='suit' ? ' · Lv ' + wpnLvl(it.id) : ''}${armWorn(it) ? ' · WORN' : ''}` : `${locker.filter(o => armDef(o) && loFits(armDef(o), slot==='armour' ? 'suit' : slot)).length} in the locker`,
       click:() => { UI.ccPick = { kind:'kit', key, slot }; }, tipT:d ? d.name : null, tipB:d ? `${d.desc || ''} ${armStatLine(d)}` : '' });
-    if(d){ bar(cx2 + 14, y + 98, lw5 - 28, 5, armFrac(it), it.dur > 0 ? C.good : C.hostile, 'rgba(255,255,255,.08)');
+    if(d){ bar(cx2 + 14, y + 98, lw5 - 28, 5, armFrac(it), armWorn(it) ? C.warn : C.good, 'rgba(255,255,255,.08)');
       if(slot!=='armour'){ it.att = it.att || []; for(let j = 0; j < 2; j++){ const A = it.att[j] && LO_ATT[it.att[j]], ax = cx2 + 10 + j*((lw5 - 20)/2), aw = (lw5 - 20)/2 - 4;
         btn(ax, y + KH - 22, aw, 26, A ? A.name : '+ Add', () => { UI.ccPick = { kind:'att', key, j }; }, { s:11, col:A ? C.good : C.muted }); } } } };
   wcard(0, 'arm', 'primary'); wcard(1, 'side', 'secondary'); wcard(2, 'suit', 'armour');
@@ -187,7 +187,7 @@ function drawCrewPicker(P, c, x, y, w, h){
     opts.push({ id:null, name:'Nothing', sub:cur ? 'Put it back in the locker.' : '', on:!cur, pick:() => loEquip(c, P.key, null) });
     if(cur && armDef(cur)) opts.push({ id:cur.id, name:armDef(cur).name, sub:`Equipped. ${armStatLine(armDef(cur))}`, on:true, pick:() => {} });
     for(const it of armLocker()){ const d = armDef(it); if(!d || !loFits(d, slot)) continue;
-      opts.push({ id:it.id, name:d.name + (it.dur > 0 ? '' : ' (broken)'), tag:`${(LO_CLASS[loClass(d)] || {}).name || ''}${slot!=='suit' ? ' · Lv ' + wpnLvl(it.id) : ''}`, sub:`${d.desc || ''} ${armStatLine(d)}`, pick:() => loEquip(c, P.key, it) }); }
+      opts.push({ id:it.id, name:d.name + (armWorn(it) ? ' (worn)' : ''), tag:`${(LO_CLASS[loClass(d)] || {}).name || ''}${slot!=='suit' ? ' · Lv ' + wpnLvl(it.id) : ''}`, sub:`${d.desc || ''} ${armStatLine(d)}`, pick:() => loEquip(c, P.key, it) }); }
     if(opts.length <= 2) opts.push({ id:'_none', name:'The locker is empty', sub:'Buy weapons and armour at stores (Armoury tab), or win them from boarders.', locked:true }); }
   else if(P.kind==='att'){ const it = c[P.key], d = it && armDef(it); if(!d){ UI.ccPick = null; return; } it.att = it.att || []; const lv = wpnLvl(it.id), cur = it.att[P.j];
     title = `${d.name}: attachment ${P.j + 1}`;
@@ -221,7 +221,7 @@ function drawCrewPicker(P, c, x, y, w, h){
   const r0 = drawRoster; drawRoster = function(){ const sel0 = UI.selCrew; r0(); for(const r of HR){ if(r.y===572 && r.h===66 && r.x < 800 && r.cb && !r._cc){ const cb = r.cb; r._cc = true; r.cb = (...a) => { const was = UI.selCrew; cb(...a); if(was && !UI.selCrew && was===sel0 && G && !G.modal){ openCrewScreen(was); } }; } }
     // the hunger dot on each chip
     if(typeof hungerTier!=='function' || !hungerOn()) return; const list = crewMineAll(), n = list.length, cw = Math.min(160, (760 - 6*(n - 1))/Math.max(1, n));
-    list.forEach((c, i) => { const t = hungerTier(c); if(!t || !t.pen) return; const x = 24 + i*(cw + 6) + cw - 12; ctx.beginPath(); ctx.arc(x, 572 + 12, 6, 0, 7); ctx.fillStyle = t.col; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); }); };
+    list.forEach((c, i) => { const t = hungerTier(c); if(!t || !(t.pen > 0)) return; const x = 24 + i*(cw + 6) + cw - 12; ctx.beginPath(); ctx.arc(x, 572 + 12, 6, 0, 7); ctx.fillStyle = t.col; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); }); };
   // the small card's "more" button opens the full page
   if(typeof drawCrewStrip==='function'){ const s0 = drawCrewStrip; drawCrewStrip = function(c, sh, race, job){ s0(c, sh, race, job); for(const r of HR) if(r.t==='ⓘ' && !r._cc){ r._cc = true; r.cb = () => { if(c.owner==='p') openCrewScreen(c.id); else UI.crewMore = true; }; } }; }
   // the Armoury's Loadouts view and the Ship → Crew tab point here

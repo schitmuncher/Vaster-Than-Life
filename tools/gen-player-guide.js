@@ -16,7 +16,7 @@ P('### Contents',
   '- [Crew: the crew screen](#crew-the-crew-screen) · [Crew levels](#crew-levels) · [Classes](#classes) · [Perks](#perks) · [Abilities](#abilities) · [Grenades](#grenades) · [Attachments](#attachments) · [Crew weapons](#crew-weapons)',
   '- [Health and healing](#health-and-healing) · [Food and hunger](#food-and-hunger) · [Skills](#skills) · [Races](#races)',
   '- [Captain level, rank and renown](#captain-level-rank-and-renown) · [Ships](#ships) · [Haven\'s Rest](#havens-rest) · [Difficulty](#difficulty)',
-  '- [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)');
+  '- [Gentler rules](#gentler-rules) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)');
 
 // ---------------- controls ----------------
 P('### Controls',
@@ -101,24 +101,26 @@ P('### Attachments',
 
 const wRows = LO_WEAPONS.map(([id, name, cls, tier, cost]) => { const d = DATA.arms[id] || {}; return [name, (LO_CLASS[cls] || {}).name, LO_CLASS[cls].slot, tier, cost, `×${(d.dmg || 1).toFixed(2)}`, typeof armStatLine==='function' ? armStatLine(d) : '', d.desc]; });
 P('### Crew weapons',
-  'Primary weapons are what crew fight with; the secondary takes over when the primary breaks (from level 3). Weapons wear out with use: repair them in the Armoury with a drone part or at a store. Buy them at stores (Armoury tab) or take them from beaten boarders.',
+  'Primary weapons are what crew fight with; the secondary (from level 3) takes over when the primary is worn out and it is not. Weapons and armour wear out with use but never break: worn kit works at half its bonus and without its tricks (stuns, bleeding, fire, crits, attachments) until it is mended. Between jumps the crew mend one worn piece with a spare drone part (they keep two in reserve; Settings → Gameplay → Crew mend kit), or repair it yourself in the Armoury or at a store. Buy weapons at stores (Armoury tab) or take them from beaten boarders.',
   table(['Weapon', 'Class', 'Slot', 'Tier', 'Cost', 'Damage', 'Notes', 'Description'], wRows));
 
 // ---------------- health, food, skills, races ----------------
 P('### Health and healing',
   '- **The medbay** heals crew standing in it; more power heals faster. Hurt crew walk there on their own when it is safe. It heals up to their *current* maximum health.',
-  '- **Maximum health** comes from their race, plus their level (+1 a level), prestige (+5 each), the Juggernaut ability (+30), a Hearty meal while it lasts, and minus any hunger penalty.',
+  '- **Maximum health** comes from their race, plus their level (+1 a level), prestige (+5 each), the Juggernaut ability (+30), a Hearty meal while it lasts and being well fed (+10% on Relaxed), and minus any hunger penalty.',
   '- **Healing in a fight**: the Field Medic perk and Field Surgeon ability heal everyone in their room; the Stim Shot grenade heals the thrower 35; Second Wind gives 40 back once a fight; Last Stand stops a killing blow once.',
   '- **Between fights**: a clone bay (if you have one) heals 20 every jump; stores sell full medical care (Supplies); events that rest or treat the crew heal them and also fill them up.',
   '- **Health rewards and hunger**: because hunger takes maximum health away and the medbay cannot feed anyone, food and the healing events are what get a worn-out crew back to full.');
 
 P('### Food and hunger',
   `Crew eat between jumps, by themselves, hungriest first. Fullness runs from 0 to 100. Every jump costs ${HUNGER_JUMP}; fighting hand to hand costs about ${(HUNGER_FIGHT*60).toFixed(1)} a minute; each repair costs ${HUNGER_REPAIR}; each kill ${HUNGER_KILL}. Anyone under ${EAT_BELOW} eats at the next jump.`,
-  table(['Fullness', 'State', 'Effect'], HUNGER_TIERS.map((t, i) => [`${t.at}${i ? '–' + (HUNGER_TIERS[i - 1].at - 1) : '+'}`, t.name, t.text.replace(/^[^:]+: /, '')])),
+  `There are three settings (**Settings → Gameplay → Crew hunger**). **Relaxed** is the default: you can ignore food entirely and only lose out if the crew go properly hungry, while a well-fed crew gets a real bonus. **Hardcore** is full survival: every bit of hunger costs maximum health. **Off**: nobody eats.`,
+  '**Relaxed**', table(['Fullness', 'State', 'Effect'], HUNGER_RELAXED.map((t, i) => [`${t.at}${i ? '–' + (HUNGER_RELAXED[i - 1].at - 1) : '+'}`, t.name, t.text.replace(/^[^:]+: /, '')])),
+  '**Hardcore**', table(['Fullness', 'State', 'Effect'], HUNGER_HARD.map((t, i) => [`${t.at}${i ? '–' + (HUNGER_HARD[i - 1].at - 1) : '+'}`, t.name, t.text.replace(/^[^:]+: /, '')])),
   '**What they eat**, in this order: meals from the ship\'s Food store (top bar; each fills 35), then the cheapest food in the hold. Goods that Haven\'s Rest still needs are only eaten by the starving; cooked meals are kept for feasts unless someone is starving (then they fill 70).',
   table(['Food in the hold', 'Fills'], Object.entries(FOOD_VAL).map(([id, v]) => [(goodsDef(id) || {}).name || id, v]).concat([['Any cooked meal (only when starving)', 70]])),
   '**Getting food**: every run starts with about four meals per crew member; stores sell **Food ×5** under Supplies; half of all beaten ships leave 1–3 meals; events give food or heal-and-feed the crew. Tap **Feed** on the crew screen to feed someone straight away.',
-  '**Appetite** depends on race (see Races below): 1 is normal, more means they get hungry faster, 0 means they never eat. Hunger can be turned off in **Settings → Gameplay → Crew hunger**. The tutorial never uses it.');
+  '**Appetite** depends on race (see Races below): 1 is normal, more means they get hungry faster, 0 means they never eat. The tutorial never uses hunger.');
 
 P('### Skills',
   'Crew improve at what they do. Each skill has two steps, skilled and expert.',
@@ -150,6 +152,13 @@ P('### Difficulty',
   'Rebuff alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.');
 
 // ---------------- saves ----------------
+P('### Gentler rules',
+  '- **Grief**: when someone dies, their best friend, sibling or sweetheart is furious rather than broken: 25% more hand-to-hand damage and 8% slower repairs for three jumps, or until you win a fight.',
+  '- **Cabin fever**: after 11 jumps without a store or home, the crew slowly lose hearts. Nothing else: no damage, no slower work.',
+  '- **Fishing**: the worst a cast can do is lose the fish, tangle the line (no more fishing at that beacon) or snap the rod.',
+  '- **Pet diets**: when your pet gets hungry you can say Not yet; it asks again a couple of jumps later, until you have what you want to feed it.',
+  '- **The void fungus** no longer swallows the oxygen system: it keeps the air sweet itself, and letting it into the reactor costs two bars, not three.');
+
 P('### Saves and your data',
   `- **Save slots**: Settings → Profile, or the save button next to Career on the title screen. Up to ${SLOT_MAX} separate careers on one device, each with its own record, medals, unlocks, captain level, roster, classes and run in progress. Settings are shared.`,
   '- **Play this save** switches careers (the game reloads). **Rename** names a save. **Delete** removes another save; on the save you are playing it says **Clear this save** and starts it fresh. Both ask twice.',
@@ -170,7 +179,8 @@ P('### Troubleshooting',
   '- **Text is too small**: Settings → Accessibility (text size), or Settings → VR console (text size and the magnifier) in VR.',
   '- **My progress is gone**: check the save button on the title screen (you may be on another save). If the browser cleared its data, load your last **Download all data** file.',
   '- **Not enough storage to switch saves**: download your data, then delete a save you no longer need.',
-  '- **Crew keep losing health between fights**: they are probably hungry (dot on their chip); buy Food at a store.',
+  '- **Crew keep losing health between fights**: they are probably hungry (dot on their chip); buy Food at a store, or set Crew hunger to Relaxed or Off.',
+  '- **A weapon says (worn)**: it still works, just weaker. Keep three or more drone parts and the crew mend it between jumps, or repair it in the Armoury.',
   '- **A mod broke something**: turn it off in Mods; Settings → Gameplay → Allow mod scripts stays off unless you trust a mod.');
 
 const text = out.join('\n'); const README = ROOT + 'README.md'; let r = fs.readFileSync(README, 'utf8');

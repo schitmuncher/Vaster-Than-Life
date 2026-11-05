@@ -110,7 +110,7 @@ A detailed reference for everything you do in a run. The tables in this section 
 
 - [Captain level, rank and renown](#captain-level-rank-and-renown) · [Ships](#ships) · [Haven's Rest](#havens-rest) · [Difficulty](#difficulty)
 
-- [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)
+- [Gentler rules](#gentler-rules) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)
 
 ### Controls
 
@@ -325,7 +325,7 @@ Crew weapons level up across all your runs (kills and time in fights with that w
 
 ### Crew weapons
 
-Primary weapons are what crew fight with; the secondary takes over when the primary breaks (from level 3). Weapons wear out with use: repair them in the Armoury with a drone part or at a store. Buy them at stores (Armoury tab) or take them from beaten boarders.
+Primary weapons are what crew fight with; the secondary (from level 3) takes over when the primary is worn out and it is not. Weapons and armour wear out with use but never break: worn kit works at half its bonus and without its tricks (stuns, bleeding, fire, crits, attachments) until it is mended. Between jumps the crew mend one worn piece with a spare drone part (they keep two in reserve; Settings → Gameplay → Crew mend kit), or repair it yourself in the Armoury or at a store. Buy weapons at stores (Armoury tab) or take them from beaten boarders.
 
 | Weapon | Class | Slot | Tier | Cost | Damage | Notes | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -391,7 +391,7 @@ Primary weapons are what crew fight with; the secondary takes over when the prim
 
 - **The medbay** heals crew standing in it; more power heals faster. Hurt crew walk there on their own when it is safe. It heals up to their *current* maximum health.
 
-- **Maximum health** comes from their race, plus their level (+1 a level), prestige (+5 each), the Juggernaut ability (+30), a Hearty meal while it lasts, and minus any hunger penalty.
+- **Maximum health** comes from their race, plus their level (+1 a level), prestige (+5 each), the Juggernaut ability (+30), a Hearty meal while it lasts and being well fed (+10% on Relaxed), and minus any hunger penalty.
 
 - **Healing in a fight**: the Field Medic perk and Field Surgeon ability heal everyone in their room; the Stim Shot grenade heals the thrower 35; Second Wind gives 40 back once a fight; Last Stand stops a killing blow once.
 
@@ -402,6 +402,20 @@ Primary weapons are what crew fight with; the secondary takes over when the prim
 ### Food and hunger
 
 Crew eat between jumps, by themselves, hungriest first. Fullness runs from 0 to 100. Every jump costs 4; fighting hand to hand costs about 3.6 a minute; each repair costs 1.5; each kill 2. Anyone under 62 eats at the next jump.
+
+There are three settings (**Settings → Gameplay → Crew hunger**). **Relaxed** is the default: you can ignore food entirely and only lose out if the crew go properly hungry, while a well-fed crew gets a real bonus. **Hardcore** is full survival: every bit of hunger costs maximum health. **Off**: nobody eats.
+
+**Relaxed**
+
+| Fullness | State | Effect |
+| --- | --- | --- |
+| 85+ | Well fed | 10% more maximum health, and 5% more damage and repair speed. |
+| 60–84 | Fed | no effect. |
+| 35–59 | Peckish | no effect yet. They'll eat at the next jump if there's food. |
+| 15–34 | Hungry | maximum health 10% lower until they eat. |
+| 0–14 | Starving | maximum health 20% lower until they eat. |
+
+**Hardcore**
 
 | Fullness | State | Effect |
 | --- | --- | --- |
@@ -429,7 +443,7 @@ Crew eat between jumps, by themselves, hungriest first. Fullness runs from 0 to 
 
 **Getting food**: every run starts with about four meals per crew member; stores sell **Food ×5** under Supplies; half of all beaten ships leave 1–3 meals; events give food or heal-and-feed the crew. Tap **Feed** on the crew screen to feed someone straight away.
 
-**Appetite** depends on race (see Races below): 1 is normal, more means they get hungry faster, 0 means they never eat. Hunger can be turned off in **Settings → Gameplay → Crew hunger**. The tutorial never uses it.
+**Appetite** depends on race (see Races below): 1 is normal, more means they get hungry faster, 0 means they never eat. The tutorial never uses hunger.
 
 ### Skills
 
@@ -589,6 +603,18 @@ Your great-uncle's old station, restored across runs. Collect each wing's goods 
 
 Rebuff alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.
 
+### Gentler rules
+
+- **Grief**: when someone dies, their best friend, sibling or sweetheart is furious rather than broken: 25% more hand-to-hand damage and 8% slower repairs for three jumps, or until you win a fight.
+
+- **Cabin fever**: after 11 jumps without a store or home, the crew slowly lose hearts. Nothing else: no damage, no slower work.
+
+- **Fishing**: the worst a cast can do is lose the fish, tangle the line (no more fishing at that beacon) or snap the rod.
+
+- **Pet diets**: when your pet gets hungry you can say Not yet; it asks again a couple of jumps later, until you have what you want to feed it.
+
+- **The void fungus** no longer swallows the oxygen system: it keeps the air sweet itself, and letting it into the reactor costs two bars, not three.
+
 ### Saves and your data
 
 - **Save slots**: Settings → Profile, or the save button next to Career on the title screen. Up to 5 separate careers on one device, each with its own record, medals, unlocks, captain level, roster, classes and run in progress. Settings are shared.
@@ -631,7 +657,9 @@ It has 96 scenes (a story scene in every sector, picked from several each run, p
 
 - **Not enough storage to switch saves**: download your data, then delete a save you no longer need.
 
-- **Crew keep losing health between fights**: they are probably hungry (dot on their chip); buy Food at a store.
+- **Crew keep losing health between fights**: they are probably hungry (dot on their chip); buy Food at a store, or set Crew hunger to Relaxed or Off.
+
+- **A weapon says (worn)**: it still works, just weaker. Keep three or more drone parts and the crew mend it between jumps, or repair it in the Armoury.
 
 - **A mod broke something**: turn it off in Mods; Settings → Gameplay → Allow mod scripts stays off unless you trust a mod.
 
@@ -645,11 +673,11 @@ It has 96 scenes (a story scene in every sector, picked from several each run, p
 
 **Hand-to-hand combat**
 - **Personal weapons and armour.** Every crew member has a weapon slot and an armour slot (Ship → **Armoury**). 22 kinds of kit: blunt (wrench, stun baton, gravity hammer that throws foes out of the room), blades (knife, cutlass, fire axe, plasma torch, monofilament sword: cuts bleed), guns (laser pistol, boarding shotgun, pulse rifle: they also shoot into neighbouring rooms) and weird ones (freeze ray, spore pistol, tentacle whip, life-leech glove, mender's staff, a rubber chicken that makes the whole room stop to laugh). Armour: flak vest, boarding plate, void suit (breathe without air), personal shield, auto-medpack.
-- Kit **wears out** with use and **breaks** at zero: repair it with a drone part in the Armoury, at any store's repair shop, or strip it for parts. Tools double up: the fire axe fights fires faster, the torch and wrench repair faster.
+- Kit **wears out** with use. Worn kit keeps working at half its bonus and without its tricks (stuns, bleeding, fire, crits, attachments) until it is mended: the crew do it between jumps with a spare drone part, or repair it in the Armoury, at any store's repair shop, or strip it for parts. Tools double up: the fire axe fights fires faster, the torch and wrench repair faster.
 - **The crew screen.** Tap Crew in the top bar, or tap someone in the crew row twice: level and xp, health, food, damage, repair and speed, class, every weapon, attachment, grenade, perk and ability, each a card you tap to choose from. Six ready-made classes (Assault, Medic, Engineer, Breacher, Marksman, Tank) and up to eight of your own, applied to anyone in one tap. Every crew level adds health, damage and repair speed.
 - **Hunger.** Crew eat between jumps; fighting and repairs make them hungrier, and hungry crew lose maximum health until they eat. Food is bought at stores, salvaged after fights and found in events. Can be turned off in Settings.
 - **Captain level and save slots.** A captain level (to 55, then prestige) that rises every run, win or lose. Up to five separate saves per device, with download, load and clear for all data (Settings → Profile).
-- **Loadouts (a Call of Duty-style class system).** On the crew screen. Each crew member has a primary (assault rifle, SMG, LMG, shotgun, marksman or special) and a secondary (pistol, launcher or melee) that takes over when the primary breaks, each with two attachments; armour; a lethal grenade (frag, sticky, incendiary, plasma, cluster) and a tactical one (flashbang, stim, smoke, concussion, EMP), thrown once a fight; and three perk slots of four perks each, with Pro versions unlocked by using them. 57 new crew weapons. Weapons level up across runs (to 10), unlocking 16 attachments.
+- **Loadouts (a Call of Duty-style class system).** On the crew screen. Each crew member has a primary (assault rifle, SMG, LMG, shotgun, marksman or special) and a secondary (pistol, launcher or melee) that takes over when the primary is worn out, each with two attachments; armour; a lethal grenade (frag, sticky, incendiary, plasma, cluster) and a tactical one (flashbang, stim, smoke, concussion, EMP), thrown once a fight; and three perk slots of four perks each, with Pro versions unlocked by using them. 57 new crew weapons. Weapons level up across runs (to 10), unlocking 16 attachments.
 - **Crew levels and prestige.** Crew earn XP for everything they do and level up to 30, unlocking the secondary, grenades, perk slots and four abilities (Second Wind, Last Stand, War Cry, Field Surgeon, Breacher, Quartermaster, Juggernaut, Sprinter). At 30 they can prestige, up to 10 stars, each a little tougher and stronger for good. Enemy crews throw grenades from sector 4.
 - **The crew roster.** Save crew to the roster and they come back in later runs (Hangar → Crew roster), updated after every run they survive. Export one or all as a file or a paste-able code and import them on another device.
 - **Enemy crews carry kit too**, more and better as you go deeper, and beaten boarders often drop it. You can see who is armed: weapons show in their hands, armour as a ring.
@@ -723,7 +751,7 @@ It has 96 scenes (a story scene in every sector, picked from several each run, p
 - **Contracts.** Every store has a noticeboard (Trade → Contracts), and so does Haven's Rest: deliver cargo to a later sector, beat two ships of a faction, or survey quiet beacons. Up to three at a time, paid in scrap and faction standing; Ship → Log → Contracts tracks them.
 - **Home between sectors.** At an exit beacon you can drop in at Haven's Rest before choosing where to go next.
 - **Faction ships.** Become Revered by a faction and it gives you one of its ship designs for good.
-- **Cabin fever.** Eleven jumps without a port and the crew lose hearts every jump and repair 10% slower; after sixteen, things start to rattle loose. Any store or a trip home cures it.
+- **Cabin fever.** Eleven jumps without a port and the crew slowly lose hearts. That's all: no damage and no slower work. Any store or a trip home cures it.
 - **Madame Ossery** will lease the whole station: every wing restored at once, but she takes rent every run and a fee every time you dock, and no ally will move into a station she owns.
 - **Random encounters.** Many beacons are built on the spot from 16 kinds of people and ships, 12 kinds of trouble and choices made from your ship, crew races and personalities, and cargo, with sector-scaled rewards, traps, surprises, thank-yous and grudges a few jumps later, and short quests. Settings → Gameplay → Story variety: Hand-made, Mixed or Wild. In the open galaxy your story plays up to two scenes a trip, and the chart warns you before you'd strike with scenes unplayed.
 - **Game modes.** Hangar → Mode: Classic (Fleet chase, standard ship), Explorer (open galaxy), Admiral (Fleet chase in a two-deck capital ship) or Grand Voyage (both), or mix the two switches yourself.
@@ -731,7 +759,7 @@ It has 96 scenes (a story scene in every sector, picked from several each run, p
 - **Convoys.** Faction freighters and Rebuff payroll barges crawl across each sector towards a store, shown on the map with their route. Raid one (its faction is furious unless you run dark behind a cloak or stealth plating), escort it for pay and standing, or trade with it. A raided store pays 2.5 times as much for the cargo that never came; an escorted one is well stocked.
 - **Expedition mode.** Pick it in the hangar. No Rebuff Fleet: heat rises as you travel and the Rebuff hunt you harder the hotter you run. Haven's Rest is the hub, and every exit opens a galaxy chart of Near, Far and Deep spokes (1, 2 and 4 fuel). Deep spokes hold Precursor keys; three open the final assault early, and each key held weakens the Flaggship. Classic mode is unchanged.
 - **Ship facilities.** Fit empty rooms (Ship → Layout, at a store or home) with a Hydroponics Bay, Crew Lounge, Galley, Armoury Rack or Vending Machine. Each helps between jumps (planters and growth, hearts and later cabin fever, extra meal portions, kit repairs), and six new room combos use them (The Oasis, Botanist's Delight, Triage Centre, The Galley Garden, Mess Hall, Snack Corner). A vending machine is a bridge: the rooms either side of it count as linked.
-- **Grief.** When someone dies, their best friend, sibling or sweetheart loses hearts and works worse for a while; a quiet scene later lets you help (a shared meal works best).
+- **Grief.** When someone dies, their best friend, sibling or sweetheart is furious: 25% more hand-to-hand damage and slightly slower repairs, for three jumps or until you win a fight and they have their revenge. A quiet scene later lets you help (a shared meal works best).
 - **The Long Lights.** Relight an old relay beacon, or restore the Communications Relay wing, and the map gets a "Relay home" button: once a sector, for 2 fuel, Haven's Rest pulls you home from any beacon.
 - **Supply and demand.** Every sector has a shortage that stores pay double for, and selling lots of one good at one store floods its market.
 - **The blockade.** At maximum heat you can fight through, bribe the commander, or risk an uncharted wormhole. The Mantlis think less of you each time you run from a fight, and peoples who dislike you won't sign on as crew.
@@ -744,7 +772,7 @@ It has 96 scenes (a story scene in every sector, picked from several each run, p
 **Runs that stop being polite**
 - **Ship scars.** Some damage stays: a room that leaks air, a system jammed one bar short, wiring that sparks into fires, a system locked out until you deal with the cause. Events can't end your run, but they can scar it. A badge shows on the room, and any store's dockyard (Supplies) patches it; Enjinn workshops do it cheaper.
 - **Anomalies** bend the rules for a few jumps, each with a climax:
-  - **Void fungus** (nebulas): mends your hull every jump but glows so the Fleet sees you, eats your drone parts, swallows the oxygen system and finally asks for the reactor. Merge with it, burn it out (a Pebblekin can pull it out bare-handed) or vent the ship.
+  - **Void fungus** (nebulas): mends your hull every jump and keeps the air sweet, but glows so the Fleet sees you, nibbles a drone part and finally asks for the reactor (two bars of power, for a living shield). Merge with it, burn it out (a Pebblekin can pull it out bare-handed) or vent the ship.
   - **WARDEN-9**, an Enjinn escort carrier that opens fire on every enemy for you. Some runs it starts "correcting" your course into hazards and finally takes the helm; other runs it's genuinely loyal.
   - **Crystal song** (Glass space): super shields at the start of every fight, engines stuck at 2 power, and your crew slowly turning to glass. Join the choir, smash its heart, or sell it.
   - **The Black Mark**: take the Pyrate King's mark and the Rebuff stop chasing you. Fedoration enforcers hunt you instead, lawful stores shut their shutters, and at the end the King offers to help against the Flaggship, for half your crew.
@@ -859,7 +887,7 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **The galley:** cook crops and fish into five meals. Meals don't heal (the medbay does that): each gives the crew a different edge for three fights. Spicy hash hits harder in a brawl, fish supper charges guns faster, star stew repairs faster (and +15 health), berry pie dodges better, and melon sorbet is a bit of everything. A cook makes two portions and makes the edge last a fight longer.
 - **Crew wishes:** now and then someone starts dreaming about something they love ("Captain. Captain. Void pepper. Think about it."). Bring it to them for a big jump in hearts. A dot on the Ship button tells you when crops are ripe or a wish can be granted.
 - **Friendship hearts:** give gifts (everyone loves and hates different things, and you learn what they love), eat together, survive together. 3 hearts: works 5% better; 6: 10%; 8: +10 health; 10: devoted, and will cheat death once. A gift they love also gives them a burst of practice at their job. The crew card shows what their hearts do.
-- **Fishing** needs a rod (stores sell them in Supplies, and it's one of Hale's send-off gifts) and a fishing spot: 🐟 beacons on the map, nebulas and asteroid fields. Cast as often as you like, but every cast at the same spot risks trouble first: a snagged rock in your hull, a bite, a snapped rod, a live power cell, or a patrol that heard the splashing. The deeper you fish, the rarer the catch. The reeling game is harder too: two tries, smaller zones.
+- **Fishing** needs a rod (stores sell them in Supplies, and it's one of Hale's send-off gifts) and a fishing spot: 🐟 beacons on the map, nebulas and asteroid fields. Cast as often as you like, but every cast at the same spot risks a little trouble first, but only for your fishing: the fish gets away, the line tangles (no more fishing at that beacon), or the rod snaps. The deeper you fish, the rarer the catch. The reeling game is harder too: two tries, smaller zones.
 - **The Harvest Fair** turns up from sector 2: enter your best crop in the show, run a food stall, or take the crew for a night out.
 - **Birthdays** last two jumps. A present then counts three times over and makes them properly good at their job. Forget, and they sulk: 10% worse for three fights. The Ship button lights up when a birthday is on.
 - **Home-life tips** explain the garden, trade goods and hearts the first time they matter.

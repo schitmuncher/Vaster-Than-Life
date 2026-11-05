@@ -45,7 +45,7 @@ const HINTS = {
   shields2:  { title:'Only one shield layer', text:'Enemies from here on fire several shots at once. Upgrade Shields to 4 (two layers) soon: open Ship (C) > Systems.', at:()=>RECT.ship },
   skills:    { title:'Crew learn on the job', text:'Crew who stay on a station (Helm, Engines, Shields, Weapons) gain skill and boost it. Use "Stations" to send everyone back to their posts.' },
   arms:      { title:'Arm your crew', text:'You have personal weapons or armour in the locker. Open Ship (S) → Armoury, pick a crew member\'s slot, then something from the locker. Armed crew win boarding fights far faster.', at:()=>RECT.ship },
-  armbroken: { title:'Broken kit', text:'Someone\'s weapon or armour has broken and does nothing now. Repair it in Ship → Armoury with a drone part, or at a store\'s repair shop.', at:()=>RECT.ship },
+  armbroken: { title:'Worn kit', text:'Someone\'s weapon or armour is worn out: it still works, but weaker and without its tricks. The crew mend it between jumps if you have spare drone parts, or mend it yourself in Ship → Armoury or at a store.', at:()=>RECT.ship },
   tonics:    { title:'Tonics and treats', text:'You have something to give a crew member. Ship → Armoury → Tonics & treats: permanent boosts, skill chips, stims and medkits, given to one person at a time.', at:()=>RECT.ship },
   workshop:  { title:'The workshop', text:'This store sells workshop machines: load one with goods from your hold and it turns them into something worth more while you jump. Ship → Workshop. You can also send goods home to Haven\'s Rest from there, and swap rooms for combos in Ship → Layout.', at:()=>RECT.ship },
   standing:  { title:'They remember you', text:'That changed how a faction sees you. Ship → Factions shows your standing: it sets their store prices, and whether their ships talk or shoot.', at:()=>RECT.ship },
@@ -127,7 +127,7 @@ function checkHints(dt){
     if(!e && G.stats.kills>=1){ const sh = s.systems.shields; if(sh && sh.max < 8 && G.scrap >= upgradeCost('shields', sh.max)) hint('upgrade'); hint('skills'); }
     if(s.hull < s.maxHull*.4) hint('hull');
     if(!e && (G.arms||[]).length && s.crew.some(c => c.owner==='p' && !c.drone && !c.arm)) hint('arms');
-    if(!e && s.crew.some(c => c.owner==='p' && ((c.arm && c.arm.dur <= 0) || (c.suit && c.suit.dur <= 0 && !(DATA.arms[c.suit.id]||{}).medpack)))) hint('armbroken');
+    if(!e && s.crew.some(c => c.owner==='p' && ((c.arm && typeof armWorn==='function' && armWorn(c.arm)) || (c.suit && typeof armWorn==='function' && armWorn(c.suit))))) hint('armbroken');
     if(!e && Object.keys(G.items||{}).length) hint('tonics');
     if(!e && (G.scars||[]).length) hint('scar');
     if(!e && G.anom && G.anom.fever) hint('fever');

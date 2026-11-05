@@ -141,9 +141,9 @@ function mergeTrait(t, p){ return { name:t.name, desc:t.desc, repair:(t.repair||
 /* fishing needs a rod (stores, Mags) and a fishing spot: nebulas, asteroid fields, and quiet beacons marked with a fish on the map.
    You can keep casting, but every cast at the same spot is riskier than the last. */
 function fishSpot(node){ return !!(node && (node.nebula || node.hazard==='asteroid' || node.fishy)); }
-function canFish(node){ return !!(node && G.rod && fishSpot(node) && !G.enemy); }
+function canFish(node){ return !!(node && G.rod && fishSpot(node) && !G.enemy && !node.fishDone); }
 function fishRisk(node){ return Math.min(.7, .06 + .13*((node && node.casts) || 0)); }
-function fishButton(node){ if(!fishSpot(node) || G.enemy) return null;
+function fishButton(node){ if(!fishSpot(node) || G.enemy || (node && node.fishDone)) return null;
   if(!G.rod) return { id:'fish', label:'🎣 Fishing spot (you need a rod)', fn:() => toast('You need a fishing rod. Stores sell them in Supplies, and Mags always has one.') };
   const k = node.casts||0; return { id:'fish', label: k ? `🎣 Cast again · ${Math.round(fishRisk(node)*100)}% risk` : '🎣 Cast a line', fn:startFishing }; }
 /* what bites: deeper casts reach rarer things */
@@ -151,15 +151,13 @@ function rollBite(){ const node = G.map.nodes[G.map.cur], deep = Math.min(3, (no
   return r < (neb ? .3 : .38) - deep*.05 ? 'fish' : r < .5 ? 'eel' : r < .64 ? 'junk' : r < .76 ? 'seeds' : r < .79 + deep*.02 ? 'relic' : 'none'; }
 const BITES = { fish:{ zone:.2, speed:2.6, name:'Something small and quick' }, eel:{ zone:.1, speed:3.8, name:'Something big and angry' }, junk:{ zone:.26, speed:2, name:'Something heavy and lazy' },
   seeds:{ zone:.22, speed:2.3, name:'Something light, drifting' }, relic:{ zone:.07, speed:4.3, name:'Something old, deep and very heavy' } };
-const FISH_TROUBLE = ['snag','bite','rod','noise','spark'];
-/* trouble: the risk you take for one more cast */
+const FISH_TROUBLE = ['away','away','tangle','rod'];
+/* trouble: the risk you take for one more cast. Fishing only ever costs you fishing: the catch, the spot or the rod. */
 function fishTrouble(m){ const node = G.map.nodes[G.map.cur], who = pick(G.ship.crew.filter(c => c.owner==='p' && !c.drone)) || { name:'Someone' }; let t = pick(FISH_TROUBLE), text;
-  if(t==='snag'){ G.ship.hull = Math.max(1, G.ship.hull - 2); text = 'The hook snags a tumbling rock, and the line yanks it straight into your hull. -2 hull.'; }
-  else if(t==='bite'){ if(who.hp) who.hp = Math.max(5, who.hp - 30); text = `Something with far too many teeth comes up the line and bites ${who.name}. -30 health.`; }
-  else if(t==='rod'){ G.rod = false; text = `The line goes tight, then the rod snaps clean in half. ${who.name} looks at the stump for a long time. You'll need a new rod.`; }
-  else if(t==='spark'){ if(typeof igniteRoom==='function') igniteRoom(G.ship, Math.floor(Math.random()*G.ship.rooms.length)); text = 'You reel in a live power cell. It is very much alive. Fire on board!'; }
-  else { text = 'All the splashing has been noticed. A patrol is coming to see what the noise is about.'; G.fishFight = true; }
-  node.casts = (node.casts||0) + 1; m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = [fishButton(node)].filter(Boolean); sfx('alarm'); save();
+  if(t==='away') text = pick([`Something huge takes the bait, the hook and ${who.name}'s pride, and is gone.`, 'The line goes slack. Whatever it was has your bait now, and is welcome to it.']);
+  else if(t==='tangle'){ node.fishDone = true; text = `The line tangles round itself so badly that ${who.name} gives up on this spot. No more fishing at this beacon.`; }
+  else { G.rod = false; text = `The line goes tight, then the rod snaps clean in half. ${who.name} looks at the stump for a long time. You'll need a new rod.`; }
+  node.casts = (node.casts||0) + 1; m.text = m.text ? m.text + '\n\n' + text : text; m._skip = true; m.extra = [fishButton(node)].filter(Boolean); sfx('error'); save();
   if(G.fishFight){ G.fishFight = false; m.btn = 'Battle stations'; m.then = () => startCombat('random', {}); } }
 /* the catch itself; outcome: a bite, 'none' (nothing bit) or 'lost' (it got away) */
 function goFish(m, outcome){

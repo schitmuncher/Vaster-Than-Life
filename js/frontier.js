@@ -79,9 +79,12 @@ function facilityJump(){
 /* ---------------- grief ---------------- */
 (function(){ if(typeof sagaDeath!=='function') return; const d0 = sagaDeath;
   sagaDeath = function(c, sh, cause){ const b = typeof bondOf==='function' ? bondOf(c) : null; d0(c, sh, cause);
-    if(b && b.other && b.other.owner==='p' && b.kind!=='rivals' && G){ const o = b.other; o.grief = 7; if(typeof addHearts==='function') addHearts(o, -200);
-      G.later.push({ event:'fr_grief', jumps:ri(2, 4), star:o.id }); } }; })();
-(function(){ if(typeof bondMult!=='function') return; const b0 = bondMult; bondMult = function(c, kind){ const m = b0(c, kind); return c && c.grief > 0 && (kind==='rep' || kind==='dps') ? m * .88 : m; }; })();
+    if(b && b.other && b.other.owner==='p' && b.kind!=='rivals' && G){ const o = b.other; o.grief = 3; if(typeof addHearts==='function') addHearts(o, -100); toast(`${o.name} is grieving, and furious: they fight harder and repair a little slower until you win a fight or a few jumps pass.`);
+      G.later.push({ event:'fr_grief', jumps:ri(1, 2), star:o.id }); } }; })();
+/* grief is fury, not a slump: +25% hand-to-hand damage, 8% slower repairs, and winning the next fight settles it */
+(function(){ if(typeof bondMult!=='function') return; const b0 = bondMult; bondMult = function(c, kind){ const m = b0(c, kind); return c && c.grief > 0 ? (kind==='dps' ? m * 1.25 : kind==='rep' ? m * .92 : m) : m; }; })();
+(function(){ if(typeof finishCombat!=='function') return; const f0 = finishCombat; finishCombat = function(kind, offer){ const had = !!(G && G.enemy); f0(kind, offer);
+  if(had && kind!=='fled' && G && G.ship) for(const c of G.ship.crew) if(c.owner==='p' && c.grief > 0){ c.grief = 0; toast(`${c.name} has had their revenge. They're ready to carry on.`); } }; })();
 function griefJump(){ for(const c of G.ship.crew) if(c.grief > 0){ c.grief--; if(!c.grief) toast(`${c.name} is starting to smile again.`); } }
 BASE.events.fr_grief = { id:'fr_grief', moment:true, star:'any', once:false, title:'Grief', art:'ship', text:'{crew} hasn\'t said much since the funeral. They sit alone in the mess with a cold cup of tea, turning a keepsake over and over in their hands.',
   choices:[

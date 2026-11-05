@@ -46,10 +46,17 @@ BASE.arms = {
   medpack:  { name:'Auto-Medpack',        kind:'suit',  medpack:60, dur:1, cost:25, tier:1, desc:'Injects the wearer with 60 health the first time they are badly hurt. Then it\'s used up.' }
 };
 const ARM_KIND = { blunt:['Blunt','#d8b06a'], blade:['Blade','#e9eefc'], gun:['Gun','#ff7a5a'], weird:['Weird','#c9a0ff'], suit:['Armour','#5fd3e6'] };
-function armDef(it){ return it && DATA.arms && DATA.arms[it.id] || null; }
-function armLive(it){ return !!(it && it.dur > 0 && armDef(it)); }
+/* kit wears out but never breaks: at the bottom of its durability it is "worn" and still works, at half its bonus and without
+   its tricks (stuns, bleeding, fire, crits, attachments), until someone mends it. One-shot medpacks are still used up. */
+function armDef0(it){ return it && DATA.arms && DATA.arms[it.id] || null; }
+const ARM_WORN = new WeakMap();
+function armWornDef(d){ let w = ARM_WORN.get(d); if(!w){ w = Object.assign({}, d, { dmg:1 + ((d.dmg || 1) - 1)*.5, armor:(d.armor || 0)*.5, repair:d.repair ? 1 + (d.repair - 1)*.5 : d.repair, fire:d.fire ? 1 + (d.fire - 1)*.5 : d.fire,
+  crit:0, stun:0, bleed:0, ignite:0, knock:0, fear:0, leech:0, quick:0, slow:0, splash:(d.splash || 0)*.5, worn:true }); ARM_WORN.set(d, w); } return w; }
+function armWorn(it){ const d = armDef0(it); return !!(d && !d.medpack && it.dur <= 1); }
+function armDef(it){ const d = armDef0(it); return d && it.dur <= 1 && !d.medpack ? armWornDef(d) : d; }
+function armLive(it){ if(it && it.dur <= 0){ const d = armDef0(it); if(d && !d.medpack) it.dur = 1; } return !!(it && it.dur > 0 && armDef(it)); }   // older saves: broken kit becomes worn kit
 function armNew(id, frac){ const d = DATA.arms && DATA.arms[id]; return d ? { id, dur:Math.max(1, Math.round(d.dur * (frac==null ? 1 : frac))) } : null; }
-function armName(it){ const d = armDef(it); return d ? d.name + (it.dur <= 0 ? ' (broken)' : '') : ''; }
+function armName(it){ const d = armDef(it); return d ? d.name + (armWorn(it) ? ' (worn)' : it.dur <= 0 ? ' (used)' : '') : ''; }
 function armFrac(it){ const d = armDef(it); return d ? clamp(it.dur / d.dur, 0, 1) : 0; }
 function armLocker(){ return G ? (G.arms = G.arms || []) : []; }
 function armAllowed(c){ return c && !c.drone; }
@@ -59,7 +66,8 @@ function armTake(c){ const d = armLive(c.suit) ? armDef(c.suit) : null; return d
 function armRepair(c){ const d = armLive(c.arm) ? armDef(c.arm) : null; return d && d.repair ? d.repair : 1; }
 function armFire(c){ const d = armLive(c.arm) ? armDef(c.arm) : null; return d && d.fire ? d.fire : 1; }
 function armVac(c){ const d = armLive(c.suit) ? armDef(c.suit) : null; return !!(d && d.vac); }
-function wear(it, c, n){ if(!it || it.dur <= 0) return; it.dur -= n; if(it.dur <= 0){ it.dur = 0; if(c.owner==='p' && G && G.ship.crew.includes(c)) toast(`${c.name}'s ${armDef(it).name} has broken. Repair it in Ship → Armoury.`); } }
+function wear(it, c, n){ if(!it || it.dur <= 0) return; const d0 = armDef0(it); if(d0 && d0.medpack){ it.dur = Math.max(0, it.dur - n); return; }
+  const was = it.dur > 1; it.dur = Math.max(1, it.dur - n); if(was && it.dur <= 1 && c && c.owner==='p' && G && G.ship.crew.includes(c)) toast(`${c.name}'s ${d0 ? d0.name : 'kit'} is worn: still works, but weaker. ${SET.autoMaintain===false ? 'Mend it in the Armoury.' : 'The crew mend it between jumps.'}`); }
 /* one attacker, one target, one tick of melee (called from the fight loop) */
 function armHit(a, tgt, dt, dealt, sh, room){
   const d = armLive(a.arm) ? armDef(a.arm) : null;
@@ -117,7 +125,7 @@ function allKit(){ const out = []; for(const it of armLocker()) out.push({ it, w
 function drawArmIcon(px, py, rad, c, face){
   if(c.drone) return; const d = c.arm && armDef(c.arm), s = c.suit && armDef(c.suit);
   if(s && c.suit.dur > 0 && !s.medpack){ ctx.beginPath(); ctx.arc(px, py, rad*1.05, Math.PI*1.1, Math.PI*1.9); ctx.strokeStyle = hexA(ARM_KIND.suit[1], .8); ctx.lineWidth = 2; ctx.stroke(); }
-  if(!d) return; const broken = c.arm.dur <= 0, col = broken ? '#5b6378' : (ARM_KIND[d.kind] || ARM_KIND.weird)[1];
+  if(!d) return; const broken = armWorn(c.arm), col = broken ? '#5b6378' : (ARM_KIND[d.kind] || ARM_KIND.weird)[1];
   const hx = px + face*rad*.95, hy = py + rad*.15, L = rad*1.1;
   ctx.save(); ctx.translate(hx, hy); ctx.scale(face, 1); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineCap = 'round';
   if(d.kind==='blunt'){ ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(L*.4, -L*.8); ctx.stroke(); ctx.fillRect(L*.25, -L*1.05, L*.4, L*.32); }
@@ -140,7 +148,7 @@ function drawArmouryTab(f, cx, y0){
   const slot = (c, k, x, y, w) => { const it = c[k], d = armDef(it), on = sel && sel.c===c.id && sel.k===k;
     rr(x, y, w, 52, 8); ctx.fillStyle = on ? hexA(C.amber,.16) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = on ? C.amber : C.line; ctx.lineWidth = on ? 2.5 : 1.2; ctx.stroke();
     region(x, y, w, 52, () => { UI.armSel = on ? null : { c:c.id, k }; });
-    if(d){ T(d.name, x+12, y+22, { s:15, f:FD, w:700, c: it.dur > 0 ? C.ink : C.hostile, max:w-24 }); bar(x+12, y+34, w-24, 7, armFrac(it), it.dur <= 0 ? C.hostile : armFrac(it) > .4 ? C.good : C.warn);
+    if(d){ T(d.name + (armWorn(it) ? ' (worn)' : ''), x+12, y+22, { s:15, f:FD, w:700, c: armWorn(it) ? C.warn : C.ink, max:w-24 }); bar(x+12, y+34, w-24, 7, armFrac(it), armWorn(it) ? C.warn : armFrac(it) > .4 ? C.good : C.warn);
       tip(x, y, w, 52, d.name, `${(ARM_KIND[d.kind]||[''])[0]}. ${d.desc} ${armStatLine(d)} Condition: ${Math.round(armFrac(it)*100)}%.`); }
     else T(k==='arm' ? 'No weapon' : 'No armour', x+12, y+32, { s:14, c:C.muted }); };
   crew.slice(0, 8).forEach((c, i) => { const y = y0+30 + i*62;
@@ -153,8 +161,8 @@ function drawArmouryTab(f, cx, y0){
   const per = 7, pages = Math.max(1, Math.ceil(L.length/per)); UI.armPage = clamp(UI.armPage||0, 0, pages-1);
   L.slice(UI.armPage*per, UI.armPage*per + per).forEach((it, i) => { const d = armDef(it); if(!d) return; const y = y0+76 + i*70, kind = ARM_KIND[d.kind] || ARM_KIND.weird;
     rr(lx+14, y, lw-28, 62, 8); ctx.fillStyle = C.panel2; ctx.fill();
-    T(d.name, lx+30, y+24, { s:16, f:FD, w:700, c: it.dur > 0 ? C.ink : C.hostile, max:220 }); T(kind[0].toUpperCase(), lx+30, y+46, { s:11, f:FD, w:700, c:kind[1] });
-    bar(lx+90, y+40, 140, 7, armFrac(it), it.dur <= 0 ? C.hostile : C.good); tip(lx+14, y, 240, 62, d.name, `${d.desc} ${armStatLine(d)}`);
+    T(d.name + (armWorn(it) ? ' (worn)' : ''), lx+30, y+24, { s:16, f:FD, w:700, c: armWorn(it) ? C.warn : C.ink, max:220 }); T(kind[0].toUpperCase(), lx+30, y+46, { s:11, f:FD, w:700, c:kind[1] });
+    bar(lx+90, y+40, 140, 7, armFrac(it), armWorn(it) ? C.warn : C.good); tip(lx+14, y, 240, 62, d.name, `${d.desc} ${armStatLine(d)}`);
     const want = sel && ((sel.k==='suit') === (d.kind==='suit'));
     btn(lx+262, y+12, 110, 38, 'Equip', () => { const c = s.crew.find(x => x.id===sel.c); if(!c) return; const old = c[sel.k]; c[sel.k] = it; L.splice(L.indexOf(it), 1); if(old) L.push(old); sfx('click'); }, { s:14, disabled:!want, fill:!!want });
     btn(lx+380, y+12, 110, 38, 'Repair · 1 part', () => armRepairItem(it), { s:12, disabled:it.dur >= d.dur || G.parts < 1 });
@@ -163,7 +171,7 @@ function drawArmouryTab(f, cx, y0){
   // the selected slot
   if(sel){ const c = s.crew.find(x => x.id===sel.c), it = c && c[sel.k];
     if(c && it){ const by = y0+600; btn(lx, by, 200, 44, 'Take it off', () => { L.push(it); c[sel.k] = null; UI.armSel = null; }, { s:14 }); btn(lx+210, by, 200, 44, 'Repair · 1 part', () => armRepairItem(it), { s:14, disabled:it.dur >= armDef(it).dur || G.parts < 1 }); } }
-  para('Weapons multiply a crew member\'s damage in hand-to-hand fights, and some have tricks: stuns, bleeding, guns that shoot into the next room. Armour soaks up melee damage. Everything wears out with use and breaks at zero. Repair it here with a drone part, or at any store.', cx, y0+570, 720, { s:13, lh:18, c:C.muted, max:4 });
+  para('Weapons multiply a crew member\'s damage in hand-to-hand fights, and some have tricks: stuns, bleeding, guns that shoot into the next room. Armour soaks up melee damage. Everything wears out with use. Worn kit still works, at half its bonus and without its tricks, until it is mended: here with a drone part, at any store, or by the crew between jumps (they keep two parts in reserve).', cx, y0+570, 720, { s:13, lh:18, c:C.muted, max:4 });
 }
 function armStatLine(d){ if(!d) return ''; const t = [];
   if(d.dmg) t.push(`${d.dmg >= 1 ? '+' + Math.round((d.dmg-1)*100) : Math.round((d.dmg-1)*100)}% melee damage`);
@@ -202,3 +210,10 @@ Object.assign(BASE.events, {
     { text:'Report him to the authorities.', effect:{ text:'There\'s a small reward.', scrap:15 } } ] }
 });
 SENDOFF.push({ id:'sidearms', t:1, text:'A crate of sidearms and armour for the crew.', fx:{ arm:['pistol', 'knife', 'vest'] } });
+
+/* idle hands: between jumps the crew mend one worn or badly worn piece of kit, keeping two drone parts in reserve (Settings → Gameplay) */
+function armAutoMaintain(){ if(!G || !G.ship || SET.autoMaintain===false || (G.parts || 0) < 3) return;
+  let best = null; for(const c of G.ship.crew) if(c.owner==='p' && !c.drone) for(const k of ['arm', 'side', 'suit']){ const it = c[k], d = it && armDef0(it); if(!d || d.medpack) continue; const f = it.dur / (d.dur || 1); if(f < .35 && (!best || f < best.f)) best = { c, it, d, f }; }
+  for(const it of armLocker()){ const d = armDef0(it); if(!d || d.medpack) continue; const f = it.dur / (d.dur || 1); if(f <= 1/(d.dur || 1) + .001 && !best) best = { c:null, it, d, f }; }
+  if(!best) return; G.parts--; best.it.dur = best.d.dur; toast(`The crew mended ${best.c ? best.c.name + '\'s' : 'a'} ${best.d.name} between jumps (1 drone part).`); }
+(function(){ if(typeof homeJump==='function'){ const j0 = homeJump; homeJump = function(){ j0(); try{ armAutoMaintain(); }catch(e){} }; } })();

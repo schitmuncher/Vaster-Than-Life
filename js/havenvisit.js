@@ -53,11 +53,10 @@ function lockerTake(i){ const id = locker()[i]; if(!id || !DATA.weapons[id]) ret
 function feverJump(node){
   if(['store','haven','base'].includes(node && node.type)){ G.away = 0; if(G.anom) delete G.anom.fever; return; }
   G.away = (G.away || 0) + 1; if(G.away < 11 || (typeof campDef==='function' && campDef())) return; G.anom = G.anom || {}; G.anom.fever = true;
-  for(const c of G.ship.crew) if(c.owner==='p' && !c.drone && typeof addHearts==='function') addHearts(c, -25);
-  if(G.away===11) toast('Cabin fever: eleven jumps without a port. The crew are getting short with each other. Find a store, or go home.');
-  if(G.away >= 16 && Math.random() < .08 && typeof addScar==='function'){ const sc = addScar(pick(['sparky','leaky'])); if(sc) toast(`Something has rattled loose after so long out here: ${scarName(sc)}.`); }
+  for(const c of G.ship.crew) if(c.owner==='p' && !c.drone && typeof addHearts==='function') addHearts(c, -10);   // just a little friction: no damage, no slower repairs
+  if(G.away===11) toast('Cabin fever: eleven jumps without a port. The crew are getting short with each other (they slowly lose hearts). Any store, or home, cures it.');
 }
-if(typeof ANOM_INFO!=='undefined') ANOM_INFO.fever = { name:'Cabin fever', label:() => `Cabin fever · ${G.away} jumps`, col:'#ff8a5a', text:() => `${G.away} jumps since the last port. The crew lose hearts every jump and repair 10% slower; after 16 jumps things start to rattle loose. Any store, or Haven's Rest, cures it.` };
+if(typeof ANOM_INFO!=='undefined') ANOM_INFO.fever = { name:'Cabin fever', label:() => `Cabin fever · ${G.away} jumps`, col:'#ff8a5a', text:() => `${G.away} jumps since the last port. The crew slowly lose hearts (friendship) each jump. Nothing else: no damage, no slower work. Any store, or Haven's Rest, cures it.` };
 
 /* ---------------- run start: the Cantina's recruit, Ossery's rent ---------------- */
 function havenRunStart(){

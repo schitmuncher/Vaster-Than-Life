@@ -453,7 +453,8 @@ function drawSettings(){
       onoff('Captain\'s tips', 'hints', true, 'Short tips the first time each mechanic comes up.');
       btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
-      onoff('Crew hunger', 'hunger', true, 'Crew eat between jumps. Fighting and repairs make them hungrier, and hungry crew lose maximum health until they eat. Buy food at any store.');
+      onoff('Crew mend kit', 'autoMaintain', true, 'Between jumps the crew mend one worn or badly worn weapon or armour, using a drone part, as long as you have three or more. Turn off to do it yourself in the Armoury.');
+      { if(SET.hunger===true) SET.hunger = 'relaxed'; choice('Crew hunger', 'hunger', [[false,'Off'],['relaxed','Relaxed'],['hardcore','Hardcore']], 'relaxed', 'Crew eat between jumps, by themselves. Relaxed: a well-fed crew gets more health and works harder, and only real hunger costs health. Hardcore: every bit of hunger costs maximum health, and the starving slow down. Off: nobody eats.'); }
       head('Content');
       choice('Story variety', 'storyMix', [['classic','Hand-made'],['mixed','Mixed'],['wild','Wild']], 'mixed', 'How many beacons are generated on the spot (new people, new trouble, choices built from your ship and crew) rather than hand-written. Mixed is about a third; Wild is most. Campaign mods always use their own events.');
       onoff('Unlock all ships', 'unlockAll', false, 'Skip the unlock conditions and pick any ship.');
@@ -468,7 +469,6 @@ function drawSettings(){
       head('Pace');
       choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down for more time to think and aim.');
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
-      onoff('Crew hunger', 'hunger', true, 'Crew eat between jumps. Fighting and repairs make them hungrier, and hungry crew lose maximum health until they eat. Buy food at any store.');
       head('Controls'); y += 12;
       note('Game controller: the d-pad jumps between buttons and rooms, the left stick moves a cursor, A selects, B goes back, Start pauses. X holds fire, Y opens the map, LB and RB pick weapons, LT sends crew to stations, RT toggles autofire, View opens the ship. Keyboard: the arrow keys move the same way and Enter selects.');
       break;

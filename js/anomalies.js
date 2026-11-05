@@ -163,7 +163,7 @@ function anomStoreBlock(node){
 
 /* ---------------- crew bonds in the same room ---------------- */
 function bondMult(c, kind){
-  const fever = kind==='rep' && G && G.anom && G.anom.fever && c && c.owner==='p' ? .9 : 1;   // cabin fever (havenvisit.js)
+  const fever = 1;   // cabin fever no longer slows anyone (havenvisit.js)
   if(!c || !c.bond || c.drone) return fever; const o = typeof crewById==='function' ? crewById(c.bond.id) : null; if(!o || o.room!==c.room || o.hp <= 0 || o.owner!==c.owner) return fever;
   if(c.bond.kind==='rivals') return (kind==='dps' ? 1.25 : .6) * (kind==='rep' && G && G.anom && G.anom.fever ? .9 : 1);   // showing off in a fight, arguing over the wrench
   return 1.15 * fever; }
@@ -232,12 +232,12 @@ const ANOM_EVENTS = {
     { text:'Bring it aboard. It mends things.', effect:{ text:'The spore settles into a vent and starts to grow. By morning the scorch marks in the corridor are gone, and the ship smells faintly of mushrooms.', anom:{ fungus:1 }, later:{ event:'vf_spread', jumps:3 } } },
     { text:'{who} has seen this before.', req:{ race:'sloog' }, effect:{ text:'"Hollow Bloom," says {who}. "It eats ships. Slowly, kindly, completely." {who} seals a sample in a jar instead, and a Sloog emporium will pay well for it.', scrap:40 } },
     { text:'Leave it alone.', effect:{ text:'The spore drifts on. {crew} sulks for an hour.' } } ] },
-  vf_spread:{ pack:'anom', questOnly:true, title:'The fungus spreads', art:'ship', text:'The fungus is in every vent now. It has eaten your spare drone parts, swallowed the oxygen system whole and started to glow. The air is fine; better than fine. But the glow can be seen from a long way off.', choices:[
-    { text:'Let it grow.', effect:{ text:'The ship hums with something like contentment.', parts:-3, anom:{ fungus:2 }, scar:{ kind:'locked', sys:'oxygen', why:'Smothered by the fungus.' }, later:{ event:'vf_bloom', jumps:3 } } },
-    { text:'Cut it back with knives and buckets.', effect:{ text:'Hot, horrible work. The crew come out coughing spores, but the fungus is pushed back from the oxygen pumps. It will be back.', parts:-3, crewHurt:15, later:{ event:'vf_bloom', jumps:4 } } },
+  vf_spread:{ pack:'anom', questOnly:true, title:'The fungus spreads', art:'ship', text:'The fungus is in every vent now. It has nibbled a spare drone part, wrapped itself round the oxygen pumps and started to glow. The air is fine; better than fine. But the glow can be seen from a long way off.', choices:[
+    { text:'Let it grow.', effect:{ text:'The ship hums with something like contentment. The fungus keeps the air sweet by itself now, even when the oxygen system is damaged.', parts:-1, anom:{ fungus:2 }, later:{ event:'vf_bloom', jumps:3 } } },
+    { text:'Cut it back with knives and buckets.', effect:{ text:'Hot, horrible work. The crew come out coughing spores, but the fungus is pushed back from the oxygen pumps. It will be back.', crewHurt:10, later:{ event:'vf_bloom', jumps:4 } } },
     { text:'{who} scrapes it off with bare stone hands.', req:{ race:'pebblekin' }, effect:{ text:'The fungus can\'t get a grip on {who}. The pumps stay clear.', parts:-1, later:{ event:'vf_bloom', jumps:4 } } } ] },
   vf_bloom:{ pack:'anom', questOnly:true, title:'The bloom', art:'ship', text:'The fungus has reached the reactor. It pulses in time with it. It is asking, as clearly as anything without a mouth can ask, to be let in.', choices:[
-    { text:'Let it in.', effect:{ text:'The reactor goes green. You lose three bars of power for good, and gain something that throws a living shield around the ship at the start of every fight.', reactor:-3, augment:'bloom_heart', anom:{ fungus:'merged' }, unscar:'locked' } },
+    { text:'Let it in.', effect:{ text:'The reactor goes green. You lose two bars of power for good, and gain something that throws a living shield around the ship at the start of every fight.', reactor:-2, augment:'bloom_heart', anom:{ fungus:'merged' }, unscar:'locked' } },
     { text:'Burn it out with the fire suppression reversed.', effect:{ text:'Fire everywhere, on purpose. When it\'s over the fungus is ash, the wiring is ruined and the crew are singed. In the ash of the reactor room: a seed pod that fires like a gun.', fire:true, crewHurt:20, damageSystem:'random', scar:'sparky', anom:{ fungus:null }, unscar:'locked', weapon:'spore_cannon' } },
     { text:'{who} walks into the fire and pulls it out by the roots.', req:{ race:'pebblekin' }, effect:{ text:'{who} is fireproof and very annoyed. The fungus comes out in one long rope. {who} keeps a seed pod as a souvenir; it fires like a gun.', anom:{ fungus:null }, unscar:'locked', weapon:'spore_cannon' } },
     { text:'Vent the whole ship to space.', effect:{ text:'Every door, every airlock. The fungus freezes and dies. So, nearly, does the crew. One room never quite seals again.', crewHurt:30, scar:'leaky', anom:{ fungus:null }, unscar:'locked' } } ] },
@@ -312,6 +312,11 @@ const ANOM_EVENTS = {
     { text:'Feed it drone parts.', req:{ parts:2 }, cost:{ parts:2 }, effect:{ text:'{pet} crunches through the parts and starts taking apart anything broken, then putting it back together better.', petEvo:'fixer' } },
     { text:'Feed it missiles. Carefully.', req:{ missiles:2 }, cost:{ missiles:2 }, effect:{ text:'{pet} swallows a warhead whole and burps a small explosion. It now spits things at enemy ships.', petEvo:'ballistic' } },
     { text:'Feed it scrap metal.', req:{ scrap:25 }, cost:{ scrap:25 }, effect:{ text:'{pet} grows a shell of riveted plates and starts welding dents shut.', petEvo:'armoured' } },
-    { text:'Feed it a proper meal.', req:{ goodsKind:'meal' }, effect:{ text:'{pet} eats like a king, and now everyone who sits with it feels better.', eatGoods:'meal', petEvo:'gourmet' } } ] }
+    { text:'Feed it a proper meal.', req:{ goodsKind:'meal' }, effect:{ text:'{pet} eats like a king, and now everyone who sits with it feels better.', eatGoods:'meal', petEvo:'gourmet' } },
+    { text:'Not yet. Choose later, when you have what you want to give it.', effect:{ text:'{pet} sulks, eats a sock, and waits. It will ask again in a couple of jumps, and keep asking until you decide.', later:{ event:'pet_diet_again', jumps:2 } } } ] }
 };
+/* the diet can wait: the same choice comes back until you make it */
+ANOM_EVENTS.pet_diet_again = Object.assign({}, ANOM_EVENTS.pet_diet, { questOnly:true, once:false, weight:0, minSector:1, maxSector:9, title:'{pet} is still hungry',
+  text:'{pet} the {petkind} is back at the galley door, looking at you. It has been patient. Mostly. What it eats now still decides what it becomes.',
+  choices:ANOM_EVENTS.pet_diet.choices.map(c => c.effect && c.effect.later ? Object.assign({}, c, { effect:Object.assign({}, c.effect, { later:{ event:'pet_diet_again', jumps:2 } }) }) : c) });
 Object.assign(BASE.events, ANOM_EVENTS);

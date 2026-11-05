@@ -118,7 +118,7 @@ function wpnAddXP(id, n){ if(!id || !n) return; PROFILE.wxp = PROFILE.wxp || {};
   if(a > b && DATA.arms[id]){ const un = Object.entries(LO_ATT).filter(([k, A]) => A.lvl===a && A.cls.includes(loClass(DATA.arms[id]))).map(([k, A]) => A.name); toast(`${DATA.arms[id].name} is level ${a}${un.length ? ': ' + un.join(', ') + ' unlocked' : ''}.`); } }
 function attFor(d){ const cl = loClass(d); return Object.keys(LO_ATT).filter(k => LO_ATT[k].cls.includes(cl)); }
 function attOn(it, k){ return !!(it && it.att && it.att.includes(k)); }
-function attSum(it, key){ let v = 0; for(const k of (it && it.att) || []) if(LO_ATT[k] && LO_ATT[k].fx[key]) v += LO_ATT[k].fx[key]; return v; }
+function attSum(it, key){ let v = 0; if(it && it.dur <= 1 && key!=='wear') return 0; for(const k of (it && it.att) || []) if(LO_ATT[k] && LO_ATT[k].fx[key]) v += LO_ATT[k].fx[key]; return v; }
 
 /* ---------------- perks ---------------- */
 const LO_PERKS = {
@@ -185,7 +185,9 @@ if(typeof ACHIEVEMENTS!=='undefined' && !ACHIEVEMENTS.some(a => a.id==='first_pr
 
 /* ---------------- in a fight ---------------- */
 function loSideOk(c){ return c.owner!=='p' || loLvl(c) >= LO_UNLOCK.secondary; }   // your crew carry a secondary from level 3
-function loActive(c){ if(armLive(c.arm)) return c.arm; if(c.side && armLive(c.side) && loSideOk(c)) return c.side; return null; }
+/* the secondary takes over when the primary is missing, or worn out while the secondary is still in good shape */
+function loPrimDown(c){ const w = it => typeof armWorn==='function' && armWorn(it); return !armLive(c.arm) || (w(c.arm) && c.side && armLive(c.side) && !w(c.side)); }
+function loActive(c){ if(!loPrimDown(c)) return c.arm; if(c.side && armLive(c.side) && loSideOk(c)) return c.side; return armLive(c.arm) ? c.arm : null; }
 function loActiveDef(c){ const it = loActive(c); return it ? armDef(it) : null; }
 function loFightingT(c){ return c._fT || 0; }
 (function(){
@@ -202,7 +204,7 @@ function loFightingT(c){ return c._fT || 0; }
   const r0 = armRepair; armRepair = function(c){ let r = r0(c); if(perkOn(c, 'engineer')) r *= perkPro('engineer') ? 1.35 : 1.2; return r; };
   const f0 = armFire; armFire = function(c){ let r = f0(c); if(perkOn(c, 'engineer')) r *= perkPro('engineer') ? 1.35 : 1.2; return r; };
   // the secondary takes over when the primary breaks; tricks from the weapon in hand and its attachments
-  const h0 = armHit; armHit = function(a, tgt, dt, dealt, sh, room){ const swap = !armLive(a.arm) && a.side && armLive(a.side) && loSideOk(a); const keep = a.arm; if(swap) a.arm = a.side;
+  const h0 = armHit; armHit = function(a, tgt, dt, dealt, sh, room){ const swap = loPrimDown(a) && a.side && armLive(a.side) && loSideOk(a); const keep = a.arm; if(swap) a.arm = a.side;
     try{ h0(a, tgt, dt, dealt, sh, room); } finally { if(swap){ a.side = a.arm; a.arm = keep; } }
     const it = loActive(a); if(!it) return; const d = armDef(it); wpnAddXP(it.id, dt*.5);
     const stun = attSum(it, 'stun'), bleed = attSum(it, 'bleed'), ign = (d.ignite || 0) + attSum(it, 'ignite'), kn = attSum(it, 'knock');
@@ -241,7 +243,7 @@ function loTick(sh, dt){
       if(c.owner==='p'){ loGain(c, 10*n); const it = loActive(c); if(it){ wpnAddXP(it.id, 10*n); if(wpnLvl(it.id) >= 10 && typeof grant==='function') grant('wpn_max'); } perkCredit(c, 'kills', n);
         if(perkOn(c, 'scavenger') && it){ const d = armDef(it); it.dur = Math.min(d.dur, it.dur + 12*n); } } }
     // the secondary's reach, when the primary is broken
-    if(!armLive(c.arm) && c.side && armLive(c.side) && loSideOk(c) && !c.path.length && c.stunT <= 0 && G.enemy){ const d = armDef(c.side), reach = (d.reach || 0) + attSum(c.side, 'reach'); if(reach){
+    if(loPrimDown(c) && c.side && armLive(c.side) && loSideOk(c) && !c.path.length && c.stunT <= 0 && G.enemy){ const d = armDef(c.side), reach = (d.reach || 0) + attSum(c.side, 'reach'); if(reach){
       const near = sh.rooms.map((r, i) => i).filter(i => i!==c.room && roomDist(sh, c.room, i) <= 1.4); let tgt = null;
       for(const i of near) for(const o of sh.crew) if(o.room===i && o.hp > 0 && !o.path.length && crewSide(o)!==side && (!tgt || o.hp < tgt.hp)) tgt = o;
       if(tgt){ tgt.hp -= crewDps(c)*armMult(c)*reach*armTake(tgt)*dt*(perkOn(c, 'steady') ? (perkPro('steady') ? 1.5 : 1.3) : 1); tgt.lastByCrew = c.id; wear(c.side, c, dt*.6);
@@ -267,7 +269,7 @@ function loThrow(sh, c, foes){
 }
 (function(){ if(typeof armsTick==='function'){ const a0 = armsTick; armsTick = function(sh, dt){
   // the primary's reach code in arms.js only looks at c.arm: let a working secondary stand in when the primary is broken
-  const swapped = []; for(const c of sh.crew) if(!c.drone && !armLive(c.arm) && c.side && armLive(c.side) && loSideOk(c) && armDef(c.side).reach){ swapped.push([c, c.arm]); c.arm = c.side; }
+  const swapped = []; for(const c of sh.crew) if(!c.drone && loPrimDown(c) && c.side && armLive(c.side) && loSideOk(c) && armDef(c.side).reach){ swapped.push([c, c.arm]); c.arm = c.side; }
   try{ a0(sh, dt); } finally { for(const [c, keep] of swapped){ c.side = c.arm; c.arm = keep; } }
   try{ loTick(sh, dt); }catch(e){} }; } })();
 (function(){ if(typeof livingCombatStart!=='function') return; const l0 = livingCombatStart; livingCombatStart = function(e, def, o){ l0(e, def, o);
