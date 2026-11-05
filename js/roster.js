@@ -14,7 +14,7 @@ function roster(){ return (PROFILE.roster = PROFILE.roster || []); }
 function rosterUid(){ return 'r' + Date.now().toString(36) + Math.floor(Math.random()*1e6).toString(36); }
 function kitSnap(it){ return it && it.id ? { id:it.id, att:(it.att || []).slice(0, 2) } : null; }
 function rosterSnap(c, old){ return { uid:c.rid || (old && old.uid) || rosterUid(), name:String(c.name).slice(0, 16), race:c.race, quirk:c.quirk || null, gender:c.gender || null, look:c.look || null,
-  sk:Object.assign({}, c.sk || {}), lvl:c.lvl || 1, cxp:Math.floor(c.cxp || 0), pres:c.pres || 0, abil:(c.abil || []).slice(0, 4), perks:(c.perks || []).slice(0, 3), lethal:c.lethal || null, tactical:c.tactical || null,
+  sk:Object.assign({}, c.sk || {}), lvl:c.lvl || 1, cxp:Math.floor(c.cxp || 0), pres:c.pres || 0, abil:(c.abil || []).slice(0, 4), perks:(c.perks || []).slice(0, 4), lethal:c.lethal || null, tactical:c.tactical || null,
   kit:{ arm:kitSnap(c.arm), side:kitSnap(c.side), suit:kitSnap(c.suit) }, kills:(old && old.kills || 0) + Math.max(0, (c.kills || 0) - (c._rk0 || 0)), runs:(old && old.runs) || 0, t:Date.now() }; }
 function rosterSave(c, quiet){ if(!c || c.drone) return; const R_ = roster(), i = R_.findIndex(x => x.uid===c.rid);
   if(i < 0 && R_.length >= ROSTER_MAX){ toast(`The roster is full (${ROSTER_MAX}). Remove someone in the hangar first.`); return; }
@@ -40,7 +40,7 @@ function rosterClean(x){ if(!x || typeof x!=='object' || typeof x.name!=='string
   const kit = {}; for(const k of ['arm', 'side', 'suit']){ const s = x.kit && x.kit[k]; if(s && typeof s.id==='string' && DATA.arms[s.id]) kit[k] = { id:s.id, att:(Array.isArray(s.att) ? s.att : []).filter(a => typeof LO_ATT!=='undefined' && LO_ATT[a]).slice(0, 2) }; }
   return { uid:typeof x.uid==='string' ? x.uid.slice(0, 40) : rosterUid(), name:x.name.slice(0, 16), race:typeof x.race==='string' && DATA.races[x.race] && !DATA.races[x.race].secret ? x.race : 'human', quirk:typeof x.quirk==='string' ? x.quirk.slice(0, 24) : null,
     gender:x.gender==='f' || x.gender==='m' ? x.gender : null, look:x.look && typeof x.look==='object' ? x.look : null, sk, lvl:n(x.lvl, 1, 30), cxp:n(x.cxp, 0, 9999), pres:n(x.pres, 0, 10),
-    abil:(Array.isArray(x.abil) ? x.abil : []).filter(a => typeof LO_ABIL!=='undefined' && LO_ABIL[a]).slice(0, 4), perks:(Array.isArray(x.perks) ? x.perks : []).map(p => typeof LO_PERKS!=='undefined' && LO_PERKS[p] ? p : null).slice(0, 3),
+    abil:(Array.isArray(x.abil) ? x.abil : []).filter(a => typeof LO_ABIL!=='undefined' && LO_ABIL[a]).slice(0, 4), perks:(Array.isArray(x.perks) ? x.perks : []).map(p => typeof LO_PERKS!=="undefined" && LO_PERKS[p] ? p : null).slice(0, 4),
     lethal:typeof LO_LETHAL!=='undefined' && LO_LETHAL[x.lethal] ? x.lethal : null, tactical:typeof LO_TACT!=='undefined' && LO_TACT[x.tactical] ? x.tactical : null, kit, kills:n(x.kills, 0, 99999), runs:n(x.runs, 0, 9999), t:Date.now() }; }
 function rosterImportText(t){ let d = null; t = String(t || '').trim();
   try{ if(/^VTLC1:/.test(t)) d = JSON.parse(decodeURIComponent(escape(atob(t.slice(6).replace(/\s+/g, ''))))); else d = JSON.parse(t); }catch(e){ toast('That isn\'t a crew file or code.'); return 0; }
