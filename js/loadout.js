@@ -136,7 +136,7 @@ const LO_PERKS = {
   sleight:   { slot:3, name:'Sleight of Hand',text:'Their secondary does 25% more.', pro:'Pro: 50% more, and it never wears out.', goal:20, stat:'kills' }
 };
 function perkPro(id){ return !!(PROFILE.perkPro && PROFILE.perkPro[id]); }
-function perkOn(c, id){ return !!(c && c.perks && c.perks.includes(id) && perkUnlocked(c, LO_PERKS[id].slot)); }
+function perkOn(c, id){ if(!c || !c.perks || !LO_PERKS[id]) return false; const i = c.perks.indexOf(id); if(i < 0) return false; return i===3 ? (c.pres || 0) >= 1 : perkUnlocked(c, LO_PERKS[id].slot) && LO_PERKS[id].slot===i + 1; }   // slot 4 is the prestige wildcard: any perk
 function perkProg(id, n){ if(!LO_PERKS[id] || perkPro(id) || !n) return; PROFILE.perkProgress = PROFILE.perkProgress || {}; const v = (PROFILE.perkProgress[id] || 0) + n; PROFILE.perkProgress[id] = v;
   if(v >= LO_PERKS[id].goal){ PROFILE.perkPro = PROFILE.perkPro || {}; PROFILE.perkPro[id] = true; toast(`${LO_PERKS[id].name} Pro unlocked! ${LO_PERKS[id].pro}`); if(typeof sfx==='function') sfx('achieve'); saveProfile(); } }
 function perkCredit(c, stat, n){ for(const id of c.perks || []) if(LO_PERKS[id] && LO_PERKS[id].stat===stat && perkOn(c, id)) perkProg(id, n); }
@@ -176,10 +176,11 @@ function loLevelUp(c){ const un = []; for(const [k, L] of Object.entries(LO_UNLO
   for(const [k, G_] of Object.entries(LO_LETHAL)) if(G_.lvl===c.lvl && G_.lvl > 2) un.push(G_.name); for(const [k, G_] of Object.entries(LO_TACT)) if(G_.lvl===c.lvl && G_.lvl > 5) un.push(G_.name);
   if(LO_ABIL_L.includes(c.lvl)) un.push('a new ability');
   if(c.lvl===LO_MAXL) un.push('Prestige');
-  toast(`${c.name} reached level ${c.lvl}${un.length ? ': ' + un.join(', ') : ''}. (Ship → Armoury → Loadouts)`); if(typeof sfx==='function') sfx('levelup');
+  if(typeof loSyncHp==='function') loSyncHp(c);
+  toast(`${c.name} reached level ${c.lvl}: tougher and stronger${un.length ? ', and ' + un.join(', ') : ''}. Tap Crew to see.`); if(typeof sfx==='function') sfx('levelup');
   if(c.lvl===LO_UNLOCK.lethal && !c.lethal) c.lethal = 'frag'; if(c.lvl===LO_UNLOCK.tactical && !c.tactical) c.tactical = 'flash'; }
-function loPrestige(c){ if(!c || loLvl(c) < LO_MAXL || (c.pres||0) >= 10) return; c.pres = (c.pres || 0) + 1; c.lvl = 1; c.cxp = 0; c.maxHp += 3; c.hp = Math.min(c.maxHp, c.hp + 3); c.perks = []; c.lethal = null; c.tactical = null;
-  toast(`${c.name} prestiges: ★${c.pres}. Back to level 1, a little tougher and stronger for good, abilities kept.`); if(typeof sfx==='function') sfx('achieve'); if(typeof grant==='function' && c.pres===1) grant('first_prestige'); }
+function loPrestige(c){ if(!c || loLvl(c) < LO_MAXL || (c.pres||0) >= 10) return; c.pres = (c.pres || 0) + 1; c.lvl = 1; c.cxp = 0; c.perks = []; c.lethal = null; c.tactical = null; if(typeof loSyncHp==='function') loSyncHp(c);
+  toast(`${c.name} prestiges: ★${c.pres}. Back to level 1 with +5 health and +3% damage for good, abilities kept${c.pres===1 ? ', and a wildcard perk slot that takes any perk' : ''}.`); if(typeof sfx==='function') sfx('achieve'); if(typeof grant==='function' && c.pres===1) grant('first_prestige'); }
 if(typeof ACHIEVEMENTS!=='undefined' && !ACHIEVEMENTS.some(a => a.id==='first_prestige')) ACHIEVEMENTS.push({ id:'first_prestige', name:'Once More, With Feeling', desc:'Prestige a crew member.' }, { id:'perk_pro', name:'Professional', desc:'Unlock a Pro perk.' }, { id:'wpn_max', name:'Old Faithful', desc:'Take a crew weapon to level 10.' });
 
 /* ---------------- in a fight ---------------- */

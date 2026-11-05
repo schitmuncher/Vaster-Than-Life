@@ -222,6 +222,7 @@ function drawTitleCards(t){
   // record
   panel(x, 696, w, 226, 12); label('Captain\'s record', x+24, 732, C.good, 'left', 16);
   if(typeof drawRankCard==='function'){ drawRankCard(x+24, 770, w-48); btn(x+w-164, 708, 140, 40, 'Career ›', () => { UI.screen = 'career'; }, { s:15, col:C.amber }); }
+  if(typeof slotsMeta==='function'){ const sm = slotsMeta(), nm = (sm.list[sm.cur] || {}).name || 'Save 1'; btn(x+w-290, 708, 118, 40, `${nm.length > 9 ? nm.slice(0, 8) + '…' : nm} ▾`, () => { UI.setFrom = 'title'; UI.setTab = 'profile'; UI.screen = 'settings'; }, { s:14, col:C.cyan }); tip(x+w-290, 708, 118, 40, 'Saves', `Playing ${nm}. Switch saves, start a new one, or download or clear all your data.`); }
   const wins = Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0);
   [['Runs', PROFILE.runs], ['Wins', wins], ['Best sector', PROFILE.maxSector], ['Ships beaten', PROFILE.kills]].forEach((r,i) => { const cx = x+24 + i*128; label(r[0], cx, 852, C.muted, 'left', 12); T(fmtNum(r[1]||0), cx, 892, { s:28, f:FD, w:700 }); });
 }
@@ -235,7 +236,7 @@ function drawHangar(){
   label('Choose your ship', 60, 70, C.cyan, 'left', 18);
   if(typeof drawCampaignPicker==='function' && !NET.on) drawCampaignPicker(760, 64);
   T('Hangar', 60, 122, { s:50, f:FD, w:700 });
-  if(typeof pilotLevel==='function' && !NET.on){ const nOpen = Object.values(DATA.ships).filter(d => d && !d.secret && shipUnlocked(d)).length, nAll = Object.values(DATA.ships).filter(d => d && !d.secret).length; T(`Pilot level ${pilotLevel()} · ${nOpen}/${nAll} ships${tokensLeft() ? ` · ${tokensLeft()} requisition token${tokensLeft()>1?'s':''}` : ''}`, 300, 118, { s:16, c:C.cyan }); }
+  if(typeof pilotLevel==='function' && !NET.on){ const nOpen = Object.values(DATA.ships).filter(d => d && !d.secret && shipUnlocked(d)).length, nAll = Object.values(DATA.ships).filter(d => d && !d.secret).length; T(`Captain level ${typeof capLevel==='function' ? capLevel() + (capPres() ? ' ★' + capPres() : '') : pilotLevel()} · ${nOpen}/${nAll} ships${tokensLeft() ? ` · ${tokensLeft()} requisition token${tokensLeft()>1?'s':''}` : ''}`, 300, 118, { s:16, c:C.cyan }); }
   const groups = classGroups(), names = Object.keys(groups);
   const per = 8; const pages = Math.max(1, Math.ceil(names.length/per)); UI.page = clamp(UI.page, 0, pages-1);
   const show = names.slice(UI.page*per, UI.page*per+per);
@@ -452,6 +453,7 @@ function drawSettings(){
       onoff('Captain\'s tips', 'hints', true, 'Short tips the first time each mechanic comes up.');
       btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
+      onoff('Crew hunger', 'hunger', true, 'Crew eat between jumps. Fighting and repairs make them hungrier, and hungry crew lose maximum health until they eat. Buy food at any store.');
       head('Content');
       choice('Story variety', 'storyMix', [['classic','Hand-made'],['mixed','Mixed'],['wild','Wild']], 'mixed', 'How many beacons are generated on the spot (new people, new trouble, choices built from your ship and crew) rather than hand-written. Mixed is about a third; Wild is most. Campaign mods always use their own events.');
       onoff('Unlock all ships', 'unlockAll', false, 'Skip the unlock conditions and pick any ship.');
@@ -466,6 +468,7 @@ function drawSettings(){
       head('Pace');
       choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down for more time to think and aim.');
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
+      onoff('Crew hunger', 'hunger', true, 'Crew eat between jumps. Fighting and repairs make them hungrier, and hungry crew lose maximum health until they eat. Buy food at any store.');
       head('Controls'); y += 12;
       note('Game controller: the d-pad jumps between buttons and rooms, the left stick moves a cursor, A selects, B goes back, Start pauses. X holds fire, Y opens the map, LB and RB pick weapons, LT sends crew to stations, RT toggles autofire, View opens the ship. Keyboard: the arrow keys move the same way and Enter selects.');
       break;
@@ -483,6 +486,7 @@ function drawSettings(){
     case 'profile':
       head('Your record');
       T(`Runs ${PROFILE.runs} · Ships defeated ${PROFILE.kills} · Furthest sector ${PROFILE.maxSector} · Wins ${Object.values(PROFILE.wins).reduce((a,b)=>a+(+b||0),0)} · Achievements ${Object.keys(PROFILE.ach).length}/${ACHIEVEMENTS.length}`, X, y+24, { s:20 }); y += 70;
+      if(typeof drawSavesPanel==='function'){ y += 40; drawSavesPanel(X, y); break; }
       if(UI.confirmReset){ T('Erase all achievements, unlocks and stats?', X, y+24, { s:22, c:C.hostile });
         btn(X, y+40, 220, 52, 'Yes, erase', () => { for(const k of Object.keys(PROFILE.ach)) delete PROFILE.ach[k]; PROFILE.maxSector = 1; PROFILE.kills = 0; PROFILE.wins = {}; PROFILE.runs = 0; saveProfile(); UI.confirmReset = false; }, { col:C.hostile, fill:true });
         btn(X+240, y+40, 160, 52, 'Cancel', () => { UI.confirmReset = false; }); }
@@ -768,8 +772,8 @@ function drawTopBar(){
   tip(tx, 48, 110, 22, 'Evasion', 'Chance to dodge incoming shots. Needs powered engines and someone at the helm. Manning engines and cloaking add more.');
   const avgO2 = Math.round(s.rooms.reduce((t,r)=>t+r.o2,0)/s.rooms.length);
   label(`O2 ${avgO2}%`, tx+120, 64, avgO2<40 ? C.hostile : C.ink, 'left', 14);
-  const res = [['Scrap', G.scrap, C.amber, 'The currency of the galaxy. Spend it on upgrades, repairs and gear.'], ['Fuel', G.fuel, G.fuel<=3?C.hostile:C.ink, 'Each jump costs 1 fuel. Run out and you will be stranded.'], ['Missiles', G.missiles, C.ink, 'Ammo for missiles and bombs.'], ['Parts', G.parts, C.ink, 'Drone parts. Each drone deployment and hacking drone uses one.']];
-  res.forEach((r,i) => { const x = 440 + i*108; label(r[0], x, 28, C.muted, 'left', 13); T(String(r[1]), x, 64, { s:28, f:FD, w:700, c:r[2] }); tip(x-6, 10, 100, 60, r[0], r[3]); });
+  const res = [['Scrap', G.scrap, C.amber, 'The currency of the galaxy. Spend it on upgrades, repairs and gear.'], ['Fuel', G.fuel, G.fuel<=3?C.hostile:C.ink, 'Each jump costs 1 fuel. Run out and you will be stranded.'], ['Missiles', G.missiles, C.ink, 'Ammo for missiles and bombs.'], ['Parts', G.parts, C.ink, 'Drone parts. Each drone deployment and hacking drone uses one.'], ...(typeof hungerOn==='function' && hungerOn() ? [['Food', G.food || 0, (G.food || 0) <= 2 ? C.hostile : C.ink, 'Meals for the crew. They eat between jumps; hungry crew lose maximum health. Buy more at any store (Supplies).']] : [])];
+  const rsp = res.length > 4 ? 86 : 108; res.forEach((r,i) => { const x = 440 + i*rsp; label(r[0], x, 28, C.muted, 'left', 13); T(String(r[1]), x, 64, { s:28, f:FD, w:700, c:r[2] }); tip(x-6, 10, rsp-8, 60, r[0], r[3]); });
   const sd = sectorDef();
   label(`Sector ${G.sector} of ${R.sectors}`, 872, 22, C.muted, 'left', 12);
   label(sd.name, 872, 42, sd.color||C.cyan, 'left', 12);
@@ -779,10 +783,11 @@ function drawTopBar(){
   label('VTL drive', 1108, 28, C.muted, 'left', 12);
   const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber); if(charge>=1) glow(1258, 44, 16, C.good, .4);
   tip(1104, 14, 160, 44, 'VTL drive', 'Charges during combat while someone flies the ship. When full you can jump away from a fight.');
-  btn(1268, 12, 104, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
-  btn(1380, 12, 92, 52, 'Ship', () => { const at = typeof homeAttention==='function' && homeAttention(); G.modal = { type:'ship' }; UI.tab = at ? (/Crops/.test(at) ? 'garden' : 'hold') : (UI.tab || 'systems'); });
-  { const at = typeof homeAttention==='function' && !G.enemy && homeAttention(); if(at){ ctx.beginPath(); ctx.arc(1466, 18, 8, 0, 7); ctx.fillStyle = C.good; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); tip(1380, 12, 92, 52, 'Ship', at + '.'); } }
-  btn(1480, 12, 100, 52, G.paused ? 'Resume' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused });
+  btn(1266, 12, 88, 52, charge>=1 ? 'Jump' : 'Map', openMap, { fill:charge>=1 && !!G.enemy, col: charge>=1 ? C.good : C.amber });
+  if(typeof openCrewScreen==='function'){ btn(1360, 12, 78, 52, 'Crew', () => openCrewScreen(), { s:18 }); tip(1360, 12, 78, 52, 'Crew', 'Everyone\'s level, health, food, class, weapons, perks and abilities. Or tap someone in the crew row twice.'); }
+  btn(1444, 12, 66, 52, 'Ship', () => { const at = typeof homeAttention==='function' && homeAttention(); G.modal = { type:'ship' }; UI.tab = at ? (/Crops/.test(at) ? 'garden' : 'hold') : (UI.tab || 'systems'); });
+  { const at = typeof homeAttention==='function' && !G.enemy && homeAttention(); if(at){ ctx.beginPath(); ctx.arc(1504, 18, 8, 0, 7); ctx.fillStyle = C.good; ctx.fill(); ctx.strokeStyle = '#0b1020'; ctx.lineWidth = 2; ctx.stroke(); tip(1444, 12, 66, 52, 'Ship', at + '.'); } }
+  btn(1516, 12, 66, 52, G.paused ? '▶' : 'Pause', () => { G.paused = !G.paused; }, { fill:G.paused, s:G.paused ? 22 : 16 }); tip(1516, 12, 66, 52, G.paused ? 'Resume' : 'Pause', 'Pause to give orders calmly (Space).');
   if((SET.speed||1)!==1) label(`Speed ${Math.round((SET.speed||1)*100)}%`, 1108, 66, C.cyan, 'left', 11);
   if(typeof drawAnomChips==='function') drawAnomChips(78, 506);   // anomalies and ship scars (anomalies.js)
 }

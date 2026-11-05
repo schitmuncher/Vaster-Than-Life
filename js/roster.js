@@ -1,7 +1,7 @@
 'use strict';
 /* =========================================================================
    The crew roster: crew who outlive a run.
-   - Save anyone to the roster (Ship → Crew → Armoury → Loadouts), and your
+   - Save anyone to the roster (Crew → pick someone), and your
      roster crew are updated automatically at the end of every run they
      survive: level, prestige, skills, perks, abilities, grenades and kit.
    - In the hangar, "Crew roster" picks who flies with you this run.
@@ -68,7 +68,7 @@ function drawRosterOverlay(){
   const def = DATA.ships[UI.selShip], seats = def && def.crew ? def.crew.length : 3, pickL = (UI.rosterPick = (UI.rosterPick || []).filter(u => roster().some(x => x.uid===u)));
   T(`Pick up to ${seats} to fly with you (they replace the ship's usual crew). ${pickL.length}/${seats} picked.`, f.x + 300, f.y + 88, { s:15, c:C.ink, max:f.w - 340 });
   const R_ = roster(), per = 12, pages = Math.max(1, Math.ceil(R_.length/per)), pg = clamp(UI.rosterPg || 0, 0, pages - 1), cw = (f.w - 72 - 40)/3;
-  if(!R_.length) para('Nobody yet. In a run, open Ship → Crew → Armoury → Loadouts and press "Save to roster" on anyone you want to keep. They\'re updated at the end of every run they survive. Or import a crew file from another device.', f.x + 36, f.y + 150, f.w - 72, { s:17, lh:25, c:C.muted });
+  if(!R_.length) para('Nobody yet. In a run, tap Crew, pick someone and press "Save to roster" you want to keep. They\'re updated at the end of every run they survive. Or import a crew file from another device.', f.x + 36, f.y + 150, f.w - 72, { s:17, lh:25, c:C.muted });
   R_.slice(pg*per, pg*per + per).forEach((r, i) => { const x = f.x + 36 + (i % 3)*(cw + 20), y = f.y + 120 + Math.floor(i/3)*126, on = pickL.includes(r.uid), race = DATA.races[r.race] || {};
     rr(x, y, cw, 116, 10); ctx.fillStyle = on ? hexA(C.cyan, .14) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = on ? C.cyan : C.line; ctx.lineWidth = on ? 2.5 : 1; ctx.stroke();
     T(r.name, x + 16, y + 30, { s:19, f:FD, w:700, max:cw - 150 }); T(`Lv ${r.lvl}${r.pres ? '  ★' + r.pres : ''}`, x + cw - 16, y + 30, { s:15, a:'right', c:C.amber });

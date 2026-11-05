@@ -298,6 +298,7 @@ function drawStoreSupplies(st, cx, y0, W2){
   const s = G.ship, rep = 2 + Math.floor((G.sector-1)/3), miss = s.crew.filter(c => c.owner==='p' && !c.drone).reduce((t, c) => t + Math.max(0, c.maxHp - c.hp), 0);
   const rows = [ ['Fuel cell', `One jump's worth. You have ${G.fuel}.`, price(3, st, 'fuel'), () => G.fuel++], ['Missile', `Ammo for missiles and bombs. You have ${G.missiles}.`, price(6, st, 'missile'), () => G.missiles++],
     ['Drone part', `For drones and hacking. You have ${G.parts}.`, price(8, st, 'part'), () => G.parts++],
+    ['Food ×5', `Meals for the crew, eaten between jumps. You have ${G.food || 0}.`, price(7, st, 'supply'), () => { G.food = (G.food || 0) + 5; }],
     ...(G.rod ? [] : [['Fishing rod', 'For fishing spots (🐟 on the map), nebulas and asteroid fields.', price(18, st, 'supply'), () => { G.rod = true; toast('Fishing rod bought. Look for 🐟 on the map.'); }]]),
     ['Hull repair ×1', `Hull ${s.hull}/${s.maxHull}`, price(rep, st, 'repair'), () => { s.hull = Math.min(s.maxHull, s.hull+1); }, s.hull>=s.maxHull],
     ['Hull repair ×5', `Hull ${s.hull}/${s.maxHull}`, price(5*rep - 1, st, 'repair'), () => { s.hull = Math.min(s.maxHull, s.hull+5); }, s.hull>=s.maxHull],

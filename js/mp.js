@@ -195,7 +195,7 @@ netOn('ready', (m, P) => { if(!mpAmHost()) return; const p = NET.players.find(x 
 
 /* ---------------- roles: who may press what (only when "stick to stations" is on) ---------------- */
 const MP_ZONES = [   // [x, y, w, h, area]
-  [1268, 12, 104, 52, 'nav'], [1380, 12, 92, 52, 'ship'], [1480, 12, 100, 52, 'any'],
+  [1266, 12, 88, 52, 'nav'], [1360, 12, 78, 52, 'crew'], [1444, 12, 66, 52, 'ship'], [1516, 12, 66, 52, 'any'],
   [24, 96, 760, 466, 'crew'], [816, 96, 760, 466, 'target'], [24, 572, 760, 66, 'crew'], [24, 652, 904, 328, 'power'], [940, 652, 636, 328, 'weapons'] ];
 const ROLE_AREAS = { captain:'*', crew:'*', helm:['nav','events','any','helm'], tactical:['weapons','target','any','events'], engineer:['power','crew','ship','store','any','events'], navigator:['nav','events','store','ship','any'], boarder:['crew','target','any','events'], courier:'*' };
 function mpArea(x, y){ if(G && G.modal){ const t = G.modal.type; return t==='map' ? 'nav' : t==='store' ? 'store' : t==='ship' ? 'ship' : 'events'; } for(const z of MP_ZONES) if(x>=z[0] && x<=z[0]+z[2] && y>=z[1] && y<=z[1]+z[3]) return z[4]; return 'any'; }

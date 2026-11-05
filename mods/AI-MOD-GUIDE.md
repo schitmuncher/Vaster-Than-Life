@@ -88,6 +88,7 @@ Changes the game's rules for the whole run. All fields optional.
 | `heal` | number | Health per second for everyone in the same room (0.5–2), or `true` for 1 |
 | `armor` | number | Share of weapon damage taken, e.g. 0.7 = 30% less |
 | `fireproof`, `noAir`, `telepathic`, `mindImmune` | true/false | Immune to fire / needs no oxygen / sees enemy crew / cannot be mind controlled |
+| `food` | number | How much they eat: 1 normal, 0.5 light eaters, 1.3 big eaters, 0 never eat. Without it, races that need no air don't eat |
 | `power` | number | Free power to the system in the room they stand in (1) |
 | `deathBurst` | number | Damage to enemies in the room when they die (10–30) |
 | `learn` | number | Skill learning speed (1–2) |

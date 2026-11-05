@@ -333,7 +333,8 @@ function applyEffect(e){
   if(e.clearFlag) for(const f of [].concat(e.clearFlag)) delete G.flags[f];
   if(e.later) G.later.push({ event:e.later.event, jumps:e.later.jumps||3 });
   if(e.maxHull){ s.maxHull += e.maxHull; L.push(`+${e.maxHull} max hull`); }
-  if(e.crewHeal){ for(const c of s.crew) if(c.owner==='p') c.hp = Math.min(c.maxHp, c.hp + e.crewHeal); L.push('Crew healed'); }
+  if(e.crewHeal){ let fed = 0; for(const c of s.crew) if(c.owner==='p'){ if(typeof hungerFeed==='function' && hungerOn() && !c.drone) fed += hungerFeed(c, Math.round(e.crewHeal*.6)); c.hp = Math.min(c.maxHp, c.hp + e.crewHeal); } L.push(fed > 0 ? 'Crew healed and fed' : 'Crew healed'); }   // a good meal or a rest also fills them up (hunger.js)
+  if(e.food){ G.food = Math.max(0, (G.food || 0) + e.food); L.push(`${sign(e.food)} food`); }
   if(e.crewHurt){ for(const c of s.crew) if(c.owner==='p' && !c.drone) c.hp = Math.max(1, c.hp - e.crewHurt*(.5+Math.random()*.5)); L.push('Crew injured'); }
   if(e.xp){ for(const c of s.crew) if(c.owner==='p' && !c.drone) gainXP(c, e.xp.skill, e.xp.amt); L.push(`Crew trained in ${SKILLN[e.xp.skill]||e.xp.skill}`); }
   if(e.reveal && G.map){ for(const n of G.map.nodes) n.revealed = true; L.push('Sector map revealed'); }
@@ -485,6 +486,7 @@ function finishCombat(kind, offer){
     if(!reward.augment && Math.random() < .05) reward.augment = 'random';
     if(Math.random() < (kind==='crew' ? .08 : .04)) reward.drone = 'random';
     if(Math.random() < .35) reward.goods = 'loot';   // cargo worth trading (market.js)
+    if(Math.random() < .5) reward.food = ri(1, 3);   // the galley's leftovers (hunger.js)
     const races = [...new Set(e.crew.filter(c => c.owner==='e' && !c.drone && DATA.races[c.race] && !DATA.races[c.race].secret).map(c => c.race))];
     if(kind==='destroyed' && Math.random() < .07){ reward.crew = races.length ? pick(races) : 'random'; L.push(pick(SURVIVOR_LINES)); }
     L.push(...applyEffect(reward)); }); }
