@@ -3,7 +3,7 @@
    The candidates are the best of the Memorial Wall (memorial.js): most kills, highest level, longest served. */
 const GRAVE_CHANCE = .012;
 function graveCands(){
-  if(!G || G.daily || G.cup || G.tut || G.practice || typeof PROFILE==='undefined') return [];
+  if(!G || G.daily || G.cup || G.tut || G.practice || typeof PROFILE==='undefined' || (typeof NET!=='undefined' && NET.on)) return [];
   const start = G.startedAt || 0, seed = G.seed || '';
   return (PROFILE.memorial || []).filter(f => f && f.name && !f.risen && !(f.runId && f.runId===seed) && (!start || (f.date || f.t || 0) < start))
     .map(f => ({ f, score:(f.kills || 0)*2 + (f.lvl || 1) + (f.served || 0)/3 + (f.pres || 0)*10 }))
@@ -25,17 +25,17 @@ const GRAVE_ROB_OK = 'Nobody here needs scrap any more. Your crew work quickly a
       GRAVE_ROB_BAD = 'The groundskeeper robot catches you mid-dig and beats your crew with a spade while reciting the cemetery bylaws. Fair.';
 function graveName(f){ const r = (typeof DATA!=='undefined' && DATA.races[f.race]) || null; return `${f.name}${r ? ' the ' + r.name : ''}`; }
 function graveDesc(f){ const b = [];
-  if(f.lvl > 1) b.push(`level ${f.lvl}`); if(f.kills) b.push(`${f.kills} kill${f.kills===1 ? '' : 's'}`); if(f.ship) b.push(`of ${/^the /i.test(f.ship) ? f.ship : 'the ' + f.ship}`);
+  if(f.lvl > 1) b.push(`level ${f.lvl}`); if(f.kills) b.push(`${f.kills} kill${f.kills===1 ? '' : 's'}`); if(f.ship) b.push(`of the ${String(f.ship).replace(/^the /i, '')}`);
   return b.join(', '); }
 function graveEvent(){
   const C = graveCands(); if(!C.length) return null; G.graveCands = C.map(f => ({ name:f.name, date:f.date || f.t || 0 }));
-  const stones = C.map(f => `${graveName(f)}${graveDesc(f) ? ' (' + graveDesc(f) + ')' : ''}: "${f.epitaph || f.words || 'Here lies someone.'}"`).join('  ');
+  const stones = C.map(f => `${graveName(f)}${graveDesc(f) ? ' (' + graveDesc(f) + ')' : ''}: "${f.epitaph || f.words || 'Here lies someone.'}"`).join('\n• ');
   const choices = C.map((f, i) => ({ text:`Dig up ${f.name}.${graveDesc(f) ? ' (' + graveDesc(f) + ')' : ''}`, chance:.7,
     success:{ text:pick(GRAVE_RISE).replace(/\{name\}/g, f.name), resurrect:i + 1 },
     fail:{ text:pick(GRAVE_WRONG), resurrect:i + 1, wrong:1 } }));
   choices.push({ text:'Leave flowers and go.', effect:{ text:pick(GRAVE_FLOWERS), crewHeal:15, graveFlowers:1 } });
   choices.push({ text:'Rob the graves. They don\'t need scrap.', chance:.6, success:{ text:GRAVE_ROB_OK, scrap:35 }, fail:{ text:GRAVE_ROB_BAD, crewHurt:20, scrap:8 } });
-  DATA.events.g3_graveyard = { id:'g3_graveyard', title:'The Graveyard', text:`${pick(GRAVE_OPEN)} The best of them: ${stones}`, choices, art:'planet', questOnly:true, once:true };
+  DATA.events.g3_graveyard = { id:'g3_graveyard', title:'The Graveyard', text:`${pick(GRAVE_OPEN)} The best of them:\n• ${stones}`, choices, art:'planet', questOnly:true, once:true };
   return 'g3_graveyard';
 }
 function graveRaise(i, wrong, L){

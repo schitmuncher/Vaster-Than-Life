@@ -129,7 +129,7 @@ function jumpTo(i){
   if(G.fuel<=0){ G.modal = { type:'stranded' }; return; }
   if(G.enemy && !G.enemy.dead && typeof sagaEnemyGotAway==='function') sagaEnemyGotAway(G.enemy, 'when the crew fled the fight');
   if(G.enemy && !G.enemy.dead){ const aboard = G.enemy.crew.filter(c=>c.owner==='p' && !c.drone); if(aboard.length){ for(const c of aboard) killCrew(G.enemy, c); toast('Crew left aboard the enemy ship are lost.'); } }
-  G.fuel--; if(G.fuel <= 2 && G.fuelWarn!==G.sector){ G.fuelWarn = G.sector; setTimeout(() => toast(G.fuel ? `Fuel low: ${G.fuel} jump${G.fuel===1?'':'s'} left. Stores sell fuel for 3 scrap.` : 'Out of fuel! You can only wait for help, and the Fleet.'), 1200); }
+  G.fuel--; if(G.fuel <= 2 && G.fuelWarn!==G.sector){ G.fuelWarn = G.sector; setTimeout(() => G && toast(G.fuel ? `Fuel low: ${G.fuel} jump${G.fuel===1?'':'s'} left. Stores sell fuel for 3 scrap.` : 'Out of fuel! You can only wait for help, and the Fleet.'), 1200); }
   G.modal = null; leaveCombat(); G.warp = 1; G.warpNode = i; sfx('jump'); haptic(.4, 300); if(Math.random()<.35) say('jump');
 }
 function leaveCombat(){

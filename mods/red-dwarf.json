@@ -1,6 +1,6 @@
 {
  "name": "Red Dwarf: Three Million Years Late",
- "version": "6.0",
+ "version": "6.1",
  "author": "Vaster Than Life team (unofficial fan campaign)",
  "campaign": {
   "id": "reddwarf",
@@ -787,11 +787,11 @@
    "color": "#d8c46a",
    "pattern": "TDBDN",
    "desc": "Built by skutters from a laundry trolley and a fridge. Tiny, nippy, full of drones, and very sorry about all this.",
-   "hull": 20,
+   "hull": 24,
    "reactor": 9,
    "fuel": 18,
    "missiles": 6,
-   "parts": 8,
+   "parts": 10,
    "systems": {
     "shields": 1,
     "engines": 3,

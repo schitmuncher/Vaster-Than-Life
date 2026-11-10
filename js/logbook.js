@@ -30,7 +30,7 @@ function logDeath(f){ logEntry(`${f.name} died: ${f.why}. Last words: "${f.words
   // choices: the situation, the decision and how it went
   const c0 = chooseOption; chooseOption = function(ch){ const m = G && G.modal, ev = m && m.type==='event' ? (m.inline || (DATA.events[m.id] || {})) : null, sit = ev ? firstSentence(fillText(ev.text, m.ctx || {})) : '';
     const n0 = G && G.log ? G.log.length : 0; c0(ch);
-    if(G && G.log && G.log.length > n0 && sit){ const e = G.log[G.log.length - 1]; e.t = `${sit} → ${e.t}`; e.k = 'event'; const r = G.modal; if(r && r.type==='result' && r.lines && r.lines.length) e.t += ` (${r.lines.slice(0, 5).join('; ')})`; } };
+    if(G && G.log && G.log.length > n0 && sit){ const e = G.log[G.log.length - 1]; e.t = `${sit} → ${e.t}`; e.k = 'event'; const r = G.modal; if(r && r.type==='result' && r.lines && r.lines.length) e.t += ` [${r.lines.slice(0, 5).join(' · ')}]`; } };
   // fights: how long, how much it hurt, what it paid
   const s0 = startCombat; startCombat = function(id, o){ const r = s0(id, o); if(G && G.enemy){ G._logFight = { hull:G.ship.hull, t:G.combatT || 0, crew:G.ship.crew.filter(c => c.owner==='p' && !c.drone).length, name:G.enemy.name };
       const e = G.log && G.log[G.log.length - 1]; if(e && /^Engaged/.test(e.t)){ e.k = 'fight'; e.t += ` Hull ${G.enemy.hull}, ${G.enemy.crew.filter(c => !c.drone).length} crew, ${G.enemy.weapons.filter(Boolean).length} weapons.`; } } return r; };
@@ -62,19 +62,27 @@ function drawLogbook(){
   panel(60, 150, 420, 820, 12); label('Voyages', 84, 186, C.amber, 'left', 14);
   list.slice(0, 16).forEach((i, k) => { const s = logSource(i); if(!s) return; const y = 204 + k*46, on = i===UI.logIdx, d = new Date(s.t || 0);
     rr(76, y, 388, 40, 8); ctx.fillStyle = on ? hexA(C.amber, .16) : 'rgba(6,9,18,.5)'; ctx.fill(); if(on){ ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5; ctx.stroke(); }
-    T(s.live ? `${theName(s.ship)} · now` : `${theName(s.ship)}`, 90, y + 18, { s:15, f:FD, w:700, c:on ? C.amber : C.ink, max:240 });
+    T(s.live ? `${mcap(theName(s.ship))} · now` : mcap(theName(s.ship)), 90, y + 18, { s:15, f:FD, w:700, c:on ? C.amber : C.ink, max:240 });
     T(s.live ? `sector ${s.sector}, in progress` : `${d.getDate()} ${d.toLocaleString('en-GB', { month:'short' })} · ${s.win ? 'won' : 'lost in sector ' + s.sector}${s.daily ? ' · daily' : ''}`, 90, y + 34, { s:12, c:s.win ? C.good : C.muted, max:360 });
     region(76, y, 388, 40, () => { UI.logIdx = i; UI.logPage = null; }, 'log:' + i); });
   // the pages
   const s = logSource(UI.logIdx); if(!s) return; const x = 510, w = 1030;
   panel(x, 150, w, 820, 12);
   T(`${mcap(theName(s.ship))}${s.live ? ' · this run so far' : s.win ? ' · victory' : ' · lost'}`, x + 24, 192, { s:24, f:FD, w:700, c:s.win ? C.good : C.amber, max:w - 48 });
-  T([s.mode, s.diff && cap1(s.diff), `${s.jumps || 0} jumps`, s.kills != null ? `${s.kills} kills` : '', s.time ? `${typeof fmtTime==='function' ? fmtTime(s.time) : s.time + 's'} in action` : '', s.seed ? 'seed ' + s.seed : ''].filter(Boolean).join(' · '), x + 24, 218, { s:13, c:C.muted, max:w - 48 });
-  const rows = s.log || [], per = 16, pages = Math.max(1, Math.ceil(rows.length/per)); if(UI.logPage == null) UI.logPage = s.live ? pages - 1 : 0; const pg = clamp(UI.logPage, 0, pages - 1);
-  let y = 252; let lastS = null;
-  for(const e of rows.slice(pg*per, pg*per + per)){ const col = { death:C.hostile, win:C.good, fight:C.warn, sector:C.cyan, store:'#9fdc7a', crew:C.cyan, level:C.amber, note:'#c9b7ff', end:C.hostile, start:C.amber }[e.k] || C.ink;
-    if(e.s!==lastS){ lastS = e.s; } T(LOG_ICON[e.k] || '·', x + 34, y + 1, { s:16, a:'center', c:col }); T(`S${e.s}${e.j != null ? ' J' + e.j : ''}`, x + 56, y + 1, { s:12, f:FD, w:700, c:C.muted });
-    const h = para(e.t, x + 130, y, w - 160, { s:15, lh:19, max:2, c:e.k==='note' ? '#d9ccff' : C.ink }); y += Math.max(26, h) + 6; if(y > 900) break; }
+  T([s.mode, s.diff && cap1(s.diff), `${s.jumps || 0} jumps`, s.kills != null ? `${s.kills} kill${s.kills===1 ? '' : 's'}` : '', s.time ? `${typeof fmtTime==='function' ? fmtTime(s.time) : s.time + 's'} in action` : '', s.seed ? 'seed ' + s.seed : ''].filter(Boolean).join(' · '), x + 24, 218, { s:13, c:C.muted, max:w - 48 });
+  // pages by height, so a long entry never pushes another one off the page
+  const rows = s.log || [], sz = MINF && 15 < MINF ? Math.max(18, Math.min(MINF, 15*1.35)) : 15, lh = Math.round(19*sz/15), font = `400 ${sz}px ${FM}`,
+    hOf = e => Math.max(26, Math.min(3, lines(e.t || '', w - 160, font).length)*lh) + 6, P = [[]]; let used = 0;
+  for(const e of rows){ const h = hOf(e); if(used + h > 640 && P[P.length - 1].length){ P.push([]); used = 0; } P[P.length - 1].push(e); used += h; }
+  const pages = P.length; if(UI.logPage == null) UI.logPage = s.live ? pages - 1 : 0; const pg = clamp(UI.logPage, 0, pages - 1);
+  let y = 252;
+  for(const e of P[pg]){ const col = { death:C.hostile, win:C.good, fight:C.warn, sector:C.cyan, store:'#9fdc7a', crew:C.cyan, level:C.amber, note:'#c9b7ff', end:C.hostile, start:C.amber }[e.k] || C.ink;
+    T(LOG_ICON[e.k] || '·', x + 34, y + 1, { s:16, a:'center', c:col }); T(`S${e.s}${e.j != null ? ' J' + e.j : ''}`, x + 56, y + 1, { s:12, f:FD, w:700, c:C.muted });
+    para(e.t, x + 130, y, w - 160, { s:15, lh:19, max:3, c:e.k==='note' ? '#d9ccff' : C.ink }); y += hOf(e); }
   if(pages > 1){ btn(x + 24, 912, 160, 44, '‹ Earlier', () => { UI.logPage = pg - 1; }, { s:15, disabled:pg <= 0 }); T(`Page ${pg + 1} of ${pages}`, x + w/2, 942, { s:14, a:'center', c:C.muted }); btn(x + w - 184, 912, 160, 44, 'Later ›', () => { UI.logPage = pg + 1; }, { s:15, disabled:pg >= pages - 1 }); }
 }
 function cap1(t){ return t ? String(t)[0].toUpperCase() + String(t).slice(1) : ''; }
+// average run length on the Record screen (here, not modes.js: drawRecord lives in ui.js, which loads later)
+(function(){ if(typeof drawRecord!=='function') return; const d0 = drawRecord; drawRecord = function(){ d0(); const h = (PROFILE.history || []).filter(e => !e.daily).slice(0, 10); if(h.length < 2) return;
+  const avgT = h.reduce((t, e) => t + (e.time || 0), 0)/h.length, avgS = h.reduce((t, e) => t + (e.sector || 0), 0)/h.length, avgJ = h.reduce((t, e) => t + (e.jumps || 0), 0)/h.length;
+  T(`Your last ${h.length} runs: ${fmtTime(avgT)} of action on average (not counting pauses and reading), ${avgJ.toFixed(0)} jumps, reaching sector ${avgS.toFixed(1)}.`, 132, 722, { s:13, c:C.muted, max:850 }); }; })();

@@ -37,7 +37,7 @@ SHIPS = [
    'lvl':8, 'ch':{ 'kills':80, 'sector':8 } },
  { 'id':'rd_pram', 'name':'The Skutter Pram', 'layout':'A', 'cls':'Skutter-built runabout', 'color':'#d8c46a', 'pattern':'TDBDN',
    'desc':"Built by skutters from a laundry trolley and a fridge. Tiny, nippy, full of drones, and very sorry about all this.",
-   'hull':20, 'reactor':9, 'fuel':18, 'missiles':6, 'parts':8,
+   'hull':24, 'reactor':9, 'fuel':18, 'missiles':6, 'parts':10,
    'systems':SYS(shields=1, engines=3, oxygen=1, weapons=2, drones=3, medbay=1, piloting=1, sensors=1, doors=1), 'reserve':['teleporter','hacking'],
    'weapons':['rd_rivet_gun'], 'drones':['rd_skutter','rd_armed_skutter'], 'crew':['rd_mechanoid','rd_mechanoid'], 'augments':['rd_spare_heads'],
    'campCrew':[ { 'name':'Kryten', 'quirk':'worrier', 'skills':{ 'repair':2, 'engines':1 } }, { 'name':'Spanners', 'quirk':'tinkerer', 'skills':{ 'repair':1, 'weapons':1 } } ],
@@ -46,7 +46,7 @@ SHIPS = [
 put('ships', SHIPS)
 for s in SHIPS:
     if s['id'] not in d['campaign']['ships']: d['campaign']['ships'].append(s['id'])
-d['version'] = '6.0'
+d['version'] = '6.1'
 
 def ev(id, text, choices, **k):
     e = { 'id':id, 'tags':k.pop('tags', ['rd']), 'weight':k.pop('weight', 1.0), 'once':True, 'art':k.pop('art', 'ship'), 'text':text, 'choices':choices }; e.update(k); return e

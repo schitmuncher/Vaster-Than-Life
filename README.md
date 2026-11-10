@@ -667,7 +667,7 @@ Ships to unlock (pilot level plus a challenge, or a requisition token, or renown
 | Holoship Smug Glow | Hard-light holoship | 22 | Rimmer, Cmdr Glossop, Nurse Lumen | pilot level 6, reach sector 6 in Blue Midget | Made of light and arrogance. Fast, well shielded, and its holograms can't burn or choke. The hull is mostly opinion. |
 | Captured GELF Canoe | GELF war canoe | 32 | Lister, Grunk, Mrs Grunk, Cat | pilot level 5, destroy 12 ships in Blue Midget | Won in a wrestling match, a wedding and a misunderstanding. Bone, hide, a harpoon and boarders who love a scrap. |
 | Stolen Simulant Barge | Simulant salvage barge | 36 | Lister, Rimmer, Cat, Kryten | pilot level 8, reach sector 8, 80 ships destroyed in total | Nicked while its Simulants were at a team-building day. Plasma lance, hacking, and a computer that asks politely to kill you. |
-| The Skutter Pram | Skutter-built runabout | 20 | Kryten, Spanners | pilot level 3, destroy 10 ships in Starbug 1 | Built by skutters from a laundry trolley and a fridge. Tiny, nippy, full of drones, and very sorry about all this. |
+| The Skutter Pram | Skutter-built runabout | 24 | Kryten, Spanners | pilot level 3, destroy 10 ships in Starbug 1 | Built by skutters from a laundry trolley and a fridge. Tiny, nippy, full of drones, and very sorry about all this. |
 
 Music: the theme plus five tunes written for the campaign (hangar, start, explore, strange, combat each have their own; exploring and fights take turns sector by sector).
 

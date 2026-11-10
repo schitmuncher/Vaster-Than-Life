@@ -195,7 +195,7 @@ function funeralEffect(e, L){ if(!e || !e.funeral || !G) return; const crew = G.
   saveProfile(); }
 (function(){
   const a0 = applyEffect; applyEffect = function(e, ...rest){ const L = a0(e, ...rest); if(e && e.funeral){ try{ funeralEffect(e, L || []); }catch(err){} } return L; };
-  const c0 = closeResult; closeResult = function(m){ c0(m); if(G && !G.modal && !G.enemy && (G.funeralFor || []).length) funeralOpen(); };
+  const c0 = closeResult; closeResult = function(m){ c0(m); if(G && UI.screen==='game' && !G.modal && !G.enemy && (G.funeralFor || []).length && !(typeof NET!=='undefined' && NET.on) && G.ship.crew.some(c => c.owner==='p' && !c.drone && c.hp > 0)) funeralOpen(); };
 })();
 
 /* ---------------- the Memorial Wall ---------------- */
@@ -214,16 +214,16 @@ function drawMemorial(){
   const S = memorialStats(M);
   const stat = (x, k, v) => { T(k.toUpperCase(), x, 160, { s:12, f:FD, w:600, c:C.muted, ls:1 }); T(v, x, 188, { s:18, f:FD, w:700, c:C.ink, max:300 }); };
   stat(60, 'Fallen', String(M.length)); stat(220, 'Took with them', `${S.kills} foes`); stat(440, 'Biggest killer', S.cause ? `${S.cause[0]} (${S.cause[1]})` : '—'); stat(780, 'Most lost', S.race ? `${S.race[0]} (${S.race[1]})` : '—');
-  stat(1060, 'Unluckiest ship', S.ship ? `${theName(S.ship[0])} (${S.ship[1]})` : '—');
+  stat(1060, 'Unluckiest ship', S.ship ? `${mcap(theName(S.ship[0]))} (${S.ship[1]})` : '—');
   [['new', 'Newest'], ['kills', 'Most kills'], ['served', 'Longest served'], ['lvl', 'Highest level']].forEach(([k, n], i) => btn(60 + i*170, 212, 160, 40, n, () => { UI.memSort = k; UI.memPage = 0; }, { s:14, fill:sort===k }));
-  if(S.hero && S.hero.kills) T(`Hero of the wall: ${S.hero.name}, ${S.hero.kills} kills. ${S.shortest && S.shortest.served <= 2 ? `Shortest career: ${S.shortest.name}, ${S.shortest.served} jump${S.shortest.served===1 ? '' : 's'}.` : ''}`, 760, 240, { s:14, c:C.muted, max:800 });
+  if(S.hero && S.hero.kills) T(`Hero of the wall: ${S.hero.name}, ${S.hero.kills} kill${S.hero.kills===1 ? '' : 's'}. ${S.shortest && S.shortest.served <= 2 ? `Shortest career: ${S.shortest.name}, ${S.shortest.served} jump${S.shortest.served===1 ? '' : 's'}.` : ''}`, 760, 240, { s:14, c:C.muted, max:800 });
   const per = 6, pages = Math.ceil(M.length/per), pg = clamp(UI.memPage || 0, 0, pages - 1), cw = 728, ch = 196;
   M.slice(pg*per, pg*per + per).forEach((f, i) => { const x = 60 + (i % 2)*(cw + 24), y = 272 + Math.floor(i/2)*(ch + 14), race = DATA.races[f.race] || {}, qd = typeof quirkDef==='function' && quirkDef(f.quirk);
     rr(x, y, cw, ch, 12); ctx.fillStyle = 'rgba(14,16,24,.92)'; ctx.fill(); ctx.strokeStyle = hexA(C.amber, .35); ctx.lineWidth = 1.5; ctx.stroke();
     rr(x + 6, y + 6, cw - 12, ch - 12, 9); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.stroke();
     T(f.name, x + 24, y + 40, { s:26, f:FD, w:700, c:C.amber, max:380 });
     T(`${race.name || f.race}${qd ? ' · ' + qd.name : ''}${f.lvl ? ' · Lv ' + f.lvl : ''}${f.pres ? ' ★' + f.pres : ''}`, x + cw - 24, y + 38, { s:14, a:'right', c:race.color || C.muted, max:300 });
-    const d = new Date(f.date || f.t || 0); T(`${theName(f.ship || 'the ship')} · sector ${f.s || '?'} · ${d.getDate()} ${d.toLocaleString('en-GB', { month:'short' })} ${d.getFullYear()}`, x + 24, y + 64, { s:13, c:C.muted, max:cw - 48 });
+    const d = new Date(f.date || f.t || 0); T(`${mcap(theName(f.ship || 'the ship'))} · sector ${f.s || '?'} · ${d.getDate()} ${d.toLocaleString('en-GB', { month:'short' })} ${d.getFullYear()}`, x + 24, y + 64, { s:13, c:C.muted, max:cw - 48 });
     T(`${mcap(f.why || 'lost')}. Served ${f.served != null ? f.served : '?'} jump${f.served===1 ? '' : 's'}, ${f.kills || 0} kill${f.kills===1 ? '' : 's'}.${f.funeral ? ' ' + mcap(f.funeral) + '.' : ''}${f.risen ? (f.risen.wrong ? ' Dug up again. Came back wrong.' : ' Dug up again, and came back.') : ''}`, x + 24, y + 88, { s:14, c:C.ink, max:cw - 48 });
     para(`"${f.words}"`, x + 24, y + 116, cw - 48, { s:16, lh:21, c:'#f3e3c0', max:2 });
     if(f.epitaph) para(f.epitaph, x + 24, y + 166, cw - 210, { s:13, lh:17, c:C.muted, max:2 });

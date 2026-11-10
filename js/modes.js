@@ -36,7 +36,7 @@ function drawModeOverlay(){
     STORY_MIX.forEach(([k, n], i) => btn(f.x + 150 + i*210, y2 + 90, 200, 44, n, () => { SET.storyMix = k; saveProfile(); }, { fill:sm===k, s:15 }));
     T(storyMixText(), f.x + 790, y2 + 118, { s:14, c:C.muted, max:f.w - 1120 + 300 }); }
   drawVoyageRows(f.x + 40, y2 + 150, f.w - 380);
-  para('Dailies, challenges, campaign mods and multiplayer always play the classic way. Every mode earns renown, medals and Haven\'s Rest progress.', f.x + 40, y2 + 262, f.w - 380, { s:14, lh:20, c:C.muted });
+  T('Dailies, challenges, campaigns and multiplayer always use Classic and the standard voyage. Every mode earns renown and medals.', f.x + 40, y2 + 262, { s:13, c:C.muted, max:f.w - 380 });
   btn(f.x + f.w - 280, f.y + f.h - 90, 240, 60, 'Done', () => { UI.modeOpen = false; }, { fill:true, s:20 });
 }
 
@@ -51,10 +51,10 @@ function voyageText(){ const L = voyOpt('len'), S = voyOpt('size'), P = voyOpt('
 function drawVoyageRows(x, y, w){
   T('Voyage', x, y + 26, { s:16, f:FD, w:700 });
   VOYAGE.len.forEach(([k, n], i) => btn(x + 110 + i*150, y, 140, 40, n, () => { SET.voy_len = k; saveProfile(); }, { fill:voyOpt('len')[0]===k, s:14 }));
-  T('Sectors', x + 600, y + 26, { s:15, c:C.muted }); VOYAGE.size.forEach(([k, n], i) => btn(x + 690 + i*150, y, 140, 40, n, () => { SET.voy_size = k; saveProfile(); }, { fill:voyOpt('size')[0]===k, s:14 }));
+  T('Map', x + 600, y + 26, { s:15, c:C.muted }); VOYAGE.size.forEach(([k, n], i) => btn(x + 690 + i*150, y, 140, 40, n, () => { SET.voy_size = k; saveProfile(); }, { fill:voyOpt('size')[0]===k, s:14 }));
   T('Fleet', x, y + 78, { s:16, f:FD, w:700 }); VOYAGE.pace.forEach(([k, n], i) => btn(x + 110 + i*150, y + 52, 140, 40, n, () => { SET.voy_pace = k; saveProfile(); }, { fill:voyOpt('pace')[0]===k, s:14 }));
   T(voyageText(), x + 600, y + 78, { s:14, c:C.cyan, max:w - 600 });
-  tip(x, y, w, 92, 'Voyage', 'Length: how many sectors. Sectors: Sprawling makes each sector about half as big again, with more beacons, stores and stories, and slows the Fleet to match. Fleet: Patient gives you about 30% more time in every sector to enjoy the garden, the shops and the stories; Relentless gives you less.'); }
+  tip(x, y, w, 92, 'Voyage', 'Length: how many sectors. Map: Sprawling makes each sector about half as big again, with more beacons, stores and stories, and slows the Fleet to match. Fleet: Patient gives you about 30% more time in every sector to enjoy the garden, the shops and the stories; Relentless gives you less.'); }
 function voyageAllowed(o){ o = o || {}; return !(o.daily || o.cup || o.challenge || o.seedDuel || o.practice || o.tut || o.keepData) && !(typeof CAMP!=='undefined' && CAMP) && !(typeof NET!=='undefined' && NET.on); }
 (function(){
   const a0 = applyMods; applyMods = function(...a){ const r = a0(...a); if(UI._voy && R){ const L = voyOpt('len'), S = voyOpt('size'), P = voyOpt('pace');
@@ -62,7 +62,3 @@ function voyageAllowed(o){ o = o || {}; return !(o.daily || o.cup || o.challenge
     R.mapExtra = S[2]; R.fleetSpeed = (R.fleetSpeed || .11) * P[2] * (S[2] ? 7/(7 + S[2]) : 1); } return r; };
   const n0 = newRun; newRun = function(id, name, o = {}){ UI._voy = voyageAllowed(o); try{ return n0(id, name, o); } finally { UI._voy = false; if(G && voyageAllowed(o)) G.voyage = { len:voyOpt('len')[0], size:voyOpt('size')[0], pace:voyOpt('pace')[0] }; } };
 })();
-/* the record: how long runs really take */
-(function(){ if(typeof drawRecord!=='function') return; const d0 = drawRecord; drawRecord = function(){ d0(); const h = (PROFILE.history || []).filter(e => !e.daily).slice(0, 10); if(h.length < 2) return;
-  const avgT = h.reduce((t, e) => t + (e.time || 0), 0)/h.length, avgS = h.reduce((t, e) => t + (e.sector || 0), 0)/h.length, avgJ = h.reduce((t, e) => t + (e.jumps || 0), 0)/h.length;
-  T(`Your last ${h.length} runs: ${fmtTime(avgT)} of action on average (not counting pauses and reading), ${avgJ.toFixed(0)} jumps, reaching sector ${avgS.toFixed(1)}.`, 84, 818, { s:14, c:C.muted, max:930 }); }; })();
