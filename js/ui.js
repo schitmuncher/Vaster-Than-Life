@@ -142,6 +142,8 @@ function draw(){
     case 'tutorial': drawTutorial(); break;
     case 'record': drawRecord(); break;
     case 'saga': drawSaga(); break;
+    case 'memorial': if(typeof drawMemorial==='function') drawMemorial(); else UI.screen = 'record'; break;
+    case 'logs': if(typeof drawLogbook==='function') drawLogbook(); else UI.screen = 'record'; break;
     case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
@@ -451,12 +453,13 @@ function drawSettings(){
       choice('Game speed', 'speed', [[.5,'50%'],[.75,'75%'],[1,'Normal'],[1.25,'125%']], 1, 'How fast fights and crew move. Slow it down to have more time to think, aim and walk in VR. Applies straight away, mid-run too.');
       head('Help');
       onoff('Captain\'s tips', 'hints', true, 'Short tips the first time each mechanic comes up.');
-      btn(VX, y-4, 240, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 }); y += 50;
+      btn(VX + 336, y-46, 220, 42, 'Replay all tips', () => { PROFILE.hintsSeen = {}; SET.hints = true; saveProfile(); toast('Tips will show again.'); }, { s:15 });
       onoff('Smart pause', 'smartPause', true, 'Pause automatically when boarders arrive, crew die or the hull gets critical.');
       onoff('Crew mend kit', 'autoMaintain', true, 'Between jumps the crew mend one worn or badly worn weapon or armour, using a drone part, as long as you have three or more. Turn off to do it yourself in the Armoury.');
       { if(SET.hunger===true) SET.hunger = 'relaxed'; choice('Crew hunger', 'hunger', [[false,'Off'],['relaxed','Relaxed'],['hardcore','Hardcore']], 'relaxed', 'Crew eat between jumps, by themselves. Relaxed: a well-fed crew gets more health and works harder, and only real hunger costs health. Hardcore: every bit of hunger costs maximum health, and the starving slow down. Off: nobody eats.'); }
       head('Content');
       choice('Story variety', 'storyMix', [['classic','Hand-made'],['mixed','Mixed'],['wild','Wild']], 'mixed', 'How many beacons are generated on the spot (new people, new trouble, choices built from your ship and crew) rather than hand-written. Mixed is about a third; Wild is most. Campaign mods always use their own events.');
+      onoff('Grown-up humour', 'grownUp', true, 'Adult jokes: swearing, innuendo and dark humour in stories, last words and funerals. Off keeps it family-friendly.');
       onoff('Unlock all ships', 'unlockAll', false, 'Skip the unlock conditions and pick any ship.');
       onoff('Allow mod scripts', 'allowScripts', false, 'Lets mods run their own JavaScript. Only turn this on for mods you trust.', () => applyMods());
       break;
@@ -613,7 +616,7 @@ function rememberRename(oldName, name){ const L = SET.lastCrew; if(!L || !Array.
 function hangarCrew(sel, temp){
   let hc = UI.hangarCrew; if(hc && hc.ship===sel && hc.names.length===temp.crew.length) return hc;
   const used = []; const quirks = temp.crew.map(c => { const q = typeof rollQuirk==='function' ? rollQuirk(used) : null; used.push(q); return q; });
-  const CC = typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew;
+  const CC = typeof campHangarDef==='function' && campHangarDef() && ((DATA.ships[sel] || {}).campCrew || campHangarDef().crew);
   const LC = !CC && !(typeof NET!=='undefined' && NET.on) && SET.lastCrew || null, ln = LC && Array.isArray(LC.names) ? LC.names : [], lq = LC && Array.isArray(LC.quirks) ? LC.quirks : [];   // last run's names come back
   const qOk = q => q && (!BASE.quirks || (DATA.quirks || BASE.quirks)[q]);
   hc = UI.hangarCrew = { ship:sel, names:temp.crew.map((c, i) => CC && CC[i] && CC[i].name || (typeof ln[i]==='string' && ln[i].trim() ? ln[i].slice(0, 16) : c.name)), quirks:quirks.map((q, i) => CC && CC[i] && CC[i].quirk || (qOk(lq[i]) ? lq[i] : q)) }; return hc;
@@ -649,7 +652,8 @@ function drawRecord(){
   T("Captain's record", 60, 122, { s:50, f:FD, w:700 });
   const hist = PROFILE.history || [];
   panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
-  if((PROFILE.memorial||[]).length && typeof memorialSaga==='function') btn(540, 160, 224, 36, `Memorial (${PROFILE.memorial.length}) ›`, () => openSaga(memorialSaga(), 'record'), { s:14, col:C.muted });
+  if((PROFILE.memorial||[]).length && typeof memorialSaga==='function') btn(540, 160, 224, 36, `Memorial (${PROFILE.memorial.length}) ›`, () => typeof openMemorial==='function' ? openMemorial('record') : openSaga(memorialSaga(), 'record'), { s:14, col:C.muted });
+  if(typeof openLogbook==='function' && (PROFILE.logs||[]).length) btn(300, 160, 224, 36, `Captain's logs (${PROFILE.logs.length}) ›`, () => openLogbook('record', 0), { s:14, col:C.muted });
   if((PROFILE.sagas||[]).length && typeof openSaga==='function') btn(780, 160, 224, 36, `Sagas (${PROFILE.sagas.length}) ›`, () => { UI.sagaIdx = 0; openSaga(PROFILE.sagas[0], 'record'); UI.sagaList = true; }, { s:14, col:C.amber });
   ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
   if(!hist.length) T('No runs yet.', 84, 268, { s:18, c:C.muted });
@@ -1573,8 +1577,9 @@ function drawShipModal(){
   } else if(UI.tab==='factions' && typeof drawFactionsTab==='function'){ drawFactionsTab(f, cx, y0);
   } else if(UI.tab==='log'){
     label('Captain\'s log', cx, y0+10, C.muted, 'left', 14);
+    if(typeof openLogbook==='function') btn(cx + 1000, y0 - 12, 300, 40, 'Read the whole log ›', () => { const back = G.modal; openLogbook('game', -1); UI.logModal = back; }, { s:14, col:C.amber });
     const entries = (G.log||[]).slice(-17).reverse(); if(!entries.length) T('Nothing logged yet.', cx, y0+56, { s:18, c:C.muted });
-    entries.forEach((e,i) => { T(`S${e.s}`, cx, y0+46+i*36, { s:14, f:FD, w:700, c:C.amber }); para(e.t, cx+50, y0+46+i*36, 1280, { s:15, lh:18, max:1 }); });
+    entries.forEach((e,i) => { T(`S${e.s}${e.j != null ? ' J' + e.j : ''}`, cx, y0+46+i*36, { s:13, f:FD, w:700, c:C.amber }); para(e.t, cx+70, y0+46+i*36, 1260, { s:15, lh:18, max:1 }); });
   } else {
     label(`Augments (${s.augments.length}/${R.augmentSlots})`, cx, y0+10, C.muted, 'left', 14);
     if(!s.augments.length) T('No augments yet. Find them in events and stores.', cx, y0+56, { s:18, c:C.muted });

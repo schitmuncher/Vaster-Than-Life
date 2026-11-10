@@ -46,26 +46,45 @@ const MIDI_STYLES = {
   eerie:   { tempo:.65, tr:-5,  lead:'sine',     bass:'sine',     pad:true,  drums:0,  cut:900,  vol:.6,  gap:6, detune:18, sparse:.3 },
   battle:  { tempo:1.18,tr:-12, lead:'square',   bass:'sawtooth', pad:false, drums:3,  cut:2600, vol:.75, gap:0 },
   boss:    { tempo:1.08,tr:-13, lead:'sawtooth', bass:'sawtooth', pad:true,  drums:3,  cut:1600, vol:.8,  gap:0, detune:10 },
-  victory: { tempo:1.0, tr:2,   lead:'sawtooth', bass:'triangle', pad:true,  drums:1,  cut:4000, vol:.85, gap:3 }
+  victory: { tempo:1.0, tr:2,   lead:'sawtooth', bass:'triangle', pad:true,  drums:1,  cut:4000, vol:.85, gap:3 },
+  // plainer ones for tunes written to be played as they are
+  blues:   { tempo:1.0, tr:0,   lead:'triangle', bass:'triangle', pad:false, drums:2,  cut:2400, vol:.75, gap:1 },
+  funk:    { tempo:1.0, tr:0,   lead:'square',   bass:'sawtooth', pad:false, drums:2,  cut:2000, vol:.68, gap:0 },
+  lullaby: { tempo:1.0, tr:0,   lead:'sine',     bass:'sine',     pad:true,  drums:0,  cut:1400, vol:.6,  gap:3, detune:8 },
+  march:   { tempo:1.0, tr:0,   lead:'square',   bass:'sawtooth', pad:false, drums:3,  cut:2600, vol:.72, gap:0 },
+  chirpy:  { tempo:1.0, tr:0,   lead:'triangle', bass:'square',   pad:false, drums:2,  cut:3600, vol:.62, gap:1 }
 };
 const MIDI = { song:null, url:null, loading:false, style:null, next:0, idx:0, t0:0, loopAt:0 };
+const MIDI_CACHE = {};   // parsed songs by url, so a campaign can switch tunes per cue without refetching
 function midiLoad(url){
-  if(MIDI.url === url && (MIDI.song || MIDI.loading)) return; MIDI.url = url; MIDI.song = null; MIDI.loading = true;
-  const done = b => { MIDI.song = parseMidi(b); MIDI.loading = false; }, fail = () => { MIDI.loading = false; MIDI.song = null; };
+  if(MIDI.url === url && (MIDI.song || MIDI.loading)) return;
+  if(MIDI_CACHE[url]){ MIDI.url = url; MIDI.song = MIDI_CACHE[url]; MIDI.loading = false; MIDI.idx = 0; MIDI.t0 = (typeof now==='function' ? now() : 0) + .4; return; }
+  if(MIDI.loading && MIDI.url !== url && MIDI.pending === url) return;
+  MIDI.url = url; MIDI.pending = url; MIDI.song = null; MIDI.loading = true;
+  const done = b => { const s = parseMidi(b); MIDI_CACHE[url] = s; if(MIDI.url === url){ MIDI.song = s; MIDI.loading = false; MIDI.idx = 0; MIDI.t0 = (typeof now==='function' ? now() : 0) + .4; } },
+        fail = () => { if(MIDI.url === url){ MIDI.loading = false; MIDI.song = null; } };
   // some hosts won't serve .mid files: then use the base64 copy beside it (my-theme.mid.json, { "base64": "..." })
   const viaJson = () => fetch(url + '.json').then(r => { if(!r.ok) throw new Error(r.status); return r.json(); }).then(j => { const s = atob(j.base64), a = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); done(a.buffer); }).catch(fail);
   fetch(url).then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b => { try{ done(b); }catch(e){ viaJson(); } }).catch(viaJson);
+}
+/* which file plays for a cue: music.tracks { cue: 'file.mid' | { file, style } | [ several, taking turns by sector ] }, else music.file */
+function midiTrackFor(M, cue){
+  let t = M.tracks && M.tracks[cue]; if(Array.isArray(t)) t = t.length ? t[((typeof G!=='undefined' && G ? G.sector : 1) - 1) % t.length] : null;
+  if(typeof t === 'string') t = { file:t }; return t && t.file ? t : { file:M.file };
 }
 /* which arrangement fits the moment (null: the normal soundtrack) */
 function midiCue(){
   const C = UI.screen==='select' ? (typeof campHangarDef==='function' ? campHangarDef() : null) : (typeof campDef==='function' && typeof G!=='undefined' && G ? campDef() : null);
   const M = C && C.music; if(!M || !M.file) return null; const cues = Object.assign({ hangar:'lounge', start:'rock', explore:'musicbox', strange:'eerie', combat:'battle', boss:'boss', win:'victory' }, M.cues || {});
-  midiLoad('mods/' + M.file);
-  if(UI.screen==='select') return cues.hangar; if(UI.screen==='win') return cues.win; if(UI.screen!=='game' || !G) return null;
-  if(G.enemy && !G.enemy.dead) return G.boss ? cues.boss : cues.combat;
-  if(G.sector <= 1 && (G.stats.jumps||0) < 2) return cues.start;
-  const sd = typeof sectorDef==='function' ? sectorDef() : {}; if((M.strange || []).includes(sd.id) || (M.strange || []).includes(G.sectorType)) return cues.strange;
-  return cues.explore;
+  const key = (() => {
+    if(UI.screen==='select') return 'hangar'; if(UI.screen==='win') return 'win'; if(UI.screen!=='game' || !G) return null;
+    if(G.enemy && !G.enemy.dead) return G.boss ? 'boss' : 'combat';
+    if(G.sector <= 1 && (G.stats.jumps||0) < 2) return 'start';
+    const sd = typeof sectorDef==='function' ? sectorDef() : {}; if((M.strange || []).includes(sd.id) || (M.strange || []).includes(G.sectorType)) return 'strange';
+    return 'explore'; })();
+  if(!key) return null;
+  const tr = midiTrackFor(M, key); midiLoad('mods/' + tr.file);
+  return tr.style && MIDI_STYLES[tr.style] ? tr.style : cues[key];
 }
 function midiActive(){ return !!(MIDI.style && MIDI.song && SET.music > 0); }
 /* called from the music timer: schedule the next half second of notes */

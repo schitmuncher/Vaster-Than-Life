@@ -48,7 +48,7 @@ function C_AMBER(){ return '#ffb547'; }
 /* start of a campaign run: named crew, its own briefing */
 function campaignStart(){ const C = campDef(); if(!C) return;
   const crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);
-  (C.crew||[]).forEach((cc, i) => { const c = crew[i]; if(!c || !cc) return; if(cc.name) c.name = String(cc.name).slice(0, 16); if(cc.quirk){ c.quirk = cc.quirk; c.quirkSet = true; }
+  (((DATA.ships[G.shipDef] || {}).campCrew) || C.crew || []).forEach((cc, i) => { const c = crew[i]; if(!c || !cc) return; if(cc.name) c.name = String(cc.name).slice(0, 16); if(cc.quirk){ c.quirk = cc.quirk; c.quirkSet = true; }
     if(cc.skills) for(const k in cc.skills) if(SKILLT[k]) c.sk[k] = cc.skills[k] >= 2 ? SKILLT[k][1] : cc.skills[k] >= 1 ? SKILLT[k][0] : 0;
     if(cc.hp){ c.maxHp = cc.hp; c.hp = cc.hp; } if(cc.title) c.title = cc.title; });
   if(C.scrap != null) G.scrap = C.scrap; if(C.fuel != null) G.fuel = C.fuel;

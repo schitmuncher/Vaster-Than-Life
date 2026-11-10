@@ -16,7 +16,7 @@ P('### Contents',
   '- [Crew: the crew screen](#crew-the-crew-screen) · [Crew levels](#crew-levels) · [Classes](#classes) · [Perks](#perks) · [Abilities](#abilities) · [Grenades](#grenades) · [Attachments](#attachments) · [Crew weapons](#crew-weapons)',
   '- [Health and healing](#health-and-healing) · [Food and hunger](#food-and-hunger) · [Skills](#skills) · [Races](#races)',
   '- [Captain level, rank and renown](#captain-level-rank-and-renown) · [Ships](#ships) · [Haven\'s Rest](#havens-rest) · [Difficulty](#difficulty)',
-  '- [Gentler rules](#gentler-rules) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)');
+  '- [Gentler rules](#gentler-rules) · [Voyages, memorial, logs](#longer-voyages-the-memorial-wall-logs-and-the-graveyard) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)');
 
 // ---------------- controls ----------------
 P('### Controls',
@@ -159,6 +159,15 @@ P('### Gentler rules',
   '- **Pet diets**: when your pet gets hungry you can say Not yet; it asks again a couple of jumps later, until you have what you want to feed it.',
   '- **The void fungus** no longer swallows the oxygen system: it keeps the air sweet itself, and letting it into the reactor costs two bars, not three.');
 
+P('### Longer voyages, the Memorial Wall, logs and the Graveyard',
+  '- **Voyage options** (hangar → Mode, below the four modes): Length Short/Standard/Long (3 fewer or 3 more sectors), Map Compact/Sprawling (3 more columns of beacons per sector), Fleet Relentless/Standard/Patient (25% faster or 30% slower). A sprawling map slows the Fleet to match. Dailies, the Cup, challenges, campaigns and multiplayer use the standard voyage. Record shows your average run time, jumps and sector over the last ten runs.',
+  `- **Last words**: ${LAST_WORDS.generic.length + LAST_WORDS_ADULT.length} general lines plus sets for each way of dying (${Object.keys(LAST_WORDS_CAUSE).join(', ')}), each race, each personality, rookies and veterans.`,
+  '- **Funerals**: after a fight, choose full honours (+30 hearts each), a roast (+20, more for daredevils, pyrates and gamblers), a quick word, or the reclaimer (+2 drone parts, -60 hearts).',
+  '- **The Memorial Wall** (Record → Memorial): a plaque for everyone who died, with last words, cause, kills, level, ship, funeral and an epitaph. Sort by newest, kills, time served or level.',
+  `- **Captain\'s logs** (Record → Captain\'s logs, or Ship → Log in a run): every jump, choice, fight, death, recruit and level-up, for the last ${LOGS_KEEP} voyages.`,
+  `- **The Graveyard**: a ${Math.round(GRAVE_CHANCE*1000)/10}% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.`,
+  '- **Grown-up humour** (Settings → Gameplay, on by default): adult stories, last words, funerals and captain\'s remarks. Off keeps everything family-friendly.');
+
 P('### Saves and your data',
   `- **Save slots**: Settings → Profile, or the save button next to Career on the title screen. Up to ${SLOT_MAX} separate careers on one device, each with its own record, medals, unlocks, captain level, roster, classes and run in progress. Settings are shared.`,
   '- **Play this save** switches careers (the game reloads). **Rename** names a save. **Delete** removes another save; on the save you are playing it says **Clear this save** and starts it fresh. Both ask twice.',
@@ -169,8 +178,13 @@ P('### Saves and your data',
 // ---------------- Red Dwarf ----------------
 try{ const rd = JSON.parse(fs.readFileSync(ROOT + 'mods/red-dwarf.json', 'utf8')); const C = rd.campaign;
   P('### Red Dwarf campaign',
-    `${rd.name} is a campaign mod in the library (unofficial fan campaign; all text original). Turn it on in **Mods**, then pick it with the Campaign arrows at the top of the hangar. Fly ${C.ships.map(id => (rd.ships.find(s => s.id===id) || {}).name || id).join(' or ')} with ${C.crew.map(c => c.name).join(', ')}, after the Simulants who towed Red Dwarf away. Hunger applies to the crew who eat (holograms and mechanoids don't).`,
+    `${rd.name} is a campaign mod in the library (unofficial fan campaign; all text original). Turn it on in **Mods**, then pick it with the Campaign arrows at the top of the hangar. Start in ${C.ships.map(id => rd.ships.find(s => s.id===id) || {}).filter(s => !s.ch).map(s => s.name).join(' or ')} with ${C.crew.map(c => c.name).join(', ')}, after the Simulants who towed Red Dwarf away. Hunger applies to the crew who eat (holograms and mechanoids don't).`,
     table(['Sector', 'What it is like'], rd.sectors.filter(s => s.id!=='laststand').map(s => [s.name, s.blurb])),
+    'Ships to unlock (pilot level plus a challenge, or a requisition token, or renown):',
+    table(['Ship', 'Kind', 'Hull', 'Crew', 'To unlock', 'What it is like'], rd.ships.filter(s => s.ch).map(s => { const ch = s.ch, nm = id => (rd.ships.find(x => x.id===id) || {}).name || id;
+      const u = [`pilot level ${s.lvl || 1}`, ch.shipSector ? `reach sector ${ch.shipSector[1]} in ${nm(ch.shipSector[0])}` : '', ch.shipKills ? `destroy ${ch.shipKills[1]} ships in ${nm(ch.shipKills[0])}` : '', ch.sector ? `reach sector ${ch.sector}` : '', ch.kills ? `${ch.kills} ships destroyed in total` : ''].filter(Boolean).join(', ');
+      return [s.name, s.cls, s.hull, (s.campCrew || C.crew).slice(0, s.crew.length).map(c => c.name).join(', '), u, s.desc]; })),
+    `Music: the theme plus five tunes written for the campaign (${Object.keys((C.music || {}).tracks || {}).join(', ')} each have their own; exploring and fights take turns sector by sector).`,
     `It has ${rd.events.length} scenes (a story scene in every sector, picked from several each run, plus encounters), ${rd.enemies.length} enemy ships, ${rd.weapons.length} trick weapons, ${rd.drones.length} drones, ${rd.augments.length} augments and ${rd.arms.length} personal weapons. Along the way you may meet people who will join you: a hologram navigator and a Simulant who has changed sides.`); }catch(e){}
 
 P('### Troubleshooting',

@@ -110,7 +110,7 @@ A detailed reference for everything you do in a run. The tables in this section 
 
 - [Captain level, rank and renown](#captain-level-rank-and-renown) · [Ships](#ships) · [Haven's Rest](#havens-rest) · [Difficulty](#difficulty)
 
-- [Gentler rules](#gentler-rules) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)
+- [Gentler rules](#gentler-rules) · [Voyages, memorial, logs](#longer-voyages-the-memorial-wall-logs-and-the-graveyard) · [Saves and your data](#saves-and-your-data) · [Red Dwarf campaign](#red-dwarf-campaign) · [Troubleshooting](#troubleshooting)
 
 ### Controls
 
@@ -615,6 +615,22 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 - **The void fungus** no longer swallows the oxygen system: it keeps the air sweet itself, and letting it into the reactor costs two bars, not three.
 
+### Longer voyages, the Memorial Wall, logs and the Graveyard
+
+- **Voyage options** (hangar → Mode, below the four modes): Length Short/Standard/Long (3 fewer or 3 more sectors), Map Compact/Sprawling (3 more columns of beacons per sector), Fleet Relentless/Standard/Patient (25% faster or 30% slower). A sprawling map slows the Fleet to match. Dailies, the Cup, challenges, campaigns and multiplayer use the standard voyage. Record shows your average run time, jumps and sector over the last ten runs.
+
+- **Last words**: 89 general lines plus sets for each way of dying (fire, air, boarders, enemy, aboard, mind, away), each race, each personality, rookies and veterans.
+
+- **Funerals**: after a fight, choose full honours (+30 hearts each), a roast (+20, more for daredevils, pyrates and gamblers), a quick word, or the reclaimer (+2 drone parts, -60 hearts).
+
+- **The Memorial Wall** (Record → Memorial): a plaque for everyone who died, with last words, cause, kills, level, ship, funeral and an epitaph. Sort by newest, kills, time served or level.
+
+- **Captain's logs** (Record → Captain's logs, or Ship → Log in a run): every jump, choice, fight, death, recruit and level-up, for the last 15 voyages.
+
+- **The Graveyard**: a 1.2% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.
+
+- **Grown-up humour** (Settings → Gameplay, on by default): adult stories, last words, funerals and captain's remarks. Off keeps everything family-friendly.
+
 ### Saves and your data
 
 - **Save slots**: Settings → Profile, or the save button next to Career on the title screen. Up to 5 separate careers on one device, each with its own record, medals, unlocks, captain level, roster, classes and run in progress. Settings are shared.
@@ -629,7 +645,7 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 ### Red Dwarf campaign
 
-Red Dwarf: Three Million Years Late is a campaign mod in the library (unofficial fan campaign; all text original). Turn it on in **Mods**, then pick it with the Campaign arrows at the top of the hangar. Fly Starbug 1 or Blue Midget with Lister, Rimmer, Cat, Kryten, after the Simulants who towed Red Dwarf away. Hunger applies to the crew who eat (holograms and mechanoids don't).
+Red Dwarf: Three Million Years Late is a campaign mod in the library (unofficial fan campaign; all text original). Turn it on in **Mods**, then pick it with the Campaign arrows at the top of the hangar. Start in Starbug 1 or Blue Midget with Lister, Rimmer, Cat, Kryten, after the Simulants who towed Red Dwarf away. Hunger applies to the crew who eat (holograms and mechanoids don't).
 
 | Sector | What it is like |
 | --- | --- |
@@ -643,7 +659,19 @@ Red Dwarf: Three Million Years Late is a campaign mod in the library (unofficial
 | The Garbage Trail | Three million years of Red Dwarf's rubbish, still drifting in a line across space. Some of it is valuable. Some of it is alive. |
 | The Mirror Sea | A stretch of space so still and polished that every ship sees itself coming. Some of the reflections fly better than you do. |
 
-It has 96 scenes (a story scene in every sector, picked from several each run, plus encounters), 19 enemy ships, 15 trick weapons, 3 drones, 11 augments and 6 personal weapons. Along the way you may meet people who will join you: a hologram navigator and a Simulant who has changed sides.
+Ships to unlock (pilot level plus a challenge, or a requisition token, or renown):
+
+| Ship | Kind | Hull | Crew | To unlock | What it is like |
+| --- | --- | --- | --- | --- | --- |
+| Starbug Mk III | Rebuilt shuttle | 34 | Lister, Rimmer, Cat, Kryten | pilot level 4, reach sector 5 in Starbug 1 | Three crashed Starbugs welded into one by a skutter with ambition. More hull, more guns, and the toilet is on the outside. |
+| Holoship Smug Glow | Hard-light holoship | 22 | Rimmer, Cmdr Glossop, Nurse Lumen | pilot level 6, reach sector 6 in Blue Midget | Made of light and arrogance. Fast, well shielded, and its holograms can't burn or choke. The hull is mostly opinion. |
+| Captured GELF Canoe | GELF war canoe | 32 | Lister, Grunk, Mrs Grunk, Cat | pilot level 5, destroy 12 ships in Blue Midget | Won in a wrestling match, a wedding and a misunderstanding. Bone, hide, a harpoon and boarders who love a scrap. |
+| Stolen Simulant Barge | Simulant salvage barge | 36 | Lister, Rimmer, Cat, Kryten | pilot level 8, reach sector 8, 80 ships destroyed in total | Nicked while its Simulants were at a team-building day. Plasma lance, hacking, and a computer that asks politely to kill you. |
+| The Skutter Pram | Skutter-built runabout | 20 | Kryten, Spanners | pilot level 3, destroy 10 ships in Starbug 1 | Built by skutters from a laundry trolley and a fridge. Tiny, nippy, full of drones, and very sorry about all this. |
+
+Music: the theme plus five tunes written for the campaign (hangar, start, explore, strange, combat each have their own; exploring and fights take turns sector by sector).
+
+It has 123 scenes (a story scene in every sector, picked from several each run, plus encounters), 19 enemy ships, 15 trick weapons, 3 drones, 11 augments and 6 personal weapons. Along the way you may meet people who will join you: a hologram navigator and a Simulant who has changed sides.
 
 ### Troubleshooting
 

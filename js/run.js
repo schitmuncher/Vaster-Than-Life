@@ -46,7 +46,7 @@ function newRun(shipId, name, o={}){
   PROFILE.runs++; saveProfile();
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; UI.crewPanel = false; if(typeof svReset==='function') svReset();
   emit('runStart', G);
-  logEntry(`Took command of ${G.ship.name}.`);
+  logEntry(`Took command of ${G.ship.name}.`, 'start');
   G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
   if(typeof campaignRunStart==='function') campaignRunStart(o);   // Admiral Hale's send-off, Rebuff alert (campaign.js)
   if(typeof livingRunStart==='function') livingRunStart();   // standing carried over, Haven's Rest perks, an old wreck (living.js)
@@ -73,7 +73,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0; if(typeof situEnter==='fu
   PROFILE.maxSector = Math.max(PROFILE.maxSector, n); saveProfile();
   if(n>=3) grant('sector3'); if(n>=5) grant('sector5'); if(final) grant('laststand');
   if(typeof challengeCheck==='function'){ challengeCheck(false); runAchCheck(); }
-  const cols = final ? 8 : 7, nodes = [], mix = (typeof situMix==='function' ? situMix : x => x)(sd.mix || { event:50, combat:30, store:10, empty:10 });
+  const cols = (final ? 8 : 7) + (R.mapExtra || 0), nodes = [], mix = (typeof situMix==='function' ? situMix : x => x)(sd.mix || { event:50, combat:30, store:10, empty:10 });
   for(let c=0;c<cols;c++){
     const count = (c===0 || c===cols-1) ? 1 : ri(2,3);
     for(let k=0;k<count;k++){
@@ -109,7 +109,7 @@ function genSector_(n, type){ if(G) G.fleetFights = 0; if(typeof situEnter==='fu
   if(typeof campaignSectorGen==='function') campaignSectorGen(n);
   G.flag = null;
   if(sd.secret){ G.flags.glassDone = true; grant('glasswork'); placeQuest('glass_welcome'); }
-  logEntry(`Entered sector ${n}: ${sd.name}.`);
+  logEntry(`Entered sector ${n}: ${sd.name}.${sd.blurb ? ' ' + sd.blurb : ''}`, 'sector');
   if(typeof mpSector==='function') mpSector(n);
   if(final){ const cand = nodes.map((nd,i)=>i).filter(i => nodes[i].col===3);
     G.flag = { node:pick(cand), phase:0, baseHP:R.baseHP, step:0 };
@@ -233,7 +233,7 @@ function eventKinds(e){
 function pickEvent(node){
   if(typeof pickMoment==='function'){ const mo = pickMoment(node); if(mo) return mo; }   // now and then the beacon is about your crew (saga.js)
   const sd = sectorDef(); const tags = sd.tags || [], inCamp = !!(typeof campDef==='function' && campDef());
-  let list = Object.values(DATA.events).filter(e => !(inCamp && e.pack) && !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (!e.req || reqMet(e.req)) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
+  let list = Object.values(DATA.events).filter(e => !(inCamp && e.pack) && !(e.adult && SET.grownUp===false) && !e.questOnly && !e.hail && !e.moment && !(e.once && G.seen[e.id]) && (!e.flag || G.flags[e.flag]) && (!e.noFlag || !G.flags[e.noFlag]) && (!e.req || reqMet(e.req)) && (e.minSector||1) <= G.sector && (e.maxSector||99) >= G.sector
     && (!e.tags || e.tags.includes('') || e.tags.some(t => tags.includes(t) || t===G.sectorType)) && (!e.nebula || node?.nebula));
   // no reruns: events already met this run only come back once everything else has been seen
   const fresh = list.filter(e => !G.seen[e.id]); if(fresh.length) list = fresh;
@@ -502,7 +502,7 @@ function finishCombat(kind, offer){
   if(typeof bountyKill==='function'){ const bl = bountyKill(e); if(bl) L.push(bl); }   // Kestrel Jones's contracts (travellers.js)
   G.modal = { type:'result', title: kind==='surrender' ? 'Surrender accepted' : 'Hostile defeated',
     text: kind==='crew' ? `The ${e.name} drifts silent, its crew gone. You strip it bare.` : kind==='surrender' ? `The ${e.name} hands over its cargo and limps away.` : pick([].concat(VICTORY_LINES[e.faction]||VICTORY_LINES.generic)).replace('{enemy}', e.name) + ' Your crew sweeps the debris for anything useful.', lines:L, after:{} };
-  logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
+  if(typeof LOG_MAX==='undefined') logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
 }
 function flagDefeated(){
   const f = G.flag; grant('phase1'); if(typeof sagaNote==='function') sagaNote('boss', f && f.phase >= 2 ? 'At Fedoration command, the Flaggship finally broke apart.' : `They beat the Flaggship${f && f.phase ? ' a second time' : ''}, and it ran.`);

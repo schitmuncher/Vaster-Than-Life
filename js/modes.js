@@ -35,6 +35,34 @@ function drawModeOverlay(){
   if(typeof STORY_MIX!=='undefined'){ const sm = SET.storyMix || 'mixed'; T('Stories', f.x + 40, y2 + 116, { s:16, f:FD, w:700 });
     STORY_MIX.forEach(([k, n], i) => btn(f.x + 150 + i*210, y2 + 90, 200, 44, n, () => { SET.storyMix = k; saveProfile(); }, { fill:sm===k, s:15 }));
     T(storyMixText(), f.x + 790, y2 + 118, { s:14, c:C.muted, max:f.w - 1120 + 300 }); }
-  para('Dailies, challenges, campaign mods and multiplayer always play the classic way. Every mode earns renown, medals and Haven\'s Rest progress.', f.x + 40, y2 + 160, f.w - 380, { s:14, lh:20, c:C.muted });
+  drawVoyageRows(f.x + 40, y2 + 150, f.w - 380);
+  para('Dailies, challenges, campaign mods and multiplayer always play the classic way. Every mode earns renown, medals and Haven\'s Rest progress.', f.x + 40, y2 + 262, f.w - 380, { s:14, lh:20, c:C.muted });
   btn(f.x + f.w - 280, f.y + f.h - 90, 240, 60, 'Done', () => { UI.modeOpen = false; }, { fill:true, s:20 });
 }
+
+/* ---------------- the voyage: how long, how big, how hard they chase ----------------
+   Length: 5, 8 or 11 sectors. Sectors: compact (about 6 jumps across) or sprawling (about 9,
+   with more beacons, stores and stories, and a Fleet slowed to match). Fleet: relentless,
+   standard or patient (30% slower, time to enjoy the garden, the shops and the stories). */
+const VOYAGE = { len:[['short','Short (5)',-3],['standard','Standard (8)',0],['long','Long (11)',3]], size:[['compact','Compact',0],['sprawling','Sprawling',3]], pace:[['relentless','Relentless',1.25],['standard','Standard',1],['patient','Patient',.7]] };
+function voyOpt(k){ const v = SET['voy_' + k]; return VOYAGE[k].find(o => o[0]===v) || VOYAGE[k][k==='size' ? 0 : 1]; }
+function voyageText(){ const L = voyOpt('len'), S = voyOpt('size'), P = voyOpt('pace'), secs = 8 + L[2], jumps = Math.round(secs*(6 + S[2]));
+  return `About ${jumps} jumps across ${secs} sectors${P[0]==='patient' ? ', with time to look around' : P[0]==='relentless' ? ', with the Fleet on your heels' : ''}.`; }
+function drawVoyageRows(x, y, w){
+  T('Voyage', x, y + 26, { s:16, f:FD, w:700 });
+  VOYAGE.len.forEach(([k, n], i) => btn(x + 110 + i*150, y, 140, 40, n, () => { SET.voy_len = k; saveProfile(); }, { fill:voyOpt('len')[0]===k, s:14 }));
+  T('Sectors', x + 600, y + 26, { s:15, c:C.muted }); VOYAGE.size.forEach(([k, n], i) => btn(x + 690 + i*150, y, 140, 40, n, () => { SET.voy_size = k; saveProfile(); }, { fill:voyOpt('size')[0]===k, s:14 }));
+  T('Fleet', x, y + 78, { s:16, f:FD, w:700 }); VOYAGE.pace.forEach(([k, n], i) => btn(x + 110 + i*150, y + 52, 140, 40, n, () => { SET.voy_pace = k; saveProfile(); }, { fill:voyOpt('pace')[0]===k, s:14 }));
+  T(voyageText(), x + 600, y + 78, { s:14, c:C.cyan, max:w - 600 });
+  tip(x, y, w, 92, 'Voyage', 'Length: how many sectors. Sectors: Sprawling makes each sector about half as big again, with more beacons, stores and stories, and slows the Fleet to match. Fleet: Patient gives you about 30% more time in every sector to enjoy the garden, the shops and the stories; Relentless gives you less.'); }
+function voyageAllowed(o){ o = o || {}; return !(o.daily || o.cup || o.challenge || o.seedDuel || o.practice || o.tut || o.keepData) && !(typeof CAMP!=='undefined' && CAMP) && !(typeof NET!=='undefined' && NET.on); }
+(function(){
+  const a0 = applyMods; applyMods = function(...a){ const r = a0(...a); if(UI._voy && R){ const L = voyOpt('len'), S = voyOpt('size'), P = voyOpt('pace');
+    if(SET.runMode!=='expedition') R.sectors = clamp((R.sectors || 8) + L[2], 4, 12);
+    R.mapExtra = S[2]; R.fleetSpeed = (R.fleetSpeed || .11) * P[2] * (S[2] ? 7/(7 + S[2]) : 1); } return r; };
+  const n0 = newRun; newRun = function(id, name, o = {}){ UI._voy = voyageAllowed(o); try{ return n0(id, name, o); } finally { UI._voy = false; if(G && voyageAllowed(o)) G.voyage = { len:voyOpt('len')[0], size:voyOpt('size')[0], pace:voyOpt('pace')[0] }; } };
+})();
+/* the record: how long runs really take */
+(function(){ if(typeof drawRecord!=='function') return; const d0 = drawRecord; drawRecord = function(){ d0(); const h = (PROFILE.history || []).filter(e => !e.daily).slice(0, 10); if(h.length < 2) return;
+  const avgT = h.reduce((t, e) => t + (e.time || 0), 0)/h.length, avgS = h.reduce((t, e) => t + (e.sector || 0), 0)/h.length, avgJ = h.reduce((t, e) => t + (e.jumps || 0), 0)/h.length;
+  T(`Your last ${h.length} runs: ${fmtTime(avgT)} of action on average (not counting pauses and reading), ${avgJ.toFixed(0)} jumps, reaching sector ${avgS.toFixed(1)}.`, 84, 818, { s:14, c:C.muted, max:930 }); }; })();

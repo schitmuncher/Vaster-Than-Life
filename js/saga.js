@@ -319,7 +319,7 @@ function pickMoment(node, chance){
   if(!G || G.challenge && /lone/.test(G.challenge)) return null;
   const since = (G.stats.jumps||0) - (G.lastMoment ?? -99); if(since < 3) return null;
   if(Math.random() >= (chance ?? .22)) return null;
-  const list = Object.values(DATA.events).filter(ev => ev.moment && !ev.questOnly && momentOk(ev)); if(!list.length) return null;
+  const list = Object.values(DATA.events).filter(ev => ev.moment && !ev.questOnly && !(ev.adult && SET.grownUp===false) && momentOk(ev)); if(!list.length) return null;
   // personal ones first: a scene about someone's quirk beats a generic one
   const ev = wpick(list, ev => (ev.weight ?? 1) * (ev.star && ev.star!=='any' ? 2.2 : ev.bond || ev.fallen || ev.pet ? 1.8 : 1));
   G.lastMoment = G.stats.jumps; return ev.id;
