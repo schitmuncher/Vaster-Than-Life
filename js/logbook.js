@@ -20,6 +20,10 @@ function logDeath(f){ logEntry(`${f.name} died: ${f.why}. Last words: "${f.words
 (function(){
   // arrivals: where, what, and what it cost to get there
   const a0 = arrive; arrive = function(i){ const n = G && G.map && G.map.nodes[i], sp = G ? (G.spent || 0) - (G._logSpent || 0) : 0;
+    // jumping out of a fight that is still going
+    if(G && G._logFight && G.enemy && !G.enemy.dead){ const L0 = G._logFight, lost = Math.max(0, L0.hull - G.ship.hull), secs = Math.round((G.combatT || 0) - L0.t);
+      logEntry(`Jumped away from the ${L0.name}${secs > 0 ? ' after ' + secs + ' seconds' : ''}, ${lost ? lost + ' hull the worse for it' : 'without a scratch'}.`, 'fight'); }
+    if(G) G._logFight = null;
     if(G && sp > 0 && G._logStore){ logEntry(`Spent ${sp} scrap at the store.`, 'store'); } if(G){ G._logSpent = G.spent || 0; G._logStore = false; }
     const r = a0(i);
     if(n && G){ const bits = [BEACON_WORD[n.type] || 'a beacon']; if(n.nebula) bits.push('in a nebula'); if(n.hazard) bits.push(`near ${({ sun:'a star', asteroids:'asteroids', ionstorm:'an ion storm', pulsar:'a pulsar' })[n.hazard] || n.hazard}`); if(n.distress) bits.push('answering a distress call');
@@ -37,7 +41,7 @@ function logDeath(f){ logEntry(`${f.name} died: ${f.why}. Last words: "${f.words
   const f0 = finishCombat; finishCombat = function(kind, offer){ const L0 = G && G._logFight; f0(kind, offer); if(!L0 || !G) return; G._logFight = null;
     const secs = Math.round((G.combatT || 0) - L0.t), lost = Math.max(0, L0.hull - G.ship.hull), crewNow = G.ship.crew.filter(c => c.owner==='p' && !c.drone).length, m = G.modal;
     const loot = m && m.type==='result' && m.lines ? m.lines.filter(l => /scrap|fuel|missile|part|food|weapon|drone|augment|crew/i.test(l)).slice(0, 4).join(', ') : '';
-    const how = { destroyed:'Destroyed', crew:'Killed every last one of the crew of', surrender:'Accepted the surrender of', fled:'Lost the' }[kind] || 'Finished with';
+    const how = { destroyed:'Destroyed', crew:'Killed every last one of the crew of', surrender:'Accepted the surrender of', fled:'Lost' }[kind] || 'Finished with';
     const parts = [secs > 0 ? `${secs} seconds` : '', lost ? `${lost} hull damage` : 'not a scratch on the hull', crewNow < L0.crew ? `${L0.crew - crewNow} crew lost` : ''].filter(Boolean).join(', ');
     logEntry(`${how} the ${L0.name}${kind==='fled' ? ' when they ran' : ''}. ${cap1(parts)}.${loot ? ' Took: ' + loot + '.' : ''}`, kind==='fled' ? 'fight' : 'win'); };
   // people
@@ -68,6 +72,7 @@ function drawLogbook(){
   // the pages
   const s = logSource(UI.logIdx); if(!s) return; const x = 510, w = 1030;
   panel(x, 150, w, 820, 12);
+  if(!s.live && typeof openGazette==='function') btn(x + w - 204, 164, 180, 40, '📰 Front page', () => openGazette(s, 'logs'), { s:14, col:C.amber });
   T(`${mcap(theName(s.ship))}${s.live ? ' · this run so far' : s.win ? ' · victory' : ' · lost'}`, x + 24, 192, { s:24, f:FD, w:700, c:s.win ? C.good : C.amber, max:w - 48 });
   T([s.mode, s.diff && cap1(s.diff), `${s.jumps || 0} jumps`, s.kills != null ? `${s.kills} kill${s.kills===1 ? '' : 's'}` : '', s.time ? `${typeof fmtTime==='function' ? fmtTime(s.time) : s.time + 's'} in action` : '', s.seed ? 'seed ' + s.seed : ''].filter(Boolean).join(' · '), x + 24, 218, { s:13, c:C.muted, max:w - 48 });
   // pages by height, so a long entry never pushes another one off the page

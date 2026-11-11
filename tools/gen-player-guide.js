@@ -166,6 +166,9 @@ P('### Longer voyages, the Memorial Wall, logs and the Graveyard',
   '- **The Memorial Wall** (Record → Memorial): a plaque for everyone who died, with last words, cause, kills, level, ship, funeral and an epitaph. Sort by newest, kills, time served or level.',
   `- **Captain\'s logs** (Record → Captain\'s logs, or Ship → Log in a run): every jump, choice, fight, death, recruit and level-up, for the last ${LOGS_KEEP} voyages.`,
   `- **The Graveyard**: a ${Math.round(GRAVE_CHANCE*1000)/10}% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.`,
+  `- **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of ${Object.keys(ORDERS).length}. ${ORDER_PAY} scrap and ${ORDER_XP} captain xp each, plus ${ORDER_BONUS} scrap for all three. Not in dailies, the Cup, challenges or multiplayer.`,
+  `- **The Codex** (Record → Codex): fills in as you meet ships (${Object.keys(DATA.enemies).length}), carry weapons (${Object.keys(DATA.weapons).length}), drones (${Object.keys(DATA.drones).length}) and augments (${Object.keys(DATA.augments).length}), crew with peoples and cross sectors. ${CODEX_XP} captain xp at 25, 50 and 75% of a section, ${CODEX_XP*3} at 100%.`,
+  '- **The Fedoration Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain\'s logs → Front page.',
   '- **Grown-up humour** (Settings → Gameplay, on by default): adult stories, last words, funerals and captain\'s remarks. Off keeps everything family-friendly.');
 
 P('### Saves and your data',

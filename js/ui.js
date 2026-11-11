@@ -144,6 +144,8 @@ function draw(){
     case 'saga': drawSaga(); break;
     case 'memorial': if(typeof drawMemorial==='function') drawMemorial(); else UI.screen = 'record'; break;
     case 'logs': if(typeof drawLogbook==='function') drawLogbook(); else UI.screen = 'record'; break;
+    case 'gazette': if(typeof drawGazette==='function') drawGazette(); else UI.screen = 'title'; break;
+    case 'codex': if(typeof drawCodex==='function') drawCodex(); else UI.screen = 'record'; break;
     case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
@@ -588,8 +590,9 @@ function drawEnd(){
     st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
     // the journey: the last entries of the captain's log
     panel(W/2-640, 552, 820, 300, 12); label("Captain's log", W/2-616, 588, C.amber, 'left', 15);
+    if(typeof openLogbook==='function' && (PROFILE.logs||[]).length && !(UI.saga && typeof openSaga==='function')) btn(W/2-640+820-262, 562, 246, 40, 'Read the whole log ›', () => openLogbook(UI.screen, 0), { s:15, col:C.amber });
     if(UI.saga && typeof openSaga==='function') btn(W/2-640+820-262, 562, 246, 40, 'Read the saga ›', () => openSaga(UI.saga), { fill:true, s:16, col:C.amber });
-    (G.log||[]).slice(-8).forEach((e,i) => { T(`S${e.s}`, W/2-616, 624 + i*28, { s:13, f:FD, w:700, c:C.amber }); T(e.t, W/2-572, 624 + i*28, { s:14, c:C.ink, max:740 }); });
+    (G.log||[]).slice(-8).forEach((e,i) => { T(`S${e.s}`, W/2-616, 624 + i*28, { s:13, f:FD, w:700, c:C.amber }); para(e.t, W/2-572, 624 + i*28, 740, { s:14, c:C.ink, max:1 }); });
     panel(W/2+200, 552, 440, 300, 12); label('This run', W/2+224, 588, C.cyan, 'left', 15);
     const rows = [['Ship', `${G.ship.name}`], ['Difficulty', (DIFFICULTY[G.diff]||{}).name || ''], ['Seed', G.seed || '-'], ['Crew lost', G.lost.length ? G.lost.slice(0,4).join(', ') + (G.lost.length>4 ? '…' : '') : 'nobody'], ['Time', fmtTime(G.time||0)]];
     if(G.daily){ const best = PROFILE.daily?.[G.daily]; rows.push(['Daily best', best ? `${fmtNum(best.score)} pts` : '-']); }
@@ -597,6 +600,7 @@ function drawEnd(){
     rows.forEach((r,i) => { label(r[0], W/2+224, 626 + i*36, C.muted, 'left', 12); T(r[1], W/2+360, 626 + i*36, { s:16, max:260 }); }); }
   if(typeof mpEndExtras==='function') mpEndExtras(win);
   if(typeof mpEndButtons==='function' && mpEndButtons(win)) return;
+  if(typeof openGazette==='function' && (PROFILE.logs||[])[0] && G && !G.tut && Math.abs((PROFILE.logs[0].t||0) - Date.now()) < 6*3600e3 && PROFILE.logs[0].seed===(G.seed||'')) btn(110, 46, 280, 52, '📰 Read the paper', () => openGazette(PROFILE.logs[0], UI.screen), { s:17, col:C.amber });
   btn(W/2-640, 884, 300, 72, 'Back to title', () => { UI.screen = 'title'; G = null; }, { s:22 });
   if(G && G.challenge){ const cid = G.challenge; btn(W/2-320, 884, 300, 72, 'Retry challenge', () => startChallenge(cid), { fill:true, s:20, col:C.good }); btn(W/2, 884, 300, 72, 'All challenges', () => { UI.screen = 'challenges'; G = null; }, { s:20 }); }
   else if(G && !G.daily){ const ship = G.shipDef, seed = G.seed;
@@ -653,6 +657,7 @@ function drawRecord(){
   const hist = PROFILE.history || [];
   panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
   if((PROFILE.memorial||[]).length && typeof memorialSaga==='function') btn(540, 160, 224, 36, `Memorial (${PROFILE.memorial.length}) ›`, () => typeof openMemorial==='function' ? openMemorial('record') : openSaga(memorialSaga(), 'record'), { s:14, col:C.muted });
+  if(typeof openCodex==='function'){ const [ca, cb] = codexTotal(); btn(780, 160, 224, 36, `Codex ${ca}/${cb} ›`, () => openCodex('record'), { s:14, col:C.muted }); }
   if(typeof openLogbook==='function' && (PROFILE.logs||[]).length) btn(300, 160, 224, 36, `Captain's logs (${PROFILE.logs.length}) ›`, () => openLogbook('record', 0), { s:14, col:C.muted });
   if((PROFILE.sagas||[]).length && typeof openSaga==='function') btn(780, 160, 224, 36, `Sagas (${PROFILE.sagas.length}) ›`, () => { UI.sagaIdx = 0; openSaga(PROFILE.sagas[0], 'record'); UI.sagaList = true; }, { s:14, col:C.amber });
   ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
