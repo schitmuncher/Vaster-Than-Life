@@ -170,17 +170,68 @@ function pxParse(text){
   return { art, fixes };
 }
 function pxShareCode(a){ const rows = pxRows(a); return JSON.stringify(Object.assign({ vtl:'pixel', name:a.name, w:a.w, h:a.h, palette:a.pal }, a.w*a.h > 4096 ? { z:pxRLE(rows) } : { rows })); }
-function pxAIPrompt(w, h){ const big = w*h > 64*64, nc = big ? 32 : 16, last = big ? 'v' : 'f'; return [
-  `I'm making a character for my browser game, Vaster Than Life (a spaceship crew game). I've attached a picture. Turn its main subject into a small pixel-art crew member.`,
-  ``, `Rules:`,
-  `- The canvas is exactly ${w} pixels wide and ${h} pixels tall.`,
-  `- Draw the whole body, standing, facing right. Feet on the bottom row, centred left to right.`,
-  `- See-through background. A 1-pixel dark outline round the figure.`,
-  big ? `- At most ${nc} colours. Use the space for detail: shading with 3 or 4 tones per colour, highlights, folds in clothes, a proper face.` : `- At most 16 colours. Keep it readable when small: a big head, simple shapes, strong contrast.`,
-  `- Keep what makes the picture recognisable: hair, colours, clothes, glasses, markings and so on.`,
-  ``, `Reply with ONLY this JSON and nothing else:`,
-  `{"vtl":"pixel","name":"<a short name>","w":${w},"h":${h},"palette":["#RRGGBB", ...],"rows":[ ...${h} strings... ]}`,
-  ``, `In "rows", each string is exactly ${w} characters, one per pixel, left to right, top row first. Use "." for see-through and "0" to "9" then "a" to "${last}" for palette colours 0 to ${nc - 1}. Before you reply, check there are exactly ${h} rows and every row has exactly ${w} characters.`].join('\n'); }
+/* the prompt for an AI that can see pictures. Long on purpose: text AIs drift towards side views, wrong row
+   lengths and too few details unless told plainly, so it spells out the pose, a body plan in rows, and a checklist */
+const PX_EXAMPLE = { w:12, h:20, palette:['#1a1420', '#e8b48a', '#5a3a22', '#3a6fd8', '#2b2f45', '#4a2e1e', '#241a2a', '#b5544a'],
+  rows:['....0000....', '...022220...', '..02222220..', '.0222222220.', '.0211111120.', '.0161111610.', '.0111111110.', '..01177110..', '...011110...', '..00333300..',
+    '.0333333330.', '.0313333130.', '.0313333130.', '.0103333010.', '..00444400..', '..04400440..', '..04400440..', '..05500550..', '.0555005550.', '.0000..0000.'] };
+function pxAIPrompt(w, h){
+  const big = w*h > 64*64, small = h <= 48, nc = big ? 32 : w*h > 32*48 ? 24 : 16, chars = PX_CH.slice(0, nc), last = chars[chars.length - 1];
+  const hh = Math.round(h*(small ? .38 : h <= 96 ? .3 : .24)), sh = hh + Math.max(1, Math.round(h*.03)), belt = sh + Math.round(h*(small ? .22 : .26)), knee = belt + Math.round((h - 1 - belt)*.5);
+  const headW = Math.round(w*(small ? .56 : .42)), shW = Math.min(w - 2, Math.round(w*(small ? .66 : .56))), mid = w/2;
+  const style = small ? 'chunky, cute "chibi" proportions like classic 16-bit RPG sprites: a big head, a small body, short legs'
+    : h <= 96 ? 'slightly stylised proportions, like a detailed 16-bit or 32-bit era game portrait sprite: the head a bit big, the body otherwise natural'
+    : 'natural proportions with plenty of detail, like high-end modern pixel art';
+  return [
+`I'm making a character for my browser game, Vaster Than Life, a spaceship crew game. I've attached a picture. Please turn the main person (or creature) in it into a pixel-art crew member, written as text that my game reads. Please read everything below carefully before you start: the details matter.`,
+``,
+`=== 1. THE POSE: FRONT VIEW, FACING THE VIEWER ===`,
+`This is the most important rule, and the one AIs most often get wrong.`,
+`- Draw the character from the FRONT, looking straight out of the picture at the viewer, like a passport photo or a character standing to attention in a line-up.`,
+`- NOT side-on, NOT in profile, NOT a three-quarter turn, NOT walking, NOT facing left or right. Even if the picture shows them side-on, redraw them facing forwards.`,
+`- Both eyes visible, the same size, at the same height, the same distance from the middle. The nose points at the viewer, so it is at most a pixel or two of shading in the middle of the face, never a bump sticking out of one side.`,
+`- Shoulders level and square to the viewer. Both arms hang straight down at the sides, slightly away from the body so there is a gap (or an outline) between arm and body. Hands visible at the ends of the arms.`,
+`- Legs straight, side by side, with a one- or two-pixel gap between them. Both feet visible, pointing at the viewer (or very slightly outwards).`,
+`- The figure is close to mirror-symmetrical down the middle (between columns ${Math.floor(mid) - 1} and ${Math.floor(mid)}, counting from 0). Only things that really are one-sided break the symmetry: a side parting, a badge, an eyepatch, something held in one hand.`,
+``,
+`=== 2. THE CANVAS ===`,
+`- Exactly ${w} pixels wide and ${h} pixels tall. Every row must be exactly ${w} characters, and there must be exactly ${h} rows.`,
+`- The whole body fits: head at the top, feet on the bottom row (row ${h - 1}). Use the full height: the top of the head should be on row 0 or 1.`,
+`- Centred left to right, with a column or two of see-through space at each side.`,
+`- The background is see-through: everything that is not the character is ".".`,
+``,
+`=== 3. A BODY PLAN FOR THIS SIZE (rows counted from 0 at the top) ===`,
+`Style: ${style}. A rough guide, adjust to suit the character:`,
+`- Head (hair included): rows 0 to ${hh - 1}, about ${headW} pixels wide.`,
+`- Neck and chin: around row ${hh}. Shoulders: row ${sh}, about ${shW} pixels across.`,
+`- Body and arms: rows ${sh} to about ${belt}. The hands end around row ${belt + Math.round((knee - belt)*.4)}.`,
+`- Waist or belt: around row ${belt}. Knees: around row ${knee}. Feet: the last ${Math.max(2, Math.round(h*.06))} rows, ending on row ${h - 1}.`,
+``,
+`=== 4. HOW IT SHOULD LOOK ===`,
+`- A 1-pixel dark outline all the way round the figure (a very dark version of the nearby colour, or near-black). Use darker lines inside too, to separate the arms from the body, the hair from the face, and so on.`,
+`- Light comes from the top left: each colour gets a lighter tone on its upper-left side and a darker tone on its lower-right side.${big ? ' Use 3 or 4 tones per colour (shadow, base, light, highlight) and shade folds in clothes, strands of hair and the shape of the face.' : ' Use 2 or 3 tones per main colour.'}`,
+`- Face: ${small ? 'eyes 1 or 2 pixels each, with a pixel or so of skin between them; a mouth of 1 to 3 pixels; maybe a pixel of blush or shadow' : 'eyes with a white and a dark pupil, eyebrows, a hint of a nose in the middle by shading, a mouth, ears at both sides, and shading under the chin and hair'}. Keep the face the friendliest, clearest part.`,
+`- Keep what makes the picture recognisable: hair style and colour, skin tone, beard or moustache, glasses, hat, clothes and their colours, logos made simple, scars, markings, accessories.`,
+`- Clean pixel art: no blurry in-between pixels against the background, no single stray pixels, no dithering noise unless it is a texture on purpose, no text or letters.`,
+`- At most ${nc} colours, including the outline colour.`,
+``,
+`=== 5. THE FORMAT TO REPLY IN ===`,
+`Reply with ONLY this JSON, nothing before it and nothing after it:`,
+`{"vtl":"pixel","name":"<a short name, up to 24 letters>","w":${w},"h":${h},"palette":["#RRGGBB", ...],"rows":["<row 0>", "<row 1>", ... "<row ${h - 1}>"]}`,
+`- "palette" lists the colours as hex codes. The first one is colour 0, the next colour 1, and so on.`,
+`- In "rows", each string is one row of pixels, left to right, top row first. Each character is one pixel: "." means see-through, "0" to "9" then "a" to "${last}" pick palette colours 0 to ${nc - 1} (so "a" is colour 10, "b" is colour 11 and so on).`,
+`- Please put each row on its own line inside the list, so the rows line up and are easy to check.`,
+``,
+`Here is a tiny example (12×20) of the right pose and format. Yours must be ${w}×${h} and far more detailed, but notice it faces the viewer, both eyes show, the arms hang at the sides and each row is a mirror image of itself:`,
+JSON.stringify({ vtl:'pixel', name:'Example', w:PX_EXAMPLE.w, h:PX_EXAMPLE.h, palette:PX_EXAMPLE.palette, rows:PX_EXAMPLE.rows }).replace('"rows":[', '"rows":[\n  ').replace(/","/g, (m, o, str) => o > str.indexOf('"rows"') ? '",\n  "' : m).replace(/"\]\}$/, '"\n]}'),
+``,
+`=== 6. BEFORE YOU REPLY, CHECK ===`,
+`1. Front view: both eyes showing, facing the viewer, not side-on? If not, redraw it.`,
+`2. Exactly ${h} rows, and every row exactly ${w} characters? Count them. Fix any row that is too long or too short.`,
+`3. Feet on the last row, head near the top, figure centred?`,
+`4. Only "." and the characters for colours you listed in the palette?`,
+`5. Does it still look like the person in the picture?`,
+`Then reply with only the JSON.`].join('\n'); }
 function pxCopy(text, ok){
   const done = () => { if(typeof toast==='function') toast(ok); }, fallback = () => { try{ const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const r = document.execCommand('copy'); ta.remove(); if(r){ done(); return; } }catch(e){}
     if(typeof toast==='function') toast('Your browser blocked copying. The prompt is in the wiki: Help → Pixel Studio.'); };
@@ -438,7 +489,7 @@ function drawPxImport(E, a, rx, rw){
   const opt = [[`Colours: ${O.cols}`, () => { const o = [6, 8, 12, 16, 24, 32, 48], i = o.indexOf(O.cols); O.cols = o[(i + 1) % o.length]; }, false, 'How many colours the picture is cut down to. More is more detailed; fewer looks more like classic pixel art.'],
     [O.dither ? 'Dither: on' : 'Dither: off', () => { O.dither = !O.dither; }, O.dither, 'Blends colours with a fine checkerboard, for smooth gradients and photos.'],
     [O.outline ? 'Outline: on' : 'Outline: off', () => { O.outline = !O.outline; }, O.outline, 'Adds a dark one-pixel edge round the figure.'],
-    [O.cut ? 'Cut background' : 'Keep background', () => { O.cut = !O.cut; }, O.cut, 'Takes away a plain background so only the character is left.']];
+    [O.cut ? 'Cut out: on' : 'Cut out: off', () => { O.cut = !O.cut; }, O.cut, 'Takes away a plain background so only the character is left.']];
   opt.forEach(([n, f, on, d], i) => { btn(rx + i*139, y + 72, 131, 38, n, f, { s:13, fill:on }); tip(rx + i*139, y + 72, 131, 38, n, d); });
   y += 136; label('Trace over a picture', rx, y, C.muted, 'left', 13);
   btn(rx, y + 12, 272, 44, E.ref ? 'Change tracing picture' : 'Lay a picture over the canvas', () => pxPickPicture('ref'), { s:14, col:C.cyan });
@@ -448,8 +499,8 @@ function drawPxImport(E, a, rx, rw){
   btn(rx, y + 12, 272, 44, '🤖 Copy AI prompt', () => pxCopy(pxAIPrompt(a.w, a.h), 'Prompt copied. Paste it into an AI that can see pictures, with your picture attached.'), { s:15, col:C.violet || '#c48bff' });
   tip(rx, y + 12, 272, 44, 'Copy AI prompt', `Copies instructions for an AI (ChatGPT, Gemini, Claude...) to turn a picture into a ${a.w}×${a.h} crew member. Attach your picture, paste the prompt, then copy its whole reply and press Paste.`);
   btn(rx + 280, y + 12, 272, 44, '📋 Paste AI reply / code', pxPaste, { s:15, col:C.violet || '#c48bff' });
-  para(a.w*a.h > 64*64 ? 'AIs that write text lose track of very big grids. For big canvases, ask an AI that makes pictures for "pixel art of …, plain background", save it, then use Turn a picture into art.' : 'Tip: an AI that makes pictures can draw your character as pixel art too. Save that picture and use Turn a picture into art.', rx, y + 76, rw, { s:13, lh:18, c:C.muted });
-  y += 132; label('Share and start over', rx, y, C.muted, 'left', 13);
+  const tipH = para(a.w*a.h > 64*64 ? 'AIs that write text lose track of very big grids. For big canvases, ask an AI that makes pictures for "pixel art of …, plain background", save it, then use Turn a picture into art.' : 'Tip: an AI that makes pictures can draw your character as pixel art too. Save that picture and use Turn a picture into art.', rx, y + 70, rw, { s:13, lh:18, c:C.muted, max:3 });
+  y += Math.max(132, 84 + tipH); label('Share and start over', rx, y, C.muted, 'left', 13);
   btn(rx, y + 12, 272, 40, 'Copy share code', () => pxCopy(pxShareCode(a), `Code for "${a.name}" copied. Send it to a friend: they press Paste.`), { s:14 });
   btn(rx + 280, y + 12, 272, 40, 'Start from a crew look', () => { const c = (G && G.ship && pick(G.ship.crew.filter(o => o.owner==='p' && !o.drone))) || { id:'r' + Math.random(), name:'Crew', race:pick(Object.keys(DATA.races).filter(r => !DATA.races[r].drone && !DATA.races[r].secret)) }; const n = pxFromCrew(c, a.w, a.h); if(pxAdd(n)) pxOpenArt(n.id); }, { s:14 });
   y += 70; label('In the game', rx, y, C.muted, 'left', 13); const ph = 916 - y - 22;
