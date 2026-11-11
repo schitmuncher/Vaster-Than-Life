@@ -54,6 +54,37 @@ const MIDI_STYLES = {
   march:   { tempo:1.0, tr:0,   lead:'square',   bass:'sawtooth', pad:false, drums:3,  cut:2600, vol:.72, gap:0 },
   chirpy:  { tempo:1.0, tr:0,   lead:'triangle', bass:'square',   pad:false, drums:2,  cut:3600, vol:.62, gap:1 }
 };
+/* the game's own soundtrack (music/, written by tools/compose-ost.py): each part on its own channel gets its own
+   instrument. w wave, v volume, a attack, lp filter, det second detuned voice, rev reverb, bell a ringing overtone */
+const OST_INST = {
+  bass:   { w:'sawtooth', v:.95, a:.006, lp:520 },   bassS:{ w:'square', v:.8, a:.006, lp:700 },   bassR:{ w:'triangle', v:1.15, a:.01, lp:900 },
+  pad:    { w:'sawtooth', v:.32, a:.35, lp:1300, det:9, rev:.45 }, padS:{ w:'triangle', v:.42, a:.5, lp:1600, det:7, rev:.6 },
+  stab:   { w:'square', v:.34, a:.004, lp:2200, rev:.2 },          keys:{ w:'triangle', v:.45, a:.008, lp:3000, rev:.3 },
+  lead:   { w:'sawtooth', v:.62, a:.012, lp:2800, det:5, rev:.28 }, leadS:{ w:'square', v:.55, a:.01, lp:2400, rev:.25 },
+  flute:  { w:'triangle', v:.75, a:.05, lp:3600, rev:.4 },          bellL:{ w:'sine', v:.7, a:.004, lp:6000, rev:.55, bell:true },
+  arp:    { w:'square', v:.26, a:.003, lp:3200, rev:.25 },          arpS:{ w:'triangle', v:.36, a:.003, lp:4200, rev:.4 },
+  bell:   { w:'sine', v:.42, a:.003, lp:7000, rev:.55, bell:true },  harm:{ w:'triangle', v:.4, a:.02, lp:2600, rev:.3 } };
+const ost = (bass, pad, lead, arp, harm, o) => Object.assign({ tempo:1, tr:0, vol:.85, gap:0, drums:3, kit:true, inst:{ 0:OST_INST[bass], 1:OST_INST[pad], 2:OST_INST[lead], 3:OST_INST[arp], 4:OST_INST[harm] } }, o || {});
+Object.assign(MIDI_STYLES, {
+  ost_anthem: ost('bass', 'pad', 'lead', 'arp', 'harm'),
+  ost_funk:   ost('bassS', 'stab', 'leadS', 'arpS', 'keys', { vol:.8 }),
+  ost_arp:    ost('bass', 'pad', 'lead', 'arp', 'harm'),
+  ost_soft:   ost('bassR', 'padS', 'flute', 'arpS', 'bell', { vol:.8 }),
+  ost_ambient:ost('bassR', 'padS', 'bellL', 'arpS', 'bell', { vol:.8, gap:2 }),
+  ost_waltz:  ost('bassR', 'keys', 'bellL', 'arpS', 'flute', { vol:.8 }),
+  ost_eerie:  ost('bassR', 'padS', 'flute', 'arpS', 'bell', { vol:.75, gap:2 }),
+  ost_rock:   ost('bass', 'stab', 'lead', 'arp', 'harm', { vol:.9 }),
+  ost_break:  ost('bassS', 'stab', 'leadS', 'arp', 'harm', { vol:.88 }),
+  ost_bossa:  ost('bassR', 'keys', 'flute', 'arpS', 'bell', { vol:.8 }) });
+const OST = { dir:'music/', cues:{}, tracks:{
+  title:{ file:'title.mid', style:'ost_anthem' }, hangar:{ file:'hangar.mid', style:'ost_funk' }, start:{ file:'start.mid', style:'ost_arp' },
+  explore:[{ file:'explore1.mid', style:'ost_soft' }, { file:'explore2.mid', style:'ost_arp' }, { file:'explore3.mid', style:'ost_ambient' }, { file:'explore4.mid', style:'ost_waltz' }, { file:'explore5.mid', style:'ost_funk' }],
+  strange:[{ file:'strange1.mid', style:'ost_ambient' }, { file:'strange2.mid', style:'ost_eerie' }],
+  combat:[{ file:'combat1.mid', style:'ost_rock' }, { file:'combat2.mid', style:'ost_rock' }, { file:'combat3.mid', style:'ost_arp' }, { file:'combat4.mid', style:'ost_break' }],
+  boss:{ file:'boss.mid', style:'ost_rock' }, store:{ file:'store.mid', style:'ost_bossa' }, win:{ file:'win.mid', style:'ost_anthem' }, over:{ file:'over.mid', style:'ost_ambient' } },
+  strange:['nebula', 'voltan', 'glass', 'prismfields', 'gf_graveyard', 'pv_vaults', 'nr_expanse', 'ss_hollow', 'hz_maze', 'hz_pulsarfield'] };
+const OST_TITLES = { title:'Vaster Than Life', hangar:'Dry Dock', start:'Departure', explore1:'The Long Way Round', explore2:'Beacon Lights', explore3:'Drift', explore4:'Quiet Stars',
+  explore5:'Engine Room', strange1:'Nebula Hymn', strange2:'Static', combat1:'Shields Up', combat2:'Boarding Party', combat3:'Red Alert', combat4:'Dogfight', boss:'Flaggship', store:'Haggle Bossa', win:'Homecoming', over:'Drifting On' };
 const MIDI = { song:null, url:null, loading:false, style:null, next:0, idx:0, t0:0, loopAt:0 };
 const MIDI_CACHE = {};   // parsed songs by url, so a campaign can switch tunes per cue without refetching
 function midiLoad(url){
@@ -69,21 +100,27 @@ function midiLoad(url){
 }
 /* which file plays for a cue: music.tracks { cue: 'file.mid' | { file, style } | [ several, taking turns by sector ] }, else music.file */
 function midiTrackFor(M, cue){
-  let t = M.tracks && M.tracks[cue]; if(Array.isArray(t)) t = t.length ? t[((typeof G!=='undefined' && G ? G.sector : 1) - 1) % t.length] : null;
+  let t = M.tracks && M.tracks[cue]; if(Array.isArray(t)) t = t.length ? t[Math.abs((cue==='combat' ? (MIDI.fightN || 0) + ((typeof G!=='undefined' && G ? G.sector : 1)) : (typeof G!=='undefined' && G ? G.sector : 1) - 1)) % t.length] : null;
   if(typeof t === 'string') t = { file:t }; return t && t.file ? t : { file:M.file };
 }
 /* which arrangement fits the moment (null: the normal soundtrack) */
 function midiCue(){
-  const C = UI.screen==='select' ? (typeof campHangarDef==='function' ? campHangarDef() : null) : (typeof campDef==='function' && typeof G!=='undefined' && G ? campDef() : null);
-  const M = C && C.music; if(!M || !M.file) return null; const cues = Object.assign({ hangar:'lounge', start:'rock', explore:'musicbox', strange:'eerie', combat:'battle', boss:'boss', win:'victory' }, M.cues || {});
+  const C = UI.screen==='select' ? (typeof campHangarDef==='function' ? campHangarDef() : null) : (typeof campDef==='function' && typeof G!=='undefined' && G && UI.screen==='game' ? campDef() : null);
+  let M = C && C.music && C.music.file ? C.music : null;
+  if(!M){ if(typeof SET!=='undefined' && SET.musicSrc==='synth') return null; M = OST; }
+  const cues = Object.assign({ hangar:'lounge', start:'rock', explore:'musicbox', strange:'eerie', combat:'battle', boss:'boss', win:'victory' }, M.cues || {});
   const key = (() => {
-    if(UI.screen==='select') return 'hangar'; if(UI.screen==='win') return 'win'; if(UI.screen!=='game' || !G) return null;
+    if(UI.screen==='select') return 'hangar'; if(UI.screen==='win') return 'win';
+    if(UI.screen==='over') return M===OST ? 'over' : null;
+    if(UI.screen!=='game' || !G) return M===OST ? 'title' : null;
     if(G.enemy && !G.enemy.dead) return G.boss ? 'boss' : 'combat';
+    if(M===OST && G.modal && G.modal.type==='store') return 'store';
     if(G.sector <= 1 && (G.stats.jumps||0) < 2) return 'start';
-    const sd = typeof sectorDef==='function' ? sectorDef() : {}; if((M.strange || []).includes(sd.id) || (M.strange || []).includes(G.sectorType)) return 'strange';
+    const sd = typeof sectorDef==='function' ? sectorDef() : {}; if((M.strange || []).includes(sd.id) || (M.strange || []).includes(G.sectorType) || (M===OST && G.nebula)) return 'strange';
     return 'explore'; })();
   if(!key) return null;
-  const tr = midiTrackFor(M, key); midiLoad('mods/' + tr.file);
+  if(key==='combat' && MIDI.lastKey!=='combat') MIDI.fightN = (MIDI.fightN || 0) + 1; MIDI.lastKey = key;
+  const tr = midiTrackFor(M, key); if(!tr || !tr.file) return null; midiLoad((M.dir || 'mods/') + tr.file); MIDI.title = M===OST ? OST_TITLES[tr.file.replace(/\.mid$/, '')] : null;
   return tr.style && MIDI_STYLES[tr.style] ? tr.style : cues[key];
 }
 function midiActive(){ return !!(MIDI.style && MIDI.song && SET.music > 0); }
@@ -102,14 +139,35 @@ function midiTick(){
   }
 }
 function midiNote(n, t, S, k){
-  if(SET.music <= 0) return; const dur = Math.min(2.5, n.d*k), v = (.03 + .045*n.v) * S.vol, rev = S.pad ? .35 : .12;
-  if(n.ch === 9){ if(!S.drums) return;   // drums: kick, snare, hats
+  if(SET.music <= 0) return; const dur = Math.min(S.inst ? 6 : 2.5, n.d*k), v = (.03 + .045*n.v) * S.vol;
+  if(n.ch === 9){ if(!S.drums) return; if(S.kit) return midiDrum(n.n, t, v);
     if(n.n <= 36) osc('sine', 120, t, .14, v*2.2, { to:42, slide:.12, dest:MUSG });
     else if(n.n <= 40) nz(t, .09, v*1.4, { hp:1400, dest:MUSG });
     else if(S.drums >= 2) nz(t, .03, v*.7, { hp:7000, dest:MUSG });
     return; }
-  const f = 440 * Math.pow(2, (n.n + S.tr - 69)/12), bass = n.n + S.tr < 50;
+  const f = 440 * Math.pow(2, (n.n + S.tr - 69)/12);
+  if(S.inst){ const I = S.inst[n.ch] || S.inst[2]; if(!I) return; const a = Math.min(I.a, dur*.45), o = { a, lp:I.lp, rev:I.rev || 0 };
+    mnote(f, t, dur, I.w, v*I.v, o); if(I.det) mnote(f, t, dur, I.w, v*I.v*.7, Object.assign({}, o, { detune:I.det }));
+    if(I.bell) mnote(f*2.76, t, Math.min(dur, .7), 'sine', v*I.v*.22, { a:.002, rev:I.rev || 0 });
+    return; }
+  const bass = n.n + S.tr < 50, rev = S.pad ? .35 : .12;
   if(bass){ if(S.bass) mnote(f, t, dur, S.bass, v*.85, { a:.01, lp:S.cut*.5 }); return; }
   mnote(f, t, dur, S.lead, v, { a:S.pad ? Math.min(.2, dur*.3) : .01, lp:S.cut, detune:S.detune || 0, rev });
   if(S.pad) mnote(f/2, t, dur*1.2, 'triangle', v*.3, { a:Math.min(.35, dur*.4), lp:S.cut*.5, rev });
+}
+/* the soundtrack's drum kit */
+function midiDrum(n, t, v){ const D = { dest:MUSG };
+  switch(n){
+    case 35: case 36: osc('sine', 150, t, .16, v*2.6, { to:44, slide:.11, dest:MUSG }); nz(t, .012, v*.6, { hp:2500, dest:MUSG }); break;
+    case 38: case 40: nz(t, .15, v*1.5, { bp:1800, q:.7, dest:MUSG, rev:.12 }); osc('triangle', 190, t, .07, v*.9, { to:150, dest:MUSG }); break;
+    case 39: for(const d of [0, .011, .024]) nz(t + d, d ? .02 : .12, v*1.2, { bp:1300, q:1.2, dest:MUSG, rev:.15 }); break;
+    case 37: osc('square', 880, t, .025, v*.5, D); nz(t, .02, v*.5, { hp:3200, dest:MUSG }); break;
+    case 42: case 44: nz(t, .035, v*.55, { hp:8000, dest:MUSG }); break;
+    case 46: nz(t, .22, v*.45, { hp:7000, dest:MUSG }); break;
+    case 49: case 57: nz(t, 1.4, v*.55, { hp:5200, dest:MUSG, rev:.3 }); break;
+    case 51: case 59: nz(t, .25, v*.28, { bp:9000, q:2, dest:MUSG }); osc('triangle', 3200, t, .18, v*.12, D); break;
+    case 41: case 43: case 45: case 47: case 48: case 50: { const f = { 41:90, 43:105, 45:120, 47:150, 48:175, 50:200 }[n]; osc('sine', f, t, .28, v*1.8, { to:f*.62, slide:.25, dest:MUSG, rev:.15 }); break; }
+    case 69: case 70: nz(t, .05, v*.32, { hp:6500, dest:MUSG }); break;
+    default: nz(t, .04, v*.4, { hp:5000, dest:MUSG });
+  }
 }

@@ -29,7 +29,7 @@ const LO_CLASS = {
 };
 // [id, name, class, tier, cost, overrides, desc]
 const LO_WEAPONS = [
-  ['ar_kestrel',  'Kestrel AR-7',        'ar', 1, 45, {}, 'A dependable rifle. Every courier crew has one, and every one jams on a Tuesday.'],
+  ['ar_kestrel',  'Courier AR-7',        'ar', 1, 45, {}, 'A dependable rifle. Every courier crew has one, and every one jams on a Tuesday.'],
   ['ar_vanguard', 'Vanguard Carbine',    'ar', 1, 50, { spd:.04 }, 'Short and light. Good in narrow corridors.'],
   ['ar_lancer',   'Lancer Battle Rifle', 'ar', 2, 70, { dmg:1.55, reach:.55 }, 'Heavier rounds, slower fire. Hits like a door slamming.'],
   ['ar_fang',     'Fang Burst Rifle',    'ar', 2, 65, { crit:.08 }, 'Three-round bursts. Now and then all three find the same spot.'],

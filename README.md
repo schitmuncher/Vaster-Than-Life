@@ -329,7 +329,7 @@ Primary weapons are what crew fight with; the secondary (from level 3) takes ove
 
 | Weapon | Class | Slot | Tier | Cost | Damage | Notes | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Kestrel AR-7 | Assault rifle | primary | 1 | 45 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | A dependable rifle. Every courier crew has one, and every one jams on a Tuesday. |
+| Courier AR-7 | Assault rifle | primary | 1 | 45 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | A dependable rifle. Every courier crew has one, and every one jams on a Tuesday. |
 | Vanguard Carbine | Assault rifle | primary | 1 | 50 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | Short and light. Good in narrow corridors. |
 | Lancer Battle Rifle | Assault rifle | primary | 2 | 70 | ×1.55 | +55% melee damage, shoots into neighbouring rooms. | Heavier rounds, slower fire. Hits like a door slamming. |
 | Fang Burst Rifle | Assault rifle | primary | 2 | 65 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | Three-round bursts. Now and then all three find the same spot. |
@@ -629,7 +629,7 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 - **The Graveyard**: a 1.2% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.
 
-- **Pixel Studio** (Record → Pixel Studio, or 🎨 by any crew member): draw pixel-art crew (pen, rubber, fill, pick, mirror, outline, undo; sizes 32×48, 32×32, 24×32, 16×24, 48×64), or import a picture (background taken away, colours reduced, outline added). Copy AI prompt gives instructions for an AI that can see pictures; paste its reply back in. Share codes let friends swap characters. Any crew member can wear a drawing; the hangar remembers who wore what.
+- **Pixel Studio** (title screen, hangar, Record, or 🎨 by any crew member): draw pixel-art crew on canvases from 16×24 up to 128×128 (32×48, 48×64, 64×96, 96×128, 128×128, 64×64, 32×32, 24×32, 16×24). Tools: pen, rubber, fill, pick, line, box, oval, dither, shade, brush sizes 1–8, mirror, outline, flip, undo; zoom and pan with a corner map; a colour mixer, shading ramps and up to 62 colours; scale up ×2 to add detail. Import a picture (colours, dithering, outline, background removal), trace over a picture, or copy an AI prompt and paste its reply back. Share codes let friends swap characters. Any crew member can wear a drawing; the hangar remembers who wore what.
 
 - **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of 19. 25 scrap and 20 captain xp each, plus 40 scrap for all three. Not in dailies, the Cup, challenges or multiplayer.
 
@@ -1222,7 +1222,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/mobile.js` | Screen fitting, safe areas, sideways mode, full screen, touch taps, long press, pinch and double-tap zoom, wake lock |
 | `js/keyboard.js` | The on-screen QWERTY keyboard every text box uses (VR, touch, mouse and physical keys) |
 | `js/pad.js` | Game controller and keyboard focus: d-pad and arrow-key navigation between buttons and rooms, cursor, button actions |
-| `js/media.js` | FTL artwork and soundtrack: title wallpaper, gallery, crew avatars, streamed music |
+| `js/media.js` | Painted title wallpaper and beacon vistas, the Gallery and its jukebox |
 | `js/xr.js` | WebXR session, console, controllers, haptics, dialogs, boot |
 | `js/netcrypto.js` | SHA-256, AES-GCM and BIP-340 Schnorr signatures (for Nostr), with no libraries |
 | `js/net.js` | Rooms and codes, WebRTC connections, the three meeting points (PeerJS, Nostr, a local BroadcastChannel for testing), a small Nostr client, the public room list |
@@ -1247,4 +1247,10 @@ Scoreboards and the public room list are Nostr events (kind 30078), signed with 
 
 ## Credits
 
-Artwork (title wallpaper, concept-art gallery, crew avatars) and five soundtrack tracks come from **FTL: Faster Than Light**, © Subset Games, with music by **Ben Prunty**. They are used with the rights holders' permission and live in `assets/`. The wallpaper has had its logo painted out. In **Settings** you can switch crew portraits to *Drawn* and the music to *Generated* to play without them.
+Everything in the game is original. The paintings in `assets/art/` were made by `tools/paint-backgrounds.py` and the eighteen-tune soundtrack in `music/` by `tools/compose-ost.py`; both scripts are in this repo, so anyone can remake or change them. Crew art is drawn by the game, or by players in the Pixel Studio.
+
+Fonts are from Google Fonts under the SIL Open Font License, and 3D uses three.js (MIT licence).
+
+The **Red Dwarf** campaign in `mods/` is an unofficial, non-commercial fan tribute. Red Dwarf and its characters belong to their owners; the campaign's story text and its theme arrangement are written for this game. It is a separate mod: delete `mods/red-dwarf*` to share a build without it.
+
+*Vaster Than Life* is inspired by *FTL: Faster Than Light*, but uses none of its art, music, names or text.

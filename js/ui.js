@@ -190,6 +190,10 @@ function drawTitle(){
     T('🎓', tx + 40, ty + 74, { s:40, a:'center' }); T('Tutorial', tx + 76, ty + 56, { s:26, f:FD, w:700, c: fresh ? '#06231a' : C.good });
     T(PROFILE.tutDone ? 'Every system, explained' : 'Learn everything', tx + 76, ty + 86, { s:14, c: fresh ? '#06231a' : C.muted, max:tw - 90 });
     if(typeof drawHaven==='function'){ const hy = ty + th + 12, nd = typeof HAVEN_WINGS!=='undefined' ? HAVEN_WINGS.filter(w => havenDone(w.id)).length : 0; btn(tx, hy, tw, 60, `Haven's Rest ${nd}/${HAVEN_WINGS.length}`, () => { UI.screen = 'haven'; }, { s:17, col:'#9fdc7a' }); tip(tx, hy, tw, 60, 'Haven\'s Rest', 'Your great-uncle\'s old station. Restore its wings with goods sent home from stores; each restored wing helps every future run.'); }
+    if(typeof openPixelStudio==='function'){ const py = ty + th + (typeof drawHaven==='function' ? 84 : 12), np = (PROFILE.pixels || []).length;
+      btn(tx, py, tw, 60, '', () => openPixelStudio('title'), { col:C.violet || '#c48bff' }); T('🎨', tx + 34, py + 40, { s:26, a:'center' });
+      T('Pixel Studio', tx + 62, py + 30, { s:19, f:FD, w:700, c:C.violet || '#c48bff' }); T(np ? `${np} drawing${np===1 ? '' : 's'} · draw your crew` : 'Draw your own crew', tx + 62, py + 50, { s:13, c:C.muted, max:tw - 74 });
+      tip(tx, py, tw, 60, 'Pixel Studio', 'Draw your own crew in pixel art, from tiny sprites up to 128×128 with shading, or turn a picture into one. Any crew member can wear what you make.'); }
     tip(tx, ty, tw, th, 'Tutorial', 'Guided practice in a real fight, plus a page on every part of the game: power, weapons, crew, damage, drones, stores, the garden, pets, fishing, stories, career, multiplayer and mods.'); }
   drawTitleCards(t);
   label(MOB.touch ? 'Tap to act · press and hold for info · pinch to zoom · turn your phone sideways' : 'Quest: trigger or touch selects · left stick walks · left stick click: datapad · A/X pause · B/Y map', 110, H-30, C.muted, 'left', 15);
@@ -391,12 +395,11 @@ function drawSettings(){
       onoff('Crew voices', 'voices', true, 'Crew and enemy captains babble a few syllables when they talk, pitched for each race.');
       choice('Spoken voices', 'tts', [['off','Off'],['dialogue','Dialogue'],['full','Full story']], 'off', 'Your device reads the story aloud, with a different voice for each character (Admiral Hale, Pip, Kross, Vance, Holly, Rimmer...). Dialogue speaks only what people say; Full story reads the narration and crew chatter too. Uses the voices installed on your device, so it sounds different on each.', v => { if(v==='off' && typeof ttsStop==='function') ttsStop(); else if(typeof ttsSay==='function') ttsSay([{ t:'Voices on. Welcome aboard, Captain.', v:{ key:'Hale', g:'f', p:.9, r:.95 } }], true); });
       if((SET.tts||'off')!=='off') bar_('Voice speed', 'ttsRate', .7, 1.4, .05, 1, v => `${Math.round(v*100)}%`, 'How fast the voices talk.');
-      choice('Music source', 'musicSrc', [['ftl','Soundtrack'],['synth','Generated']], 'ftl', 'Soundtrack plays the licensed FTL tracks by Ben Prunty: title theme, exploration and three battle themes. Generated is the adaptive synth music made in the game.');
+      choice('Music source', 'musicSrc', [['ost','Soundtrack'],['synth','Generated']], 'ost', 'Soundtrack plays the game\'s own score: eighteen tunes for the hangar, exploring, strange sectors, stores, fights and the last battle. Generated is the endless adaptive synth music. Campaigns with their own music always play it.');
       btn(X, y+10, 220, 46, 'Test sounds', () => { ensureAudio(); ['laser','ion','missile','shield','hit','explode'].forEach((n,i) => setTimeout(() => sfx(n), i*260)); });
       break;
     case 'graphics':
       head('Quality');
-      choice('Crew portraits', 'portraits', [['art','FTL artwork'],['drawn','Drawn']], 'art', 'FTL artwork uses the pixel avatars for each race. Drawn uses the portraits painted by the game from each crew member\'s look.');
       choice('Effects quality', 'gfx', [['low','Low'],['medium','Medium'],['high','High'],['ultra','Ultra']], 'high', 'How many particles, streaks and explosion layers to draw. Use Low or Medium if your headset stutters.');
       choice('VR resolution', 'vrRes', [[.7,'70%'],[.85,'85%'],[1,'100%'],[1.2,'120%']], 1, 'Rendering resolution inside the headset. Higher is sharper but slower. Applies next time you enter VR.');
       choice('VR foveation', 'vrFov', [[0,'Off'],[.33,'Low'],[.66,'Medium'],[1,'High']], .66, 'Renders the edges of your view at lower resolution to save performance on Quest. Applies next time you enter VR.');
@@ -650,6 +653,7 @@ function drawCrewNaming(sel, temp){
   const by = y + h - 76;
   btn(x+32, by, 230, 52, 'Random names', () => { const pool = NAMES.slice(); hc.names = hc.names.map(() => pool.splice(Math.floor(Math.random()*pool.length), 1)[0]); }, { s:16 });
   if(qs.length) btn(x+274, by, 270, 52, 'Random personalities', () => { const used = []; hc.quirks = hc.quirks.map(() => { const q = rollQuirk(used); used.push(q); return q; }); }, { s:16 });
+  if(typeof openPixelStudio==='function'){ btn(x+556, by, 270, 52, '🎨 Pixel Studio', () => openPixelStudio('select'), { s:16, col:C.violet || '#c48bff' }); tip(x+556, by, 270, 52, 'Pixel Studio', 'Draw new looks for your crew. Back here, press 🎨 by a name to dress them in one.'); }
   btn(x+w-232, by, 200, 52, 'Done', () => { UI.crewPanel = false; }, { fill:true, s:18 });
 }
 function fmtTime(sec){ sec = Math.round(sec); const m = Math.floor(sec/60), h = Math.floor(m/60); return h ? `${h}h ${String(m%60).padStart(2,'0')}m` : `${m}m ${String(sec%60).padStart(2,'0')}s`; }
