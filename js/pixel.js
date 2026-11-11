@@ -27,16 +27,22 @@ function pxRLE(rows){ return rows.map(r => r.replace(/(.)\1{2,}/g, (m, c) => '('
 function pxUnRLE(z){ return String(z || '').split('/').map(r => r.replace(/\((\d+)\)(.)/g, (m, n, c) => c.repeat(Math.min(+n, PX_MAXSIDE)))); }
 function pxRows(a){ return a.z != null ? pxUnRLE(a.z) : (a.rows || []); }
 function pxStore(a, grid){ a.z = pxRLE(pxEncode(grid, a.w, a.h)); delete a.rows; return a; }
-function pxSize(a){ return (a.z != null ? a.z.length : (a.rows || []).join('').length) + 60 + (a.pal || []).length*10; }
+/* extra views: the front is the main drawing; a.views holds 'side' (facing right) and 'back', packed the same way */
+const PX_VIEWS = ['front', 'side', 'back'], PX_VNAME = { front:'Front', side:'Side', back:'Back' };
+function pxHasView(a, v){ return !v || v==='front' || !!(a && a.views && a.views[v] != null); }
+function pxViewCount(a){ return PX_VIEWS.filter(v => pxHasView(a, v)).length; }
+function pxStoreView(a, v, grid){ if(!v || v==='front') return pxStore(a, grid);
+  a.views = a.views || {}; if(grid.every(x => x < 0)) delete a.views[v]; else a.views[v] = pxRLE(pxEncode(grid, a.w, a.h)); if(!Object.keys(a.views).length) delete a.views; return a; }
+function pxSize(a){ return (a.z != null ? a.z.length : (a.rows || []).join('').length) + Object.values(a.views || {}).reduce((s, z) => s + String(z).length, 0) + 60 + (a.pal || []).length*10; }
 function pxBytes(){ return pxLib().reduce((s, p) => s + (p ? pxSize(p) : 0), 0); }
-function pxDecode(a){ const g = new Int16Array(a.w*a.h).fill(-1), rows = pxRows(a);
+function pxDecode(a, v){ const g = new Int16Array(a.w*a.h).fill(-1), rows = !v || v==='front' ? pxRows(a) : a.views && a.views[v] != null ? pxUnRLE(a.views[v]) : [];
   for(let y = 0; y < a.h; y++){ const row = String(rows[y] || ''); for(let x = 0; x < a.w; x++){ const i = PX_CH.indexOf(row[x]); g[y*a.w + x] = i >= 0 && i < a.pal.length ? i : -1; } } return g; }
 function pxEncode(g, w, h){ const rows = []; for(let y = 0; y < h; y++){ let s = ''; for(let x = 0; x < w; x++){ const v = g[y*w + x]; s += v < 0 ? '.' : PX_CH[v]; } rows.push(s); } return rows; }
 /* a picture of the art at 1:1, cached by id and version */
 const PX_IMG = {};
-function pxCanvas(a){ const key = a.id + '|' + (a.v || 0); if(PX_IMG[key]) return PX_IMG[key];
-  const c = mkCanvas(a.w, a.h), g = c.getContext('2d'), im = g.createImageData(a.w, a.h), grid = pxDecode(a), rgb = a.pal.map(pxRGB);
-  for(let i = 0; i < grid.length; i++){ const v = grid[i]; if(v < 0) continue; const [r, gg, b] = rgb[v]; im.data[i*4] = r; im.data[i*4 + 1] = gg; im.data[i*4 + 2] = b; im.data[i*4 + 3] = 255; }
+function pxCanvas(a, v){ v = pxHasView(a, v) ? v || 'front' : 'front'; const key = a.id + '|' + (a.v || 0) + '|' + v; if(PX_IMG[key]) return PX_IMG[key];
+  const c = mkCanvas(a.w, a.h), g = c.getContext('2d'), im = g.createImageData(a.w, a.h), grid = pxDecode(a, v), rgb = a.pal.map(pxRGB);
+  for(let i = 0; i < grid.length; i++){ const q = grid[i]; if(q < 0) continue; const [r, gg, b] = rgb[q]; im.data[i*4] = r; im.data[i*4 + 1] = gg; im.data[i*4 + 2] = b; im.data[i*4 + 3] = 255; }
   g.putImageData(im, 0, 0); c.bbox = pxBBox(grid, a.w, a.h); return PX_IMG[key] = c; }
 function pxBBox(g, w, h){ let x0 = w, y0 = h, x1 = -1, y1 = -1; for(let y = 0; y < h; y++) for(let x = 0; x < w; x++) if(g[y*w + x] >= 0){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
   return x1 < 0 ? { x:0, y:0, w:w, h:h, empty:true } : { x:x0, y:y0, w:x1 - x0 + 1, h:y1 - y0 + 1 }; }
@@ -44,15 +50,17 @@ function pxSaveArt(a){ a.v = (a.v || 0) + 1; for(const k in PX_IMG) if(k.startsW
 
 /* ---------------- as a crew sprite ---------------- */
 const PX_SPR = {};
-function pxSprite(a, pose, hostile){
-  const key = a.id + '|' + (a.v || 0) + '|' + pose + '|' + (hostile ? 1 : 0); if(PX_SPR[key]) return PX_SPR[key];
-  const src = pxCanvas(a), bb = src.bbox, S = SPR_S, cvs = mkCanvas(SPR_W*S, SPR_H*S), g = cvs.getContext('2d');
-  const boxW = (SPR_W - 6)*S, boxH = (SPR_H - 5)*S, k = Math.min(boxW/bb.w, boxH/bb.h), dw = bb.w*k, dh = bb.h*k;
+function pxSprite(a, pose, hostile, view){
+  view = pxHasView(a, view) ? view || 'front' : 'front';
+  const key = a.id + '|' + (a.v || 0) + '|' + pose + '|' + (hostile ? 1 : 0) + '|' + view; if(PX_SPR[key]) return PX_SPR[key];
+  // every view is scaled like the front, so the character doesn't grow or shrink as it turns
+  const front = pxCanvas(a, 'front'), fb = front.bbox, src = pxCanvas(a, view), bb = src.bbox, S = SPR_S, cvs = mkCanvas(SPR_W*S, SPR_H*S), g = cvs.getContext('2d');
+  const boxW = (SPR_W - 6)*S, boxH = (SPR_H - 5)*S, k = Math.min(boxW/fb.w, boxH/fb.h, boxW/bb.w), dw = bb.w*k, dh = bb.h*k, foot = (a.h - (bb.y + bb.h))*k;
   g.imageSmoothingEnabled = k < .99; g.imageSmoothingQuality = 'high'; g.translate((SPR_W/2 - 2)*S, (SPR_H - 3)*S);   // detailed art is shrunk smoothly, small art kept crisp
   const walk = pose==='walk0' ? 1 : pose==='walk1' ? -1 : 0, fight = pose==='fight0' ? 1 : pose==='fight1' ? -1 : 0;
   if(walk===1) g.translate(0, -1.6*S); if(walk===-1) g.scale(1.03, .97);
   if(pose==='work') g.rotate(.09); if(fight){ g.translate(fight*1.6*S, 0); g.rotate(fight*.06); }
-  g.drawImage(src, bb.x, bb.y, bb.w, bb.h, -dw/2, -dh, dw, dh);
+  g.drawImage(src, bb.x, bb.y, bb.w, bb.h, -dw/2 + ((bb.x + bb.w/2) - (fb.x + fb.w/2))*k*(view==='side' ? 0 : 1), -dh - foot + (a.h - (fb.y + fb.h))*k, dw, dh);
   if(hostile){ g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,40,70,.32)'; g.fillRect(-SPR_W*S, -SPR_H*S, SPR_W*S*2, SPR_H*S*2); }
   return PX_SPR[key] = cvs;
 }
@@ -67,11 +75,21 @@ function pxPortrait(x, y, rad, a, hostile){
   if(hostile){ ctx.fillStyle = 'rgba(255,40,70,.25)'; ctx.fillRect(x - rad, y - rad, rad*2, rad*2); }
   ctx.restore(); ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.strokeStyle = hostile ? C.hostile : hexA(C.amber, .8); ctx.lineWidth = 2; ctx.stroke();
 }
-function pxThumb(a, x, y, w, h){ const src = pxCanvas(a), bb = src.bbox, k = Math.min(w/bb.w, h/bb.h);
+function pxThumb(a, x, y, w, h, v){ const src = pxCanvas(a, v), bb = src.bbox, k = Math.min(w/bb.w, h/bb.h);
   ctx.imageSmoothingEnabled = k < .99; ctx.drawImage(src, bb.x, bb.y, bb.w, bb.h, x + (w - bb.w*k)/2, y + h - bb.h*k, bb.w*k, bb.h*k); ctx.imageSmoothingEnabled = true; }
 (function(){
-  const s0 = spriteFor; spriteFor = function(c, pose, hostile){ const a = c && c.skin && pxGet(c.skin); if(a){ try{ return pxSprite(a, pose || 'idle', hostile); }catch(e){} } return s0(c, pose, hostile); };
+  const s0 = spriteFor; spriteFor = function(c, pose, hostile){ const a = c && c.skin && pxGet(c.skin); if(a){ try{ return pxSprite(a, pose || 'idle', hostile, c._view); }catch(e){} } return s0(c, pose, hostile); };
   const p0 = drawPortrait; drawPortrait = function(x, y, rad, c, hostile){ const a = c && c.skin && pxGet(c.skin); if(a){ try{ return pxPortrait(x, y, rad, a, hostile); }catch(e){} } return p0(x, y, rad, c, hostile); };
+  /* which way are they facing? Walking across the screen: the side view (flipped for left). Walking up the screen: the
+     back. Walking down, standing or working: the front. Fighting: side-on to the enemy. o.view forces one (previews). */
+  const d0 = drawCrewSprite; drawCrewSprite = function(x, y, r, c, o = {}){
+    const a = c && c.skin && pxGet(c.skin); if(!a || (!a.views && !o.view)) return d0(x, y, r, c, o);
+    let view = o.view;
+    if(!view){ let pose = o.pose; try{ pose = pose || crewPose(c, o.ship || null); }catch(e){ pose = 'idle'; }
+      if(c._vx != null){ const dx = x - c._vx, dy = y - c._vy; if(Math.abs(dx) + Math.abs(dy) > .25) c._vd = Math.abs(dx) >= Math.abs(dy)*.7 ? 'side' : dy < 0 ? 'back' : 'front'; }
+      c._vx = x; c._vy = y; view = /^walk/.test(pose) ? (c._vd || 'front') : /^fight/.test(pose) ? 'side' : 'front'; }
+    if(!pxHasView(a, view)) view = 'front';
+    const was = c._view; c._view = view; try{ return d0(x, y, r, c, view==='side' ? o : Object.assign({}, o, { face:1 })); } finally { c._view = was; } };
 })();
 
 /* ---------------- making art from a picture ---------------- */
@@ -128,8 +146,9 @@ function pxFromImage(img, w, h, o = {}){
   pxTidyPal(art, grid); return art;
 }
 /* drop unused colours, keeping the grid pointing at the right ones */
-function pxTidyPal(art, grid){ const used = [...new Set([...grid].filter(v => v >= 0))].sort((a, b) => a - b), map = {}; used.forEach((v, i) => { map[v] = i; });
-  art.pal = used.map(v => art.pal[v]); for(let i = 0; i < grid.length; i++) if(grid[i] >= 0) grid[i] = map[grid[i]]; return pxStore(art, grid); }
+function pxTidyPal(art, grid, views = {}){ const all = [grid, ...Object.values(views)], used = [...new Set(all.flatMap(g => [...g].filter(v => v >= 0)))].sort((a, b) => a - b), map = {}; used.forEach((v, i) => { map[v] = i; });
+  art.pal = used.map(v => art.pal[v]); for(const g of all) for(let i = 0; i < g.length; i++) if(g[i] >= 0) g[i] = map[g[i]];
+  pxStore(art, grid); for(const k in views) pxStoreView(art, k, views[k]); return art; }
 /* a one-pixel dark edge round everything, in the darkest colour (added if there isn't a dark one) */
 function pxOutline(grid, w, h, pal){
   let dark = -1, dl = 1e9; pal.forEach((c, i) => { const [r, g, b] = pxRGB(c), l = r*.3 + g*.59 + b*.11; if(l < dl){ dl = l; dark = i; } });
@@ -152,96 +171,152 @@ function pxParse(text){
   let pal = o.palette || o.pal || o.colors || o.colours; if(pal && !Array.isArray(pal) && typeof pal==='object'){ const ks = Object.keys(pal); const arr = []; ks.forEach(k => { const i = PX_CH.indexOf(k.length===1 ? k : ''); arr[i >= 0 ? i : arr.length] = pal[k]; }); pal = arr; }
   if(!Array.isArray(pal)) pal = [];
   pal = pal.slice(0, PX_CH.length).map(c => pxHex(typeof c==='object' && c ? c.hex || c.color || c.colour : c) || '#ff00ff');
-  let rows = typeof o.z==='string' ? pxUnRLE(o.z) : o.rows || o.pixels || o.data || o.grid || o.image;
-  if(typeof rows==='string') rows = rows.split(/\r?\n|\|/).map(s => s.trim()).filter(Boolean);
+  // the views: "rows" (or "front"), plus "side" and "back" (or inside "views"); "left" is mirrored into a side view
+  const V = o.views && typeof o.views==='object' && !Array.isArray(o.views) ? Object.assign({}, o, o.views) : o;
+  const grab = k => { let r = V[k]; if(r && !Array.isArray(r) && typeof r==='object') r = r.rows || (typeof r.z==='string' ? pxUnRLE(r.z) : null);
+    if(typeof r==='string') r = /[\/(]/.test(r) && !/\n/.test(r) ? pxUnRLE(r) : r.split(/\r?\n|\|/).map(x => x.trim()).filter(Boolean);
+    return Array.isArray(r) && r.length ? r : null; };
+  let rows = typeof o.z==='string' ? pxUnRLE(o.z) : grab('rows') || grab('front') || grab('pixels') || grab('data') || grab('grid') || grab('image');
+  const extra = {}; for(const [k, alts] of [['side', ['side', 'right', 'side_right', 'profile']], ['back', ['back', 'rear', 'behind']]]) for(const k2 of alts){ const r = grab(k2); if(r){ extra[k] = r; break; } }
+  if(!extra.side){ const l = grab('left'); if(l) extra.side = l.map(r => Array.isArray(r) ? r.slice().reverse() : String(r).replace(/\s+/g, '').split('').reverse().join('')); }
+  const viewsOnly = !rows && Object.keys(extra).length > 0;
+  if(viewsOnly) rows = extra.side || extra.back;
   if(!Array.isArray(rows) || !rows.length) return { err:'The code has no rows of pixels.' };
-  if(!pal.length && !(Array.isArray(rows) && rows.some(r => Array.isArray(r)))) return { err:'The code has no palette (the list of colours).' };
+  const any2d = [rows, ...Object.values(extra)].some(rs => rs.some(r => Array.isArray(r)));
+  if(!pal.length && !any2d) return { err:'The code has no palette (the list of colours).' };
   const caseless = pal.length <= 36, fixes = { uneven:0, unknown:0 };
   const cell = ch => { if(ch==null || ch==='.' || ch===' ' || ch==='_' || ch==='-' || ch===-1 || ch===null) return -1;
     if(typeof ch==='number') return ch >= 0 && ch < pal.length ? ch : -1;
     let i = PX_CH.indexOf(caseless ? String(ch).toLowerCase() : String(ch)); if(i < 0 || i >= pal.length){ fixes.unknown++; return -1; } return i; };
-  rows = rows.slice(0, PX_MAXSIDE).map(r => Array.isArray(r) ? r.map(v => typeof v==='string' && v.length > 1 ? (pxHex(v) ? (pal.indexOf(pxHex(v)) >= 0 ? pal.indexOf(pxHex(v)) : (pal.push(pxHex(v)), pal.length - 1)) : -1) : v) : String(r).replace(/\s+/g, '').split(''));
-  const w0 = +o.w || +o.width || 0, wMax = Math.max(...rows.map(r => r.length)), w = clamp(w0 && Math.abs(w0 - wMax) <= 3 ? w0 : wMax, 1, PX_MAXSIDE), h = clamp(rows.length, 1, PX_MAXSIDE);
-  const grid = new Int16Array(w*h).fill(-1);
-  rows.forEach((r, y) => { if(r.length !== w) fixes.uneven++; for(let x = 0; x < w; x++) grid[y*w + x] = cell(r[x]); });
+  const cells = rs => rs.slice(0, PX_MAXSIDE).map(r => Array.isArray(r) ? r.map(v => typeof v==='string' && v.length > 1 ? (pxHex(v) ? (pal.indexOf(pxHex(v)) >= 0 ? pal.indexOf(pxHex(v)) : (pal.push(pxHex(v)), pal.length - 1)) : -1) : v) : String(r).replace(/\s+/g, '').split(''));
+  rows = cells(rows); for(const k in extra) extra[k] = cells(extra[k]);
+  const w0 = +o.w || +o.width || 0, wMax = Math.max(...rows.map(r => r.length)), w = clamp(w0 && Math.abs(w0 - wMax) <= 3 ? w0 : wMax, 1, PX_MAXSIDE), h = clamp(+o.h && Math.abs(+o.h - rows.length) <= 3 ? Math.max(+o.h, rows.length) : rows.length, 1, PX_MAXSIDE);
+  // a view with too few or too many rows keeps its feet on the floor
+  const toGrid = rs => { const g = new Int16Array(w*h).fill(-1), off = h - rs.length; rs.forEach((r, y) => { const yy = y + off; if(yy < 0 || yy >= h) return; if(r.length !== w) fixes.uneven++; for(let x = 0; x < w; x++) g[yy*w + x] = cell(r[x]); }); if(rs.length !== h) fixes.uneven++; return g; };
+  const grid = viewsOnly ? new Int16Array(w*h).fill(-1) : toGrid(rows), vg = {}; for(const k in extra) vg[k] = toGrid(extra[k]);
   const art = { id:pxId(), name:String(o.name || 'From AI').replace(/[^\w '&().,!?-]/g, '').trim().slice(0, 24) || 'From AI', w, h, pal, rows:[] };
   if(!art.pal.length) return { err:'The code has no palette (the list of colours).' };
-  pxTidyPal(art, grid); if(pxBBox(grid, w, h).empty) return { err:'That code is all see-through. Nothing to draw.' };
-  return { art, fixes };
+  pxTidyPal(art, grid, vg);
+  if(!viewsOnly && pxBBox(grid, w, h).empty) return { err:'That code is all see-through. Nothing to draw.' };
+  if(viewsOnly && !art.views) return { err:'Those views are all see-through. Nothing to draw.' };
+  return { art, fixes, viewsOnly, views:['front', ...Object.keys(art.views || {})].filter(v => v!=='front' || !viewsOnly) };
 }
-function pxShareCode(a){ const rows = pxRows(a); return JSON.stringify(Object.assign({ vtl:'pixel', name:a.name, w:a.w, h:a.h, palette:a.pal }, a.w*a.h > 4096 ? { z:pxRLE(rows) } : { rows })); }
-/* the prompt for an AI that can see pictures. Long on purpose: text AIs drift towards side views, wrong row
-   lengths and too few details unless told plainly, so it spells out the pose, a body plan in rows, and a checklist */
+/* add the side and back from one piece into another (for replies that come one view at a time) */
+function pxMergeViews(a, src){ const map = src.pal.map(hx => { let i = a.pal.indexOf(hx); if(i < 0 && a.pal.length < PX_CH.length){ a.pal.push(hx); i = a.pal.length - 1; } return i; });
+  const got = []; for(const v of ['side', 'back']){ if(!src.views || src.views[v] == null) continue; const g = pxDecode(src, v);
+    for(let i = 0; i < g.length; i++) if(g[i] >= 0) g[i] = map[g[i]] < 0 ? 0 : map[g[i]]; pxStoreView(a, v, g); got.push(v); }
+  pxSaveArt(a); return got; }
+function pxShareCode(a){ const rows = pxRows(a), big = a.w*a.h > 4096, o = Object.assign({ vtl:'pixel', name:a.name, w:a.w, h:a.h, palette:a.pal }, big ? { z:pxRLE(rows) } : { rows });
+  for(const v of ['side', 'back']) if(a.views && a.views[v] != null) o[v] = big ? { z:a.views[v] } : pxUnRLE(a.views[v]);
+  return JSON.stringify(o); }
+/* the prompt for an AI that can see pictures. Long on purpose: text AIs drift towards side views when asked for a
+   front, wrong row lengths and flat, detail-free figures unless told plainly. So it spells out each view, a body plan
+   in rows, what detail to carry over from the picture, a worked example and a checklist. */
 const PX_EXAMPLE = { w:12, h:20, palette:['#1a1420', '#e8b48a', '#5a3a22', '#3a6fd8', '#2b2f45', '#4a2e1e', '#241a2a', '#b5544a'],
-  rows:['....0000....', '...022220...', '..02222220..', '.0222222220.', '.0211111120.', '.0161111610.', '.0111111110.', '..01177110..', '...011110...', '..00333300..',
+  front:['....0000....', '...022220...', '..02222220..', '.0222222220.', '.0211111120.', '.0161111610.', '.0111111110.', '..01177110..', '...011110...', '..00333300..',
+    '.0333333330.', '.0313333130.', '.0313333130.', '.0103333010.', '..00444400..', '..04400440..', '..04400440..', '..05500550..', '.0555005550.', '.0000..0000.'],
+  side:['....00000...', '...0222220..', '..022222220.', '..022221110.', '..022211160.', '..022111110.', '...021111110', '...02111770.', '....011110..', '....033330..',
+    '...0333330..', '...0333330..', '...0333330..', '...0331330..', '....04440...', '....04440...', '....04440...', '....05550...', '....0555550.', '....0000000.'],
+  back:['....0000....', '...022220...', '..02222220..', '.0222222220.', '.0222222220.', '.0222222220.', '.0122222210.', '..02222220..', '...011110...', '..00333300..',
     '.0333333330.', '.0313333130.', '.0313333130.', '.0103333010.', '..00444400..', '..04400440..', '..04400440..', '..05500550..', '.0555005550.', '.0000..0000.'] };
-function pxAIPrompt(w, h){
+const PX_AI_SIZES = [[32, 48], [48, 64], [64, 96], [96, 128]];
+function pxAISet(){ return UI.pxAI = UI.pxAI || { size:2, views:true }; }
+function pxAIPrompt(w, h, views = true){
   const big = w*h > 64*64, small = h <= 48, nc = big ? 32 : w*h > 32*48 ? 24 : 16, chars = PX_CH.slice(0, nc), last = chars[chars.length - 1];
   const hh = Math.round(h*(small ? .38 : h <= 96 ? .3 : .24)), sh = hh + Math.max(1, Math.round(h*.03)), belt = sh + Math.round(h*(small ? .22 : .26)), knee = belt + Math.round((h - 1 - belt)*.5);
-  const headW = Math.round(w*(small ? .56 : .42)), shW = Math.min(w - 2, Math.round(w*(small ? .66 : .56))), mid = w/2;
+  const headW = Math.round(w*(small ? .56 : .42)), shW = Math.min(w - 2, Math.round(w*(small ? .66 : .56))), mid = w/2, feetN = Math.max(2, Math.round(h*.06));
   const style = small ? 'chunky, cute "chibi" proportions like classic 16-bit RPG sprites: a big head, a small body, short legs'
-    : h <= 96 ? 'slightly stylised proportions, like a detailed 16-bit or 32-bit era game portrait sprite: the head a bit big, the body otherwise natural'
-    : 'natural proportions with plenty of detail, like high-end modern pixel art';
+    : h <= 96 ? 'slightly stylised proportions, like a detailed 16-bit or 32-bit era game sprite: the head a little big, the body otherwise natural'
+    : 'natural proportions with lots of detail, like high-end modern pixel art';
+  const V = views ? ['front', 'side', 'back'] : ['front'], n = V.length;
+  const ex = { vtl:'pixel', name:'Example', w:PX_EXAMPLE.w, h:PX_EXAMPLE.h, palette:PX_EXAMPLE.palette }; for(const v of V) ex[v] = PX_EXAMPLE[v];
+  const exText = '{"vtl":"pixel","name":"Example","w":12,"h":20,\n "palette":' + JSON.stringify(PX_EXAMPLE.palette) + ',\n' + V.map(v => ` "${v}":[\n` + PX_EXAMPLE[v].map(r => `  "${r}"`).join(',\n') + '\n ]').join(',\n') + '\n}';
+  const shape = '{"vtl":"pixel","name":"<short name>","w":' + w + ',"h":' + h + ',"palette":["#RRGGBB", ...],' + V.map(v => `"${v}":[ ...${h} rows... ]`).join(',') + '}';
   return [
-`I'm making a character for my browser game, Vaster Than Life, a spaceship crew game. I've attached a picture. Please turn the main person (or creature) in it into a pixel-art crew member, written as text that my game reads. Please read everything below carefully before you start: the details matter.`,
+`I'm making a character for my browser game, Vaster Than Life, a spaceship crew game. I've attached a picture. Please turn the main person (or creature) in it into a detailed pixel-art crew member${views ? ', drawn from three angles (front, side and back) so it can turn round as it walks about the ship' : ''}, written as text that my game reads. Please read everything below before you start: every part matters.`,
 ``,
-`=== 1. THE POSE: FRONT VIEW, FACING THE VIEWER ===`,
-`This is the most important rule, and the one AIs most often get wrong.`,
-`- Draw the character from the FRONT, looking straight out of the picture at the viewer, like a passport photo or a character standing to attention in a line-up.`,
-`- NOT side-on, NOT in profile, NOT a three-quarter turn, NOT walking, NOT facing left or right. Even if the picture shows them side-on, redraw them facing forwards.`,
-`- Both eyes visible, the same size, at the same height, the same distance from the middle. The nose points at the viewer, so it is at most a pixel or two of shading in the middle of the face, never a bump sticking out of one side.`,
-`- Shoulders level and square to the viewer. Both arms hang straight down at the sides, slightly away from the body so there is a gap (or an outline) between arm and body. Hands visible at the ends of the arms.`,
-`- Legs straight, side by side, with a one- or two-pixel gap between them. Both feet visible, pointing at the viewer (or very slightly outwards).`,
-`- The figure is close to mirror-symmetrical down the middle (between columns ${Math.floor(mid) - 1} and ${Math.floor(mid)}, counting from 0). Only things that really are one-sided break the symmetry: a side parting, a badge, an eyepatch, something held in one hand.`,
+`=== 1. ${views ? 'THE THREE VIEWS' : 'THE POSE: FRONT VIEW'} ===`,
+`FRONT ("front"): this is the most important one, and the one AIs most often get wrong.`,
+`- The character faces the viewer, looking straight out of the picture, like a passport photo or someone standing to attention in a line-up. NOT side-on, NOT in profile, NOT a three-quarter turn, NOT walking. Even if the picture shows them side-on, redraw them facing forwards.`,
+`- Both eyes visible, the same size, at the same height, the same distance from the middle. The nose points at the viewer: at most a pixel or two of shading in the middle of the face, never a bump sticking out of one side.`,
+`- Shoulders level and square. Both arms hang straight down at the sides, slightly apart from the body, hands visible. Legs straight and side by side with a small gap. Both feet visible.`,
+`- Close to mirror-symmetrical down the middle (between columns ${Math.floor(mid) - 1} and ${Math.floor(mid)}, counting from 0). Only truly one-sided things break the symmetry: a side parting, a badge, an eyepatch, something held in one hand.`,
+...(views ? [
+`SIDE ("side"): a true side-on profile, facing RIGHT.`,
+`- The nose and the toes point to the right edge of the canvas. We see the character's left side: one eye, one ear, the profile of the face (forehead, nose, lips, chin) on the right-hand edge of the head, and the back of the head and hair on the left.`,
+`- The near arm (their left) hangs down at the side over the body; the far arm is hidden or just peeks out behind. The legs are side by side or one slightly ahead of the other; the feet point right.`,
+`- The body is narrower than in the front view (people are thinner side-on), but just as tall.`,
+`BACK ("back"): seen from directly behind.`,
+`- No face. We see the back of the head: hair (or the back of a hat or helmet), the backs of the ears, the back of the neck.`,
+`- The backs of the clothes: collar, seams, back pockets, a hood, a backpack or anything else worn on the back. Arms hang at the sides, the backs of the hands showing. Heels of the shoes at the bottom.`,
+`- Mirror-symmetrical like the front, except for one-sided things, which swap sides (a parting on their left is on OUR left from behind).`,
+`ALL THREE VIEWS must match each other exactly, so the game can switch between them without the character jumping:`,
+`- The same palette, the same clothes and colours, the same height. The top of the head, the shoulders, the belt and the soles of the feet are on the same rows in every view.`,
+`- Each view is centred left to right in its own canvas, with the feet on the bottom row.`,
+`- If the picture only shows one side of them, work out the other views sensibly from what you can see.`] : []),
 ``,
-`=== 2. THE CANVAS ===`,
-`- Exactly ${w} pixels wide and ${h} pixels tall. Every row must be exactly ${w} characters, and there must be exactly ${h} rows.`,
-`- The whole body fits: head at the top, feet on the bottom row (row ${h - 1}). Use the full height: the top of the head should be on row 0 or 1.`,
-`- Centred left to right, with a column or two of see-through space at each side.`,
-`- The background is see-through: everything that is not the character is ".".`,
+`=== 2. KEEP AS MUCH DETAIL AS POSSIBLE ===`,
+`This is the second most important thing. Use every pixel: the aim is a rich, detailed character that is clearly the one in the picture, not a generic figure.`,
+`- Study the picture closely first. Carry over: the exact hair shape, length, parting, fringe and any streaks or highlights; eyebrow shape; eye colour if there is room; facial hair (shape, length, colour); skin tone; freckles, scars, tattoos, make-up.`,
+`- Every visible item of clothing, in layers: jacket over shirt over vest, open or done up; collars and lapels, buttons, zips, seams, cuffs, pockets, belts and buckles, ties, patterns (stripes, checks, prints), logos and badges as simple shapes in the right colours; shoes with laces, soles and toecaps.`,
+`- Accessories: glasses, hats, earrings, necklaces, watches, gloves, bags, lanyards, anything held.`,
+`- Take the colours from the picture itself, then build each into a range of shades.`,
+`- No big flat areas: every area wider than about ${Math.max(3, Math.round(w/10))} pixels should have shading, a fold, a seam or a highlight in it.`,
+`- Before the JSON you may write a short list of the features you will keep (no curly brackets in it, please).`,
 ``,
-`=== 3. A BODY PLAN FOR THIS SIZE (rows counted from 0 at the top) ===`,
-`Style: ${style}. A rough guide, adjust to suit the character:`,
-`- Head (hair included): rows 0 to ${hh - 1}, about ${headW} pixels wide.`,
-`- Neck and chin: around row ${hh}. Shoulders: row ${sh}, about ${shW} pixels across.`,
-`- Body and arms: rows ${sh} to about ${belt}. The hands end around row ${belt + Math.round((knee - belt)*.4)}.`,
-`- Waist or belt: around row ${belt}. Knees: around row ${knee}. Feet: the last ${Math.max(2, Math.round(h*.06))} rows, ending on row ${h - 1}.`,
+`=== 3. THE CANVAS ===`,
+`- Every view is exactly ${w} pixels wide and ${h} pixels tall: exactly ${h} rows, and every row exactly ${w} characters.`,
+`- The whole body fits: the top of the head on row 0 or 1, the soles of the feet on the bottom row (row ${h - 1}). Use the full height.`,
+`- A column or two of see-through space at each side. Everything that is not the character is "." (see-through).`,
 ``,
-`=== 4. HOW IT SHOULD LOOK ===`,
-`- A 1-pixel dark outline all the way round the figure (a very dark version of the nearby colour, or near-black). Use darker lines inside too, to separate the arms from the body, the hair from the face, and so on.`,
-`- Light comes from the top left: each colour gets a lighter tone on its upper-left side and a darker tone on its lower-right side.${big ? ' Use 3 or 4 tones per colour (shadow, base, light, highlight) and shade folds in clothes, strands of hair and the shape of the face.' : ' Use 2 or 3 tones per main colour.'}`,
-`- Face: ${small ? 'eyes 1 or 2 pixels each, with a pixel or so of skin between them; a mouth of 1 to 3 pixels; maybe a pixel of blush or shadow' : 'eyes with a white and a dark pupil, eyebrows, a hint of a nose in the middle by shading, a mouth, ears at both sides, and shading under the chin and hair'}. Keep the face the friendliest, clearest part.`,
-`- Keep what makes the picture recognisable: hair style and colour, skin tone, beard or moustache, glasses, hat, clothes and their colours, logos made simple, scars, markings, accessories.`,
-`- Clean pixel art: no blurry in-between pixels against the background, no single stray pixels, no dithering noise unless it is a texture on purpose, no text or letters.`,
-`- At most ${nc} colours, including the outline colour.`,
+`=== 4. A BODY PLAN FOR THIS SIZE (rows counted from 0 at the top) ===`,
+`Style: ${style}. A rough guide, adjusted to suit the character:`,
+`- Head (hair included): rows 0 to ${hh - 1}, about ${headW} pixels wide (a little narrower side-on).`,
+`- Neck and chin: around row ${hh}. Shoulders: row ${sh}, about ${shW} pixels across from the front.`,
+`- Body and arms: rows ${sh} to about ${belt}. Hands end around row ${belt + Math.round((knee - belt)*.4)}.`,
+`- Waist or belt: around row ${belt}. Knees: around row ${knee}. Feet: the last ${feetN} rows, ending on row ${h - 1}.`,
 ``,
-`=== 5. THE FORMAT TO REPLY IN ===`,
-`Reply with ONLY this JSON, nothing before it and nothing after it:`,
-`{"vtl":"pixel","name":"<a short name, up to 24 letters>","w":${w},"h":${h},"palette":["#RRGGBB", ...],"rows":["<row 0>", "<row 1>", ... "<row ${h - 1}>"]}`,
-`- "palette" lists the colours as hex codes. The first one is colour 0, the next colour 1, and so on.`,
-`- In "rows", each string is one row of pixels, left to right, top row first. Each character is one pixel: "." means see-through, "0" to "9" then "a" to "${last}" pick palette colours 0 to ${nc - 1} (so "a" is colour 10, "b" is colour 11 and so on).`,
-`- Please put each row on its own line inside the list, so the rows line up and are easy to check.`,
+`=== 5. HOW IT SHOULD LOOK ===`,
+`- A 1-pixel dark outline all the way round the figure (a very dark version of the colour next to it, or near-black). Darker lines inside too, to separate arms from body, hair from face, and so on.`,
+`- Light comes from the top left: each colour has lighter tones on its upper-left side and darker tones on its lower-right side. ${big ? 'Use 3 or 4 tones per colour (shadow, base, light, highlight) and shade folds in clothes, strands of hair and the shape of the face.' : 'Use 2 or 3 tones per main colour.'}`,
+`- Face (front): ${small ? 'eyes 1 or 2 pixels each with a pixel or two of skin between them, a mouth of 1 to 3 pixels, maybe a pixel of blush or shadow' : 'eyes with a white and a dark pupil, eyebrows, a hint of a nose in the middle by shading, a mouth with a lip colour, ears at both sides, shading under the chin and under the hair'}.`,
+`- Clean pixel art: no blurry in-between pixels against the background, no stray single pixels, no random noise, no text or letters.`,
+`- At most ${nc} colours in total, shared by all ${n > 1 ? 'the views' : 'of it'}, including the outline colour.`,
 ``,
-`Here is a tiny example (12×20) of the right pose and format. Yours must be ${w}×${h} and far more detailed, but notice it faces the viewer, both eyes show, the arms hang at the sides and each row is a mirror image of itself:`,
-JSON.stringify({ vtl:'pixel', name:'Example', w:PX_EXAMPLE.w, h:PX_EXAMPLE.h, palette:PX_EXAMPLE.palette, rows:PX_EXAMPLE.rows }).replace('"rows":[', '"rows":[\n  ').replace(/","/g, (m, o, str) => o > str.indexOf('"rows"') ? '",\n  "' : m).replace(/"\]\}$/, '"\n]}'),
+`=== 6. THE FORMAT TO REPLY IN ===`,
+`Reply with this JSON (and, if you like, the short feature list before it). Nothing after the JSON.`,
+shape,
+`- "palette" lists the colours as hex codes. The first is colour 0, the next colour 1, and so on.`,
+`- ${n > 1 ? 'Each of "front", "side" and "back" is' : '"front" is'} a list of exactly ${h} strings, one per row of pixels, top row first. Each character is one pixel, left to right: "." is see-through, "0" to "9" then "a" to "${last}" pick palette colours 0 to ${nc - 1} ("a" is colour 10, "b" is 11, and so on).`,
+`- Put each row on its own line, so the rows line up and are easy to check.`,
+...(n > 1 ? [`- This is a long reply (${n*h} rows). If you can't fit all three views in one reply, send the front first in the same format; I'll then ask for the others, and you send {"palette":[the same palette],"side":[...],"back":[...]} with the same palette in the same order.`] : []),
 ``,
-`=== 6. BEFORE YOU REPLY, CHECK ===`,
-`1. Front view: both eyes showing, facing the viewer, not side-on? If not, redraw it.`,
-`2. Exactly ${h} rows, and every row exactly ${w} characters? Count them. Fix any row that is too long or too short.`,
-`3. Feet on the last row, head near the top, figure centred?`,
-`4. Only "." and the characters for colours you listed in the palette?`,
-`5. Does it still look like the person in the picture?`,
-`Then reply with only the JSON.`].join('\n'); }
+`Here is a tiny example (12×20) showing the format and the ${n > 1 ? 'three views' : 'pose'}. Yours must be ${w}×${h} and FAR more detailed${n > 1 ? '. Notice the front and back are mirror images of themselves, the side faces right, and the head, shoulders, belt and feet sit on the same rows in all three' : ', but notice it faces the viewer, both eyes show, the arms hang at the sides and each row is a mirror image of itself'}:`,
+exText,
+``,
+`=== 7. BEFORE YOU REPLY, CHECK ===`,
+`1. The front faces the viewer with both eyes showing.${n > 1 ? ' The side faces RIGHT. The back shows no face.' : ''} If not, redraw.`,
+`2. Exactly ${h} rows ${n > 1 ? 'in each view' : ''}, and every row exactly ${w} characters. Count them, and fix any row that is too long or too short.`,
+`3. Feet on the last row, head near the top, figure centred${n > 1 ? ', and the views line up row for row' : ''}.`,
+`4. Only "." and the characters of colours in your palette.`,
+`5. Lots of detail, and it clearly looks like the person in the picture.`,
+`Then reply.`].join('\n'); }
 function pxCopy(text, ok){
   const done = () => { if(typeof toast==='function') toast(ok); }, fallback = () => { try{ const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const r = document.execCommand('copy'); ta.remove(); if(r){ done(); return; } }catch(e){}
     if(typeof toast==='function') toast('Your browser blocked copying. The prompt is in the wiki: Help → Pixel Studio.'); };
   try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback(); }catch(e){ fallback(); }
 }
+/* a pasted reply: a whole new piece, or (side and back only) more views for the piece that is open */
+function pxUsePasted(t){ const r = pxParse(t); if(r.err){ toast(r.err); return false; }
+  const tidy = r.fixes.uneven ? `. Tidied ${r.fixes.uneven} uneven row${r.fixes.uneven===1 ? '' : 's'}` : '';
+  if(r.viewsOnly){ const E = UI.px, a = E && pxGet(E.id); if(!a){ toast('Open the piece these views belong to first, then paste again.'); return false; }
+    if(a.w!==r.art.w || a.h!==r.art.h){ toast(`Those views are ${r.art.w}×${r.art.h}, but "${a.name}" is ${a.w}×${a.h}. Open the right piece, then paste again.`); return false; }
+    pxCommit(); const got = pxMergeViews(a, r.art); pxOpenArt(a.id); pxSwitchView(got[0] || 'front'); toast(`Added the ${got.join(' and ')} view${got.length > 1 ? 's' : ''} to "${a.name}"${tidy}.`); return true; }
+  if(!pxAdd(r.art)) return false; pxOpenArt(r.art.id); const nv = pxViewCount(r.art);
+  toast(`Imported "${r.art.name}", ${r.art.w}×${r.art.h}${nv > 1 ? `, ${nv} views` : ''}${tidy}.`); return true; }
 function pxPaste(){
-  const use = t => { const r = pxParse(t); if(r.err){ toast(r.err); return; } pxAdd(r.art); pxOpenArt(r.art.id);
-    toast(`Imported "${r.art.name}", ${r.art.w}×${r.art.h}${r.fixes.uneven ? `. Tidied ${r.fixes.uneven} uneven row${r.fixes.uneven===1 ? '' : 's'}` : ''}.`); };
-  const ask = () => openKeyboard({ title:'Paste the AI\'s reply (or a friend\'s code)', value:'', max:60000, min:2, ok:'Import', hint:'Ctrl+V, or the Paste key', onOk:use });
-  try{ if(navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => { if(t && t.includes('{')) use(t); else ask(); }, ask); else ask(); }catch(e){ ask(); }
+  const ask = () => openKeyboard({ title:'Paste the AI\'s reply (or a friend\'s code)', value:'', max:250000, min:2, ok:'Import', hint:'Ctrl+V, or the Paste key', onOk:pxUsePasted });
+  try{ if(navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => { if(t && t.includes('{')) pxUsePasted(t); else ask(); }, ask); else ask(); }catch(e){ ask(); }
 }
 function pxImp(){ return UI.pxImp = UI.pxImp || { cols:16, dither:false, outline:true, cut:true }; }
 function pxPickPicture(mode){
@@ -262,9 +337,16 @@ function pxAdd(art){ const L = pxLib(); if(L.length >= PX_MAX){ toast(`The studi
   art.v = 1; L.unshift(art); if(typeof saveProfile==='function') saveProfile(); return true; }
 function pxNew(w, h){ const a = pxStore({ id:pxId(), name:'New crew ' + (pxLib().length + 1), w, h, pal:PX_PAL0.slice() }, new Int16Array(w*h).fill(-1)); if(pxAdd(a)) pxOpenArt(a.id); }
 function pxOpenArt(id){ const a = pxGet(id); if(!a) return; const o = UI.px || {};
-  UI.px = { id, w:a.w, h:a.h, grid:pxDecode(a), undo:[], redo:[], col:Math.min(1, a.pal.length - 1), tool:'pen', mirror:false, del:false, zoom:1, panX:0, panY:0,
-    brush:o.brush || 1, solid:!!o.solid, tab:o.tab || 'draw', mix:!!o.mix, ref:o.ref || null, refOn:!!o.refOn, refA:o.refA || .45, shadeDir:-1 }; }
-function pxCommit(){ const E = UI.px, a = E && pxGet(E.id); if(!a) return; pxStore(a, E.grid); pxSaveArt(a); }
+  UI.px = { id, w:a.w, h:a.h, view:'front', grid:pxDecode(a, 'front'), undo:[], redo:[], col:Math.min(1, a.pal.length - 1), tool:'pen', mirror:false, del:false, zoom:1, panX:0, panY:0,
+    brush:o.brush || 1, solid:!!o.solid, tab:o.tab || 'draw', mix:!!o.mix, ref:o.ref || null, refOn:!!o.refOn, refA:o.refA || .45, shadeDir:-1, onion:o.onion !== false }; }
+function pxCommit(){ const E = UI.px, a = E && pxGet(E.id); if(!a) return; pxStoreView(a, E.view || 'front', E.grid); pxSaveArt(a); }
+/* draw a different angle of the same character */
+function pxSwitchView(v){ const E = UI.px, a = E && pxGet(E.id); if(!a || E.view===v) return; pxCommit(); E.view = v; E.grid = pxDecode(a, v); E.undo = []; E.redo = []; E.sa = E.sb = null; E.mirror = E.mirror && v!=='side'; }
+function pxNeedsStart(){ const E = UI.px; return !!E && UI.screen==='pixel' && E.tab!==undefined && E.view && E.view!=='front' && !E.sa && E.blankOk!==E.view && E.grid.every(q => q < 0); }
+function pxStartView(how){ const E = UI.px, a = pxGet(E.id); pxSnap(); const f = pxDecode(a, 'front');
+  if(how==='front') E.grid.set(f);
+  else if(how==='flip'){ for(let y = 0; y < E.h; y++) for(let x = 0; x < E.w; x++) E.grid[y*E.w + x] = f[y*E.w + (E.w - 1 - x)]; }
+  pxCommit(); }
 
 /* ---------------- the studio ---------------- */
 function openPixelStudio(back, target){
@@ -351,18 +433,20 @@ function pxRamp(){ const E = UI.px, a = pxGet(E.id), c = a.pal[E.col]; if(!c) re
 function pxDelete(){ const E = UI.px, L = pxLib(), i = L.findIndex(p => p.id===E.id); if(i < 0) return; L.splice(i, 1);
   if(G && G.ship) for(const c of G.ship.crew) if(c.skin===E.id) c.skin = null; saveProfile(); UI.px = null; if(L.length) pxOpenArt(L[Math.min(i, L.length - 1)].id); else { UI.screen = UI.pxBack || 'title'; } }
 function pxDuplicate(){ const a = pxGet(UI.px.id); if(!a) return; pxCommit(); const b = JSON.parse(JSON.stringify(a)); b.id = pxId(); b.name = (a.name + ' copy').slice(0, 24); if(pxAdd(b)) pxOpenArt(b.id); }
-function pxResize(w, h){ const a = pxGet(UI.px.id); pxCommit(); const g0 = pxDecode(a), bb = pxBBox(g0, a.w, a.h), g = new Int16Array(w*h).fill(-1), ox = Math.floor((w - bb.w)/2) - bb.x, oy = h - bb.h - bb.y;
-  for(let y = 0; y < a.h; y++) for(let x = 0; x < a.w; x++){ const v = g0[y*a.w + x], nx = x + ox, ny = y + oy; if(v >= 0 && nx >= 0 && ny >= 0 && nx < w && ny < h) g[ny*w + nx] = v; }
-  a.w = w; a.h = h; pxStore(a, g); pxSaveArt(a); pxOpenArt(a.id); }
+/* resizing and scaling move every view the same way, so they stay lined up */
+function pxEachView(a, fn){ const out = PX_VIEWS.filter(v => pxHasView(a, v)).map(v => [v, fn(pxDecode(a, v))]); return out; }
+function pxResize(w, h){ const a = pxGet(UI.px.id); pxCommit(); const bb = pxBBox(pxDecode(a, 'front'), a.w, a.h), ox = Math.floor((w - bb.w)/2) - bb.x, oy = h - bb.h - bb.y, w0 = a.w, h0 = a.h;
+  const out = pxEachView(a, g0 => { const g = new Int16Array(w*h).fill(-1); for(let y = 0; y < h0; y++) for(let x = 0; x < w0; x++){ const v = g0[y*w0 + x], nx = x + ox, ny = y + oy; if(v >= 0 && nx >= 0 && ny >= 0 && nx < w && ny < h) g[ny*w + nx] = v; } return g; });
+  a.w = w; a.h = h; delete a.views; for(const [v, g] of out) pxStoreView(a, v, g); pxSaveArt(a); pxOpenArt(a.id); }
 /* scale the drawing up (every pixel becomes 2×2, ready for more detail) or down (each 2×2 becomes its commonest colour) */
-function pxScale(up){ const a = pxGet(UI.px.id); pxCommit(); const g0 = pxDecode(a);
-  if(up){ const w = a.w*2, h = a.h*2; if(w > PX_MAXSIDE || h > PX_MAXSIDE){ toast(`Too big: the most is ${PX_MAXSIDE} pixels a side.`); return; } const g = new Int16Array(w*h);
-    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++) g[y*w + x] = g0[(y >> 1)*a.w + (x >> 1)]; a.w = w; a.h = h; pxStore(a, g); }
-  else { const w = Math.max(4, Math.ceil(a.w/2)), h = Math.max(4, Math.ceil(a.h/2)), g = new Int16Array(w*h).fill(-1);
-    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){ const n = {}; for(const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]){ const sx = x*2 + dx, sy = y*2 + dy; if(sx < a.w && sy < a.h){ const v = g0[sy*a.w + sx]; n[v] = (n[v] || 0) + 1; } }
-      let best = -1, bn = 0; for(const k in n){ const kv = +k, c = n[k] + (kv >= 0 ? .5 : 0); if(c > bn){ bn = c; best = kv; } } g[y*w + x] = best; }
-    a.w = w; a.h = h; pxStore(a, g); }
-  pxSaveArt(a); pxOpenArt(a.id); toast(`Now ${a.w}×${a.h}.`); }
+function pxScale(up){ const a = pxGet(UI.px.id); pxCommit(); const w0 = a.w, h0 = a.h;
+  if(up && (w0*2 > PX_MAXSIDE || h0*2 > PX_MAXSIDE)){ toast(`Too big: the most is ${PX_MAXSIDE} pixels a side.`); return; }
+  const w = up ? w0*2 : Math.max(4, Math.ceil(w0/2)), h = up ? h0*2 : Math.max(4, Math.ceil(h0/2));
+  const out = pxEachView(a, g0 => { const g = new Int16Array(w*h).fill(-1);
+    if(up){ for(let y = 0; y < h; y++) for(let x = 0; x < w; x++) g[y*w + x] = g0[(y >> 1)*w0 + (x >> 1)]; return g; }
+    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){ const n = {}; for(const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]){ const sx = x*2 + dx, sy = y*2 + dy; if(sx < w0 && sy < h0){ const v = g0[sy*w0 + sx]; n[v] = (n[v] || 0) + 1; } }
+      let best = -1, bn = 0; for(const k in n){ const kv = +k, c = n[k] + (kv >= 0 ? .5 : 0); if(c > bn){ bn = c; best = kv; } } g[y*w + x] = best; } return g; });
+  a.w = w; a.h = h; delete a.views; for(const [v, g] of out) pxStoreView(a, v, g); pxSaveArt(a); pxOpenArt(a.id); toast(`Now ${a.w}×${a.h}.`); }
 function pxLooksHere(){ return (G && G.ship ? G.ship.crew.filter(c => c.owner==='p' && c.skin===UI.px?.id).map(c => c.name) : []); }
 
 /* the canvas, drawn as one picture each frame */
@@ -373,11 +457,14 @@ function pxLive(E, grid, pal){ if(!PXV.c || PXV.w!==E.w || PXV.h!==E.h){ PXV.c =
   g.putImageData(im, 0, 0); return PXV.c; }
 function pxChecker(){ if(PXV.chk) return PXV.chk; const c = mkCanvas(24, 24), g = c.getContext('2d'); g.fillStyle = '#151b2e'; g.fillRect(0, 0, 24, 24); g.fillStyle = '#1c2440'; g.fillRect(0, 0, 12, 12); g.fillRect(12, 12, 12, 12); return PXV.chk = ctx.createPattern(c, 'repeat'); }
 function pxDrawCanvas(E, a){
+  UI.pxNoPaint = [];
   const b = pxGridBox(), cs = b.cs; let grid = E.grid;
   if(E.sa){ E.wg = E.grid.slice(); pxShape(E.tool, E.sa, E.sb || E.sa, E.tool==='eraser' ? -1 : E.col); grid = E.wg; E.wg = null; }
   ctx.save(); ctx.fillStyle = '#080b16'; ctx.fillRect(PXG.x, PXG.y, PXG.w, PXG.h); ctx.beginPath(); ctx.rect(PXG.x, PXG.y, PXG.w, PXG.h); ctx.clip();
   ctx.fillStyle = pxChecker(); ctx.fillRect(b.x, b.y, b.gw, b.gh);
-  ctx.imageSmoothingEnabled = false; ctx.drawImage(pxLive(E, grid, a.pal), b.x, b.y, b.gw, b.gh);
+  ctx.imageSmoothingEnabled = false;
+  if(E.view && E.view!=='front' && E.onion){ ctx.globalAlpha = .2; ctx.drawImage(pxCanvas(a, 'front'), b.x, b.y, b.gw, b.gh); ctx.globalAlpha = 1; }   // the front, faintly, to line the rows up against
+  ctx.drawImage(pxLive(E, grid, a.pal), b.x, b.y, b.gw, b.gh);
   if(E.ref && E.refOn){ const r = E.ref, k = Math.min(b.gw/r.naturalWidth, b.gh/r.naturalHeight), rw = r.naturalWidth*k, rh = r.naturalHeight*k; ctx.imageSmoothingEnabled = true; ctx.globalAlpha = E.refA; ctx.drawImage(r, b.x + (b.gw - rw)/2, b.y + b.gh - rh, rw, rh); ctx.globalAlpha = 1; }
   ctx.imageSmoothingEnabled = true;
   if(cs >= 8){ const x0 = Math.max(0, Math.floor((PXG.x - b.x)/cs)), x1 = Math.min(E.w, Math.ceil((PXG.x + PXG.w - b.x)/cs)), y0 = Math.max(0, Math.floor((PXG.y - b.y)/cs)), y1 = Math.min(E.h, Math.ceil((PXG.y + PXG.h - b.y)/cs));
@@ -393,7 +480,7 @@ function pxDrawCanvas(E, a){
   if(b.gw > PXG.w + 2 || b.gh > PXG.h + 2){ const mk = Math.min(150/E.w, 150/E.h), mw = E.w*mk, mh = E.h*mk, mx = PXG.x + PXG.w - mw - 12, my = PXG.y + 12;
     ctx.fillStyle = 'rgba(4,6,12,.85)'; ctx.fillRect(mx - 4, my - 4, mw + 8, mh + 8); ctx.imageSmoothingEnabled = false; ctx.drawImage(PXV.c, mx, my, mw, mh); ctx.imageSmoothingEnabled = true;
     const vx = (PXG.x - b.x)/cs*mk, vy = (PXG.y - b.y)/cs*mk; ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5; ctx.strokeRect(mx + Math.max(0, vx), my + Math.max(0, vy), Math.min(mw, PXG.w/cs*mk), Math.min(mh, PXG.h/cs*mk));
-    region(mx - 4, my - 4, mw + 8, mh + 8, (x, y) => { E.panX = (x - mx)/mk - E.w/2; E.panY = (y - my)/mk - E.h/2; pxClampPan(); }, 'pxmap'); }
+    UI.pxNoPaint.push({ x:mx - 4, y:my - 4, w:mw + 8, h:mh + 8 }); region(mx - 4, my - 4, mw + 8, mh + 8, (x, y) => { E.panX = (x - mx)/mk - E.w/2; E.panY = (y - my)/mk - E.h/2; pxClampPan(); }, 'pxmap'); }
   region(PXG.x, PXG.y, PXG.w, PXG.h, (x, y) => { const c = pxCellAt({ x, y }); if(c){ pxStroke(c, true); pxEndStroke(); } }, 'pxgrid');
   return hv;
 }
@@ -413,7 +500,7 @@ function drawPixelStudio(){
   btn(44, 154, 252, 40, '+ New canvas', () => { UI.pxChoose = 'new'; }, { s:15, col:C.good });
   L.slice(UI.pxPage*per, UI.pxPage*per + per).forEach((p, i) => { const tx = 44 + (i % 2)*130, ty = 206 + Math.floor(i/2)*150, on = p.id===E.id;
     rr(tx, ty, 122, 142, 8); ctx.fillStyle = on ? hexA(C.amber, .16) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = on ? C.amber : 'rgba(120,135,170,.25)'; ctx.lineWidth = on ? 2 : 1; ctx.stroke();
-    try{ pxThumb(p, tx + 16, ty + 10, 90, 100); }catch(e){} T(p.name, tx + 61, ty + 124, { s:12, a:'center', c:on ? C.amber : C.ink, max:112 }); T(`${p.w}×${p.h}`, tx + 116, ty + 138, { s:9, a:'right', c:C.muted });
+    try{ pxThumb(p, tx + 16, ty + 10, 90, 100); }catch(e){} if(p.views) T(`${pxViewCount(p)} views`, tx + 8, ty + 16, { s:9, c:C.cyan }); T(p.name, tx + 61, ty + 124, { s:12, a:'center', c:on ? C.amber : C.ink, max:112 }); T(`${p.w}×${p.h}`, tx + 116, ty + 138, { s:9, a:'right', c:C.muted });
     region(tx, ty, 122, 142, () => { pxCommit(); pxOpenArt(p.id); }, 'pxlib:' + p.id); });
   if(pages > 1){ btn(44, 812, 60, 36, '‹', () => UI.pxPage--, { disabled:UI.pxPage <= 0, s:16 }); T(`${UI.pxPage + 1}/${pages}`, 170, 836, { s:13, a:'center', c:C.muted }); btn(236, 812, 60, 36, '›', () => UI.pxPage++, { disabled:UI.pxPage >= pages - 1, s:16 }); }
   btn(44, 858, 120, 40, 'Duplicate', pxDuplicate, { s:13 }); btn(176, 858, 120, 40, E.del ? 'Sure?' : 'Delete', () => { if(E.del) pxDelete(); else E.del = true; }, { s:13, col:C.hostile });
@@ -421,8 +508,17 @@ function drawPixelStudio(){
   const hv = pxDrawCanvas(E, a);
   const zl = Math.round(pxCS(E)/Math.max(1, pxBase(E))*10)/10;
   btn(PXG.x, 908, 44, 34, '−', () => pxZoom(1/1.5), { s:18 }); btn(PXG.x + 50, 908, 64, 34, 'Fit', pxFit, { s:13, fill:(E.zoom || 1)===1 }); btn(PXG.x + 120, 908, 44, 34, '+', () => pxZoom(1.5), { s:18 });
-  T(`${a.w}×${a.h}  ·  zoom ${zl}×${hv ? `  ·  ${hv.x + 1}, ${hv.y + 1}` : ''}`, PXG.x + 180, 931, { s:13, c:C.muted });
-  if(!hv) T(MOB.touch ? 'Pinch to zoom · Hand to move' : 'Scroll to zoom · right-drag or Space to move', PXG.x + PXG.w, 931, { s:12, a:'right', c:C.muted });
+  T(`${a.w}×${a.h} · ${zl}×${hv ? ` · ${hv.x + 1},${hv.y + 1}` : ''}`, PXG.x + 176, 931, { s:13, c:C.muted, max:190 });
+  if(E.view!=='front'){ UI.pxNoPaint.push({ x:PXG.x + 10, y:PXG.y + 10, w:170, h:32 }); btn(PXG.x + 10, PXG.y + 10, 170, 32, E.onion ? 'Front ghost: on' : 'Front ghost: off', () => { E.onion = !E.onion; }, { s:12, fill:E.onion, col:C.cyan });
+    tip(PXG.x + 10, PXG.y + 10, 170, 32, 'Front ghost', 'Shows the front view faintly behind this one, so the head, shoulders, belt and feet line up on the same rows.');
+    if(pxNeedsStart()){ const w = 440, h = 236, x = PXG.x + (PXG.w - w)/2, y = PXG.y + (PXG.h - h)/2; panel(x, y, w, h, 12); region(x, y, w, h, () => {});
+      T(`No ${E.view} view yet`, x + w/2, y + 44, { s:22, f:FD, w:700, a:'center', c:C.amber });
+      para(E.view==='side' ? 'Side-on, facing right. The game flips it when they walk left, and uses it in fights.' : 'From behind. The game shows it when they walk up the screen, away from you.', x + 28, y + 64, w - 56, { s:14, lh:19, c:C.muted });
+      btn(x + 28, y + 122, w - 56, 42, 'Start from a copy of the front', () => pxStartView('front'), { s:15, col:C.good });
+      btn(x + 28, y + 172, (w - 64)/2, 40, 'Blank, with ghost', () => { E.onion = true; E.blankOk = E.view; }, { s:13 }); btn(x + 36 + (w - 64)/2, y + 172, (w - 64)/2, 40, 'Paste from an AI', pxPaste, { s:13, col:C.violet || '#c48bff' }); } }
+  PX_VIEWS.forEach((v, i) => { const bx = PXG.x + PXG.w - 3*96 + i*96, has = pxHasView(a, v) || (E.view===v && E.grid.some(q => q >= 0));
+    btn(bx, 908, 90, 34, (has ? '' : '+ ') + PX_VNAME[v], () => pxSwitchView(v), { s:13, fill:E.view===v, col:has ? C.cyan : C.muted });
+    tip(bx, 908, 90, 34, PX_VNAME[v] + ' view', { front:'The main drawing: facing you. Used for portraits, standing and walking towards you.', side:'Side-on, facing right (the game flips it for left). Used when they walk across the ship and when they fight.', back:'From behind. Used when they walk away from you, up the screen.' }[v]); });
   // right column
   const rx = 1018, rw = 552; panel(rx - 14, 112, rw + 28, 812, 10);
   btn(rx, 124, 300, 40, '', () => openKeyboard({ title:'Name this look', value:a.name, max:24, ok:'Save', onOk:v => { a.name = v.trim().slice(0, 24) || a.name; pxSaveArt(a); } }), { s:15 });
@@ -455,11 +551,18 @@ function drawPxDraw(E, a, rx, rw){
   let y = py + 46;
   if(E.mix){ drawPxMixer(E, a, rx, y); y += 168; }
   // preview, at game size
-  const ph = Math.min(150, 916 - y - 16); if(ph < 70) return; label('In the game', rx, y + 6, C.muted, 'left', 13);
-  rr(rx, y + 14, rw, ph, 8); ctx.fillStyle = 'rgba(6,9,18,.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,135,170,.25)'; ctx.lineWidth = 1; ctx.stroke();
-  const pose = ['idle', 'walk0', 'idle', 'walk1', 'fight0', 'fight1'][Math.floor(performance.now()/260) % 6], dummy = { id:'pxprev', name:a.name, race:'human', owner:'p', skin:a.id }, sc = ph/150;
-  try{ drawCrewSprite(rx + 60, y + 14 + ph*.68, 11*sc, dummy, { pose }); drawCrewSprite(rx + 160, y + 14 + ph*.62, 18*sc, dummy, { pose:'idle' }); drawPortrait(rx + 290, y + 14 + ph/2, Math.min(56, ph*.4), dummy, false);
-    pxThumb(a, rx + 380, y + 22, 160, ph - 16); }catch(e){}
+  const ph = Math.min(170, 916 - y - 16); if(ph < 70) return; label('In the game', rx, y + 6, C.muted, 'left', 13); pxPreview(a, rx, y + 14, rw, ph);
+}
+/* the look in the game: walking round in a circle (turning to each view it has), a portrait, and each view side by side */
+function pxPreview(a, x, y, w, h){
+  rr(x, y, w, h, 8); ctx.fillStyle = 'rgba(6,9,18,.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,135,170,.25)'; ctx.lineWidth = 1; ctx.stroke();
+  const t = performance.now(), turns = [['front', 1], ['side', 1], ['back', 1], ['side', -1]].filter(([v]) => pxHasView(a, v)), [view, face] = turns[Math.floor(t/1300) % turns.length];
+  const pose = Math.floor(t/240) % 2 ? 'walk0' : 'walk1', dummy = { id:'pxprev', name:a.name, race:'human', owner:'p', skin:a.id }, sc = h/150;
+  try{ drawCrewSprite(x + 62, y + h*.62, 17*sc, dummy, { pose, view, face });
+    drawPortrait(x + 168, y + h/2, Math.min(52, h*.36), dummy, false);
+    const vs = PX_VIEWS.filter(v => pxHasView(a, v)), bw = Math.min(110, (w - 240)/vs.length);
+    vs.forEach((v, i) => { pxThumb(a, x + 236 + i*bw, y + 10, bw - 10, h - 34, v); T(PX_VNAME[v], x + 236 + i*bw + (bw - 10)/2, y + h - 10, { s:11, a:'center', c:C.muted }); });
+    if(vs.length===1) T('Add Side and Back views (under the canvas) to turn as they walk.', x + 236 + bw + 4, y + h/2, { s:12, c:C.muted, max:w - 250 - bw }); }catch(e){}
 }
 /* hue bar and a saturation/brightness square, editing the chosen palette colour */
 const PXM = { hue:-1, sv:null, bar:null };
@@ -496,17 +599,19 @@ function drawPxImport(E, a, rx, rw){
   tip(rx, y + 12, 272, 44, 'Tracing', 'Shows a picture over your canvas, partly see-through, so you can draw over it by hand. It is not saved with the art.');
   if(E.ref){ btn(rx + 280, y + 12, 130, 44, E.refOn ? 'Hide' : 'Show', () => { E.refOn = !E.refOn; }, { s:14, fill:E.refOn }); btn(rx + 418, y + 12, 134, 44, 'Remove', () => { E.ref = null; E.refOn = false; }, { s:14, col:C.hostile }); }
   y += 76; label('With an AI', rx, y, C.muted, 'left', 13);
-  btn(rx, y + 12, 272, 44, '🤖 Copy AI prompt', () => pxCopy(pxAIPrompt(a.w, a.h), 'Prompt copied. Paste it into an AI that can see pictures, with your picture attached.'), { s:15, col:C.violet || '#c48bff' });
-  tip(rx, y + 12, 272, 44, 'Copy AI prompt', `Copies instructions for an AI (ChatGPT, Gemini, Claude...) to turn a picture into a ${a.w}×${a.h} crew member. Attach your picture, paste the prompt, then copy its whole reply and press Paste.`);
-  btn(rx + 280, y + 12, 272, 44, '📋 Paste AI reply / code', pxPaste, { s:15, col:C.violet || '#c48bff' });
-  const tipH = para(a.w*a.h > 64*64 ? 'AIs that write text lose track of very big grids. For big canvases, ask an AI that makes pictures for "pixel art of …, plain background", save it, then use Turn a picture into art.' : 'Tip: an AI that makes pictures can draw your character as pixel art too. Save that picture and use Turn a picture into art.', rx, y + 70, rw, { s:13, lh:18, c:C.muted, max:3 });
-  y += Math.max(132, 84 + tipH); label('Share and start over', rx, y, C.muted, 'left', 13);
+  const AI = pxAISet(), [aw, ah] = PX_AI_SIZES[AI.size] || PX_AI_SIZES[2];
+  btn(rx, y + 12, 272, 38, `AI draws at ${aw}×${ah}`, () => { AI.size = (AI.size + 1) % PX_AI_SIZES.length; }, { s:13 });
+  tip(rx, y + 12, 272, 38, 'Size for the AI', 'The size the AI is asked to draw at. Bigger keeps more detail from your picture, but makes a much longer reply. 64×96 is a good balance.');
+  btn(rx + 280, y + 12, 272, 38, AI.views ? 'Views: front, side, back' : 'Views: front only', () => { AI.views = !AI.views; }, { s:13, fill:AI.views });
+  tip(rx + 280, y + 12, 272, 38, 'Views', 'With all three, the AI draws the character from the front, the side and behind in one reply, and they turn to face the way they walk.');
+  btn(rx, y + 58, 272, 44, '🤖 Copy AI prompt', () => pxCopy(pxAIPrompt(aw, ah, AI.views), 'Prompt copied. Paste it into an AI that can see pictures, with your picture attached.'), { s:15, col:C.violet || '#c48bff' });
+  tip(rx, y + 58, 272, 44, 'Copy AI prompt', `Copies instructions for an AI (ChatGPT, Gemini, Claude...) to turn a picture into a ${aw}×${ah} crew member${AI.views ? ' from three angles' : ''}. Attach your picture, paste the prompt, then copy its whole reply and press Paste.`);
+  btn(rx + 280, y + 58, 272, 44, '📋 Paste AI reply / code', pxPaste, { s:15, col:C.violet || '#c48bff' });
+  const tipH = para(AI.views ? 'Three views is a long reply. If the AI stops part-way, ask it for the front first and paste that, then ask for the side and back and paste them with that piece open: they join on.' : 'Tip: an AI that makes pictures can draw your character as pixel art too. Save that picture and use Turn a picture into art.', rx, y + 112, rw, { s:13, lh:18, c:C.muted, max:3 });
+  y += Math.max(160, 124 + tipH); label('Share and start over', rx, y, C.muted, 'left', 13);
   btn(rx, y + 12, 272, 40, 'Copy share code', () => pxCopy(pxShareCode(a), `Code for "${a.name}" copied. Send it to a friend: they press Paste.`), { s:14 });
   btn(rx + 280, y + 12, 272, 40, 'Start from a crew look', () => { const c = (G && G.ship && pick(G.ship.crew.filter(o => o.owner==='p' && !o.drone))) || { id:'r' + Math.random(), name:'Crew', race:pick(Object.keys(DATA.races).filter(r => !DATA.races[r].drone && !DATA.races[r].secret)) }; const n = pxFromCrew(c, a.w, a.h); if(pxAdd(n)) pxOpenArt(n.id); }, { s:14 });
-  y += 70; label('In the game', rx, y, C.muted, 'left', 13); const ph = 916 - y - 22;
-  rr(rx, y + 12, rw, ph, 8); ctx.fillStyle = 'rgba(6,9,18,.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,135,170,.25)'; ctx.lineWidth = 1; ctx.stroke();
-  const pose = ['idle', 'walk0', 'idle', 'walk1', 'fight0', 'fight1'][Math.floor(performance.now()/260) % 6], dummy = { id:'pxprev', name:a.name, race:'human', owner:'p', skin:a.id };
-  try{ drawCrewSprite(rx + 70, y + 12 + ph*.7, 13, dummy, { pose }); drawPortrait(rx + 220, y + 12 + ph/2, Math.min(60, ph*.42), dummy, false); pxThumb(a, rx + 320, y + 20, 220, ph - 16); }catch(e){}
+  y += 64; label('In the game', rx, y, C.muted, 'left', 13); const ph = Math.min(190, 916 - y - 18); if(ph > 60) pxPreview(a, rx, y + 12, rw, ph);
 }
 function drawPxChoose(E, a){
   const mode = UI.pxChoose; ctx.fillStyle = 'rgba(4,6,12,.8)'; ctx.fillRect(0, 0, W, H); region(0, 0, W, H, () => { UI.pxChoose = null; });
@@ -525,7 +630,7 @@ function drawPxChoose(E, a){
 }
 function drawPxHelp(){
   ctx.fillStyle = 'rgba(4,6,12,.84)'; ctx.fillRect(0, 0, W, H); region(0, 0, W, H, () => { UI.pxHelp = false; });
-  const w = 1060, h = 720, x = (W - w)/2, y = (H - h)/2; panel(x, y, w, h, 14); label('Pixel Studio', x + 32, y + 44, C.amber, 'left', 18);
+  const w = 1060, h = 800, x = (W - w)/2, y = (H - h)/2; panel(x, y, w, h, 14); label('Pixel Studio', x + 32, y + 44, C.amber, 'left', 18);
   T('Draw anyone you like, and any crew member can wear it.', x + 32, y + 80, { s:22, f:FD, w:700, max:w - 64 });
   const L = [['Start', 'Press + New canvas and pick a size. 32×48 is classic; 64×96 and up leave room for faces, folds and shading. Size… → Scale up ×2 turns a small drawing into a bigger one to add detail to.'],
     ['Draw', 'Pen, Rubber and Fill as you would expect. Line, Box and Oval: drag. Brush sizes 1 to 8. Mirror copies one side to the other. Dither paints a checkerboard to blend colours.'],
@@ -533,6 +638,7 @@ function drawPxHelp(){
     ['Colours', 'Up to 62 per piece. Mixer edits the chosen colour by eye; every pixel in that colour changes with it.'],
     ['Move round', 'Scroll or pinch to zoom, right-drag, Space-drag or the Hand to move. The little map in the corner jumps you anywhere.'],
     ['Bring art in', 'Turn any picture into art (with colours, dithering and outline to taste), lay a picture over the canvas to trace by hand, or copy a prompt for an AI and paste its reply back.'],
+    ['Views', 'Front, Side and Back under the canvas. With a side and back, crew turn to face the way they walk: side-on (flipped for left) across the ship and in fights, the back walking away. Start a view from a copy of the front, or blank with the front shown faintly behind.'],
     ['Wear it', 'Press 🎨 on any crew member (in the hangar, on Ship → Crew, or on their card) and pick a drawing.'],
     ['Keys', 'B pen · E rubber · F fill · I pick · H hand · L line · R box · O oval · D dither · S shade · Q solid · M mirror · [ ] brush · + − 0 zoom · Ctrl+Z undo']];
   let yy = y + 120; for(const [k, d] of L){ T(k, x + 32, yy + 18, { s:16, f:FD, w:700, c:C.cyan }); yy += Math.max(30, para(d, x + 190, yy, w - 230, { s:15, lh:20 })) + 12; }
@@ -541,11 +647,12 @@ function drawPxHelp(){
 /* paint by dragging, with mouse or touch (VR and gamepads paint a pixel per click through the grid region) */
 (function(){ const cv = document.getElementById('game'); if(!cv) return;
   const toG = e => (typeof evGame==='function' ? evGame(e) : screenToGame(e.clientX, e.clientY)); let D = null, space = false; const touches = new Map();
-  const busy = () => UI.screen!=='pixel' || (typeof KB!=='undefined' && KB.open) || UI.pxPick || UI.pxChoose || UI.pxHelp || !UI.px;
+  const busy = () => UI.screen!=='pixel' || (typeof KB!=='undefined' && KB.open) || UI.pxPick || UI.pxChoose || UI.pxHelp || !UI.px || pxNeedsStart();
+  const noPaint = p => (UI.pxNoPaint || []).some(r => p.x >= r.x && p.y >= r.y && p.x < r.x + r.w && p.y < r.y + r.h);
   const inMix = p => { const M = UI.pxMixBox; if(!M || !UI.px || !UI.px.mix || UI.px.tab!=='draw') return null; for(const k of ['sv', 'bar']){ const B = M[k]; if(p.x >= B.x - 4 && p.y >= B.y - 4 && p.x < B.x + B.w + 4 && p.y < B.y + B.h + 4) return k; } return null; };
   cv.addEventListener('pointerdown', e => { if(busy()) return; if(typeof laserPtr==='function' && laserPtr(e)) return; const p = toG(e), E = UI.px;
     const mk = inMix(p); if(mk){ e.preventDefault(); e.stopImmediatePropagation(); try{ cv.setPointerCapture(e.pointerId); }catch(er){} D = { id:e.pointerId, mix:mk }; UI.pxMixSet(p, mk); return; }
-    if(!pxInView(p)) return; e.preventDefault(); e.stopImmediatePropagation(); try{ cv.setPointerCapture(e.pointerId); }catch(er){}
+    if(!pxInView(p) || noPaint(p)) return; e.preventDefault(); e.stopImmediatePropagation(); try{ cv.setPointerCapture(e.pointerId); }catch(er){}
     if(e.pointerType==='touch'){ touches.set(e.pointerId, p); if(touches.size===2){   // second finger: undo the dab the first one made, and pinch instead
         if(D && D.paint){ if(E.dirty || E.sa){ E.sa = E.sb = null; E.dirty = false; if(E.undo.length) E.grid = E.undo.pop(); } }
         const [a, b] = [...touches.values()]; D = { pinch:true, d0:Math.hypot(a.x - b.x, a.y - b.y) || 1, z0:E.zoom || 1, m0:{ x:(a.x + b.x)/2, y:(a.y + b.y)/2 }, px:E.panX, py:E.panY }; return; } }
@@ -581,7 +688,7 @@ function drawPxHelp(){
     if(k===']'){ const o = [1, 2, 3, 5, 8], i = o.indexOf(E.brush || 1); E.brush = o[Math.min(o.length - 1, i + 1)]; stop(); return; }
     if(k==='+' || k==='='){ pxZoom(1.5, PTR[0]); stop(); return; } if(k==='-' || k==='_'){ pxZoom(1/1.5, PTR[0]); stop(); return; } if(k==='0'){ pxFit(); stop(); return; }
     if(k==='escape'){ stop(); closePixelStudio(); } }, true);
-  window.addEventListener('paste', e => { if(UI.screen!=='pixel' || (typeof KB!=='undefined' && KB.open)) return; const t = (e.clipboardData || window.clipboardData)?.getData('text') || ''; if(t && t.includes('{')){ e.preventDefault(); const r = pxParse(t); if(r.err){ toast(r.err); return; } if(pxAdd(r.art)){ pxOpenArt(r.art.id); toast(`Imported "${r.art.name}".`); } } }, true);
+  window.addEventListener('paste', e => { if(UI.screen!=='pixel' || (typeof KB!=='undefined' && KB.open)) return; const t = (e.clipboardData || window.clipboardData)?.getData('text') || ''; if(t && t.includes('{')){ e.preventDefault(); pxUsePasted(t); } }, true);
 })();
 
 /* ---------------- choosing a look for someone ---------------- */
