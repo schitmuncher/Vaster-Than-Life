@@ -629,6 +629,8 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 - **The Graveyard**: a 1.2% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.
 
+- **Pixel Studio** (Record → Pixel Studio, or 🎨 by any crew member): draw pixel-art crew (pen, rubber, fill, pick, mirror, outline, undo; sizes 32×48, 32×32, 24×32, 16×24, 48×64), or import a picture (background taken away, colours reduced, outline added). Copy AI prompt gives instructions for an AI that can see pictures; paste its reply back in. Share codes let friends swap characters. Any crew member can wear a drawing; the hangar remembers who wore what.
+
 - **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of 19. 25 scrap and 20 captain xp each, plus 40 scrap for all three. Not in dailies, the Cup, challenges or multiplayer.
 
 - **The Codex** (Record → Codex): fills in as you meet ships (69), carry weapons (81), drones (31) and augments (67), crew with peoples and cross sectors. 40 captain xp at 25, 50 and 75% of a section, 120 at 100%.

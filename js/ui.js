@@ -145,12 +145,14 @@ function draw(){
     case 'memorial': if(typeof drawMemorial==='function') drawMemorial(); else UI.screen = 'record'; break;
     case 'logs': if(typeof drawLogbook==='function') drawLogbook(); else UI.screen = 'record'; break;
     case 'gazette': if(typeof drawGazette==='function') drawGazette(); else UI.screen = 'title'; break;
+    case 'pixel': if(typeof drawPixelStudio==='function') drawPixelStudio(); else UI.screen = 'title'; break;
     case 'codex': if(typeof drawCodex==='function') drawCodex(); else UI.screen = 'record'; break;
     case 'mp': drawMP(); break;
   }
   if(UI.toast){ const a = Math.min(1, UI.toast.t*2); ctx.globalAlpha = a; ctx.font = `600 22px ${FD}`; const tw = Math.min(W-40, ctx.measureText(UI.toast.text).width + 48);
     panel(W/2-tw/2, 84, tw, 50, 8); T(UI.toast.text, W/2, 110, { a:'center', b:'middle', s:22, f:FD, w:600, c:C.warn }); ctx.globalAlpha = 1; }
   if(UI.screen==='game'){ drawHint(); if(typeof drawTutCoach==='function') drawTutCoach(); }
+  if(typeof drawPxPick==='function' && UI.pxPick) drawPxPick();
   if(typeof mobileFrame==='function') mobileFrame();
   drawTip();
   for(const p of PTR){ if(!p.xr || !p.on) continue; glow(p.x, p.y, 18, C.amber, .5); ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.stroke();
@@ -633,7 +635,8 @@ function drawCrewNaming(sel, temp){
   const qs = typeof BASE!=='undefined' && BASE.quirks ? Object.keys(DATA.quirks || BASE.quirks) : [];
   temp.crew.forEach((c, i) => { const ry = y + 100 + i*rowH, race = DATA.races[c.race] || {}, qd = typeof quirkDef==='function' ? quirkDef(hc.quirks[i]) : null;
     rr(x+24, ry, w-48, rowH-10, 10); ctx.fillStyle = C.panel2; ctx.fill();
-    c.name = hc.names[i]; if(typeof ensureLook==='function') ensureLook(c); drawPortrait(x+62, ry+33, 26, c, false);
+    c.name = hc.names[i]; c.skin = (hc.skins || [])[i] || null; if(typeof ensureLook==='function') ensureLook(c); drawPortrait(x+62, ry+33, 26, c, false);
+    if(typeof openLookPicker==='function'){ btn(x+520, ry+14, 64, 38, '🎨', () => openLookPicker({ kind:'hangar', i, name:hc.names[i], crew:c }), { s:16, col:C.violet || '#c48bff' }); tip(x+520, ry+14, 64, 38, 'Look', 'Dress them in pixel art you have drawn or imported in the Pixel Studio.'); }
     T(hc.names[i], x+104, ry+30, { s:24, f:FD, w:700, max:230 }); T(race.name || c.race, x+104, ry+54, { s:14, c:race.color || C.muted });
     btn(x+344, ry+14, 110, 38, 'Rename', () => openRename({ title:`Name your ${(race.name||'crew member').toLowerCase()}`, value:hc.names[i], max:16, random:() => pick(NAMES), onOk:v => { hc.names[i] = v.trim().slice(0,16) || hc.names[i]; } }), { s:15 });
     btn(x+462, ry+14, 50, 38, '🎲', () => { hc.names[i] = pick(NAMES.filter(nm => !hc.names.includes(nm))); }, { s:16 }); tip(x+462, ry+14, 50, 38, 'Random name', 'Pick a random name.');
@@ -657,7 +660,8 @@ function drawRecord(){
   const hist = PROFILE.history || [];
   panel(60, 150, 960, 640, 12); label('Recent runs', 84, 186, C.amber, 'left', 15);
   if((PROFILE.memorial||[]).length && typeof memorialSaga==='function') btn(540, 160, 224, 36, `Memorial (${PROFILE.memorial.length}) ›`, () => typeof openMemorial==='function' ? openMemorial('record') : openSaga(memorialSaga(), 'record'), { s:14, col:C.muted });
-  if(typeof openCodex==='function'){ const [ca, cb] = codexTotal(); btn(780, 160, 224, 36, `Codex ${ca}/${cb} ›`, () => openCodex('record'), { s:14, col:C.muted }); }
+  if(typeof openPixelStudio==='function') btn(1268, 70, 224, 44, `Pixel Studio (${(PROFILE.pixels||[]).length}) ›`, () => openPixelStudio('record'), { s:15, col:C.violet || '#c48bff' });
+  if(typeof openCodex==='function'){ const [ca, cb] = codexTotal(); btn(1032, 70, 224, 44, `Codex ${ca}/${cb} ›`, () => openCodex('record'), { s:15, col:C.cyan }); }
   if(typeof openLogbook==='function' && (PROFILE.logs||[]).length) btn(300, 160, 224, 36, `Captain's logs (${PROFILE.logs.length}) ›`, () => openLogbook('record', 0), { s:14, col:C.muted });
   if((PROFILE.sagas||[]).length && typeof openSaga==='function') btn(780, 160, 224, 36, `Sagas (${PROFILE.sagas.length}) ›`, () => { UI.sagaIdx = 0; openSaga(PROFILE.sagas[0], 'record'); UI.sagaList = true; }, { s:14, col:C.amber });
   ['When','Ship','Difficulty','Result','Ships','Score','Seed'].forEach((h,i) => label(h, [84,230,470,600,760,840,930][i], 222, C.muted, 'left', 12));
@@ -1547,6 +1551,7 @@ function drawShipModal(){
     const crew = []; for(const sh of [G.ship, G.enemy]) if(sh) for(const c of sh.crew) if(c.owner==='p' && !c.drone) crew.push(c);
     crew.forEach((c,i) => { const x = cx + (i%2)*690, y = y0 + Math.floor(i/2)*150, race = DATA.races[c.race]||{};
       panel(x, y, 670, 138, 8); drawPortrait(x+42, y+40, 28, c, false);
+      if(typeof openLookPicker==='function'){ region(x+12, y+10, 60, 60, () => openLookPicker({ kind:'crew', id:c.id, name:c.name }), 'look:' + c.id); rr(x+56, y+54, 22, 22, 11); ctx.fillStyle = '#1a2342'; ctx.fill(); ctx.strokeStyle = C.violet || '#c48bff'; ctx.lineWidth = 2; ctx.stroke(); T('🎨', x+67, y+70, { s:11, a:'center' }); tip(x+12, y+10, 60, 60, 'Change their look', 'Dress them in pixel art from the Pixel Studio.'); }
       T(c.name, x+82, y+38, { s:22, f:FD, w:700 }); if(c.trait && DATA.traits?.[c.trait]){ T(DATA.traits[c.trait].name, x+82 + Math.min(220, ctx.measureText(c.name).width + 14), y+38, { s:14, f:FD, w:600, c:C.amber }); tip(x+82, y+20, 340, 26, DATA.traits[c.trait].name, DATA.traits[c.trait].desc); }
       T(`${race.name} · ${c.gender==='f'?'♀':'♂'} ${pronouns(c)} · ${Math.ceil(c.hp)}/${c.maxHp} hp · ${c.kills} kills`, x+82, y+62, { s:14, c:C.muted }); { const sh_ = [G.ship, G.enemy].find(q=>q && q.crew.includes(c)); const jb = crewJob(c, sh_); T(jb.text, x+82, y+80, { s:13, c:JOB_COL[jb.k]||C.ink, max:340 }); para(raceTraits(race), x+440, y+72, 220, { s:11, lh:14, c:C.cyan, max:1 }); }
       SKILLS.forEach((k,j) => { const lv = skillLvl(c,k), t = SKILLT[k], v = c.sk[k]||0; const sx = x+20 + j*106, sy = y+90;

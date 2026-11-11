@@ -389,8 +389,8 @@ function makeRequest(st){
   if(!ids.length) return null; const id = pick(ids), g = goodsDef(id), n = g.base >= 20 ? ri(1, 2) : ri(2, 4);
   return { id, n, pay:Math.round(g.base * n * 1.9 + 10 + G.sector*3), by:Math.min(R.sectors, G.sector + 1), from:st.title, taken:false };
 }
-function orders(){ G.orders = (G.orders || []).filter(o => { if(o.by < G.sector){ toast(`The order for ${o.n} ${goodsDef(o.id)?.name.toLowerCase()} has expired.`); return false; } return true; }); return G.orders; }
-function deliver(o){ if(goodsHave(o.id) < o.n) return false; takeGoods(o.id, o.n); G.orders = (G.orders||[]).filter(x => x!==o); earn(o.pay); G.spent = (G.spent||0) + Math.round(o.pay/2);   // the guild counts deliveries too
+function orders(){ if(typeof ordersMigrate==='function') ordersMigrate(); G.orders = (Array.isArray(G.orders) ? G.orders : []).filter(o => { if(o.by < G.sector){ toast(`The order for ${o.n} ${goodsDef(o.id)?.name.toLowerCase()} has expired.`); return false; } return true; }); return G.orders; }
+function deliver(o){ if(goodsHave(o.id) < o.n) return false; takeGoods(o.id, o.n); G.orders = (Array.isArray(G.orders) ? G.orders : []).filter(x => x!==o); earn(o.pay); G.spent = (G.spent||0) + Math.round(o.pay/2);   // the guild counts deliveries too
   G.delivered = (G.delivered||0) + 1; if(G.delivered >= 3) grant('market_courier'); sfx('buy'); toast(`Delivered ${o.n} ${goodsDef(o.id).name.toLowerCase()}: +${o.pay} scrap.`);
   if(o.mags && G.mags){ G.mags.hearts = (G.mags.hearts||0) + 2; G.mags.done = (G.mags.done||0) + 1; }
   if(typeof sagaNote==='function' && G.delivered===1) sagaNote('trade', `In sector ${G.sector} the crew filled their first delivery order: ${o.n} ${goodsDef(o.id).name.toLowerCase()} for ${o.pay} scrap.`);
@@ -403,8 +403,8 @@ function drawRequestBoard(st, x, y, w){
   T(`Wanted: ${o.n} × ${g.name}`, x+18, y+60, { s:19, f:FD, w:700, max:w-250 }); T(`Pays ${o.pay} scrap · deliver to any store by the end of sector ${o.by} · you have ${have}`, x+18, y+86, { s:12, c:C.muted, max:w-250 });
   tip(x, y, w-230, 120, `${g.name} wanted`, `${g.desc} You can grow, catch, cook or buy it elsewhere, then deliver it at any store (the Sell tab) before you leave sector ${o.by}.`);
   if(o.taken) T('Accepted', x+w-120, y+64, { s:16, a:'center', c:C.good });
-  else if(have >= o.n) btn(x+w-220, y+36, 200, 50, `Deliver now · ${o.pay}`, () => { o.taken = true; G.orders = G.orders || []; const ord = Object.assign({}, o); G.orders.push(ord); deliver(ord); }, { s:15, fill:true, col:C.violet });
-  else btn(x+w-220, y+36, 200, 50, (orders().length >= 4) ? 'Too many orders' : 'Accept', () => { o.taken = true; (G.orders = G.orders || []).push(Object.assign({}, o)); toast('Order accepted. Deliver it at any store.'); save(); }, { s:15, col:C.violet, disabled:orders().length >= 4 });
+  else if(have >= o.n) btn(x+w-220, y+36, 200, 50, `Deliver now · ${o.pay}`, () => { o.taken = true; G.orders = Array.isArray(G.orders) ? G.orders : []; const ord = Object.assign({}, o); G.orders.push(ord); deliver(ord); }, { s:15, fill:true, col:C.violet });
+  else btn(x+w-220, y+36, 200, 50, (orders().length >= 4) ? 'Too many orders' : 'Accept', () => { o.taken = true; (G.orders = Array.isArray(G.orders) ? G.orders : []).push(Object.assign({}, o)); toast('Order accepted. Deliver it at any store.'); save(); }, { s:15, col:C.violet, disabled:orders().length >= 4 });
 }
 
 /* ---------------- Mags Vetch, travelling merchant ----------------

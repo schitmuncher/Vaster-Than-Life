@@ -107,6 +107,7 @@ function drawCrewScreen(m){
   const L = loLvl(c), race = DATA.races[c.race] || {}, qd = typeof quirkDef==='function' && quirkDef(c.quirk), tr = c.trait && DATA.traits && DATA.traits[c.trait];
   drawPortrait(x + 44, y + 44, 40, c, false);
   T(c.name, x + 100, y + 32, { s:30, f:FD, w:700, max:380 });
+  if(typeof openLookPicker==='function' && c.owner==='p' && !c.drone){ region(x + 4, y + 4, 80, 80, () => openLookPicker({ kind:'crew', id:c.id, name:c.name }), 'cclook'); rr(x + 64, y + 64, 26, 26, 13); ctx.fillStyle = C.panel2 || '#1a2342'; ctx.fill(); ctx.strokeStyle = C.violet || '#c48bff'; ctx.lineWidth = 2; ctx.stroke(); T('🎨', x + 77, y + 83, { s:13, a:'center' }); tip(x + 4, y + 4, 80, 80, 'Change their look', 'Dress them in pixel art from the Pixel Studio, or go back to their ordinary look.'); }
   T([race.name || c.race, qd && qd.name, tr && tr.name, `${c.kills || 0} kills`].filter(Boolean).join(' · '), x + 100, y + 58, { s:14, c:C.muted, max:420 });
   if(qd) tip(x + 100, y + 44, 420, 20, qd.name, qd.desc);
   // level badge and xp
