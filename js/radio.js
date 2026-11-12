@@ -56,8 +56,8 @@ const RADIO_LINKS = {
 const RADIO = { st:null, i:0, until:0, cap:null, capT:0, said:'' };
 function radioOn(){ return SET.radio && SET.radio!=='ost' && RADIO_STATIONS[SET.radio] && SET.musicSrc!=='synth'; }
 function radioTitle(f){ return (typeof OST_TITLES!=='undefined' && OST_TITLES[f]) || f; }
-function radioSay(text){ const S = RADIO_STATIONS[SET.radio]; RADIO.cap = { who:S.name, dj:S.dj, text, col:S.col }; RADIO.capT = performance.now();
-  if(typeof logEntry==='function' && G) logEntry(`On ${S.name}: ${text}`, 'note');
+function radioSay(text, quiet){ const S = RADIO_STATIONS[SET.radio]; RADIO.cap = { who:S.name, dj:S.dj, text, col:S.col }; RADIO.capT = performance.now();
+  if(!quiet && typeof logEntry==='function' && G) logEntry(`On ${S.name}: ${text}`, 'note');   // station idents don't go in the log, only the links
   if(SET.radioVoice!==false && typeof speechSynthesis!=='undefined' && SET.music > 0){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/"/g, ''));
     const vs = speechSynthesis.getVoices(), v = vs.find(x => /en-GB/i.test(x.lang) && /male|daniel|george|arthur|oliver/i.test(x.name)) || vs.find(x => /en-GB/i.test(x.lang)) || vs.find(x => /^en/i.test(x.lang));
     if(v) u.voice = v; u.lang = 'en-GB'; u.pitch = S.pitch || 1; u.rate = S.rate || 1; u.volume = Math.min(1, (SET.master ?? 1) * Math.max(.4, SET.music*1.3)); speechSynthesis.speak(u); }catch(e){} } }
@@ -68,7 +68,7 @@ function radioNext(first){ const S = RADIO_STATIONS[SET.radio], L = RADIO_LINKS[
   if(RADIO.st!==SET.radio){ RADIO.st = SET.radio; RADIO.i = Math.floor(Math.random()*S.list.length); } else RADIO.i = (RADIO.i + 1) % S.list.length;
   const next = S.list[RADIO.i]; RADIO.until = 0;
   let text = first || !prev ? radioPick(L.intro) : (Math.random() < .2 ? radioPick(L.ad) + ' ' : '') + radioPick(L.link);
-  text = text.replace('{prev}', radioTitle(prev)).replace('{next}', radioTitle(next)); radioSay(text); }
+  text = text.replace('{prev}', radioTitle(prev)).replace('{next}', radioTitle(next)); radioSay(text, first || !prev); }
 (function(){
   if(typeof midiCue!=='function') return; const m0 = midiCue;
   midiCue = function(){
