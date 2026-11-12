@@ -442,7 +442,7 @@ function startCombat_(id, o={}){
   if(typeof mpCombatStart==='function') mpCombatStart(G.enemy);
   if(o.hail){ const hid = pickHail(o.hail===true ? (G.enemy.hailTag || G.enemy.faction) : o.hail); if(hid){ startEvent(hid, { combat:true }); return; } }
   if(def.boss && (G.flags.intel || G.flags.sabotage)) o.text = (o.text||'') + (G.flags.intel ? ' Commander Vane\'s codes expose a flaw in its hull.' : '') + (G.flags.sabotage ? ' Your spy\'s sabotage has knocked out one of its weapons.' : '');
-  G.modal = { type:'msg', title:o.title || 'Hostile contact', text:o.text || `The ${G.enemy.name} powers its weapons. Pick targets, then fire. Pause any time to think.`, btn:'Battle stations' };
+  G.modal = { type:'msg', scan:true, title:o.title || 'Hostile contact', text:o.text || 'It powers its weapons. Pick targets, then fire. Pause any time to think.', btn:'Battle stations' };
 }
 function offerSurrender(e){
   const n = G.sector; const offer = { scrap: 12 + n*5 + ri(0,10) }; const r = Math.random();

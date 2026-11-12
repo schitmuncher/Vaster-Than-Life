@@ -363,7 +363,7 @@ const STORE_GREETS = {
 };
 const QUIET_TEXTS = ['Empty space. A good place to breathe, patch up and plan.','An old navigation buoy blinks lazily. Nothing else stirs.','The stars are very quiet here. {crew} says it is too quiet. Nobody listens.','A cloud of frozen debris drifts by, glittering. Pretty, but useless.','Nothing on sensors. {crew} uses the break to fix the coffee machine.','Static on every channel. Somewhere, a beacon hums to itself.'];
 const CALLSIGNS = {
-  rebuff:['Grudge','Iron Ruling','Stern Warning','Final Notice','Red Tape','Compliance','Mandate','Overseer'],
+  rebuff:['Grudge','Iron Ruling','Stern Warning','Final Notice','Red Tape','Compliance','Due Process','Overseer'],
   pyrate:['Salty Sally','Plank Walker','Loot Goose','Rusty Cutlass','Sea Dog','Buccaneer Bob','Barnacle'],
   mantlis:['Clickjaw','Gutripper','Mandible','Swarmfang','Hivecry'],
   voltan:['Gentle Light','Serene Wrath','Calm Before','Glowing Verdict'],
