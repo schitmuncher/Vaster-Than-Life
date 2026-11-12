@@ -97,21 +97,21 @@ const BASE = {
 
   augments: {
     scrapArm:     { name:'Scrapture Arm',          cost:50, desc:'Collect 10% more scrap.' },
-    reloader:     { name:'Auto-Reloader',          cost:50, desc:'Weapons charge 10% faster.' },
-    booster:      { name:'Shield Charge Booster',  cost:55, desc:'Shield layers recharge 15% faster.' },
-    preigniter:   { name:'Weapon Pre-Igniter',     cost:90, desc:'Weapons start every fight fully charged.' },
-    scanners:     { name:'Long-Range Scanners',    cost:40, desc:'See ships and hazards at every beacon on the map.' },
-    replicator:   { name:'Explosive Replicator',   cost:55, desc:'33% chance a missile or drone part is not used up.' },
-    recovery:     { name:'Drone Recovery Arm',     cost:60, desc:'Deploying drones costs no drone parts.' },
+    reloader:     { name:'Brisk Reloader',         cost:50, desc:'Weapons charge 10% faster.' },
+    booster:      { name:'Shield Kettle',          cost:55, desc:'Shield layers recharge 15% faster.' },
+    preigniter:   { name:'Warm-Up Coils',          cost:90, desc:'Weapons start every fight fully charged.' },
+    scanners:     { name:'Nosy Neighbour Array',   cost:40, desc:'See ships and hazards at every beacon on the map.' },
+    replicator:   { name:'Two-For-One Printer',    cost:55, desc:'33% chance a missile or drone part is not used up.' },
+    recovery:     { name:'Drone Fetching Claw',    cost:60, desc:'Deploying drones costs no drone parts.' },
     voltanShield: { name:'Voltan Super Shield',    cost:85, desc:'A 5-point super shield that blocks anything at the start of every fight.' },
     stealth:      { name:'Stealth Plating',        cost:45, desc:'+5% evasion.' },
-    casing:       { name:'Titanium System Casing', cost:60, desc:'15% chance to shrug off system damage.' },
-    dna:          { name:'Backup DNA Bank',        cost:50, desc:'Crew killed in a fight are cloned back once it ends.' },
+    casing:       { name:'Bubble-Wrap Casing',     cost:60, desc:'15% chance to shrug off system damage.' },
+    dna:          { name:'Spare Crew Gene Vault',  cost:50, desc:'Keeps a fresh copy of everyone aboard. Crew killed in a fight are cloned back once it ends, slightly damp.' },
     pheromones:   { name:'Mantlis Pheromones',     cost:40, desc:'Crew move 25% faster.' },
     gel:          { name:'Sloog Repair Gel',       cost:40, desc:'Your crew slowly heal anywhere.' },
-    fireSup:      { name:'Fire Suppression',       cost:45, desc:'Crew put out fires twice as fast.' },
-    rockPlating:  { name:'Rock Plating',           cost:45, desc:'Halves the chance of hull breaches.' },
-    ionField:     { name:'Reverse Ion Field',      cost:50, desc:'20% chance to ignore ion damage.' }
+    fireSup:      { name:'Sprinkler Ceiling',      cost:45, desc:'Crew put out fires twice as fast.' },
+    rockPlating:  { name:'Pebblekin Plating',      cost:45, desc:'Halves the chance of hull breaches.' },
+    ionField:     { name:'Ion Brolly',             cost:50, desc:'20% chance to ignore ion damage.' }
   },
 
   ships: {

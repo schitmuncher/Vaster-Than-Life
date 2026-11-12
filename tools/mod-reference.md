@@ -127,21 +127,21 @@ Damage × shots, charge in seconds. Items marked with a pack name come from a bu
 | id | name | cost | what it does |
 | --- | --- | --- | --- |
 | `scrapArm` | Scrapture Arm | 50 | Collect 10% more scrap. |
-| `reloader` | Auto-Reloader | 50 | Weapons charge 10% faster. |
-| `booster` | Shield Charge Booster | 55 | Shield layers recharge 15% faster. |
-| `preigniter` | Weapon Pre-Igniter | 90 | Weapons start every fight fully charged. |
-| `scanners` | Long-Range Scanners | 40 | See ships and hazards at every beacon on the map. |
-| `replicator` | Explosive Replicator | 55 | 33% chance a missile or drone part is not used up. |
-| `recovery` | Drone Recovery Arm | 60 | Deploying drones costs no drone parts. |
+| `reloader` | Brisk Reloader | 50 | Weapons charge 10% faster. |
+| `booster` | Shield Kettle | 55 | Shield layers recharge 15% faster. |
+| `preigniter` | Warm-Up Coils | 90 | Weapons start every fight fully charged. |
+| `scanners` | Nosy Neighbour Array | 40 | See ships and hazards at every beacon on the map. |
+| `replicator` | Two-For-One Printer | 55 | 33% chance a missile or drone part is not used up. |
+| `recovery` | Drone Fetching Claw | 60 | Deploying drones costs no drone parts. |
 | `voltanShield` | Voltan Super Shield | 85 | A 5-point super shield that blocks anything at the start of every fight. |
 | `stealth` | Stealth Plating | 45 | +5% evasion. |
-| `casing` | Titanium System Casing | 60 | 15% chance to shrug off system damage. |
-| `dna` | Backup DNA Bank | 50 | Crew killed in a fight are cloned back once it ends. |
+| `casing` | Bubble-Wrap Casing | 60 | 15% chance to shrug off system damage. |
+| `dna` | Spare Crew Gene Vault | 50 | Keeps a fresh copy of everyone aboard. Crew killed in a fight are cloned back once it ends, slightly damp. |
 | `pheromones` | Mantlis Pheromones | 40 | Crew move 25% faster. |
 | `gel` | Sloog Repair Gel | 40 | Your crew slowly heal anywhere. |
-| `fireSup` | Fire Suppression | 45 | Crew put out fires twice as fast. |
-| `rockPlating` | Rock Plating | 45 | Halves the chance of hull breaches. |
-| `ionField` | Reverse Ion Field | 50 | 20% chance to ignore ion damage. |
+| `fireSup` | Sprinkler Ceiling | 45 | Crew put out fires twice as fast. |
+| `rockPlating` | Pebblekin Plating | 45 | Halves the chance of hull breaches. |
+| `ionField` | Ion Brolly | 50 | 20% chance to ignore ion damage. |
 | `reckless_drive` | Reckless Overdrive | 70 | Weapons charge 25% faster and crew move 25% faster. Systems break more easily and hits breach the hull 40% mo… |
 | `caffeine_line` | Caffeine Drip-Line | 45 | Crew move 30% faster. Their hands shake: repairs are 20% slower. |
 | `glass_plating` | Glass-Fibre Plating | 60 | +12% evasion. Every hit that lands is 60% more likely to breach. |
@@ -426,7 +426,7 @@ Goods kinds: `crop`, `fish`, `trade`, `curio`, `meal`.
 
 ### Personal kit (`arm` effect) and tonics (`item` effect)
 
-Kit: `wrench` Heavy Wrench (blunt) · `baton` Stun Baton (blunt) · `hammer` Gravity Hammer (blunt) · `knife` Combat Knife (blade) · `cutlass` Pyrate Cutlass (blade) · `axe` Fire Axe (blade) · `torch` Plasma Torch (blade) · `mono` Monofilament Sword (blade) · `pistol` Laser Pistol (gun) · `shotgun` Boarding Shotgun (gun) · `rifle` Pulse Rifle (gun) · `freeze` Freeze Ray (weird) · `spore` Spore Pistol (weird) · `whip` Tentacle Whip (weird) · `leech` Life-Leech Glove (weird) · `mender` Mender's Staff (weird) · `chicken` Rubber Chicken (weird) · `vest` Flak Vest (suit) · `plate` Boarding Plate (suit) · `voidsuit` Void Suit (suit) · `belt` Personal Shield (suit) · `medpack` Auto-Medpack (suit) · `ar_kestrel` Kestrel AR-7 (ar) · `ar_vanguard` Vanguard Carbine (ar) · `ar_lancer` Lancer Battle Rifle (ar) · `ar_fang` Fang Burst Rifle (ar) · `ar_ion` Ionclad Rifle (ar) · `ar_tempest` Tempest AR (ar) · `ar_harbinger` Harbinger Rifle (ar) · `ar_cobalt` Cobalt Pulse Rifle (ar) · `smg_wasp` Wasp SMG (smg) · `smg_ferret` Ferret Machine Pistol (smg) · `smg_hornet` Hornet PDW (smg) · `smg_vortex` Vortex SMG (smg) · `smg_scythe` Scythe SMG (smg) · `smg_blitz` Blitz Auto (smg) · `smg_mirage` Mirage Silenced SMG (smg) · `lmg_bulwark` Bulwark LMG (lmg) · `lmg_ox` Ox Squad Gun (lmg) · `lmg_thresher` Thresher Minigun (lmg) · `lmg_warden` Warden Suppressor (lmg) · `lmg_hailstorm` Hailstorm LMG (lmg) · `sg_breacher` Breacher Shotgun (shotgun) · `sg_mule` Mule Double-Barrel (shotgun) · `sg_cyclone` Cyclone Auto-Shotgun (shotgun) · `sg_dragon` Dragon's Breath (shotgun) · `sg_hammerhead` Hammerhead Slug Gun (shotgun) · `sg_tidal` Tidal Riot Gun (shotgun) · `mk_needle` Needle Marksman (marksman) · `mk_longshot` Longshot DMR (marksman) · `mk_hawk` Hawkeye Rifle (marksman) · `mk_railgun` Personal Railgun (marksman) · `mk_whisper` Whisper Rifle (marksman) · `sp_flamer` Hab Flamer (special) · `sp_arc` Arc Caster (special) · `sp_cryo` Cryo Projector (special) · `sp_grav` Grav Thrower (special) · `sp_plasma` Plasma Caster (special) · `sp_spore` Spore Projector (special) · `pi_sidearm` Fedoration Sidearm (pistol) · `pi_viper` Viper Revolver (pistol) · `pi_dart` Dart Pistol (pistol) · `pi_magnum` Hand Cannon (pistol) · `pi_machine` Auto Pistol (pistol) · `pi_flare` Flare Pistol (pistol) · `pi_ionic` Ionic Repeater (pistol) · `pi_gold` Gilded Duelist (pistol) · `ln_tube` Tube Launcher (launcher) · `ln_grenade` Grenade Launcher (launcher) · `ln_swarm` Swarm Launcher (launcher) · `ln_foam` Foam Launcher (launcher) · `me_knife` Combat Knife (melee) · `me_hatchet` Boarding Hatchet (melee) · `me_baton` Shock Baton (melee) · `me_cutlass` Pyrate Cutlass (melee) · `me_shard` Glass Shard Blade (melee) · `me_maul` Pebble Maul (melee) · `me_claws` Mantlis Claw Gloves (melee) · `me_sword` Ceremonial Sabre (melee)
+Kit: `wrench` Heavy Wrench (blunt) · `baton` Stun Baton (blunt) · `hammer` Gravity Hammer (blunt) · `knife` Combat Knife (blade) · `cutlass` Pyrate Cutlass (blade) · `axe` Fire Axe (blade) · `torch` Plasma Torch (blade) · `mono` Monofilament Sword (blade) · `pistol` Laser Pistol (gun) · `shotgun` Boarding Shotgun (gun) · `rifle` Pulse Rifle (gun) · `freeze` Freeze Ray (weird) · `spore` Spore Pistol (weird) · `whip` Tentacle Whip (weird) · `leech` Life-Leech Glove (weird) · `mender` Mender's Staff (weird) · `chicken` Rubber Chicken (weird) · `vest` Flak Vest (suit) · `plate` Boarding Plate (suit) · `voidsuit` Void Suit (suit) · `belt` Personal Shield (suit) · `medpack` Auto-Medpack (suit) · `ar_kestrel` Courier AR-7 (ar) · `ar_vanguard` Vanguard Carbine (ar) · `ar_lancer` Lancer Battle Rifle (ar) · `ar_fang` Fang Burst Rifle (ar) · `ar_ion` Ionclad Rifle (ar) · `ar_tempest` Tempest AR (ar) · `ar_harbinger` Harbinger Rifle (ar) · `ar_cobalt` Cobalt Pulse Rifle (ar) · `smg_wasp` Wasp SMG (smg) · `smg_ferret` Ferret Machine Pistol (smg) · `smg_hornet` Hornet PDW (smg) · `smg_vortex` Vortex SMG (smg) · `smg_scythe` Scythe SMG (smg) · `smg_blitz` Blitz Auto (smg) · `smg_mirage` Mirage Silenced SMG (smg) · `lmg_bulwark` Bulwark LMG (lmg) · `lmg_ox` Ox Squad Gun (lmg) · `lmg_thresher` Thresher Minigun (lmg) · `lmg_warden` Warden Suppressor (lmg) · `lmg_hailstorm` Hailstorm LMG (lmg) · `sg_breacher` Breacher Shotgun (shotgun) · `sg_mule` Mule Double-Barrel (shotgun) · `sg_cyclone` Cyclone Auto-Shotgun (shotgun) · `sg_dragon` Dragon's Breath (shotgun) · `sg_hammerhead` Hammerhead Slug Gun (shotgun) · `sg_tidal` Tidal Riot Gun (shotgun) · `mk_needle` Needle Marksman (marksman) · `mk_longshot` Longshot DMR (marksman) · `mk_hawk` Hawkeye Rifle (marksman) · `mk_railgun` Personal Railgun (marksman) · `mk_whisper` Whisper Rifle (marksman) · `sp_flamer` Hab Flamer (special) · `sp_arc` Arc Caster (special) · `sp_cryo` Cryo Projector (special) · `sp_grav` Grav Thrower (special) · `sp_plasma` Plasma Caster (special) · `sp_spore` Spore Projector (special) · `pi_sidearm` Fedoration Sidearm (pistol) · `pi_viper` Viper Revolver (pistol) · `pi_dart` Dart Pistol (pistol) · `pi_magnum` Hand Cannon (pistol) · `pi_machine` Auto Pistol (pistol) · `pi_flare` Flare Pistol (pistol) · `pi_ionic` Ionic Repeater (pistol) · `pi_gold` Gilded Duelist (pistol) · `ln_tube` Tube Launcher (launcher) · `ln_grenade` Grenade Launcher (launcher) · `ln_swarm` Swarm Launcher (launcher) · `ln_foam` Foam Launcher (launcher) · `me_knife` Combat Knife (melee) · `me_hatchet` Boarding Hatchet (melee) · `me_baton` Shock Baton (melee) · `me_cutlass` Pyrate Cutlass (melee) · `me_shard` Glass Shard Blade (melee) · `me_maul` Pebble Maul (melee) · `me_claws` Mantlis Claw Gloves (melee) · `me_sword` Ceremonial Sabre (melee)
 
 Tonics: `muscle` Muscle Tonic (perm) · `biscuit` Iron Biscuit (perm) · `gum` Nimble Gum (perm) · `tea` Tinker's Tea (perm) · `elixir` Golden Elixir (perm) · `chip_pilot` Skill Chip: Piloting (train) · `chip_eng` Skill Chip: Engines (train) · `chip_shd` Skill Chip: Shields (train) · `chip_wpn` Skill Chip: Weapons (train) · `chip_rep` Skill Chip: Repair (train) · `chip_cbt` Skill Chip: Combat (train) · `stim` Battle Stim (buff) · `focus` Focus Drops (buff) · `rage` Berserker Brew (buff) · `medkit` Field Medkit (heal) · `salve` Nanite Salve (heal) · `cookies` Comfort Cookies (treat) · `feast` Birthday Cake (treat)
 
@@ -460,6 +460,6 @@ Scar kinds (`scar`): `leaky` `jammed` `sparky` `locked`. Pets (`pet`): `kitten` 
 | 2 | 12 | 2.0 | 13.9 | 2.2 | 0.79 | 56 |
 | 3 | 5 | 4.6 | 21.4 | 3.4 | 0.67 | 79 |
 
-Event scrap rewards across 349 outcomes: 25th percentile 20, median 30, 75th 40, 90th 60, highest 140. (The game adds a little per sector.)
+Event scrap rewards across 412 outcomes: 25th percentile 20, median 30, 75th 40, 90th 60, highest 140. (The game adds a little per sector.)
 
 Random enemies: hull 7–20 (median 12) before the game adds 1 per sector.

@@ -53,10 +53,14 @@ function drawCodex(){
   btn(1360, 46, 150, 50, 'Close', () => { UI.screen = UI.codexBack || 'record'; }, { s:17 });
   T(`${ta} of ${tb} written up`, 1330, 70, { s:18, a:'right', c:C.ink, f:FD, w:600 }); bar(1050, 84, 280, 8, tb ? ta/tb : 0, C.amber);
   T(`Stories seen: ${evSeen} of ${evAll}`, 1330, 116, { s:13, a:'right', c:C.muted });
-  let x = 60; for(const t of CODEX_TABS){ const [a, b] = codexCount(t), on = UI.codexTab===t.k, w = 232;
+  let x = 60; const w = typeof drawArchive==='function' ? 196 : 232; for(const t of CODEX_TABS){ const [a, b] = codexCount(t), on = UI.codexTab===t.k;
     btn(x, 142, w, 54, '', () => { UI.codexTab = t.k; UI.codexPage = 0; }, { fill:on, s:16 });
     T(t.name, x + 16, 166, { s:17, f:FD, w:700, c:on ? '#1a1206' : C.amber }); T(`${a}/${b}`, x + w - 16, 166, { s:13, a:'right', c:on ? '#1a1206' : C.muted });
     bar(x + 16, 178, w - 32, 5, b ? a/b : 0, on ? '#1a1206' : (a===b && b ? C.good : C.cyan), on ? 'rgba(0,0,0,.18)' : C.panel2); x += w + 8; }
+  if(typeof drawArchive==='function'){ const on = UI.codexTab==='lore', L = loreList(), a = L.filter(e => loreBook()[e.id]).length, unread = L.filter(e => loreBook()[e.id] && !PROFILE.loreRead[e.id]).length;
+    btn(x, 142, w, 54, '', () => { UI.codexTab = 'lore'; }, { fill:on, s:16, col:C.cyan }); T('📜 Archive', x + 14, 166, { s:17, f:FD, w:700, c:on ? '#1a1206' : C.cyan });
+    T(unread ? `${unread} new` : `${a}/${L.length}`, x + w - 12, 166, { s:13, a:'right', c:on ? '#1a1206' : unread ? C.amber : C.muted }); bar(x + 14, 178, w - 28, 5, a/L.length, on ? '#1a1206' : C.cyan, on ? 'rgba(0,0,0,.18)' : C.panel2);
+    if(on){ drawArchive(); return; } }
   const t = CODEX_TABS.find(t => t.k===UI.codexTab) || CODEX_TABS[0], src = t.src() || {}, known = c[t.k];
   const ids = codexIds(t).sort((p, q) => (known[q] ? 1 : 0) - (known[p] ? 1 : 0) || String(src[p].name).localeCompare(String(src[q].name)));
   const cols = 3, rows = 5, per = cols*rows, pages = Math.max(1, Math.ceil(ids.length/per)); UI.codexPage = clamp(UI.codexPage || 0, 0, pages - 1);

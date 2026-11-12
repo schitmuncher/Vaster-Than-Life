@@ -633,6 +633,8 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 - **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of 19. 25 scrap and 20 captain xp each, plus 40 scrap for all three. Not in dailies, the Cup, challenges or multiplayer.
 
+- **The Archive** (Record → Codex → Archive): 56 lore entries (histories, memos, adverts, legends, letters), opened by playing or found in wrecks and on old relays, plus 30 snippets of radio chatter overheard between jumps.
+
 - **The Codex** (Record → Codex): fills in as you meet ships (69), carry weapons (81), drones (31) and augments (67), crew with peoples and cross sectors. 40 captain xp at 25, 50 and 75% of a section, 120 at 100%.
 
 - **The Fedoration Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain's logs → Front page.
