@@ -23,7 +23,16 @@ const SKILLS = ['pilot','engines','shields','weapons','repair','combat'];
 const SKILLN = { pilot:'Piloting', engines:'Engines', shields:'Shields', weapons:'Weapons', repair:'Repair', combat:'Combat' };
 const SKILLT = { pilot:[60,150], engines:[60,150], shields:[20,50], weapons:[25,60], repair:[15,40], combat:[6,15] };
 const NAMES = ['Ash','Bryn','Coll','Dara','Eli','Fen','Gale','Hollis','Ione','Jory','Kit','Lark','Mosi','Noor','Oren','Pell','Quin','Rhea','Sol','Tam',
-  'Ude','Vale','Wren','Yara','Zeb','Moss','Pim','Juno','Bex','Cato','Dex','Ezra','Faye','Gus','Halo','Iggy','Jax','Kai','Lumi','Milo','Nix','Ozzy','Pax','Rook','Sage','Tibs','Vex','Wim','Zara'];
+  'Ude','Vale','Wren','Yara','Zeb','Moss','Pim','Juno','Bex','Cato','Dex','Ezra','Faye','Gus','Halo','Iggy','Jax','Kai','Lumi','Milo','Nix','Ozzy','Pax','Rook','Sage','Tibs','Vex','Wim','Zara',
+  // British, and proud of it
+  'Gaz','Shaz','Kev','Dave','Baz','Tracey','Sharon','Gary','Wayne','Darren','Lee','Kerry','Stacey','Dean','Craig','Nigel','Clive','Derek','Brenda','Doreen',
+  'Maureen','Pauline','Barry','Terry','Trevor','Alan','Colin','Graham','Geoff','Keith','Malcolm','Roy','Stan','Reg','Arthur','Albert','Alfie','Archie','Bertie','Freddie',
+  'Harry','Ollie','Charlie','Ted','Stanley','Ronnie','Reggie','Lenny','Vince','Mick','Sid','Nobby','Dodger','Taff','Jock','Paddy','Gethin','Rhys','Dai','Bryony',
+  'Cerys','Sian','Gwen','Megan','Eluned','Hamish','Angus','Morag','Fiona','Ailsa','Callum','Lachlan','Kirsty','Mhairi','Ewan','Shona','Siobhan','Ciaran','Niamh','Aoife',
+  'Declan','Fergus','Una','Bernadette','Gemma','Jade','Chantelle','Kayleigh','Leanne','Becky','Jess','Poppy','Daisy','Tilly','Florence','Edith','Mabel','Ethel','Vera','Peggy',
+  'Ruby','Elsie','Ivy','Nora','Winnie','Hattie','Agatha','Prudence','Hyacinth','Rosamund','Cressida','Jemima','Hugo','Rupert','Giles','Jeremy','Crispin','Tarquin','Piers','Basil',
+  'Cuthbert','Nigella','Dougie','Wilf','Norman','Cyril','Percy','Herbert','Godfrey','Mavis','Gladys','Muriel','Beryl','Sandra','Linda','Julie','Karen','Shirley','Janice','Lorraine',
+  'Priya','Ravi','Sunita','Anjali','Aisha','Yusuf','Imran','Nadia','Kwame','Femi','Tunde','Chidi','Marcus','Leroy','Delroy','Winston','Mei','Jun','Bev','Mo','Dot','Gail','Wendy','Ken','Bob'];
 const SHIP_NAMES = ['Wren Junior','Big Dipper','Space Oddity','Cosmic Latte','Nebula Nugget','Void Biscuit','Star Trekkie','Hull Monty','Ion Maiden','Warp Speedo'];
 
 const BASE = {

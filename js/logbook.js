@@ -56,6 +56,16 @@ function logDeath(f){ logEntry(`${f.name} died: ${f.why}. Last words: "${f.words
 /* ---------------- the reader ---------------- */
 function openLogbook(back, idx){ UI.logBack = back || UI.screen; UI.logIdx = idx == null ? (G && UI.screen==='game' ? -1 : 0) : idx; UI.logPage = null; UI.logWas = UI.screen; UI.screen = 'logs'; }
 function logSource(i){ if(i===-1 && G && G.log) return { ship:G.ship.name, live:true, sector:G.sector, jumps:G.stats.jumps, time:Math.round(G.time || 0), log:G.log, t:Date.now() }; return (PROFILE.logs || [])[i] || null; }
+/* the whole log as plain text, ready to paste anywhere */
+function logText(s){ if(!s) return ''; const d = new Date(s.t || Date.now()), out = [];
+  out.push(`CAPTAIN'S LOG: ${mcap(theName(s.ship))}`, s.live ? `In progress: sector ${s.sector}` : `${s.win ? 'Victory' : 'Lost in sector ' + s.sector}, ${d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })}`);
+  const facts = [s.mode, s.diff && cap1(s.diff), `${s.jumps || 0} jumps`, s.kills != null ? `${s.kills} kill${s.kills===1 ? '' : 's'}` : '', s.time ? `${typeof fmtTime==='function' ? fmtTime(s.time) : s.time + 's'} in action` : '', s.seed ? 'seed ' + s.seed : '', s.daily ? 'daily run' : ''].filter(Boolean);
+  if(facts.length) out.push(facts.join(' · ')); out.push('');
+  let sec = null; for(const e of (s.log || [])){ if(e.s !== sec){ sec = e.s; out.push('', `— Sector ${e.s} —`); } out.push(`${e.j != null ? 'J' + String(e.j).padStart(2, ' ') : '   '}  ${LOG_ICON[e.k] || '·'}  ${String(e.t || '').replace(/\s+/g, ' ').trim()}`); }
+  out.push('', '— Vaster Than Life —'); return out.join('\n'); }
+function logCopy(text, what){ const fall = () => { try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type:'text/plain' })); a.download = `captains-log-${new Date().toISOString().slice(0, 10)}.txt`; document.body.appendChild(a); a.click(); a.remove(); toast(`Your browser would not copy, so ${what} has been saved as a text file instead.`); }catch(e){ toast('Could not copy or save the log here.'); } };
+  try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(`Copied ${what} (${text.split('\n').length} lines). Paste it anywhere.`), fall); else fall(); }catch(e){ fall(); } }
+function logSave(text){ try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type:'text/plain' })); a.download = `captains-log-${new Date().toISOString().slice(0, 10)}.txt`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast('Could not save a file here.'); } }
 function drawLogbook(){
   const L = PROFILE.logs || [], live = !!(G && G.log && UI.logWas==='game'), list = (live ? [-1] : []).concat(L.map((_, i) => i));
   if(!list.includes(UI.logIdx)) UI.logIdx = list[0];
@@ -64,6 +74,7 @@ function drawLogbook(){
   if(!list.length){ para('No logs yet. Every run you finish from now on keeps its log here.', 60, 200, 900, { s:20, c:C.muted }); return; }
   // the runs
   panel(60, 150, 420, 820, 12); label('Voyages', 84, 186, C.amber, 'left', 14);
+  btn(300, 166, 164, 30, '📋 Copy all', () => logCopy(list.map(i => logText(logSource(i))).join('\n\n\n'), `all ${list.length} logs`), { s:12, col:C.cyan }); tip(300, 166, 164, 30, 'Copy all', 'Copies every kept log, one after another, as plain text.');
   list.slice(0, 16).forEach((i, k) => { const s = logSource(i); if(!s) return; const y = 204 + k*46, on = i===UI.logIdx, d = new Date(s.t || 0);
     rr(76, y, 388, 40, 8); ctx.fillStyle = on ? hexA(C.amber, .16) : 'rgba(6,9,18,.5)'; ctx.fill(); if(on){ ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5; ctx.stroke(); }
     T(s.live ? `${mcap(theName(s.ship))} · now` : mcap(theName(s.ship)), 90, y + 18, { s:15, f:FD, w:700, c:on ? C.amber : C.ink, max:240 });
@@ -73,7 +84,9 @@ function drawLogbook(){
   const s = logSource(UI.logIdx); if(!s) return; const x = 510, w = 1030;
   panel(x, 150, w, 820, 12);
   if(!s.live && typeof openGazette==='function') btn(x + w - 204, 164, 180, 40, '📰 Front page', () => openGazette(s, 'logs'), { s:14, col:C.amber });
-  T(`${mcap(theName(s.ship))}${s.live ? ' · this run so far' : s.win ? ' · victory' : ' · lost'}`, x + 24, 192, { s:24, f:FD, w:700, c:s.win ? C.good : C.amber, max:w - 48 });
+  { const bx = x + w - (s.live ? 24 : 216) - 180; btn(bx, 164, 180, 40, '📋 Copy this log', () => logCopy(logText(s), 'the whole log'), { s:14, col:C.cyan }); tip(bx, 164, 180, 40, 'Copy this log', 'Copies every entry of this voyage\'s log as plain text, sector by sector, to paste into a message, a document or a forum post.');
+    btn(bx - 132, 164, 124, 40, '💾 Save', () => logSave(logText(s)), { s:14 }); tip(bx - 132, 164, 124, 40, 'Save as a file', 'Saves this log as a text file.'); }
+  T(`${mcap(theName(s.ship))}${s.live ? ' · this run so far' : s.win ? ' · victory' : ' · lost'}`, x + 24, 192, { s:24, f:FD, w:700, c:s.win ? C.good : C.amber, max:w - 600 });
   T([s.mode, s.diff && cap1(s.diff), `${s.jumps || 0} jumps`, s.kills != null ? `${s.kills} kill${s.kills===1 ? '' : 's'}` : '', s.time ? `${typeof fmtTime==='function' ? fmtTime(s.time) : s.time + 's'} in action` : '', s.seed ? 'seed ' + s.seed : ''].filter(Boolean).join(' · '), x + 24, 218, { s:13, c:C.muted, max:w - 48 });
   // pages by height, so a long entry never pushes another one off the page
   const rows = s.log || [], sz = MINF && 15 < MINF ? Math.max(18, Math.min(MINF, 15*1.35)) : 15, lh = Math.round(19*sz/15), font = `400 ${sz}px ${FM}`,
