@@ -7,6 +7,18 @@
    "kind": "campaign"
   },
   {
+   "file": "telly-night.json",
+   "name": "Telly Night",
+   "desc": "Story pack. Fourteen loose-end stories lovingly ripping off British telly: a Locum in a blue box, a hotel run by a furious man, a three-wheeled trader, a baking tent, an anti-corruption unit, the Home Guard, a cunning plan, and more. They come back, cross over, and get tangled with your other loose ends.",
+   "kind": "content"
+  },
+  {
+   "file": "blockbuster-night.json",
+   "name": "Blockbuster Night",
+   "desc": "Story pack. Thirteen loose-end stories that owe everything to famous films and series: the ways of the Farce, a very clean starship, something in the vents, Cretaceous Gardens, Agent 0.07, a ring and a volcano, a fin, a time machine, and more.",
+   "kind": "content"
+  },
+  {
    "file": "space-pirates.json",
    "name": "Space Pirates Ahoy",
    "desc": "A pirate ship, a parrot race, a broadside cannon and buried treasure.",

@@ -128,7 +128,7 @@ function draw(){
   drawBG(); drawStars();
   switch(UI.screen){
     case 'title': drawTitle(); break;
-    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); if(typeof drawModeOverlay==='function') drawModeOverlay(); if(typeof drawRosterOverlay==='function') drawRosterOverlay(); break;
+    case 'select': drawHangar(); if(UI.crewPanel && UI._prev && UI._prev.sh && !NET.on) drawCrewNaming(UI._prev.id, UI._prev.sh); if(typeof drawModeOverlay==='function') drawModeOverlay(); if(UI.classOpen && typeof drawClassOverlay==='function') drawClassOverlay(); if(typeof drawRosterOverlay==='function') drawRosterOverlay(); break;
     case 'mods': drawModsScreen(); break;
     case 'help': drawHelpScreen(); break;
     case 'settings': drawSettings(); break;
@@ -273,11 +273,11 @@ function drawHangar(){
   const def = DATA.ships[sel], open = shipUnlocked(def);
   const y0 = 390; panel(60, y0, 1480, 470, 12);
   groups[selCls].forEach((id, i) => btn(84 + i*140, y0+22, 130, 44, `Layout ${DATA.ships[id].layout||'A'}`, () => { UI.selShip = id; UI.shipName = null; }, { fill:id===sel, s:16 }));
-  T(UI.shipName || def.name, 84, y0+118, { s:36, f:FD, w:700, c:def.color||C.amber });
+  T((typeof scLevel==='function' && scLevel(def.id) >= SC_MAX ? '★ ' : '') + (UI.shipName || def.name), 84, y0+118, { s:36, f:FD, w:700, c:def.color||C.amber });
   if(open) btn(84 + Math.min(520, ctx.measureText(UI.shipName || def.name).width + 20), y0+86, 110, 40, 'Rename', () => openRename('ship'), { s:15 });
   para(def.desc||'', 84, y0+156, 640, { s:18, lh:26, c:C.muted });
   let temp = UI._prev && UI._prev.id===sel ? UI._prev.sh : null;
-  if(!temp){ try{ temp = makeShip(def,'p',{}); }catch(e){ temp = null; } UI._prev = { id:sel, sh:temp }; }
+  if(!temp){ try{ temp = makeShip(def,'p',{}); if(typeof scApply==='function' && scAllowed({}) && shipUnlocked(def)){ const c_ = scCurrent(def); if(!c_.std) scApply(temp, def, c_, false); } }catch(e){ temp = null; } UI._prev = { id:sel, sh:temp }; }
   if(temp){
     drawShip(temp, { x:760, y:y0+70, w:760, h:240 }, 1, false, true);
     const rows = [ ['Hull', temp.maxHull], ['Reactor', temp.reactor], ['Weapons', temp.weapons.map(w=>DATA.weapons[w.id].name).join(', ')||'None'],
@@ -285,10 +285,11 @@ function drawHangar(){
       ['Crew', (typeof rosterHangarNames==='function' && rosterHangarNames(temp)) || hangarCrew(sel, temp).names.map((n,i) => `${n} (${DATA.races[temp.crew[i].race].name})`).join(', ')], ['Augments', temp.augments.map(a=>DATA.augments[a]?.name).join(', ')||'None'] ];
     rows.forEach((r,k) => { label(r[0], 84, y0+232+k*30, C.muted, 'left', 13); para(String(r[1]), 210, y0+232+k*30, 520, { s:15, lh:18, max:1 }); });
     if(open && !NET.on && !(typeof campHangarDef==='function' && campHangarDef() && campHangarDef().crew)){   // naming the crew: big, near the top, and it glows until you have used it once
-      const bx = 520, by = y0+20, bw = 226, bh = 48;
+      const bx = typeof drawClassButton==='function' ? 640 : 520, by = y0+20, bw = 226, bh = 48;
       if(!PROFILE.namedCrew){ const pl = .5 + .5*Math.sin(performance.now()/260); glow(bx+bw/2, by+bh/2, 130, C.amber, .10 + .12*pl); }
       btn(bx, by, bw, bh, '✎  Name your crew', () => { UI.crewPanel = true; PROFILE.namedCrew = 1; saveProfile(); }, { fill:true, s:17, col:C.amber });
       tip(bx, by, bw, bh, 'Your crew', `Name them and pick their personalities before you launch.${SET.lastCrew && SET.lastCrew.names && SET.lastCrew.names.length ? ' The names you used last time are filled in for you.' : ''}`); }
+    if(open && typeof drawClassButton==='function') drawClassButton(372, y0+20, 256, 48, def);
   } else T('This ship has an error in its data.', 84, y0+260, { s:18, c:C.hostile });
   if(!open){ if(typeof drawShipLock==='function') drawShipLock(def, 740, y0+56, 790, 280); else { ctx.fillStyle = 'rgba(7,10,20,.55)'; rr(740, y0+60, 790, 260, 10); ctx.fill(); T('LOCKED', 1135, y0+170, { s:40, f:FD, w:700, a:'center', c:C.muted, ls:6 }); T(unlockText(def), 1135, y0+212, { s:18, a:'center', c:C.ink }); } }
   label('Difficulty', 760, y0+360, C.muted, 'left', 14); if(PROFILE.runs < 3) T(SET.difficulty==='easy' ? 'Easy is recommended for your first runs.' : 'Tip: Easy is recommended for your first runs.', 1220, y0+360, { s:14, c:C.cyan, a:'right' });

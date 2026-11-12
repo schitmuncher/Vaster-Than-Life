@@ -1,0 +1,912 @@
+{
+ "name": "Telly Night",
+ "version": "1.0",
+ "author": "Vaster Than Life",
+ "description": "Fourteen loose-end stories that are absolutely not based on anything you have seen on British television: a Locum in a blue box, a hotel run by a furious man, three-wheeled traders, a baking tent, bent couriers, and more. They cross over with the game's own loose ends.",
+ "events": [
+  {
+   "id": "tv_locum_0",
+   "title": "A blue box",
+   "text": "A tall blue box appears on your bridge with a noise like someone dragging a key down a piano. The sign on it says PORTABLE LAVATORY. A man in a long scarf and a worse jacket leans out. \"Hello! I'm the Locum. Is this 1963? No? Is it Cardiff?\"",
+   "choices": [
+    {
+     "text": "\"Who?\"",
+     "effect": {
+      "text": "\"No, the Locum. I'm filling in. The regular chap's on holiday.\" He's staying for a bit. The box is bigger on the inside. So, he warns you, is the queue.",
+      "thread": {
+       "id": "locum",
+       "name": "The Locum and his blue box"
+      }
+     }
+    },
+    {
+     "text": "Ask him to move his toilet.",
+     "effect": {
+      "text": "\"It's not a toilet, it's a time machine. It's disguised as a toilet. The disguise is stuck.\" He's staying.",
+      "thread": {
+       "id": "locum",
+       "name": "The Locum and his blue box"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "locum"
+  },
+  {
+   "id": "tv_locum_1",
+   "title": "The Locum",
+   "text": "The Locum is waving a small buzzing torch at your engines. \"I can fix this. I can fix anything with this. Except wood. And feelings.\" Everything he points it at either works much better or catches fire.",
+   "choices": [
+    {
+     "text": "Let him carry on.",
+     "chance": 0.6,
+     "success": {
+      "text": "The engines have never run better. He says he's reversed the polarity. He says that a lot.",
+      "upgrade": "engines"
+     },
+     "fail": {
+      "text": "\"That wasn't supposed to happen. Run!\" Running doesn't help. It's your ship.",
+      "fire": true,
+      "scrap": 15
+     }
+    },
+    {
+     "text": "Take the torch off him.",
+     "effect": {
+      "text": "He sulks, then produces an identical torch from another pocket. He has lots of pockets.",
+      "crewHeal": 5
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "locum",
+   "step": 1
+  },
+  {
+   "id": "tv_locum_2",
+   "title": "The Locum",
+   "text": "Angry pepper pots. A whole fleet of them, gliding up to your hull, shouting in flat metal voices: \"EX-TER-MIN-ATE! EX-TER... oh. STAIRS.\" Your airlock has three steps up. The Locum is delighted. \"They've never cracked stairs!\"",
+   "choices": [
+    {
+     "text": "Shout encouragement.",
+     "effect": {
+      "text": "They mill about at the bottom for an hour, then leave, embarrassed. They drop something in their hurry.",
+      "weapon": "random",
+      "endThread": "locum"
+     }
+    },
+    {
+     "text": "Open fire while they're stuck.",
+     "effect": {
+      "text": "\"Bit unsporting,\" says the Locum, approvingly.",
+      "fight": "auto_scoundrel",
+      "afterWin": {
+       "text": "\"Right! Must dash. I've left a kettle on in the Renaissance.\" The box fades away with its awful noise. He's left you a note: \"You were brilliant. All of you. Even the one who made that tea.\"",
+       "scrap": 45,
+       "endThread": "locum"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "locum",
+   "step": 2
+  },
+  {
+   "id": "tv_hotel_0",
+   "title": "Sybil's Rest",
+   "text": "A hotel, built on a windy asteroid. The sign says SYBIL'S REST and, underneath, in different paint, NO RIFF-RAFF. A tall, furious man in a moustache is hitting the docking clamp with a branch. \"Right! That's it! I've warned you before!\"",
+   "choices": [
+    {
+     "text": "Book a room.",
+     "effect": {
+      "text": "\"A ROOM? Oh, I see, you want a ROOM. In a HOTEL. How extraordinary.\" He gives you a key. It's for the wrong room. The right room has someone in it.",
+      "crewHeal": 15,
+      "thread": {
+       "id": "hotel",
+       "name": "A stay at Sybil's Rest"
+      }
+     },
+     "cost": {
+      "scrap": 10
+     },
+     "req": {
+      "scrap": 10
+     }
+    },
+    {
+     "text": "Just the restaurant, thanks.",
+     "effect": {
+      "text": "The waiter is from the Barcelona Relay and is doing his best. \"Is not duck. Is... hamster?\" It's lovely, whatever it is.",
+      "food": 2,
+      "thread": {
+       "id": "hotel",
+       "name": "A stay at Sybil's Rest"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "hotel"
+  },
+  {
+   "id": "tv_hotel_1",
+   "title": "Sybil's Rest",
+   "text": "There's a hotel inspector staying, and the owner has decided it's you. He is suddenly, terrifyingly nice. \"More wine? A bigger room? My wife's room? Ha ha! No, seriously, take it, I'll sleep in the kitchen.\"",
+   "choices": [
+    {
+     "text": "Play along.",
+     "effect": {
+      "text": "You get the best of everything, free. On the way out you pass the real inspector, who is trapped in a cupboard with a moose's head.",
+      "scrap": 30,
+      "crewHeal": 20,
+      "endThread": "hotel"
+     }
+    },
+    {
+     "text": "Tell him the truth.",
+     "effect": {
+      "text": "He goes white, then red, then a colour there isn't a name for. \"...I KNEW that,\" he says, and charges you for the wine.",
+      "scrap": -15,
+      "endThread": "hotel"
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "hotel",
+   "step": 1
+  },
+  {
+   "id": "tv_trot_0",
+   "title": "A three-wheeled shuttle",
+   "text": "A filthy yellow shuttle with three engines, one of which is on fire, pulls up alongside. Painted on the side: TROTTING INDEPENDENT TRADERS. NEW YORK, PARIS, BRINDLE IV. A man in a sheepskin coat leans out. \"All right? Have I got a deal for you, my son.\"",
+   "choices": [
+    {
+     "text": "Hear him out.",
+     "effect": {
+      "text": "It's a consignment of hooky inflatable escape pods. \"They're top quality. Only one of them sings.\" You take some. This is a mistake you'll be making again.",
+      "parts": 2,
+      "thread": {
+       "id": "trot",
+       "name": "Business with the Trotting brothers"
+      }
+     },
+     "cost": {
+      "scrap": 15
+     },
+     "req": {
+      "scrap": 15
+     }
+    },
+    {
+     "text": "\"Not today, thanks.\"",
+     "effect": {
+      "text": "\"No problem, no problem. Here, have my card. This time next sector, we'll be millionaires.\" The card is a beer mat.",
+      "thread": {
+       "id": "trot",
+       "name": "Business with the Trotting brothers"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "trot"
+  },
+  {
+   "id": "tv_trot_1",
+   "title": "The Trottings",
+   "text": "The yellow shuttle again. The tall, gormless brother is at the window holding up a sign that says HELP. The one in the sheepskin grabs the radio. \"Ignore him. Listen: chandeliers. Stately space-home. Two hundred scrap, cash. I just need someone to hold the ladder.\"",
+   "choices": [
+    {
+     "text": "Hold the ladder.",
+     "chance": 0.5,
+     "success": {
+      "text": "Against every expectation, it goes perfectly. He's so shocked he pays you properly.",
+      "scrap": 45,
+      "endThread": "trot"
+     },
+     "fail": {
+      "text": "You hold the wrong ladder. The crash can be heard two sectors away. \"Don't tell Grandad,\" he says, and legs it.",
+      "hull": -2,
+      "scrap": 10,
+      "endThread": "trot"
+     }
+    },
+    {
+     "text": "Buy the tall one a drink instead.",
+     "effect": {
+      "text": "He tells you about his diploma, his art, and how his brother once fell through a bar. Best night out all voyage.",
+      "crewHeal": 18,
+      "endThread": "trot"
+     },
+     "cost": {
+      "scrap": 5
+     },
+     "req": {
+      "scrap": 5
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "trot",
+   "step": 1
+  },
+  {
+   "id": "tv_bake_0",
+   "title": "A tent in space",
+   "text": "There is a marquee in orbit: bunting, pastel fridges, and twelve terrified people in aprons. A very polite man with very blue eyes hails you. \"Welcome to the Great Galactic Bake Off. We're a baker short. Can any of you make a sponge?\"",
+   "choices": [
+    {
+     "text": "Enter {crew}.",
+     "effect": {
+      "text": "{crew} has never baked anything. They're given an apron, a bench, and four hours to make a showstopper in the shape of a famous landmark.",
+      "thread": {
+       "id": "bake",
+       "name": "In the Bake Off"
+      }
+     }
+    },
+    {
+     "text": "Just watch.",
+     "effect": {
+      "text": "You're roped in anyway, to carry things. Someone has put their custard in someone else's fridge. The atmosphere is murderous.",
+      "thread": {
+       "id": "bake",
+       "name": "In the Bake Off"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "bake"
+  },
+  {
+   "id": "tv_bake_1",
+   "title": "The Bake Off",
+   "text": "Judging. {crew}'s showstopper is a scale model of Commonwealth Command in ginger biscuit. It's leaning. The blue-eyed judge presses it with one finger. There's a long, long silence.",
+   "choices": [
+    {
+     "text": "Hope.",
+     "chance": 0.5,
+     "success": {
+      "text": "He holds out his hand. A handshake. The tent gasps. {crew} will be telling this story for the rest of their life, and yours.",
+      "crewHeal": 30,
+      "scrap": 40,
+      "endThread": "bake"
+     },
+     "fail": {
+      "text": "\"It's raw in the middle. And it's got a soggy bottom.\" {crew} takes it well, which is to say they cry in the airlock.",
+      "food": 3,
+      "endThread": "bake"
+     }
+    },
+    {
+     "text": "Distract the judges and swap the cakes.",
+     "effect": {
+      "text": "You're caught at once. You are escorted from the tent by a comedian. Still: you got the cake.",
+      "food": 4,
+      "crewHeal": 6,
+      "endThread": "bake"
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "bake",
+   "step": 1
+  },
+  {
+   "id": "tv_ac_0",
+   "title": "An interview",
+   "text": "An unmarked ship. Three officers in lanyards. \"Anti-Corruption Unit 13. We're investigating bent couriers. For the benefit of the tape, you are being shown item fourteen in your folder.\" Item fourteen is a photograph of you, eating a pasty.",
+   "choices": [
+    {
+     "text": "\"No comment.\"",
+     "effect": {
+      "text": "A very long beep. \"Mother of God,\" says the one in the waistcoat. They'll be watching you.",
+      "thread": {
+       "id": "ac",
+       "name": "Under investigation by AC-13"
+      }
+     }
+    },
+    {
+     "text": "Explain about the pasty.",
+     "effect": {
+      "text": "They write for a long time. \"We're interested in one thing, and one thing only: catching bent couriers.\" They'll be watching you.",
+      "thread": {
+       "id": "ac",
+       "name": "Under investigation by AC-13"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "ac",
+   "minSector": 2
+  },
+  {
+   "id": "tv_ac_1",
+   "title": "AC-13",
+   "text": "They're back. The waistcoat one leans in. \"We've had a tip-off about a senior officer in the Courier Service. Goes by a single letter. We think it's H.\" A pause. \"Or possibly the letter after G. We're not ruling it out.\"",
+   "choices": [
+    {
+     "text": "Help them with their enquiries.",
+     "effect": {
+      "text": "You spend a day going through files. The bent courier turns out to be a filing error. They buy you a pint and stamp your record CLEAN, which is more than the ship is.",
+      "scrap": 35,
+      "reveal": true,
+      "endThread": "ac"
+     }
+    },
+    {
+     "text": "\"Am I free to go?\"",
+     "effect": {
+      "text": "\"You are. For now.\" Beeeeeeeep. On your way out you pinch a box of their biscuits. Item fifteen.",
+      "food": 2,
+      "endThread": "ac"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "ac",
+   "step": 1
+  },
+  {
+   "id": "tv_thrust_0",
+   "title": "Three men and a camera",
+   "text": "Three middle-aged men in three ridiculous ships are blocking the lane and arguing. One is very tall and shouting. One is very small and has crashed. One is very slow and is explaining something about gearboxes. A camera drone swings to face you. \"Aha! A challenger!\"",
+   "choices": [
+    {
+     "text": "Accept the challenge.",
+     "effect": {
+      "text": "The challenge is to cross the sector in a ship bought for less than fifty scrap. Yours qualifies. They find this very funny.",
+      "thread": {
+       "id": "thrust",
+       "name": "A challenge from Top Thrust"
+      }
+     }
+    },
+    {
+     "text": "Try to get past.",
+     "effect": {
+      "text": "\"He's getting away!\" \"He's not getting away, he's doing four knots.\" You're in the programme now, whether you like it or not.",
+      "thread": {
+       "id": "thrust",
+       "name": "A challenge from Top Thrust"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "thrust"
+  },
+  {
+   "id": "tv_thrust_1",
+   "title": "Top Thrust",
+   "text": "The race. The tall one has fitted a much bigger engine and is on fire. The small one has crashed again. The slow one is winning, and nobody is more surprised than he is. Some say a silent pilot in a white helmet is watching from a nearby moon. All we know is, he's called the Stag.",
+   "choices": [
+    {
+     "text": "Floor it.",
+     "chance": 0.55,
+     "success": {
+      "text": "You win by a nose. \"And on that bombshell,\" says the tall one, and the camera cuts off. They send your prize by post.",
+      "scrap": 50,
+      "xp": {
+       "skill": "pilot",
+       "amt": 20
+      },
+      "endThread": "thrust"
+     },
+     "fail": {
+      "text": "You come fourth out of four. The slow one pats your hull. \"Honestly, I thought you did very well.\"",
+      "fuel": -2,
+      "crewHeal": 8,
+      "endThread": "thrust"
+     }
+    },
+    {
+     "text": "Cheat. Everyone else is.",
+     "effect": {
+      "text": "You take a short cut through a nebula. So do they. You all get lost together and end up in a pub.",
+      "crewHeal": 20,
+      "fuel": -1,
+      "endThread": "thrust"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "thrust",
+   "step": 1
+  },
+  {
+   "id": "tv_task_0",
+   "title": "A task",
+   "text": "A wax-sealed envelope floats in through the airlock. Inside, a card: \"Deliver this potato to the Taskmistress without it touching the floor. Fastest wins. Your time starts now.\" There's a potato. A small man with a tablet is standing in the corner. He was not there before.",
+   "choices": [
+    {
+     "text": "Start. Obviously.",
+     "effect": {
+      "text": "{crew} puts the potato in a sock and swings it. The small man makes a note. \"Interesting,\" he says, in a way that means it isn't.",
+      "thread": {
+       "id": "task",
+       "name": "Tasks from the Taskmistress"
+      }
+     }
+    },
+    {
+     "text": "Ask the small man what's going on.",
+     "effect": {
+      "text": "\"All the information is on the task.\" He will say this, and only this, for as long as you know him.",
+      "thread": {
+       "id": "task",
+       "name": "Tasks from the Taskmistress"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "task"
+  },
+  {
+   "id": "tv_task_1",
+   "title": "The Taskmistress",
+   "text": "The studio. A huge, magnificent woman on a throne regards your potato. It has been through a lot. \"You were told it mustn't touch the floor. You've brought it here in a SOCK. Is a sock a floor? Little Alan?\" The small man checks his tablet.",
+   "choices": [
+    {
+     "text": "Argue that a sock is not a floor.",
+     "chance": 0.5,
+     "success": {
+      "text": "\"...I'll allow it. Five points.\" The audience roars. You win the episode and a prize somebody else brought in: it's their dad's golf clubs, and something better.",
+      "augment": "random",
+      "endThread": "task"
+     },
+     "fail": {
+      "text": "\"A sock is a floor for a FOOT. One point.\" You're beaten by a man who ate his potato.",
+      "scrap": 10,
+      "endThread": "task"
+     }
+    },
+    {
+     "text": "Bribe Little Alan.",
+     "effect": {
+      "text": "He takes the money. \"All the information is on the task,\" he says, and gives you two points.",
+      "scrap": 25,
+      "endThread": "task"
+     },
+     "cost": {
+      "scrap": 10
+     },
+     "req": {
+      "scrap": 10
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "task",
+   "step": 1
+  },
+  {
+   "id": "tv_peaky_0",
+   "title": "Flat caps",
+   "text": "The bar goes quiet. Six men in long coats and flat caps walk in, slowly, to music only they can hear. The one in front has cheekbones you could cut cheese on. \"This beacon,\" he says, \"is under new management. By order of the Peaky Bonnets.\"",
+   "choices": [
+    {
+     "text": "Buy them a drink.",
+     "effect": {
+      "text": "He drinks it without blinking. He hasn't blinked since he came in. \"You're all right. For a courier. We may have work for you.\"",
+      "thread": {
+       "id": "peaky",
+       "name": "Known to the Peaky Bonnets"
+      }
+     },
+     "cost": {
+      "scrap": 10
+     },
+     "req": {
+      "scrap": 10
+     }
+    },
+    {
+     "text": "\"Under whose order?\"",
+     "effect": {
+      "text": "All six say it again, slowly, with a key change. There are razor blades sewn into their caps. One of them has cut himself putting his on.",
+      "thread": {
+       "id": "peaky",
+       "name": "Known to the Peaky Bonnets"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "peaky"
+  },
+  {
+   "id": "tv_peaky_1",
+   "title": "The Peaky Bonnets",
+   "text": "A job. They want a crate of \"horse liniment\" moved past a Mandate checkpoint. The cheekbone one stares into the middle distance and says something about ambition and his mother. It takes four minutes. You've agreed before he finishes.",
+   "choices": [
+    {
+     "text": "Run the checkpoint.",
+     "chance": 0.6,
+     "success": {
+      "text": "Clean through. \"You've done us a service,\" he says, and walks away from you in slow motion, into smoke that wasn't there a moment ago.",
+      "scrap": 55,
+      "endThread": "peaky"
+     },
+     "fail": {
+      "text": "The Mandate open the crate. It really is horse liniment. Nobody knows what to do. You're fined for wasting everyone's time.",
+      "scrap": -15,
+      "endThread": "peaky"
+     }
+    },
+    {
+     "text": "Decline. Politely. Very politely.",
+     "effect": {
+      "text": "\"Nobody says no to the Peaky Bonnets.\" A pause. \"...But we respect it.\" They leave in slow motion, which takes ages.",
+      "endThread": "peaky"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "peaky",
+   "step": 1
+  },
+  {
+   "id": "tv_dads_0",
+   "title": "Don't panic",
+   "text": "A squad of very elderly men in ill-fitting uniforms have set up a roadblock made of deckchairs. A pompous one with a moustache holds up a hand. \"Halt! Walmington Asteroid Home Guard! We're the last line of defence against the Mandate!\" Behind him, an older one is running in circles shouting \"DON'T PANIC!\"",
+   "choices": [
+    {
+     "text": "Show them your papers.",
+     "effect": {
+      "text": "He reads them upside down. \"These seem to be in order. Carry on. Stupid boy,\" he adds, to someone else. They'd like to help with the war. They're quite insistent.",
+      "thread": {
+       "id": "dads",
+       "name": "The Home Guard is 'helping'"
+      }
+     }
+    },
+    {
+     "text": "Salute.",
+     "effect": {
+      "text": "They all salute back. One of them falls over. They've decided you're top brass, and they're coming with you.",
+      "thread": {
+       "id": "dads",
+       "name": "The Home Guard is 'helping'"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "dads"
+  },
+  {
+   "id": "tv_dads_1",
+   "title": "The Home Guard",
+   "text": "A Mandate scout has found you. The Home Guard have formed up on your hull in spacesuits with broom handles. The very old one would like to be excused. The gloomy Scottish one says you're all doomed. The scout's captain is watching this on his screen, completely baffled.",
+   "choices": [
+    {
+     "text": "Let them have their moment.",
+     "effect": {
+      "text": "\"They don't like it up 'em!\" The scout, unsure what it's looking at and unwilling to shoot pensioners, withdraws. The platoon is unbearable for a week. They give you their tea money.",
+      "scrap": 30,
+      "crewHeal": 15,
+      "fleetPush": -0.05,
+      "endThread": "dads"
+     }
+    },
+    {
+     "text": "Get them inside and fight properly.",
+     "effect": {
+      "text": "\"We were just getting started!\"",
+      "fight": "rebuff_scout",
+      "afterWin": {
+       "text": "The platoon claims the victory. You let them. The captain gives a speech. The old one finally gets to be excused.",
+       "scrap": 35,
+       "endThread": "dads"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "dads",
+   "step": 1
+  },
+  {
+   "id": "tv_antiq_0",
+   "title": "A queue",
+   "text": "A long queue of people holding vases, clocks and one stuffed owl winds across the station concourse towards a table with an umbrella over it. A woman in a scarf beams at you. \"Antiques Roadship! Have you brought something for our experts?\"",
+   "choices": [
+    {
+     "text": "Show them the kettle.",
+     "effect": {
+      "text": "The expert turns it over. \"Now, this is very interesting. Do you know what you have here?\" You hold your breath. \"It's a kettle.\" But he'd like a second look at something else aboard.",
+      "thread": {
+       "id": "antiq",
+       "name": "A valuation pending"
+      }
+     }
+    },
+    {
+     "text": "Show them The Parcel.",
+     "effect": {
+      "text": "\"Ooh.\" He puts on white gloves. \"I'm not allowed to open this, am I? No. But the wrapping alone...\" He wants to consult a colleague.",
+      "thread": {
+       "id": "antiq",
+       "name": "A valuation pending"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "antiq"
+  },
+  {
+   "id": "tv_antiq_1",
+   "title": "Antiques Roadship",
+   "text": "The valuation. A small crowd has gathered. The expert holds up the dented thing {crew} has been using as a doorstop. \"This is a Precursor navigational sphere. Have you any idea what it would fetch at auction?\"",
+   "choices": [
+    {
+     "text": "\"No...?\"",
+     "chance": 0.5,
+     "success": {
+      "text": "\"Between four and six hundred scrap.\" The crowd goes \"ooooh.\" {crew} says the thing everyone says: \"Oh, we'd never sell it.\" You sell it immediately.",
+      "scrap": 80,
+      "endThread": "antiq"
+     },
+     "fail": {
+      "text": "\"About a fiver. It's a reproduction. A bad one. But it's a lovely thing to have.\" The crowd goes \"aww.\"",
+      "scrap": 5,
+      "crewHeal": 5,
+      "endThread": "antiq"
+     }
+    },
+    {
+     "text": "Keep it as a doorstop.",
+     "effect": {
+      "text": "\"Quite right,\" says the expert, visibly in pain. He gives you his card and a discount at the station shop.",
+      "store": true,
+      "endThread": "antiq"
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "antiq",
+   "step": 1
+  },
+  {
+   "id": "tv_cunning_0",
+   "title": "A cunning plan",
+   "text": "A sneering man in black hails you from a very small, very shabby warship. Beside him stands a filthy little man holding a turnip. \"Captain Edmund Blackrudder. I find myself, through no fault of my own, in need of a ship that works. My dogsbody has a plan.\" \"I have a cunning plan, sir,\" says the dogsbody.",
+   "choices": [
+    {
+     "text": "Hear the cunning plan.",
+     "effect": {
+      "text": "The plan involves the turnip, a false moustache, and you. \"It's so cunning,\" says the dogsbody, \"you could pin a tail on it and call it a weasel.\" Against your better judgement, you're in.",
+      "thread": {
+       "id": "cunning",
+       "name": "Part of a cunning plan"
+      }
+     }
+    },
+    {
+     "text": "Decline with a withering remark.",
+     "effect": {
+      "text": "Blackrudder looks at you with new respect. \"That was almost good. You've the wit of a man with half a brain, which around here makes you a professor.\" You're in anyway.",
+      "thread": {
+       "id": "cunning",
+       "name": "Part of a cunning plan"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "cunning"
+  },
+  {
+   "id": "tv_cunning_1",
+   "title": "The cunning plan",
+   "text": "The plan has gone wrong in every way a plan can. You're disguised as a nun. The turnip has been arrested. Blackrudder is describing the dogsbody's intelligence, at length, by comparing it to various farmyard objects.",
+   "choices": [
+    {
+     "text": "Improvise.",
+     "chance": 0.55,
+     "success": {
+      "text": "You talk your way out, with the turnip. Blackrudder pays up, bitterly. \"I'd thank you, but it would be like thanking a gnat for not being a wasp.\"",
+      "scrap": 50,
+      "endThread": "cunning"
+     },
+     "fail": {
+      "text": "You're all thrown out of an airlock, fortunately a ground-floor one. The dogsbody has another cunning plan. You leave before you can hear it.",
+      "hull": -2,
+      "scrap": 15,
+      "endThread": "cunning"
+     }
+    },
+    {
+     "text": "Sell them both out.",
+     "effect": {
+      "text": "\"The first sensible thing anyone's done all day,\" says Blackrudder, being led away. The dogsbody gives you his turnip. It's the nicest thing anyone's ever given you.",
+      "scrap": 30,
+      "food": 1,
+      "endThread": "cunning"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "cunning",
+   "step": 1
+  },
+  {
+   "id": "tv_office_0",
+   "title": "A paper asteroid",
+   "text": "A grey office block on a grey asteroid: Slough Relay Paper Merchants. The regional manager meets you at the airlock with a little dance. \"I'm a friend first, a boss second, and probably an entertainer third.\" Behind him, an employee looks straight at the security camera and sighs.",
+   "choices": [
+    {
+     "text": "Buy some paper.",
+     "effect": {
+      "text": "He does an impression. You don't know what it's of. Nor does he. Someone has put the stapler in jelly again.",
+      "thread": {
+       "id": "office",
+       "name": "A visit to the paper merchants"
+      }
+     },
+     "cost": {
+      "scrap": 5
+     },
+     "req": {
+      "scrap": 5
+     }
+    },
+    {
+     "text": "Ask for the toilets.",
+     "effect": {
+      "text": "\"There's good news and bad news,\" he says, and plays the guitar at you.",
+      "thread": {
+       "id": "office",
+       "name": "A visit to the paper merchants"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "office"
+  },
+  {
+   "id": "tv_office_1",
+   "title": "The paper merchants",
+   "text": "It's the office quiz night and they're a team short. The manager has put himself in charge of yours. He's got every answer wrong so far and is blaming the questions. The one who keeps looking at the camera slides you the right answers on a sticky note.",
+   "choices": [
+    {
+     "text": "Use the sticky notes.",
+     "effect": {
+      "text": "You win. The manager gives a speech claiming the credit. The camera-looker gets a small smile, the first anyone's seen. The prize is a voucher and it's actually good.",
+      "scrap": 40,
+      "crewHeal": 10,
+      "endThread": "office"
+     }
+    },
+    {
+     "text": "Trust the manager.",
+     "effect": {
+      "text": "You come last. \"I think we all learned something tonight,\" he says. Nobody has. But the buffet was free.",
+      "food": 3,
+      "endThread": "office"
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "office",
+   "step": 1
+  },
+  {
+   "id": "tv_x_locum_cat",
+   "title": "The Locum and the cat",
+   "text": "The cat has gone into the blue box. The Locum goes in after it. They're gone four seconds. When they come out the Locum has a beard and the cat is wearing a small ruff. \"We don't talk about the Tudors,\" says the Locum.",
+   "choices": [
+    {
+     "text": "Don't talk about the Tudors.",
+     "effect": {
+      "text": "The cat has a new, knowing look. And a medal.",
+      "scrap": 30,
+      "crewHeal": 8
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "locum",
+    "cat"
+   ]
+  },
+  {
+   "id": "tv_x_bake_weev",
+   "title": "The weevils and the Bake Off",
+   "text": "The weevils have got into the tent. Twelve showstoppers, gone in a minute. One weevil is sitting on the judges' table, looking hopeful. The blue-eyed judge regards it. Slowly, he holds out a finger. The weevil shakes it.",
+   "choices": [
+    {
+     "text": "Leave before anyone asks whose weevils they are.",
+     "effect": {
+      "text": "You leave. Behind you, a weevil is being interviewed in a meadow. They've stayed behind: you're shot of the lot.",
+      "endThread": "weev",
+      "food": 2
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "bake",
+    "weev"
+   ]
+  },
+  {
+   "id": "tv_x_trot_crate",
+   "title": "The Trottings and the crate",
+   "text": "\"That crate,\" says the man in the sheepskin, \"is exactly what I've been looking for. I've got a buyer. No questions asked.\" The crate hums something that sounds a lot like a warning.",
+   "choices": [
+    {
+     "text": "Let him try to sell it.",
+     "effect": {
+      "text": "He's back within the hour, white as a sheet. \"It hummed the theme from my own life at me. You can keep it. Here: for your silence.\"",
+      "scrap": 35
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "trot",
+    "crate"
+   ]
+  },
+  {
+   "id": "tv_x_ac_debt",
+   "title": "AC-13 and Big Kev",
+   "text": "\"For the benefit of the tape,\" says the waistcoat one, \"the suspect is being shown a little book with his own name in it.\" Big Kev, across the table, folds his arms. \"No comment.\" Beeeeep. They both turn to look at you.",
+   "choices": [
+    {
+     "text": "\"I've never seen either of them before.\"",
+     "effect": {
+      "text": "A very long beep. Both of them nod, slowly. You've made two sets of friends, and one of them cancels a debt.",
+      "endThread": "debt",
+      "scrap": 10
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "ac",
+    "debt"
+   ]
+  },
+  {
+   "id": "tv_x_dads_ghost",
+   "title": "The Home Guard and the Captain",
+   "text": "\"Marr?\" says the old corporal, peering at the empty chair. \"Ignatius Marr? You owe me two shillings!\" \"I do not,\" says the ceiling. \"You do! Siege of Corvin Gate! You said, lend us two bob for a pasty!\"",
+   "choices": [
+    {
+     "text": "Pay the two shillings on the Captain's behalf.",
+     "effect": {
+      "text": "Honour is satisfied. The two of them reminisce until dawn. In the morning the corporal salutes the chair and the chair, very slightly, turns.",
+      "crewHeal": 15,
+      "xp": {
+       "skill": "combat",
+       "amt": 12
+      }
+     },
+     "cost": {
+      "scrap": 2
+     },
+     "req": {
+      "scrap": 2
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "dads",
+    "ghost"
+   ]
+  }
+ ]
+}

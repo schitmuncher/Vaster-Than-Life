@@ -1,0 +1,946 @@
+{
+ "name": "Blockbuster Night",
+ "version": "1.0",
+ "author": "Vaster Than Life",
+ "description": "Thirteen loose-end stories that owe nothing whatsoever to any famous film or series: the ways of the Farce, a very clean starship, something in the vents, Cretaceous Gardens, Agent 0.07, a ring and a volcano, and more.",
+ "events": [
+  {
+   "id": "fm_farce_0",
+   "title": "An old hermit",
+   "text": "A bearded old man in a dressing gown is waiting at the beacon, as if he knew you were coming. \"You must learn the ways of the Farce,\" he says. \"It surrounds us. It binds us. It is mostly paperwork.\" He waves a hand at a passing Mandate patrol. \"These aren't the couriers you're looking for.\"",
+   "choices": [
+    {
+     "text": "Take him aboard.",
+     "effect": {
+      "text": "\"These aren't the couriers we're looking for,\" agrees the patrol, and moves on. The old man looks as surprised as you are.",
+      "fleetPush": -0.05,
+      "thread": {
+       "id": "farce",
+       "name": "Learning the ways of the Farce"
+      }
+     }
+    },
+    {
+     "text": "\"That's just hypnosis.\"",
+     "effect": {
+      "text": "\"Search your feelings,\" he says. You search them. Mostly you're hungry. He comes aboard anyway and starts calling you \"young one.\"",
+      "thread": {
+       "id": "farce",
+       "name": "Learning the ways of the Farce"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "farce"
+  },
+  {
+   "id": "fm_farce_1",
+   "title": "The Farce",
+   "text": "Training. {crew} is wearing a helmet with the visor down, swinging a glowing strip-light at a floating toaster. \"Stretch out with your feelings,\" says the old man. The toaster fires a slice of bread. {crew} blocks it. Everyone is astonished, the old man most of all.",
+   "choices": [
+    {
+     "text": "Keep training.",
+     "effect": {
+      "text": "By teatime {crew} can block three slices in a row and has stopped using the word \"impossible.\"",
+      "xp": {
+       "skill": "combat",
+       "amt": 25
+      }
+     }
+    },
+    {
+     "text": "Ask what the strip-light actually does.",
+     "effect": {
+      "text": "\"It is an elegant weapon,\" he says, \"for a more civilised age.\" It's a strip-light. But the batteries are worth having.",
+      "parts": 3
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "farce",
+   "step": 1
+  },
+  {
+   "id": "fm_farce_2",
+   "title": "The Farce",
+   "text": "A black warship, and on its bridge a very tall man in a black helmet, breathing like a broken accordion. \"I have you now,\" he says. Then, to the old man: \"We meet again. When I left you, I was but the learner.\" \"You left without paying for the lessons,\" says the old man.",
+   "choices": [
+    {
+     "text": "Fight.",
+     "effect": {
+      "text": "\"Use the Farce!\" shouts the old man, unhelpfully.",
+      "fight": "rebuff_elite",
+      "afterWin": {
+       "text": "The black ship spins away into the dark. The tall man will be back; they always are. The old man has gone, leaving only his dressing gown, and under it, something he wanted you to have.",
+       "augment": "random",
+       "scrap": 40,
+       "endThread": "farce"
+      }
+     }
+    },
+    {
+     "text": "\"Is he your father?\"",
+     "effect": {
+      "text": "A terrible silence. \"...No,\" says the tall man. \"Why does everyone ask that?\" He's so put out he leaves. The old man refunds his lessons out of his own pocket, then yours.",
+      "scrap": 20,
+      "endThread": "farce"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "farce",
+   "step": 2
+  },
+  {
+   "id": "fm_bold_0",
+   "title": "A very clean starship",
+   "text": "A large, spotless ship glides alongside. Its captain appears on your screen in a tight jumper, lit from below. \"Captain... of the starship... Enterprising. We come... in peace.\" He pauses in places no sentence needs. Behind him, a man with pointed ears raises one eyebrow.",
+   "choices": [
+    {
+     "text": "Invite them aboard.",
+     "effect": {
+      "text": "Five of them beam over. Four are senior officers. The fifth is a nervous lad in a red jumper called Jenkins, who keeps saying it's his first mission.",
+      "thread": {
+       "id": "bold",
+       "name": "An away team from the Enterprising"
+      }
+     }
+    },
+    {
+     "text": "Raise an eyebrow back.",
+     "effect": {
+      "text": "The pointed-eared one is impressed. \"Fascinating.\" They beam over anyway, with a lad in a red jumper who looks worried.",
+      "thread": {
+       "id": "bold",
+       "name": "An away team from the Enterprising"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "bold"
+  },
+  {
+   "id": "fm_bold_1",
+   "title": "The away team",
+   "text": "There's a strange noise from the cargo hold. The captain in the tight jumper sends Jenkins to look. \"On my own, sir?\" \"On... your own.\" Everyone watches the lad in the red jumper walk down the corridor. The doctor shakes his head. \"He's a goner, Jim.\"",
+   "choices": [
+    {
+     "text": "Go with Jenkins.",
+     "effect": {
+      "text": "It's nothing: a loose crate. Jenkins is so relieved he hugs you. The captain is astonished. \"He came... back?\" It has never happened before. Jenkins asks if you're hiring.",
+      "crew": "human",
+      "endThread": "bold"
+     }
+    },
+    {
+     "text": "Let events take their course.",
+     "effect": {
+      "text": "A crash, a yelp. The doctor goes to look. \"He's fine. He tripped. I'm a doctor, not a... actually this is exactly my job.\" They leave you a gift for your trouble, and Jenkins, limping, leaves with them.",
+      "weapon": "random",
+      "endThread": "bold"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "bold",
+   "step": 1
+  },
+  {
+   "id": "fm_lodger_0",
+   "title": "Something in the vents",
+   "text": "A derelict mining ship. Its last log entry is one word: \"Vents.\" You take some salvage. Back aboard, {crew} mentions an odd stain on the ceiling, and that something has eaten through the mess-room table. From above. In a neat line.",
+   "choices": [
+    {
+     "text": "Check the vents.",
+     "effect": {
+      "text": "Nothing. Just a long, wet, banana-shaped hole where the grating used to be. You've got a lodger.",
+      "scrap": 25,
+      "thread": {
+       "id": "lodger",
+       "name": "Something in the vents"
+      }
+     }
+    },
+    {
+     "text": "Don't check the vents.",
+     "effect": {
+      "text": "Wise. But it knows you're not checking.",
+      "scrap": 25,
+      "thread": {
+       "id": "lodger",
+       "name": "Something in the vents"
+      }
+     }
+    }
+   ],
+   "art": "wreck",
+   "starts": "lodger"
+  },
+  {
+   "id": "fm_lodger_1",
+   "title": "The lodger",
+   "text": "The motion tracker is beeping. Seven metres. Six. {crew} is holding a flamethrower made from a hairdryer. Five metres. Four. \"That can't be right,\" says {crew}. \"That's inside the room.\" Everyone looks up.",
+   "choices": [
+    {
+     "text": "Open the airlock and hold on to something.",
+     "chance": 0.6,
+     "success": {
+      "text": "A long black shape goes past you, screeching, and out into the dark. You shut the door. Nobody speaks for an hour. Then somebody says, \"Did it have a little mouth inside its mouth?\"",
+      "endThread": "lodger",
+      "crewHeal": 10,
+      "scrap": 20
+     },
+     "fail": {
+      "text": "It doesn't go. You do, nearly. It's made a nest in the reactor housing, and it's cross.",
+      "hull": -4,
+      "crewHurt": 12
+     }
+    },
+    {
+     "text": "Leave out a saucer of milk.",
+     "effect": {
+      "text": "The beeping stops. In the morning the saucer is clean, and has been melted. But there's been no trouble since, and no weevils either.",
+      "food": -1,
+      "endThread": "lodger"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "lodger",
+   "step": 1
+  },
+  {
+   "id": "fm_park_0",
+   "title": "Cretaceous Gardens",
+   "text": "A jungle moon with a gate the size of a cathedral. A twinkly old man in white meets you with a cane topped with a lump of amber. \"Welcome to Cretaceous Gardens! We've spared no expense!\" A thin man in black leather mutters that life, er, finds a way.",
+   "choices": [
+    {
+     "text": "Take the tour.",
+     "effect": {
+      "text": "The tour cars stop by an enclosure. Nothing happens. Then the cup of tea on the dashboard starts to ripple. Then the power goes off.",
+      "thread": {
+       "id": "park",
+       "name": "A day out at Cretaceous Gardens"
+      }
+     }
+    },
+    {
+     "text": "Ask about the fences.",
+     "effect": {
+      "text": "\"Ten thousand volts!\" says the old man. \"Run by a single underpaid programmer!\" The lights flicker. The programmer is seen leaving with a can of shaving foam.",
+      "thread": {
+       "id": "park",
+       "name": "A day out at Cretaceous Gardens"
+      }
+     }
+    }
+   ],
+   "art": "planet",
+   "starts": "park"
+  },
+  {
+   "id": "fm_park_1",
+   "title": "Cretaceous Gardens",
+   "text": "It's out. It's enormous, it's got far too many teeth, and it's standing right in front of your landing party. \"Don't move,\" whispers the expert. \"Its vision is based on movement.\" {crew} needs a wee.",
+   "choices": [
+    {
+     "text": "Nobody move.",
+     "chance": 0.5,
+     "success": {
+      "text": "It sniffs you, loses interest, and eats a lawyer off a toilet. You walk, very calmly, back to the ship. The old man gives you a full refund and a bag of merchandise.",
+      "scrap": 45,
+      "endThread": "park"
+     },
+     "fail": {
+      "text": "{crew} sneezes. Everyone runs. Most of you make it, minus some dignity and a boot.",
+      "crewHurt": 15,
+      "scrap": 20,
+      "endThread": "park"
+     }
+    },
+    {
+     "text": "Distract it with a flare and leg it.",
+     "effect": {
+      "text": "It follows the flare. You follow the exit signs. Behind you, the old man is saying they'll have this sorted by opening day.",
+      "missiles": -1,
+      "weapon": "random",
+      "endThread": "park"
+     }
+    }
+   ],
+   "art": "planet",
+   "thread": "park",
+   "step": 1
+  },
+  {
+   "id": "fm_liner_0",
+   "title": "The unsinkable",
+   "text": "The largest liner ever built slides past, lit like a birthday cake: the RSS Unsinkable, on her maiden voyage. A steward hails you. \"We've had a slight bump. Nothing to worry about. Have you any lifeboats? We only brought the twenty.\"",
+   "choices": [
+    {
+     "text": "Go and help.",
+     "effect": {
+      "text": "On the top deck a young man is holding a young woman at the very front of the ship, arms out. \"I'm flying!\" she says. \"You're in the way,\" says the lookout.",
+      "thread": {
+       "id": "liner",
+       "name": "Helping the RSS Unsinkable"
+      }
+     }
+    },
+    {
+     "text": "Ask what they bumped.",
+     "effect": {
+      "text": "\"Ice comet. Whacking great one. Came out of nowhere, apart from the six warnings.\" The band has started playing. They say it's to keep spirits up.",
+      "thread": {
+       "id": "liner",
+       "name": "Helping the RSS Unsinkable"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "liner"
+  },
+  {
+   "id": "fm_liner_1",
+   "title": "The Unsinkable",
+   "text": "You've taken off four hundred passengers. The last two are in the water, as it were: she's on a floating door and he's holding on to the side. \"There isn't room,\" she says. Everyone on your ship is looking at the door. There's room.",
+   "choices": [
+    {
+     "text": "\"There's room. Budge up.\"",
+     "effect": {
+      "text": "She budges up. They both live. It's much less romantic and everybody prefers it. The shipping line pays you a salvage fee and asks you not to mention the lifeboats.",
+      "scrap": 70,
+      "crewHeal": 10,
+      "endThread": "liner"
+     }
+    },
+    {
+     "text": "Take them both aboard and keep the door.",
+     "effect": {
+      "text": "It's a very nice door. Solid oak. It's on your mess room now. The band, who never stopped, play you out.",
+      "scrap": 40,
+      "hull": 3,
+      "endThread": "liner"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "liner",
+   "step": 1
+  },
+  {
+   "id": "fm_agent_0",
+   "title": "A man in a dinner jacket",
+   "text": "A sleek silver ship. Its pilot is wearing a dinner jacket, in space, and holding a cocktail. \"The name's Fond. James Fond. Agent 0.07, Commonwealth Secret Service: licence to mildly inconvenience.\" He needs a lift. His own ship has just been blown up. \"They usually are.\"",
+   "choices": [
+    {
+     "text": "Give him a lift.",
+     "effect": {
+      "text": "He orders a martini, \"shaken, not stirred.\" You have tea. \"Then a tea. Stirred. Not shaken.\" He's being followed by a man with metal teeth.",
+      "thread": {
+       "id": "agent",
+       "name": "Agent 0.07 is aboard"
+      }
+     }
+    },
+    {
+     "text": "Ask to see some ID.",
+     "effect": {
+      "text": "He shows you a card. It says SECRET AGENT in gold letters. \"It's not a very secret service,\" he admits.",
+      "thread": {
+       "id": "agent",
+       "name": "Agent 0.07 is aboard"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "agent"
+  },
+  {
+   "id": "fm_agent_1",
+   "title": "Agent 0.07",
+   "text": "Fond has brought gadgets. A pen that's a laser. A watch that's a saw. A car that's a submarine, which is no use to anyone out here. He's also had an elderly man called P fit your ship with \"a few modifications. Do try to bring it back in one piece.\"",
+   "choices": [
+    {
+     "text": "Press the red button.",
+     "effect": {
+      "text": "An ejector seat fires {crew} into the corridor ceiling. But the other button was better.",
+      "crewHurt": 6,
+      "upgrade": "random"
+     }
+    },
+    {
+     "text": "Don't press anything.",
+     "effect": {
+      "text": "\"Wise,\" says P. \"Nobody ever doesn't press anything.\" He leaves you the pen.",
+      "weapon": "random"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "agent",
+   "step": 1
+  },
+  {
+   "id": "fm_agent_2",
+   "title": "Agent 0.07",
+   "text": "A hollowed-out volcano. A bald man in a grey suit strokes a white cat and swivels to face you. \"Ah, Mr Fond. I've been expecting you.\" He explains his entire plan. It takes twenty minutes and there are slides. Then he leaves you all to die slowly, unattended.",
+   "choices": [
+    {
+     "text": "Escape while he isn't watching.",
+     "effect": {
+      "text": "\"They never watch,\" says Fond, undoing his ropes with the watch. The volcano blows up behind you. He straightens his tie. \"Shocking.\"",
+      "scrap": 60,
+      "augment": "random",
+      "endThread": "agent"
+     }
+    },
+    {
+     "text": "Ask for a copy of the slides.",
+     "effect": {
+      "text": "He's so pleased somebody was listening that he lets you go, and emails the deck. Fond is furious. The plan, it turns out, had some good ideas for your reactor.",
+      "upgrade": "random",
+      "scrap": 20,
+      "endThread": "agent"
+     }
+    }
+   ],
+   "art": "planet",
+   "thread": "agent",
+   "step": 2
+  },
+  {
+   "id": "fm_sim_0",
+   "title": "A glitch",
+   "text": "The same black cat walks past the bridge door twice. A man in a long leather coat and tiny sunglasses is suddenly in your chair. \"What if I told you,\" he says, \"that none of this is real? The ship. The Fleet. The tea.\" He holds out two biscuits: one red, one blue.",
+   "choices": [
+    {
+     "text": "Take the red biscuit.",
+     "effect": {
+      "text": "It's a jammy one. For a moment everything turns to green numbers, falling. Then it's a ship again, but you can't unsee it. \"Welcome,\" he says, \"to the real world.\"",
+      "thread": {
+       "id": "sim",
+       "name": "You have seen the green numbers"
+      }
+     }
+    },
+    {
+     "text": "Take the blue biscuit.",
+     "effect": {
+      "text": "It's a plain one. You wake up in your bunk, believing whatever you want to believe. But the cat walks past twice again.",
+      "thread": {
+       "id": "sim",
+       "name": "You have seen the green numbers"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "sim"
+  },
+  {
+   "id": "fm_sim_1",
+   "title": "The green numbers",
+   "text": "A Mandate ship opens fire. Time slows. You can see the shots coming, one at a time, trailing ripples. The man in the coat is beside you. \"Don't think you can dodge them. Know you can.\" {crew} leans back at an angle no spine was built for.",
+   "choices": [
+    {
+     "text": "Dodge.",
+     "effect": {
+      "text": "You dodge. Every one. {crew} will need a chiropractor, but still.",
+      "fight": "rebuff_fighter",
+      "afterWin": {
+       "text": "\"He's beginning to believe,\" says the man in the coat, and vanishes down a telephone. You find you know a great deal about your own engines that you didn't before.",
+       "upgrade": "engines",
+       "scrap": 30,
+       "endThread": "sim"
+      }
+     }
+    },
+    {
+     "text": "\"There is no ship.\"",
+     "effect": {
+      "text": "\"Then you'll see it is not the ship that bends,\" says a small bald child who wasn't there a moment ago, \"it is only yourself.\" The Mandate ship, confused by all this, leaves. So does the child, with your spoon.",
+      "fleetPush": -0.06,
+      "endThread": "sim"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "sim",
+   "step": 1
+  },
+  {
+   "id": "fm_time_0",
+   "title": "A silver ship",
+   "text": "A silver ship with doors that open upwards skids out of nowhere, covered in frost, trailing two lines of fire. A wild-haired old man in a lab coat leans out. \"Great Scott! What year is this? Never mind! I need one point two one jiggawatts, and I need them by ten-oh-four!\"",
+   "choices": [
+    {
+     "text": "Offer him your reactor.",
+     "effect": {
+      "text": "\"A reactor! Of course! In my day all we had was lightning!\" He plugs something in. Every clock on your ship now says a different time, and they're all right.",
+      "thread": {
+       "id": "time",
+       "name": "Lending power to a time machine"
+      }
+     }
+    },
+    {
+     "text": "Ask what a jiggawatt is.",
+     "effect": {
+      "text": "\"It's like a gigawatt, but said wrong for forty years.\" A teenager in a red body-warmer climbs out. \"Doc, this is heavy.\"",
+      "thread": {
+       "id": "time",
+       "name": "Lending power to a time machine"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "time"
+  },
+  {
+   "id": "fm_time_1",
+   "title": "The time machine",
+   "text": "The silver ship needs to hit exactly eighty-eight to get home, and it needs a run-up, and your ship is the tow. \"When this baby hits eighty-eight,\" says the old man, \"you're going to see some serious stuff.\"",
+   "choices": [
+    {
+     "text": "Tow them up to eighty-eight.",
+     "chance": 0.65,
+     "success": {
+      "text": "Two lines of fire, and they're gone. A moment later a courier in old-fashioned uniform knocks on your airlock with a letter that's been waiting for you for seventy years. It has money in.",
+      "scrap": 65,
+      "endThread": "time"
+     },
+     "fail": {
+      "text": "You hit eighty-seven. They go back, but only to last Tuesday, and they're cross about it. You've lost some fuel and gained a newspaper with next week's cricket scores.",
+      "fuel": -2,
+      "scrap": 30,
+      "endThread": "time"
+     }
+    },
+    {
+     "text": "Ask to borrow it first.",
+     "effect": {
+      "text": "\"Absolutely not. The consequences could be disastrous.\" He thinks. \"...One go.\" You come back three seconds later with a tan, a parrot, and no memory of why.",
+      "crewHeal": 20,
+      "augment": "random",
+      "endThread": "time"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "time",
+   "step": 1
+  },
+  {
+   "id": "fm_wiz_0",
+   "title": "An owl",
+   "text": "An owl flies in through the airlock, which shouldn't be possible, and drops a letter on your head. It's addressed in green ink to \"The Captain, The Bridge, The Ship.\" It says {crew} has been accepted at Hogwash Academy of Wizardry, term starts Monday, and to bring a cauldron.",
+   "choices": [
+    {
+     "text": "Let {crew} go for a term.",
+     "effect": {
+      "text": "A flying bus collects them. They're back by teatime, somehow a year older, wearing a pointy hat, and insisting on being called by a house name.",
+      "thread": {
+       "id": "wiz",
+       "name": "A wizard on the crew"
+      }
+     }
+    },
+    {
+     "text": "Write back: \"We're in space.\"",
+     "effect": {
+      "text": "The reply comes by a bigger owl. \"So are we.\" Lessons will be by correspondence. The cauldron arrives separately.",
+      "thread": {
+       "id": "wiz",
+       "name": "A wizard on the crew"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "wiz"
+  },
+  {
+   "id": "fm_wiz_1",
+   "title": "The wizard",
+   "text": "{crew} has been practising. They wave a stick at the broken reactor and shout something in bad Latin. It's leviosa, apparently, not leviosar.",
+   "choices": [
+    {
+     "text": "Stand well back.",
+     "chance": 0.6,
+     "success": {
+      "text": "The reactor mends itself, hums, and lifts six inches off the floor. \"Ten points,\" says {crew}, to nobody.",
+      "upgrade": "random",
+      "endThread": "wiz"
+     },
+     "fail": {
+      "text": "The reactor turns into a very large, very surprised toad. It turns back after an hour, but it's never been quite the same, and nor has the smell.",
+      "damageSystem": "random",
+      "scrap": 25,
+      "endThread": "wiz"
+     }
+    },
+    {
+     "text": "Confiscate the stick.",
+     "effect": {
+      "text": "It bites you. But the Academy sends a sternly worded owl and a refund of the fees you never paid.",
+      "scrap": 30,
+      "crewHurt": 3,
+      "endThread": "wiz"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "wiz",
+   "step": 1
+  },
+  {
+   "id": "fm_ring_0",
+   "title": "A lift to a volcano",
+   "text": "Nine travellers at the beacon, with packs. A very small one with very hairy feet steps forward, holding something on a chain as if it weighed a ton. \"We need to get to a volcano. It's a long way, it's guarded by an enormous flaming eye, and we'd been planning to walk.\"",
+   "choices": [
+    {
+     "text": "\"Hop in. Where's the volcano?\"",
+     "effect": {
+      "text": "A grey-bearded one with a staff looks stricken. \"We could have flown? The whole time?\" Nobody speaks to him for the rest of the trip. The small ones ask when second breakfast is.",
+      "food": -2,
+      "thread": {
+       "id": "ring",
+       "name": "Nine passengers and a ring"
+      }
+     }
+    },
+    {
+     "text": "Ask to see the ring.",
+     "effect": {
+      "text": "\"No,\" say nine voices at once. The small one puts it away. A thin, pale thing in the luggage whispers that it's his precious. They're all coming aboard.",
+      "thread": {
+       "id": "ring",
+       "name": "Nine passengers and a ring"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "ring"
+  },
+  {
+   "id": "fm_ring_1",
+   "title": "The ring",
+   "text": "The volcano. From orbit it takes about four minutes. The small one stands at the open airlock, holding the ring over the fire. He hesitates. \"It's mine,\" he says, in a new and nasty voice. Everyone groans. The pale thing from the luggage bites his finger.",
+   "choices": [
+    {
+     "text": "Give the pale thing a shove.",
+     "effect": {
+      "text": "Ring, finger and pale thing go into the volcano together. The enormous flaming eye goes out like a pilot light. The walk, they tell you, would have taken three books. They knight you.",
+      "scrap": 70,
+      "augment": "random",
+      "endThread": "ring"
+     }
+    },
+    {
+     "text": "\"Shall I do it?\"",
+     "effect": {
+      "text": "You take the ring. It whispers that you could rule the galaxy. You think about the paperwork, and drop it in. The grey-bearded one says you have shown uncommon wisdom. You were mostly thinking about lunch.",
+      "scrap": 50,
+      "crewHeal": 20,
+      "endThread": "ring"
+     }
+    }
+   ],
+   "art": "planet",
+   "thread": "ring",
+   "step": 1
+  },
+  {
+   "id": "fm_shark_0",
+   "title": "A fin",
+   "text": "Something is circling the beacon. All you can see is a fin, cutting through the dust, and all you can hear, somehow, is two low notes on a cello, over and over, getting faster. A harbourmaster in a nice blazer insists the beacon stays open. \"It's the bank holiday weekend.\"",
+   "choices": [
+    {
+     "text": "Go and have a look.",
+     "effect": {
+      "text": "You go and have a look. It surfaces beside you, and keeps surfacing. {crew} backs slowly away from the window. \"You're going to need a bigger ship.\"",
+      "thread": {
+       "id": "shark",
+       "name": "Hunting the thing with the fin"
+      }
+     }
+    },
+    {
+     "text": "Close the beacon yourself.",
+     "effect": {
+      "text": "The harbourmaster is furious. The thing with the fin doesn't care about harbourmasters. It's following you now.",
+      "thread": {
+       "id": "shark",
+       "name": "Hunting the thing with the fin"
+      }
+     }
+    }
+   ],
+   "art": "creature",
+   "starts": "shark"
+  },
+  {
+   "id": "fm_shark_1",
+   "title": "The fin",
+   "text": "You've hired a grizzled old space-fisherman who scrapes his nails down your hull to get attention and has a long story about a ship that went down. He sings sea shanties. The thing has eaten his boat, his barrels, and most of the story.",
+   "choices": [
+    {
+     "text": "Shove a fuel tank in its mouth and shoot the tank.",
+     "effect": {
+      "text": "\"Smile, you son of a...\" The explosion is visible from the next sector. It rains fish for an hour. The harbourmaster reopens the beacon and takes the credit.",
+      "scrap": 60,
+      "food": 4,
+      "endThread": "shark"
+     },
+     "cost": {
+      "fuel": 1,
+      "missiles": 1
+     },
+     "req": {
+      "fuel": 1,
+      "missiles": 1
+     }
+    },
+    {
+     "text": "Throw it your leftovers and leave.",
+     "effect": {
+      "text": "It likes the leftovers. It follows you for a while, like a dog, then peels off. The two cello notes fade. The fisherman calls you a coward and asks for a lift.",
+      "food": -2,
+      "crew": "human",
+      "endThread": "shark"
+     }
+    }
+   ],
+   "art": "creature",
+   "thread": "shark",
+   "step": 1
+  },
+  {
+   "id": "fm_bust_0",
+   "title": "Who you gonna hail",
+   "text": "A converted ambulance with a siren that goes WOOOWOOOP pulls up. Four people in boiler suits with vacuum cleaners on their backs climb out. \"We got a report of a free-floating, full-torso apparition on this ship. Has anyone aboard been slimed?\"",
+   "choices": [
+    {
+     "text": "\"...A bit.\"",
+     "effect": {
+      "text": "\"He slimed me,\" confirms {crew}. They unpack a small box with a pedal. \"Whatever you do,\" says the one with glasses, \"don't cross the beams.\"",
+      "thread": {
+       "id": "bust",
+       "name": "Paranormal investigators aboard"
+      }
+     }
+    },
+    {
+     "text": "\"There's no ghost here.\"",
+     "effect": {
+      "text": "\"That's what they all say. Then the fridge starts talking.\" They set up in the mess. Their fee is a hundred scrap. You'll talk about that later.",
+      "thread": {
+       "id": "bust",
+       "name": "Paranormal investigators aboard"
+      }
+     }
+    }
+   ],
+   "art": "ship",
+   "starts": "bust"
+  },
+  {
+   "id": "fm_bust_1",
+   "title": "The investigators",
+   "text": "They've found it: a small, green, floating thing eating everything in your pantry. Four beams of light lash round the mess, knocking over the table, the chairs, and {crew}. \"I'm crossing the beams!\" \"DON'T cross the beams!\"",
+   "choices": [
+    {
+     "text": "Duck.",
+     "chance": 0.6,
+     "success": {
+      "text": "The green thing goes into the box with a noise like a sink emptying. \"We came, we saw, we kicked its ectoplasm.\" They waive the fee in exchange for the pantry, which they say is evidence.",
+      "food": -2,
+      "scrap": 30,
+      "endThread": "bust"
+     },
+     "fail": {
+      "text": "They cross the beams. When the smoke clears there's no ghost, no table, and a hole. \"That's extra,\" says the tall one.",
+      "hull": -3,
+      "scrap": -10,
+      "endThread": "bust"
+     }
+    },
+    {
+     "text": "Adopt the green thing.",
+     "effect": {
+      "text": "\"You want to KEEP it?\" It's already asleep in the bread bin. They leave, shaking their heads, and send you a T-shirt.",
+      "crewHeal": 12,
+      "endThread": "bust"
+     }
+    }
+   ],
+   "art": "ship",
+   "thread": "bust",
+   "step": 1
+  },
+  {
+   "id": "fm_throne_0",
+   "title": "A very uncomfortable chair",
+   "text": "A cold little station with a chair in the middle of it made entirely of melted-down cutlasses. Seven families in furs are glaring at each other across it. A herald unrolls a scroll. \"You stand before the Chair of Blades. Winter is coming.\" \"It's been coming for nine years,\" mutters someone at the back.",
+   "choices": [
+    {
+     "text": "Sit in the chair, for a laugh.",
+     "effect": {
+      "text": "The room goes silent. Seven families draw swords. A small man with a glass of wine starts to laugh. \"Oh, I like this one. Don't kill them. Not till the wedding.\"",
+      "thread": {
+       "id": "throne",
+       "name": "A claim to the Chair of Blades"
+      }
+     }
+    },
+    {
+     "text": "Back out slowly.",
+     "effect": {
+      "text": "\"A courier,\" says a woman with silver hair and three lizards. \"Couriers go everywhere. Couriers know things.\" You know nothing. A sad young man in black says he knows the feeling.",
+      "thread": {
+       "id": "throne",
+       "name": "A claim to the Chair of Blades"
+      }
+     }
+    }
+   ],
+   "art": "station",
+   "starts": "throne"
+  },
+  {
+   "id": "fm_throne_1",
+   "title": "The Chair of Blades",
+   "text": "You've been invited to a wedding. Everyone has warned you not to go to the wedding. The band is playing something ominous and the doors have just been locked from the outside. The small man with the wine catches your eye and nods, very slightly, at a window.",
+   "choices": [
+    {
+     "text": "Leave by the window. Now.",
+     "effect": {
+      "text": "You drop into the moat as the screaming starts. The small man is already in a rowing boat. \"I drink and I know things,\" he says, and pays his fare in gold.",
+      "scrap": 65,
+      "endThread": "throne"
+     }
+    },
+    {
+     "text": "Stay for the cake.",
+     "effect": {
+      "text": "It's very good cake. You eat it under the table while the families settle their differences. When it goes quiet, you're the only one left, and technically that makes it your chair. You sell it for scrap.",
+      "scrap": 45,
+      "food": 2,
+      "crewHurt": 8,
+      "endThread": "throne"
+     }
+    }
+   ],
+   "art": "station",
+   "thread": "throne",
+   "step": 1
+  },
+  {
+   "id": "fm_x_lodger_cat",
+   "title": "The cat and the lodger",
+   "text": "The cat and the thing in the vents have met. There was a hiss, then a much worse hiss, then a silence. You find them at opposite ends of the corridor, staring. Neither blinks. The thing has a little mouth inside its mouth. The cat is unimpressed.",
+   "choices": [
+    {
+     "text": "Back the cat.",
+     "effect": {
+      "text": "It takes six hours. The thing in the vents breaks first, and leaves by the airlock under its own power, looking back once. The cat washes a paw. You've never been prouder of anything.",
+      "endThread": "lodger",
+      "crewHeal": 15,
+      "scrap": 20
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "lodger",
+    "cat"
+   ]
+  },
+  {
+   "id": "fm_x_bust_ghost",
+   "title": "The investigators and the Captain",
+   "text": "\"We've got a class five full-roaming vapour on the bridge!\" The four of them burst in with their vacuum cleaners. The chair turns to face them. \"Get those things off my deck,\" says Captain Marr, \"and take your boots off.\" They take their boots off.",
+   "choices": [
+    {
+     "text": "Vouch for the Captain.",
+     "effect": {
+      "text": "\"He's crew.\" They put the box away. The one with glasses spends the night interviewing him and leaves with forty pages and a new respect for naval discipline. Marr says they're \"not bad, for civilians.\"",
+      "scrap": 30,
+      "crewHeal": 8
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "bust",
+    "ghost"
+   ]
+  },
+  {
+   "id": "fm_x_agent_celeb",
+   "title": "Fond and Gloria",
+   "text": "James Fond has met Gloria Pike. He raises an eyebrow. She raises hers higher. \"Fond. James Fond.\" \"I know who you are, darling. I sang the theme.\" She did. She sings it again, with the big note at the end. Somewhere, a title sequence starts.",
+   "choices": [
+    {
+     "text": "Let them have dinner.",
+     "effect": {
+      "text": "It goes on till four. Nobody will say what happened, but in the morning Fond is wearing her sunglasses and she has his watch. They both tip the ship.",
+      "scrap": 50
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "agent",
+    "celeb"
+   ]
+  },
+  {
+   "id": "fm_x_farce_hat",
+   "title": "The Farce and the hat",
+   "text": "The old man in the dressing gown is staring at the hat. \"I sense a great disturbance. It rhymes.\" The hat turns to face him. \"A wizard, is it? Old and wise / with dressing gown and rheumy eyes.\" \"I'm not a wizard,\" says the old man. \"I'm more of a consultant.\"",
+   "choices": [
+    {
+     "text": "Let them have it out.",
+     "effect": {
+      "text": "They duel: one with hand-waving, one with couplets. It's a draw. They've agreed to write a musical. You get ten per cent.",
+      "scrap": 35,
+      "crewHeal": 8
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "farce",
+    "hat"
+   ]
+  },
+  {
+   "id": "fm_x_ring_gnome",
+   "title": "The ring and the gnome",
+   "text": "The small one with the hairy feet has found the gnome. \"He looks like my Uncle Dudo,\" he says, and sits down next to it. He tells it the whole story. It takes all night. In the morning the ring, which nobody could take off him, is hanging from the gnome's fishing rod.",
+   "choices": [
+    {
+     "text": "Say nothing. Let the gnome carry it.",
+     "effect": {
+      "text": "The gnome carries it all the way to the volcano without once being tempted, because it's a gnome. The grey-bearded one says it's the bravest thing he's ever seen. The gnome's smile doesn't change.",
+      "scrap": 40,
+      "crewHeal": 10
+     }
+    }
+   ],
+   "art": "ship",
+   "threads": [
+    "ring",
+    "gnome"
+   ]
+  }
+ ]
+}

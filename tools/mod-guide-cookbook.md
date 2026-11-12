@@ -119,3 +119,23 @@ When the player pastes back the game's warnings, fix exactly what each one says 
 - *"is questOnly, but nothing in this mod leads to it"*: an unreachable event.
 - *"much stronger than any base gun"* or *"outside the usual"*: a balance warning. Bring the numbers back into range.
 
+
+### Recipe: a loose end (a story that comes back)
+
+A loose end is picked up in one event and comes back at later beacons, a step at a time. Mark the events with these extra fields (they are never drawn at random; the game brings them up when it's their turn):
+
+- `"starts": "parrot"` — this event can begin the loose end called `parrot`. One of its choices must pick it up with the effect `"thread": { "id": "parrot", "name": "A parrot that knows too much" }`.
+- `"thread": "parrot", "step": 1` — the first beat after that; then `"step": 2`, and so on. Beats come in order, at least two jumps apart.
+- End it in the last beat with the effect `"endThread": "parrot"`.
+- `"threads": ["parrot", "cat"]` — a crossover, only possible while both are loose (`cat` is one of the game's own; others are `hat`, `debt`, `flu`, `crate`, `celeb`, `gnome`, `insp`, `weev`, `ghost`).
+- `"aside": true, "thread": "parrot", "into": "pyrate"` — not a beacon: its single choice is added to other events while the loose end is active. `into` is `pay`, `fight`, `gamble`, `distress`, `pyrate`, `mandate` or `any`. Give it `"text": ""` and one choice.
+
+```json
+{ "name": "The Parrot", "events": [
+  { "id": "par_0", "title": "A parrot", "starts": "parrot", "text": "A parrot lands on the console and says the launch codes. Then it says them again.",
+    "choices": [ { "text": "Keep it.", "effect": { "text": "It settles on {crew}'s shoulder.", "thread": { "id": "parrot", "name": "A parrot that knows too much" } } } ] },
+  { "id": "par_1", "title": "The parrot", "thread": "parrot", "step": 1, "text": "A Mandate officer wants the parrot. Badly.",
+    "choices": [ { "text": "Hand it over.", "effect": { "text": "It bites him. He pays you to take it back.", "scrap": 30, "endThread": "parrot" } } ] },
+  { "id": "par_a", "aside": true, "thread": "parrot", "into": "pay", "text": "",
+    "choices": [ { "text": "Let the parrot haggle.", "effect": { "text": "It says something unrepeatable. You get a discount.", "scrap": 15 } } ] } ] }
+```

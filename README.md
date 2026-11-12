@@ -633,6 +633,10 @@ Mandate alert levels (opened by winning at your highest level on Normal or Hard)
 
 - **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of 19. 25 scrap and 20 captain xp each, plus 40 scrap for all three. Not in dailies, the Cup, challenges or multiplayer.
 
+- **Ship classes** (hangar → ⚙): every ship has a mastery level (1 to 20) and every weapon a gunnery level (1 to 10). Build up to five custom starting loadouts per ship (weapons, drones, augments and 16 kinds of fitting) on a points budget. A progress report after each voyage shows what you earned.
+
+- **Loose ends**: stories that carry on across beacons, cross over with each other and interrupt ordinary events. 10 in the game, plus the Telly Night and Blockbuster Night story packs in the Mods library.
+
 - **The regulars**: Pip Tanner, Captain Reg Bilge and Mrs Pembury turn up across your voyages (five meetings each, at most one each per run) and remember how you treated them.
 
 - **The radio** (Settings → Audio, or 📻 in the pause menu): the adaptive soundtrack, or Radio Commonwealth, Pyrate FM and Mandate Broadcasting, with presenters between tunes (captions, plus an optional British voice).
