@@ -1,6 +1,6 @@
 {
   "name": "The Ghost Fleet",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "gf_wail", "name": "Wailing Beam", "type": "beam", "damage": 1, "rooms": 2, "charge": 15, "power": 2, "cost": 60, "tier": 2, "crewDamage": 15, "desc": "Taken from a ghost ship. It screams when it fires." }

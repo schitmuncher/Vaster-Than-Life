@@ -1,6 +1,6 @@
 {
   "name": "Cosmic Wonders",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "augments": [
     { "id": "cw_starseed", "name": "Starseed Crystal", "cost": 65, "desc": "A seed of living starlight. Shields recharge 10% faster and your crew slowly heal anywhere.", "fx": { "shield": 0.1, "heal": 0.3 } },

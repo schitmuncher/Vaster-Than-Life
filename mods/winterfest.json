@@ -1,6 +1,6 @@
 {
   "name": "Winterfest",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "wf_snowball", "name": "Snowball Launcher", "type": "ion", "damage": 1, "shots": 2, "charge": 14, "power": 1, "cost": 40, "tier": 1, "desc": "Fires balls of frozen coolant. Locks systems up, hurts nobody's feelings." },

@@ -1,6 +1,6 @@
 {
   "name": "Challenge Pack",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "challenges": [
     { "id": "cp_stone_wall", "name": "Stone Wall", "tier": 1, "ship": "stone", "goal": { "sector": 4 },

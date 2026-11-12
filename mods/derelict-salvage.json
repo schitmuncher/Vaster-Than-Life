@@ -1,6 +1,6 @@
 {
   "name": "Derelict Salvage",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "augments": [
     { "id": "ds_magnet", "name": "Salvage Magnet", "cost": 55, "desc": "Pulls in loose debris after every fight: 20% more scrap.", "fx": { "scrap": 0.2 } },

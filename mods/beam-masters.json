@@ -1,6 +1,6 @@
 {
   "name": "Beam Masters",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "bm_scalpel", "name": "Scalpel Beam", "type": "beam", "damage": 1, "rooms": 1, "charge": 9, "power": 1, "cost": 40, "tier": 1, "desc": "A short, precise cut that recharges fast." },

@@ -1,6 +1,6 @@
 {
   "name": "Mullock Mysteries",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "augments": [
     { "id": "sm_eye", "name": "Third Eye Lens", "cost": 55, "desc": "See the shot before it lands: +7% evasion.", "fx": { "evade": 7 } }

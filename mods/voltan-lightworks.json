@@ -1,6 +1,6 @@
 {
   "name": "Thrumm Lightworks",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "vl_arc", "name": "Arc Thrower", "type": "ion", "damage": 1, "shots": 3, "charge": 14, "power": 2, "cost": 70, "tier": 3, "desc": "Three crackling arcs. Strips shields and locks systems." },

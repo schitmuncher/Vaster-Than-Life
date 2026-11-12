@@ -1,6 +1,6 @@
 {
   "name": "Exotic Hulls",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "ships": [
     { "id": "xh_lance", "name": "The Long Lance", "cls": "Beam Frigate", "layout": "A", "desc": "Two beams and a long reach. Knock the shields down and carve.", "hull": 26, "reactor": 9, "color": "#ff6a9a", "pattern": "TBAAN",

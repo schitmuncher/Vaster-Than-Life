@@ -1,6 +1,6 @@
 {
   "name": "Engineering Corps",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "augments": [
     { "id": "ec_capacitors", "name": "Overclocked Capacitors", "cost": 70, "desc": "Weapons charge 15% faster.", "fx": { "charge": 0.15 } },

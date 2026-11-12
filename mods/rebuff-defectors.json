@@ -1,6 +1,6 @@
 {
   "name": "Mandate Defectors",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "ships": [
     { "id": "rd_turncoat", "name": "The Turncoat", "cls": "Mandate Defector", "layout": "A", "desc": "A stolen Mandate patrol cutter. Tough hull, ion cannon, and a crew with a lot to prove.", "hull": 32, "reactor": 8, "color": "#ff6a6a", "pattern": "TABAN",

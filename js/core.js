@@ -24,6 +24,14 @@ const SAVE_KEY = 'vtl2.save', MOD_KEY = 'vtl.mods', PROFILE_KEY = 'vtl2.profile'
 const PROFILE = Object.assign({ ach:{}, maxSector:1, kills:0, wins:{}, runs:0 }, LS.get(PROFILE_KEY, {}));
 PROFILE.settings = Object.assign({ music:.5, sfx:.7, difficulty:(PROFILE.runs||0)===0 ? 'easy' : 'normal', hints:true, unlockAll:false, allowScripts:false, holotable:true, smartPause:true }, PROFILE.settings||{});
 const SET = PROFILE.settings;
+/* saves from before the renames (v72) still say Rebuff, Fedoration and so on in their history, logs and sagas:
+   bring the words up to date, once. Drawings and mods are left alone. */
+function renameOld(v){ if(typeof v==='string') return v.replace(/\b([Aa])n Enjinn\b/g, '$1 Tinkari').replace(/\bFlaggship\b/g, 'Dreadnought').replace(/\bRebuff\b/g, 'Mandate').replace(/\bFedoration\b/g, 'Commonwealth').replace(/\bEnjinn\b/g, 'Tinkari')
+    .replace(/\bVoltans\b/g, 'Thrumms').replace(/\bVoltan\b/g, 'Thrumm').replace(/\bSloogs\b/g, 'Mullocks').replace(/\bSloog\b/g, 'Mullock').replace(/\bMantlis\b/g, 'Jabbit').replace(/\bPestrel\b/g, 'Plucky')
+    .replace(/\bRed Tale\b/g, 'Red Herring').replace(/\bThe Taurus\b/g, 'The Spanner in the Works').replace(/\bThe Bortex\b/g, 'The Remote Control').replace(/\bThe Basil-isk\b/g, 'The Elbow Room');
+  if(Array.isArray(v)) return v.map(renameOld); if(v && typeof v==='object'){ const o = {}; for(const k in v) o[k] = renameOld(v[k]); return o; } return v; }
+function renameProfile(P){ if(!P || P.renamed >= 72) return false; for(const k of Object.keys(P)) if(!['pixels', 'settings', 'codex', 'ach', 'ships', 'gxp', 'lore', 'loreRead'].includes(k)) P[k] = renameOld(P[k]); P.renamed = 72; return true; }
+try{ if(renameProfile(PROFILE)) LS.set(PROFILE_KEY, PROFILE); const sv = LS.get(SAVE_KEY, null); if(sv && !sv.renamed){ const nv = renameOld(sv); nv.renamed = 72; LS.set(SAVE_KEY, nv); } }catch(e){}
 function saveProfile(){ LS.set(PROFILE_KEY, PROFILE); }
 /* colour vision and contrast: remap the status colours used by the 2D interface and the VR consoles.
    Red-green safe swaps green for blue and deepens the red, so friend, foe and health stay apart

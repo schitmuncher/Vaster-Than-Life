@@ -1,6 +1,6 @@
 {
   "name": "Boarding Party",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "bp_stunbomb", "name": "Stun Bomb", "type": "bomb", "damage": 0, "charge": 12, "power": 1, "cost": 45, "tier": 2, "stun": 6, "crewDamage": 10, "desc": "Drops a room's defenders to the floor right before your boarders land." },

@@ -157,7 +157,9 @@ function drawClassButton(x, y, w, h, def){
 
 /* ---------------- the class editor ---------------- */
 function scEditing(){ const O = UI.classOpen, def = O && DATA.ships[O.ship]; if(!def) return null; const b = scBook(def.id); return { O, def, b, L:scLevel(def.id), cls:O.edit < 0 ? scStd(def) : b.classes[O.edit] || null }; }
-function scTouch(def){ UI._prev = null; if(typeof saveProfile==='function') saveProfile(); }
+function scTouch(def){ UI._prev = null; const O = UI.classOpen, b = def && scBook(def.id);   // the class you're working on is the one you'll fly
+  if(b && O && O.edit >= 0 && b.sel!==O.edit && b.classes[O.edit]){ b.sel = O.edit; if(typeof toast==='function') toast(`${def.name} will launch as "${b.classes[O.edit].name}". Pick Standard to go back.`); }
+  if(typeof saveProfile==='function') saveProfile(); }
 function scStat(kind, id){ if(kind==='w'){ const d = DATA.weapons[id]; if(!d) return ''; return `${typeof cap==='function' ? cap(d.type || 'weapon') : d.type}${d.damage ? ' · ' + d.damage + ' dmg' : ''}${d.shots > 1 ? ' ×' + d.shots : ''} · ${d.charge}s · ${d.power} power`; }
   if(kind==='d'){ const d = DATA.drones[id]; return d ? `${typeof cap==='function' ? cap(d.kind || 'drone') : d.kind} · ${d.power} power` : ''; }
   if(kind==='a'){ const d = DATA.augments[id]; return d ? d.desc || '' : ''; } const p = scPerk(id); return p ? p[3] : ''; }
@@ -182,7 +184,7 @@ function drawClassOverlay(){
     if(r.locked){ T(`🔒 Class slot ${r.i + 1}`, lx + 16, y + 28, { s:16, c:C.muted }); T(`Opens at mastery ${r.locked}`, lx + 16, y + 50, { s:12, c:C.muted }); return; }
     T(r.name, lx + 16, y + 28, { s:17, f:FD, w:700, c:on ? C.amber : r.empty ? C.muted : C.ink, max:210 }); T(r.sub, lx + 16, y + 50, { s:12, c:C.muted, max:290 });
     if(use){ rr(lx + 236, y + 10, 74, 22, 6); ctx.fillStyle = C.good; ctx.fill(); T('IN USE', lx + 273, y + 26, { s:11, a:'center', c:'#06231a', f:FD, w:700 }); }
-    region(lx, y, 320, 66, () => { O.edit = r.i; if(r.i >= 0 && !b.classes[r.i]){ const s = scStd(def); b.classes[r.i] = { name:`Class ${r.i + 1}`, w:s.w.slice(), d:s.d.slice(), a:s.a.slice(), p:[] }; scTouch(def); } }, 'sc:cls' + r.i); });
+    region(lx, y, 320, 66, () => { O.edit = r.i; if(r.i===-1 && b.sel!==-1){ b.sel = -1; scTouch(def); toast(`${def.name} will launch as Standard.`); } if(r.i >= 0 && b.classes[r.i] && b.sel!==r.i){ b.sel = r.i; scTouch(def); } if(r.i >= 0 && !b.classes[r.i]){ const s = scStd(def); b.classes[r.i] = { name:`Class ${r.i + 1}`, w:s.w.slice(), d:s.d.slice(), a:s.a.slice(), p:[] }; scTouch(def); } }, 'sc:cls' + r.i); });
   const cls = O.edit < 0 ? scStd(def) : b.classes[O.edit], by = ly + 16 + 6*74 + 8;
   if(cls){ const inUse = b.sel===O.edit;
     btn(lx, by, 320, 48, inUse ? '✓ Flying this class' : 'Fly this class', () => { b.sel = O.edit; scTouch(def); toast(`${def.name} will launch as "${cls.name}".`); }, { s:16, fill:!inUse, col:C.good, disabled:inUse });

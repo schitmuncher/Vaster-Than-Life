@@ -82,7 +82,7 @@ function slotDelete(i){ const m = slotsMeta(); if(!m.list[i]) return;
 function allData(){ const m = slotsMeta(); return { app:'vaster-than-life', v:2, kind:'all', t:Date.now(), cur:m.cur, settings:SET, mods:MODS, slots:m.list.map((s, i) => Object.assign({ name:s.name }, slotData(i))) }; }
 function downloadAll(){ try{ const blob = new Blob([JSON.stringify(allData())], { type:'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `vaster-than-life-all-${todayKey()}.json`;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast('All your data is in your downloads.'); }catch(e){ toast('Could not save a file on this device.'); } }
-function restoreAll(d){
+function restoreAll(d){ try{ if(d && d.profile) renameProfile(d.profile); }catch(e){}
   if(!d || d.app!=='vaster-than-life') { toast('That file is not Vaster Than Life data.'); return false; }
   if(d.kind!=='all'){ return restoreBackup(d); }   // an older one-career backup: load it into this save
   const list = (d.slots || []).slice(0, SLOT_MAX); if(!list.length){ toast('That file has no saves in it.'); return false; }

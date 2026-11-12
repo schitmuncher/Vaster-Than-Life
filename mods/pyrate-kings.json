@@ -1,6 +1,6 @@
 {
   "name": "Pyrate Kings",
-  "version": "1.0",
+  "version": "1.1",
   "author": "Vaster Than Life team",
   "weapons": [
     { "id": "pk_broadside", "name": "Broadside Battery", "type": "laser", "damage": 1, "shots": 4, "charge": 15, "power": 3, "cost": 75, "tier": 3, "fire": 0.1, "desc": "Four guns on one trigger. Very pyrate, very loud." },
