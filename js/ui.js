@@ -367,7 +367,7 @@ function drawSettings(){
   label('Options', 60, 70, C.cyan, 'left', 18);
   T('Settings', 60, 122, { s:50, f:FD, w:700 });
   const tab = UI.setTab || 'audio';
-  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR movement'],['vr2','VR console'],['gameplay','Gameplay'],['access','Accessibility'],['mp','Multiplayer'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 157);
+  tabs(60, 146, [['audio','Audio'],['graphics','Graphics'],['display','Screen & touch'],['vr','VR'],['vr2','VR console'],['gameplay','Gameplay'],['access','Accessibility'],['mp','Multiplayer'],['profile','Profile']], tab, t => { UI.setTab = t; UI.confirmReset = false; }, 157);
   panel(60, 204, 1480, 640, 12);
   const X = 100, VX = 560; let y = 236;
   const head = (t) => { label(t, X, y+18, C.cyan, 'left', 15); y += 34; };
@@ -433,6 +433,11 @@ function drawSettings(){
       note('Tap to use anything: tap a weapon\'s card to power it and pick it to aim. Press and hold for details about it. Pinch with two fingers (or double-tap empty space) to zoom in, and drag to look around while zoomed. Keyboard: Space pauses, M opens the map, 1 to 4 select weapons, V holds fire, C cloaks.');
       break;
     case 'vr':
+      if(typeof XR_OK!=='undefined' && (XR_OK.vr || XR_OK.ar) && !inXR()){ T('Headset', X, y+30, { s:20 });
+        if(XR_OK.vr){ btn(VX, y+2, 240, 46, '🥽 Enter VR', () => enterXR('immersive-vr'), { fill:true, s:16, col:C.good }); tip(VX, y+2, 240, 46, 'Enter VR', 'Put the game in your headset: the bridge, the holotable and both ships around you.'); }
+        if(XR_OK.ar){ const ax = VX + (XR_OK.vr ? 252 : 0); btn(ax, y+2, 260, 46, '🪟 Enter mixed reality', () => enterXR('immersive-ar'), { s:16, col:C.cyan }); tip(ax, y+2, 260, 46, 'Mixed reality', 'The game in your own room, through the headset cameras.'); }
+        y += 52; }
+      else note(typeof inXR==='function' && inXR() ? 'You are in VR now. Press the Quest button and choose Exit to leave.' : typeof XR_OK!=='undefined' && XR_OK.failed ? 'The 3D engine did not load, so VR is not available. Check your connection and reload.' : 'No VR headset found. Open the game in the Meta Quest Browser to play in VR.');
       head('Body');
       choice('Play position', 'vrPose', [['standing','Standing'],['seated','Seated'],['lying','Lying down']], 'standing', 'Seated sets the bridge to chair height. Lying down tilts the world so looking up shows the console ahead.', v => setPlayPose(v));
       bar_('Player height', 'vrHeight', -60, 60, 1, 0, v => `${v>0?'+':''}${Math.round(v)} cm`, 'Raises or lowers your view, a centimetre at a time. Click the bar to jump, or use the buttons. Changes apply instantly in the headset.', v => setVrHeight(v));

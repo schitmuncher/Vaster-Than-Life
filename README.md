@@ -10,7 +10,7 @@ It's a fan homage to *FTL: Faster Than Light*. The code, art, names and writing 
 
 ## Play
 
-Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**. On a Quest, open the Pages link in the Meta Quest Browser and press **Enter VR**, or **Enter mixed reality** for passthrough.
+Host the repo with GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**. On a Quest, open the Pages link in the Meta Quest Browser and open **Settings → VR → Enter VR**, or **Enter mixed reality** for passthrough.
 
 | Quest control | Action |
 | --- | --- |

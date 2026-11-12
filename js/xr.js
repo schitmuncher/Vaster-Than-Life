@@ -198,6 +198,8 @@ document.getElementById('copyEx').onclick = async () => { try{ await navigator.c
 
 /* ---------------- rename dialog ---------------- */
 /* ---------------- boot ---------------- */
+/* Enter VR and mixed reality live in Settings → VR (the buttons under the game stay hidden) */
+var XR_OK = { vr:false, ar:false, failed:false };
 applyMods();
 fit();
 (document.fonts ? document.fonts.load(`700 40px 'Chakra Petch'`).then(()=>document.fonts.load(`400 20px 'IBM Plex Mono'`)) : Promise.resolve()).catch(()=>{});
@@ -207,7 +209,7 @@ if(typeof mpCheckLink==='function') mpCheckLink();
 if(window.THREE){
   init3D();
   if(navigator.xr){
-    navigator.xr.isSessionSupported('immersive-vr').then(ok => { const b = document.getElementById('vrBtn'); b.hidden = !ok; b.onclick = () => enterXR('immersive-vr'); if(!ok) document.getElementById('xrNote').textContent = 'No VR headset found. Playing in flat mode.'; fit(); }).catch(()=>{});
-    navigator.xr.isSessionSupported('immersive-ar').then(ok => { const b = document.getElementById('arBtn'); b.hidden = !ok; b.onclick = () => enterXR('immersive-ar'); fit(); }).catch(()=>{});
-  } else document.getElementById('xrNote').textContent = 'This browser has no WebXR. Playing in flat mode.';
-} else { document.getElementById('xrNote').textContent = '3D engine failed to load. Playing in flat mode.'; requestAnimationFrame(fallbackLoop); }
+    navigator.xr.isSessionSupported('immersive-vr').then(ok => { XR_OK.vr = ok; const b = document.getElementById('vrBtn'); b.hidden = true; b.onclick = () => enterXR('immersive-vr'); document.getElementById('xrNote').textContent = ok ? 'Headset found: Settings → VR to enter VR.' : ''; fit(); }).catch(()=>{});
+    navigator.xr.isSessionSupported('immersive-ar').then(ok => { XR_OK.ar = ok; const b = document.getElementById('arBtn'); b.hidden = true; b.onclick = () => enterXR('immersive-ar'); fit(); }).catch(()=>{});
+  }
+} else { XR_OK.failed = true; requestAnimationFrame(fallbackLoop); }
