@@ -42,9 +42,9 @@ const TALES = {
     { text:'Escort them to the next beacon.', chance:.6, success:{ text:'An uneventful trip. The teacher thanks you with a box of homemade snacks.', crewHeal:20, fuel:1 }, fail:{ text:'A pyrate raider spots the shuttle. You put yourself between them.', fight:'pyrate_bomber', afterWin:{ text:'The children think this is the best field trip ever.', scrap:20 } } },
     { text:'Radio the nearest station for a tow.', effect:{ text:'Help is on its way. The children boo you, but politely.' } } ] },
   d_school_thanks:{ questOnly:true, art:'station', text:'A message arrives from a school three systems away: a video of twenty children shouting "THANK YOU {ship}!" and a donation from their parents.', choices:[ { text:'Play it again.', effect:{ text:'You play it four more times.', scrap:25, crewHeal:20 } } ] },
-  d_decoy:{ distress:true, art:'fleet', text:'A Fedoration courier is begging for help, but its transponder code is three years out of date. Your comms officer frowns.', minSector:2, choices:[
-    { text:'It\'s a Rebuff decoy. Hit them first.', effect:{ text:'The "courier" drops its disguise and powers up its weapons, a little late.', fight:'rebuff_fighter', primeWeapons:true } },
-    { text:'Answer with an old Fedoration challenge code.', chance:.6, success:{ text:'They answer wrong. You jump away before the trap closes and leave them a rude message.', fleetPush:-.03 }, fail:{ text:'They answer right, by luck, and you fly straight into the ambush.', fight:'rebuff_fighter' } },
+  d_decoy:{ distress:true, art:'fleet', text:'A Commonwealth courier is begging for help, but its transponder code is three years out of date. Your comms officer frowns.', minSector:2, choices:[
+    { text:'It\'s a Mandate decoy. Hit them first.', effect:{ text:'The "courier" drops its disguise and powers up its weapons, a little late.', fight:'rebuff_fighter', primeWeapons:true } },
+    { text:'Answer with an old Commonwealth challenge code.', chance:.6, success:{ text:'They answer wrong. You jump away before the trap closes and leave them a rude message.', fleetPush:-.03 }, fail:{ text:'They answer right, by luck, and you fly straight into the ambush.', fight:'rebuff_fighter' } },
     { text:'Slip away quietly.', effect:{ text:'You leave them to wait for someone more trusting.' } } ] },
   d_cryo:{ distress:true, art:'wreck', text:'A colony transport, every cryo pod failing one by one. Most of the sleepers are already gone. Three pods still have power.', choices:[
     { text:'Wake the sleepers.', chance:.35, success:{ text:'One of the three wakes up and asks, very calmly, if they can come with you.', crew:'random' }, fail:{ text:'The sleepers wake confused, and you take them to a colony ship nearby. They pay you with what they had.', scrap:20 } },
@@ -52,9 +52,9 @@ const TALES = {
     { text:'Strip the dead pods for parts.', effect:{ text:'Grim, practical work.', parts:3, scrap:10 } } ] },
   d_singer:{ distress:true, art:'station', text:'The distress call turns out to be someone singing. Badly. A lighthouse keeper has not seen another ship in a year and wanted company.', choices:[
     { text:'Stay for a song.', effect:{ text:'You stay for six. The keeper sends you off with fuel and a hand-drawn map of the local beacons.', fuel:2, reveal:true } },
-    { text:'Teach them a better song.', req:{ race:'voltan' }, effect:{ text:'{who} sings a Voltan hymn that makes the lighthouse glow. The keeper weeps and gives you everything in the supply room.', fuel:3, missiles:2, scrap:15 } },
+    { text:'Teach them a better song.', req:{ race:'voltan' }, effect:{ text:'{who} sings a Thrumm hymn that makes the lighthouse glow. The keeper weeps and gives you everything in the supply room.', fuel:3, missiles:2, scrap:15 } },
     { text:'Politely make your excuses.', effect:{ text:'The singing follows you on comms for three more beacons.' } } ] },
-  d_lifeboats:{ distress:true, art:'distress', text:'Two lifeboats from the same wreck, drifting apart. The Rebuff Fleet is close: you only have time for one. One carries a scientist and her research. The other, a family of four.', minSector:2, choices:[
+  d_lifeboats:{ distress:true, art:'distress', text:'Two lifeboats from the same wreck, drifting apart. The Mandate Fleet is close: you only have time for one. One carries a scientist and her research. The other, a family of four.', minSector:2, choices:[
     { text:'Save the scientist.', effect:{ text:'She thanks you, quietly, and gives you a prototype from her research case. You watch the other lifeboat\'s light until it is gone.', augment:'random', crewHurt:5 } },
     { text:'Save the family.', effect:{ text:'The children sleep in the medbay all the way to the next station. Their parents leave you their savings, and you hear later the scientist was picked up by a trader.', scrap:25, crewHeal:30 } },
     { text:'Try for both.', chance:.4, success:{ text:'It works, somehow. Everyone is aboard as the fleet\'s scouts arrive.', scrap:20, augment:'random', fleetPush:.05 }, fail:{ text:'You reach both, barely, but the fleet\'s scouts reach you too.', fight:'rebuff_scout', fleetPush:.04 } } ] },
@@ -88,7 +88,7 @@ const TALES = {
     { text:'Throw them a ration pack and wave.', effect:{ text:'They wave back. Then they flag down the next ship, which is much nicer than yours.' } } ] },
   t_hitchhiker_end:{ questOnly:true, art:'station', text:'Your hitchhiker grabs their bag. "This is my stop. Thanks for everything."', choices:[
     { text:'Wish them well.', chance:.6, success:{ text:'They leave a tip on the console: the codes to a cache they hid years ago.', scrap:30, parts:2 }, fail:{ text:'They leave. So does a fuel cell, and the captain\'s good mug.', fuel:-1 } },
-    { text:'Search their bag first.', chance:.5, success:{ text:'Stolen Rebuff codes. You keep those. You let them keep the bag.', fleetPush:-.04 }, fail:{ text:'Socks. Lots of socks. They are very offended.' } } ] },
+    { text:'Search their bag first.', chance:.5, success:{ text:'Stolen Mandate codes. You keep those. You let them keep the bag.', fleetPush:-.04 }, fail:{ text:'Socks. Lots of socks. They are very offended.' } } ] },
   t_rival:{ text:'"Well, well. If it isn\'t {ship}." Your captain\'s old flight-school rival is here, in a ship with three more guns than yours, and she wants you to know it.', tags:[''], art:'ship', choices:[
     { text:'Race her to the next beacon.', req:{ system:'engines', level:3 }, effect:{ text:'You win by a hull length. She pays the bet, grumbling.', scrap:30 } },
     { text:'Challenge her to a race anyway.', chance:.3, success:{ text:'She stalls her engine at the start line. You win.', scrap:25 }, fail:{ text:'She wins by a mile and tells everyone.', scrap:-10 } },
@@ -113,9 +113,9 @@ const TALES = {
     { text:'Decode it.', req:{ system:'sensors', level:2 }, effect:{ text:'The digits are coordinates and a password. They open a cache someone hid near this beacon long ago.', scrap:35, reveal:true } },
     { text:'Reply with the next prime.', effect:{ text:'13. The signal stops. A moment later, a small cargo pod drifts out of the dark.', fuel:2, scrap:10 } },
     { text:'Pretend you didn\'t hear it.', effect:{ text:'It keeps counting, a little sadly, as you leave.' } } ] },
-  t_admiral:{ text:'An old woman in a faded Fedoration uniform runs a tea shop on this station. She was an admiral once, and she has opinions about your ship.', tags:[''], art:'station', choices:[
+  t_admiral:{ text:'An old woman in a faded Commonwealth uniform runs a tea shop on this station. She was an admiral once, and she has opinions about your ship.', tags:[''], art:'station', choices:[
     { text:'Ask for tactical advice.', effect:{ text:'She sketches your next fight on a napkin. It is uncomfortably accurate.', xp:{ skill:'weapons', amt:20 } } },
-    { text:'Ask about the Rebuff Fleet.', effect:{ text:'She knows their patrol rhythms by heart. She tells you where they will be slowest.', fleetPush:-.04 } },
+    { text:'Ask about the Mandate Fleet.', effect:{ text:'She knows their patrol rhythms by heart. She tells you where they will be slowest.', fleetPush:-.04 } },
     { text:'Just have the tea.', effect:{ text:'The best tea in the sector. Everyone feels more themselves.', crewHeal:30 } } ] },
   t_tugs:{ text:'Two salvage tugs have their grapples on the same wreck and are pulling in opposite directions. Both captains are shouting at you to settle it.', tags:[''], art:'wreck', choices:[
     { text:'Side with the older tug.', effect:{ text:'The old captain wins and shares the find.', scrap:20 } },
@@ -129,7 +129,7 @@ const TALES = {
   t_food_poisoning:{ text:'Last night\'s stew was a mistake. Half the crew are green and the other half are pretending they aren\'t.', tags:[''], art:'ship', choices:[
     { text:'Everyone to the medbay.', req:{ system:'medbay' }, effect:{ text:'A long night, but by morning everyone is fine and swearing off stew.', fleetPush:.02 } },
     { text:'Tough it out.', effect:{ text:'Grim faces, steady hands. Mostly steady.', crewHurt:15 } },
-    { text:'Have {who} eat the rest of the stew.', req:{ race:'sloog' }, effect:{ text:'{who} finishes the pot with relish. Sloog stomachs are a marvel. The crew feel better just watching.', crewHeal:10 } } ] },
+    { text:'Have {who} eat the rest of the stew.', req:{ race:'sloog' }, effect:{ text:'{who} finishes the pot with relish. Mullock stomachs are a marvel. The crew feel better just watching.', crewHeal:10 } } ] },
   t_refinery:{ text:'A fuel refinery orbits a gas giant, run by one very bored technician.', tags:[''], art:'planet', choices:[
     { text:'Buy fuel (12 scrap for 4).', req:{ scrap:12 }, cost:{ scrap:12 }, effect:{ text:'Full tanks, fair price.', fuel:4 } },
     { text:'Trade missiles for fuel (2 missiles).', req:{ missiles:2 }, cost:{ missiles:2 }, effect:{ text:'The technician collects missiles. Do not ask why.', fuel:4 } },
@@ -141,7 +141,7 @@ const TALES = {
   t_reporter:{ text:'A reporter from the Galactic Gazette wants an interview. "Courier carrying secret data, chased across the stars! Our readers will love it."', tags:[''], art:'station', choices:[
     { text:'Give a heroic interview.', effect:{ text:'You are famous. Unfortunately, so is your route.', scrap:25, fleetPush:.04 } },
     { text:'Give a boring interview on purpose.', effect:{ text:'The article is titled "Local Pilot Flies Ship". Nobody reads it. Perfect.', scrap:5 } },
-    { text:'Feed them a false route.', chance:.6, success:{ text:'The Rebuff Fleet reads the Gazette too. They go the wrong way.', fleetPush:-.06 }, fail:{ text:'The reporter checks your story and prints the truth.', fleetPush:.03 } } ] },
+    { text:'Feed them a false route.', chance:.6, success:{ text:'The Mandate Fleet reads the Gazette too. They go the wrong way.', fleetPush:-.06 }, fail:{ text:'The reporter checks your story and prints the truth.', fleetPush:.03 } } ] },
   t_comet:{ text:'A comet is passing close, its tail streaming across your path. Your pilot thinks you could ride its gravity well for a free boost.', tags:[''], art:'star', choices:[
     { text:'Ride the comet.', chance:.7, success:{ text:'Whoosh. You gain a lot of ground on the fleet.', fleetPush:-.06 }, fail:{ text:'Whoosh, then crunch. Ice in the vents.', fleetPush:-.03, hull:-3 } },
     { text:'Collect ice from the tail.', effect:{ text:'Fresh water and coolant. The crew take long showers.', crewHeal:20, fuel:1 } } ] },
@@ -162,7 +162,7 @@ const TALES = {
     { text:'Enter {crew}.', chance:.4, success:{ text:'{crew} brings the house down with a power ballad. You win.', augment:'booster' }, fail:{ text:'{crew} brings the house down, but not in a good way. Second-to-last place still gets a fuel cell.', fuel:1 } },
     { text:'Enter {who}.', req:{ race:'voltan' }, chance:.7, success:{ text:'{who} glows on every high note. The judges weep.', augment:'booster' }, fail:{ text:'The judges think the glowing is cheating.', crewHeal:10 } },
     { text:'Just watch.', effect:{ text:'A wonderful night out.', crewHeal:20 } } ] },
-  t_survey:{ text:'A Fedoration survey station asks if you would fill in a short questionnaire about your journey so far. It has 140 questions.', tags:[''], art:'station', choices:[
+  t_survey:{ text:'A Commonwealth survey station asks if you would fill in a short questionnaire about your journey so far. It has 140 questions.', tags:[''], art:'station', choices:[
     { text:'Fill it in honestly.', effect:{ text:'It takes an hour. They thank you with a care package and better charts of the sector.', reveal:true, missiles:1 } },
     { text:'Tick "strongly agree" to everything.', effect:{ text:'Your answers are flagged as suspiciously positive. They send you a free hull patch anyway.', hull:3 } } ] },
   t_ghost_crewmate:{ text:'{crew} swears they keep seeing an extra crew member in the corridors, out of the corner of their eye. Today, so does everyone else.', tags:[''], art:'ship', minSector:2, choices:[
@@ -170,14 +170,14 @@ const TALES = {
     { text:'Leave a plate of food out.', effect:{ text:'In the morning the plate is clean and your weapons have been oiled.', xp:{ skill:'weapons', amt:10 } } } ] },
 
   /* ---------------- one or two for each kind of sector ---------------- */
-  t_rebuff_recruiter:{ tags:['rebuff'], art:'fleet', text:'A Rebuff recruiting station is broadcasting cheerful adverts: "Tired of running? Join the winning side! Free uniform!"', choices:[
+  t_rebuff_recruiter:{ tags:['rebuff'], art:'fleet', text:'A Mandate recruiting station is broadcasting cheerful adverts: "Tired of running? Join the winning side! Free uniform!"', choices:[
     { text:'Sign up under a false name to steal the uniform.', chance:.6, success:{ text:'You walk out with a uniform and a set of patrol schedules.', fleetPush:-.05 }, fail:{ text:'The recruiter recognises your face from a poster.', fight:'rebuff_scout' } },
     { text:'Jam their adverts.', req:{ system:'hacking' }, effect:{ text:'You replace the adverts with a looping video of a cat. Recruitment drops sharply.', fleetPush:-.03, scrap:5 } },
     { text:'Fly past.', effect:{ text:'The adverts follow you on every channel for an hour.' } } ] },
-  t_rebuff_mess:{ tags:['rebuff'], art:'station', text:'A Rebuff supply depot has left its cargo bay doors open. The guards are watching a sports match.', choices:[
+  t_rebuff_mess:{ tags:['rebuff'], art:'station', text:'A Mandate supply depot has left its cargo bay doors open. The guards are watching a sports match.', choices:[
     { text:'Help yourself, quietly.', chance:.55, success:{ text:'Missiles, fuel and a crate of officers\' biscuits.', missiles:4, fuel:2 }, fail:{ text:'The match goes to a break at the worst moment.', fight:'rebuff_fighter' } },
     { text:'Leave a rude note and go.', effect:{ text:'It is a very good note. Your crew will be quoting it for days.', crewHeal:10 } } ] },
-  t_pyrate_auction:{ tags:['pyrate'], art:'market', text:'A pyrate auction is selling stolen goods. Half of them are probably yours from the last time pyrates raided a Fedoration convoy.', choices:[
+  t_pyrate_auction:{ tags:['pyrate'], art:'market', text:'A pyrate auction is selling stolen goods. Half of them are probably yours from the last time pyrates raided a Commonwealth convoy.', choices:[
     { text:'Bid on a mystery crate (30 scrap).', req:{ scrap:30 }, cost:{ scrap:30 }, chance:.6, success:{ text:'A gun, still in its packing.', weapon:'random' }, fail:{ text:'Socks. A crate of very nice socks.', crewHeal:10 } },
     { text:'Browse the stalls.', effect:{ text:'A pyrate trader sets up shop just for you.', store:true } },
     { text:'Report the auction to the authorities.', effect:{ text:'The pyrates find out who called. They are not pleased.', fight:'pyrate_bomber' } } ] },
@@ -190,7 +190,7 @@ const TALES = {
   t_nebula_harvester:{ tags:['nebula'], art:'nebula', text:'A gas harvester crew is stuck: their scoop is jammed and the nebula\'s static has fried their radio.', choices:[
     { text:'Help unjam the scoop.', effect:{ text:'It takes a few hours. They fill your tanks from the scoop by way of thanks.', fuel:5 } },
     { text:'Relay a message for them.', effect:{ text:'Their company sends a tug and a thank-you payment.', scrap:20 } } ] },
-  t_sloog_library:{ tags:['sloog'], art:'nebula', text:'A Sloog library holds memories instead of books. A librarian offers to lend your crew a few.', choices:[
+  t_sloog_library:{ tags:['sloog'], art:'nebula', text:'A Mullock library holds memories instead of books. A librarian offers to lend your crew a few.', choices:[
     { text:'Borrow a soldier\'s memories.', effect:{ text:'Your crew now remember a lifetime of close-quarters fighting. It\'s very unsettling, and very useful.', xp:{ skill:'combat', amt:20 } } },
     { text:'Borrow an engineer\'s memories.', effect:{ text:'Your crew remember every repair manual ever written. They fix things in their sleep.', xp:{ skill:'repair', amt:20 } } },
     { text:'Donate a memory of your own (the crew\'s favourite meal).', effect:{ text:'The librarian is thrilled. Nobody can quite remember what the meal was.', scrap:25 } } ] },
@@ -198,13 +198,13 @@ const TALES = {
     { text:'Buy tickets for the crew (10 scrap).', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'Loud, slow and strangely moving. Everyone comes back happy and a little deaf.', crewHeal:40 } },
     { text:'Sell drinks to the crowd.', effect:{ text:'Pebblekin get thirsty. You make a tidy profit.', scrap:25 } },
     { text:'Let {who} join the band.', req:{ race:'pebblekin' }, effect:{ text:'{who} grinds a solo that cracks the stage. The crowd go wild and throw scrap.', scrap:40 } } ] },
-  t_enjinn_hackathon:{ tags:['enjinn'], art:'station', text:'An Enjinn hackathon: forty-eight hours, one hundred engineers, and one question shouted over and over: "What can we improve?"', choices:[
+  t_enjinn_hackathon:{ tags:['enjinn'], art:'station', text:'A Tinkari hackathon: forty-eight hours, one hundred engineers, and one question shouted over and over: "What can we improve?"', choices:[
     { text:'Offer your ship as the challenge.', chance:.7, success:{ text:'They return it with an upgraded system and a lot of opinions.', upgrade:'random' }, fail:{ text:'They return it with a coffee maker built into the helm and no other changes.', crewHeal:15 } },
     { text:'Ask them for a drone.', effect:{ text:'They build you one from your spare parts in twenty minutes, then apologise for taking so long.', drone:'random', parts:-2 } } ] },
-  t_voltan_eclipse:{ tags:['voltan'], art:'star', text:'The Voltans gather for an eclipse, and the whole sector goes dark except for their glow. A priest invites your ship to stay for the light.', choices:[
+  t_voltan_eclipse:{ tags:['voltan'], art:'star', text:'The Thrumms gather for an eclipse, and the whole sector goes dark except for their glow. A priest invites your ship to stay for the light.', choices:[
     { text:'Stay for the eclipse.', effect:{ text:'When the light returns, your hull feels newer and your crew calmer.', hull:6, crewHeal:20 } },
     { text:'Use the darkness to slip past the fleet.', effect:{ text:'Nobody can see you in the eclipse.', fleetPush:-.05 } } ] },
-  t_mantlis_feast:{ tags:['mantlis'], art:'creature', text:'A Mantlis clan is holding a victory feast and has decided you are invited. Declining is considered an insult. So is eating too slowly.', choices:[
+  t_mantlis_feast:{ tags:['mantlis'], art:'creature', text:'A Jabbit clan is holding a victory feast and has decided you are invited. Declining is considered an insult. So is eating too slowly.', choices:[
     { text:'Eat as fast as you can.', chance:.5, success:{ text:'You win their respect, and a share of the spoils.', scrap:25, missiles:2 }, fail:{ text:'You do not win their respect. You do win indigestion.', crewHurt:10 } },
     { text:'Let {who} represent you.', req:{ race:'mantlis' }, effect:{ text:'{who} out-eats the clan champion. They chant your ship\'s name.', scrap:35, xp:{ skill:'combat', amt:10 } } },
     { text:'Make a speech instead.', effect:{ text:'They find the speech hilarious. It was meant to be serious.', crewHeal:15 } } ] }

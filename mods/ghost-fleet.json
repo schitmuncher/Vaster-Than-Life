@@ -25,7 +25,7 @@
       ] },
     { "id": "gf_flagship", "questOnly": true, "text": "The source of the signal: a vast dead warship, lights still blinking in a pattern. Its guns track you as you approach.", "choices": [
         { "text": "Fight it.", "effect": { "text": "The wreck wakes up.", "fight": "gf_banshee", "afterWin": { "text": "With its guns silent, the warship's vault opens by itself.", "scrap": 60, "augment": "gf_lantern" } } },
-        { "text": "Broadcast the old Fedoration stand-down code.", "chance": 0.5, "success": { "text": "Its guns lower. The ship lets you take what you need, then goes dark for good.", "weapon": "gf_wail", "scrap": 30 }, "fail": { "text": "Wrong code. Very wrong code.", "fight": "gf_banshee" } }
+        { "text": "Broadcast the old Commonwealth stand-down code.", "chance": 0.5, "success": { "text": "Its guns lower. The ship lets you take what you need, then goes dark for good.", "weapon": "gf_wail", "scrap": 30 }, "fail": { "text": "Wrong code. Very wrong code.", "fight": "gf_banshee" } }
       ] },
     { "id": "gf_derelict", "text": "A derelict fighter with its canopy open. The pilot's seat is empty, but the engine is warm.", "tags": ["ghost", ""], "weight": 1.2,
       "choices": [

@@ -134,7 +134,7 @@
   },
   {
    "file": "rebuff-crackdown.json",
-   "name": "Rebuff Crackdown",
+   "name": "Mandate Crackdown",
    "desc": "Occupied space: checkpoints, prison barges, deserters, the resistance.",
    "kind": "content"
   },
@@ -224,8 +224,8 @@
   },
   {
    "file": "rebuff-defectors.json",
-   "name": "Rebuff Defectors",
-   "desc": "Two stolen Rebuff ships to fly, and old comrades along the way.",
+   "name": "Mandate Defectors",
+   "desc": "Two stolen Mandate ships to fly, and old comrades along the way.",
    "kind": "ships"
   },
   {
@@ -236,13 +236,13 @@
   },
   {
    "file": "voltan-lightworks.json",
-   "name": "Voltan Lightworks",
-   "desc": "Voltan arc and glow guns, a light-temple and a super-shield halo.",
+   "name": "Thrumm Lightworks",
+   "desc": "Thrumm arc and glow guns, a light-temple and a super-shield halo.",
    "kind": "content"
   },
   {
    "file": "sloog-mysteries.json",
-   "name": "Sloog Mysteries",
+   "name": "Mullock Mysteries",
    "desc": "An oracle, shared dreams, a door in space and a memory trader.",
    "kind": "content"
   },

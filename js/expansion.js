@@ -1,10 +1,10 @@
 'use strict';
 /* =========================================================================
-   Expansion: more to do between the Admiral's send-off and the Flaggship.
+   Expansion: more to do between the Admiral's send-off and the Dreadnought.
    - Gun refits: stores tune the weapons you already own (Mk II, Mk III).
    - Sector situations: a crackdown, a salvage boom, storm season... shown on
      the exit cards, so choosing a route means more.
-   - The Ghost Fleet: a three-part quest that can bring old Fedoration frigates
+   - The Ghost Fleet: a three-part quest that can bring old Commonwealth frigates
      to the last battle.
    - Lucky Vell's crate: carry a smuggler's cargo, and decide what to do with it.
    - New one-off events.
@@ -114,7 +114,7 @@ function drawPet(){ const P = petHere(), sh = G && G.ship; if(!P || !sh || !sh._
 
 /* ---------------- sector situations ---------------- */
 const SITUATIONS = {
-  crackdown:{ name:'Rebuff crackdown', desc:'More patrols. The shopkeepers are nervous: stores are 15% cheaper.', mix:{ combat:+12, event:-12 }, price:.85, col:'#ff5a7a' },
+  crackdown:{ name:'Mandate crackdown', desc:'More patrols. The shopkeepers are nervous: stores are 15% cheaper.', mix:{ combat:+12, event:-12 }, price:.85, col:'#ff5a7a' },
   salvage:  { name:'Salvage boom', desc:'Wrecks everywhere: fights pay 25% more scrap. The Fleet is in a hurry too.', scrap:1.25, fleet:1.1, col:'#ffd166' },
   storms:   { name:'Storm season', desc:'Twice the hazards. The Fleet hates them too: it moves 10% slower.', hazard:2, fleet:.9, col:'#ffb547' },
   festival: { name:'Festival season', desc:'Fewer fights, more people to meet, and the Harvest Fair is on.', mix:{ combat:-12, event:+12 }, fair:true, col:'#7be0a0' },
@@ -145,38 +145,38 @@ function expansionEffect(e, L){
   if(e.questNext){ for(const q of [].concat(e.questNext)) G.questQueue.push(q); L.push('A new lead: it points to the next sector'); }
   if(e.ghostCrew){ const s = G.ship; if(s.crew.filter(c => c.owner==='p' && !c.drone).length < R.maxCrew){ const c = addCrew(s, 'human', 'p', 'Rourke'); c.quirk = 'grump'; c.quirkSet = true; for(const k of ['pilot','weapons','repair']) c.sk[k] = SKILLT[k][1]; c.maxHp += 10; c.hp = c.maxHp; G.flags.rourke = true; L.push('Captain Rourke joins your crew (expert pilot, gunner and engineer)'); if(typeof sagaJoined==='function') sagaJoined(c); }
     else { G.flags.rourkeLog = true; L.push('Your bunks are full: Rourke gives you her logbook and the fleet\'s codes instead'); } }
-  if(e.ghostWake){ G.flags.ghostWake = true; grant('exp_ghost'); if(typeof sagaNote==='function') sagaNote('ghost', `In sector ${G.sector}, the crew woke the lost frigates of the FNS Lantern's fleet. They promised to come when the Flaggship was found.`); }
+  if(e.ghostWake){ G.flags.ghostWake = true; grant('exp_ghost'); if(typeof sagaNote==='function') sagaNote('ghost', `In sector ${G.sector}, the crew woke the lost frigates of the FNS Lantern's fleet. They promised to come when the Dreadnought was found.`); }
 }
-/* the Flaggship fight: the ghost fleet keeps its promise */
+/* the Dreadnought fight: the ghost fleet keeps its promise */
 function expansionBoss(e, o){
   if(!G.flags.ghostWake) return; const n = (o.phase||0) < 2 ? 6 : 4; e.hull = Math.max(4, e.hull - n);
-  o.text = (o.text ? o.text + ' ' : '') + `Six old Fedoration frigates drop out of the dark around the Flaggship, ${G.flags.rourke ? 'Rourke\'s voice on every channel, ' : ''}and open fire: -${n} hull before the fight even starts.`;
+  o.text = (o.text ? o.text + ' ' : '') + `Six old Commonwealth frigates drop out of the dark around the Dreadnought, ${G.flags.rourke ? 'Rourke\'s voice on every channel, ' : ''}and open fire: -${n} hull before the fight even starts.`;
 }
 
 /* ---------------- events ---------------- */
 Object.assign(BASE.events, {
   /* --- the Ghost Fleet (three parts across three sectors) --- */
-  gf_signal:{ minSector:2, maxSector:5, once:true, weight:1.4, art:'wreck', text:'A distress code nobody has used in forty years: the FNS Lantern, a Fedoration frigate lost with her whole battle group. Her hull is here, cold and empty. Her computer is still asking for help.', choices:[
+  gf_signal:{ minSector:2, maxSector:5, once:true, weight:1.4, art:'wreck', text:'A distress code nobody has used in forty years: the FNS Lantern, a Commonwealth frigate lost with her whole battle group. Her hull is here, cold and empty. Her computer is still asking for help.', choices:[
     { text:'Board her and pull the logs.', effect:{ text:'The last entry is from Captain Ada Rourke: "Fleet hidden. Crews in cold sleep. Waiting for orders that never came. I\'ve taken a lifeboat to find help." The lifeboat\'s beacon still pings, faintly, from the next sector.', questNext:'gf_lifeboat', scrap:15 } },
     { text:'Strip her for parts.', effect:{ text:'You take what you can carry. It feels a bit like robbing a grave.', scrap:45, parts:2 } },
-    { text:'{who} decodes the old Fedoration cipher.', req:{ quirk:'bookworm' }, effect:{ text:'{who} reads the whole log in an hour, including the bits in code. Rourke\'s lifeboat is in the next sector, and her fleet is real.', questNext:'gf_lifeboat', scrap:20, xp:{ skill:'pilot', amt:20 } } } ] },
+    { text:'{who} decodes the old Commonwealth cipher.', req:{ quirk:'bookworm' }, effect:{ text:'{who} reads the whole log in an hour, including the bits in code. Rourke\'s lifeboat is in the next sector, and her fleet is real.', questNext:'gf_lifeboat', scrap:20, xp:{ skill:'pilot', amt:20 } } } ] },
   gf_lifeboat:{ questOnly:true, title:'The Lantern\'s lifeboat', art:'distress', text:'A tiny lifeboat, frost on every window. Inside, in a cold-sleep pod, a grey-haired woman in a forty-year-old uniform. The pod\'s battery has three days left in it.', choices:[
-    { text:'Wake her up.', effect:{ text:'Captain Ada Rourke wakes up, looks at your crew, looks at your ship, and says: "Is this really the best the Fedoration has left?" Then: "Right. My fleet is in the next sector. Let\'s go and get them."', ghostCrew:true, questNext:'gf_fleet' } },
+    { text:'Wake her up.', effect:{ text:'Captain Ada Rourke wakes up, looks at your crew, looks at your ship, and says: "Is this really the best the Commonwealth has left?" Then: "Right. My fleet is in the next sector. Let\'s go and get them."', ghostCrew:true, questNext:'gf_fleet' } },
     { text:'Take her logbook and leave her sleeping. She\'ll be found.', effect:{ text:'The logbook has the fleet\'s hiding place and its wake-up codes. You swap the pod\'s battery for a fresh one before you go.', questNext:'gf_fleet', setFlag:'rourkeLog' } } ] },
   gf_fleet:{ questOnly:true, title:'The hidden fleet', art:'fleet', text:'Six frigates, dark and silent, hidden in the shadow of a dead moon. Forty years of dust on the hulls. Their crews are still asleep inside. They have been waiting all this time for somebody to give them an order.', choices:[
-    { text:'Send the wake-up codes: the Flaggship is coming.', req:{ flag:'rourke', hide:true }, effect:{ text:'Rourke takes the comms. "Lantern group, this is your captain. Sorry I\'m late." One by one, sixty-year-old engines light up. They will meet you at the last battle.', ghostWake:true, crewHeal:30 } },
-    { text:'Use the codes from Rourke\'s logbook.', req:{ flag:'rourkeLog', hide:true }, effect:{ text:'The frigates wake slowly, and answer to your codes. They will find you when you find the Flaggship.', ghostWake:true } },
+    { text:'Send the wake-up codes: the Dreadnought is coming.', req:{ flag:'rourke', hide:true }, effect:{ text:'Rourke takes the comms. "Lantern group, this is your captain. Sorry I\'m late." One by one, sixty-year-old engines light up. They will meet you at the last battle.', ghostWake:true, crewHeal:30 } },
+    { text:'Use the codes from Rourke\'s logbook.', req:{ flag:'rourkeLog', hide:true }, effect:{ text:'The frigates wake slowly, and answer to your codes. They will find you when you find the Dreadnought.', ghostWake:true } },
     { text:'Strip them for parts. Nobody is coming for them.', effect:{ text:'Good guns, old but solid, and enough scrap to fill the hold. The sleeping crews never notice.', scrap:90, weapon:'random', missiles:3 } },
     { text:'Leave them to sleep.', effect:{ text:'Some things are better left as they are. Your crew are quiet for the rest of the day.', crewHeal:20 } } ] },
   /* --- Lucky Vell's crate (two parts) --- */
   sm_offer:{ minSector:1, maxSector:5, once:true, weight:1.3, art:'ship', text:'A nervous smuggler in a very large hat hails you. "Lucky Vell, at your service. I need a crate carried to a buyer in the next sector, and every patrol here knows my ship. Forty scrap now, more on delivery. No questions. Please, no questions."', choices:[
     { text:'Take the crate.', effect:{ text:'The crate is heavy, warm, and hums very slightly. Vell pays up and is gone before you can ask anything.', scrap:40, questNext:'sm_buyer', setFlag:'vellCrate' } },
     { text:'No thanks.', effect:{ text:'"Your loss." Vell is already hailing the next ship.' } },
-    { text:'{who} recognises that hum.', req:{ quirk:'expyrate' }, effect:{ text:'"That\'s a Voltan reactor core in there," {who} whispers. "Stolen. Worth a fortune." You take it anyway, with your eyes open.', scrap:40, questNext:'sm_buyer', setFlag:['vellCrate','vellKnow'] } } ] },
+    { text:'{who} recognises that hum.', req:{ quirk:'expyrate' }, effect:{ text:'"That\'s a Thrumm reactor core in there," {who} whispers. "Stolen. Worth a fortune." You take it anyway, with your eyes open.', scrap:40, questNext:'sm_buyer', setFlag:['vellCrate','vellKnow'] } } ] },
   sm_buyer:{ questOnly:true, title:'The buyer', art:'ship', text:'The buyer\'s ship is all smoked glass and polite guns. "You have my crate, I believe." The crate in your hold is humming louder than ever.', choices:[
     { text:'Hand it over and get paid.', effect:{ text:'"A pleasure." The buyer pays more than Vell promised, and asks if you\'d like regular work. You would not.', scrap:110 } },
-    { text:'Open it first.', chance:.55, success:{ text:'A Voltan reactor core, still warm. You wire it into your own reactor before the buyer can object, then pay them off with a fraction of what it is worth.', reactor:1, scrap:-20 }, fail:{ text:'The buyer sees the open crate on their screen and stops being polite.', fight:'pyrate_gunship' } },
-    { text:'Sell it to the Rebuff instead.', effect:{ text:'A Rebuff customs cutter pays well for evidence, and leads the buyer off on a chase. The Fleet behind you is busy with the paperwork.', scrap:70, fleetPush:-.08 } },
+    { text:'Open it first.', chance:.55, success:{ text:'A Thrumm reactor core, still warm. You wire it into your own reactor before the buyer can object, then pay them off with a fraction of what it is worth.', reactor:1, scrap:-20 }, fail:{ text:'The buyer sees the open crate on their screen and stops being polite.', fight:'pyrate_gunship' } },
+    { text:'Sell it to the Mandate instead.', effect:{ text:'A Mandate customs cutter pays well for evidence, and leads the buyer off on a chase. The Fleet behind you is busy with the paperwork.', scrap:70, fleetPush:-.08 } },
     { text:'Keep it, and tune your reactor with it.', req:{ flag:'vellKnow', hide:true }, effect:{ text:'You knew what it was. You wire it in and jump before the buyer finishes their sentence.', reactor:1, fleetPush:.05 } } ] },
   /* --- one-off events --- */
   x_whale:{ minSector:1, weight:.9, art:'creature', text:'Something huge drifts past the window: a space whale, a mile long, singing at a frequency that makes the coffee ripple.', choices:[
@@ -191,7 +191,7 @@ Object.assign(BASE.events, {
     { text:'Lend your medbay and crew.', req:{ system:'medbay', level:2 }, effect:{ text:'Your medbay works through the night. By morning the fever has broken. One of their nurses asks to come with you.', crew:'random', scrap:30 } },
     { text:'Help as best you can.', chance:.6, success:{ text:'It isn\'t catching, as promised. They pay you in medical supplies and scrap.', scrap:40, crewHeal:30 }, fail:{ text:'It was a little bit catching. Your crew spend three days sneezing.', crewHurt:30 } },
     { text:'Keep your distance.', effect:{ text:'You send good wishes. From very far away.' } } ] },
-  x_race:{ minSector:1, weight:.8, art:'asteroid', text:'Three pyrate skiffs are racing round an asteroid field for a pot of scrap. "Fancy a lap, Fedoration? Loser buys the drinks." The asteroids look sharp.', choices:[
+  x_race:{ minSector:1, weight:.8, art:'asteroid', text:'Three pyrate skiffs are racing round an asteroid field for a pot of scrap. "Fancy a lap, Commonwealth? Loser buys the drinks." The asteroids look sharp.', choices:[
     { text:'Race them.', req:{ system:'engines', level:4 }, effect:{ text:'You don\'t just win. You lap them. They pay up, sulking.', scrap:70 } },
     { text:'Race them anyway.', chance:.45, success:{ text:'A photo finish, and the photo says you. They pay up.', scrap:55 }, fail:{ text:'You clip three asteroids and finish last. You buy the drinks.', hull:-4, scrap:-15 } },
     { text:'Decline politely.', effect:{ text:'"Coward!" they shout, cheerfully, and race on.' } } ] },
@@ -202,12 +202,12 @@ Object.assign(BASE.events, {
   x_vending:{ minSector:1, weight:.6, art:'space', text:'A vending machine is floating in empty space, lights still on, humming to itself. Nobody knows how it got here. It has missiles in slot B4.', choices:[
     { text:'Pay for slot B4 (10 scrap).', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'Clunk. Two missiles drop out, and a free biscuit.', missiles:2 } },
     { text:'Kick it.', chance:.5, success:{ text:'Everything falls out. Everything.', missiles:3, parts:1, goods:'loot' }, fail:{ text:'It kicks back. Somehow.', hull:-1 } },
-    { text:'{who} hacks it.', req:{ quirk:'tinkerer' }, effect:{ text:'{who} has it giving away stock and singing the Fedoration anthem in under a minute.', missiles:3, parts:3 } } ] },
+    { text:'{who} hacks it.', req:{ quirk:'tinkerer' }, effect:{ text:'{who} has it giving away stock and singing the Commonwealth anthem in under a minute.', missiles:3, parts:3 } } ] },
   x_library:{ minSector:2, weight:.6, art:'station', text:'A library ship, all lit windows and quiet. The librarian waves you in. "Borrow anything. Bring it back within six months or there will be a fine."', choices:[
     { text:'Borrow the gunnery manuals.', effect:{ text:'Your gunners stay up late reading. It shows.', xp:{ skill:'weapons', amt:20 } } },
     { text:'Borrow the engineering manuals.', effect:{ text:'Your crew learn eleven new ways to fix things and two to break them.', xp:{ skill:'repair', amt:20 } } },
     { text:'{who} reads everything.', req:{ quirk:'bookworm' }, effect:{ text:'{who} reads for nine hours straight and comes back a better pilot, gunner and person. Mostly pilot.', xp:{ skill:'pilot', amt:40 } } } ] },
-  x_rival:{ minSector:2, weight:.6, art:'ship', text:'Another Fedoration courier, the Swiftly Gone, drops out of a jump beside you. Her captain grins. "Running from the Fleet too? Want to swap notes?"', choices:[
+  x_rival:{ minSector:2, weight:.6, art:'ship', text:'Another Commonwealth courier, the Swiftly Gone, drops out of a jump beside you. Her captain grins. "Running from the Fleet too? Want to swap notes?"', choices:[
     { text:'Swap maps.', effect:{ text:'Their charts fill in your map. Yours fill in theirs. Good luck to them.', reveal:true } },
     { text:'Trade fuel for missiles.', req:{ fuel:3 }, effect:{ text:'A fair swap, and a cup of terrible coffee.', fuel:-2, missiles:4 } },
     { text:'Challenge them to a card game.', req:{ quirk:'gambler' }, chance:.6, success:{ text:'{who} wins their scrap, their spare parts, and their captain\'s hat.', scrap:50, parts:2 }, fail:{ text:'{who} loses, badly, and won\'t talk about it.', scrap:-20 } } ] }

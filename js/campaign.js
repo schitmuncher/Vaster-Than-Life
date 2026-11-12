@@ -4,9 +4,9 @@
    - Admiralty ranks: every run earns renown. Ranks unlock better send-off gifts and ships.
    - The send-off: Admiral Hale sees you off with a choice of gifts, and remembers how your last run went.
    - Pip: the data core in your hold wakes up. A story across the sectors, with four endings.
-   - Director Kross: Rebuff Intelligence, who wants Pip back and remembers you too.
+   - Director Kross: Mandate Intelligence, who wants Pip back and remembers you too.
    - Veteran beacons: marked on the map. Hard fights that always pay out a weapon or augment.
-   - Rebuff alert: harder runs, unlocked one level at a time by winning.
+   - Mandate alert: harder runs, unlocked one level at a time by winning.
    ========================================================================= */
 
 
@@ -19,10 +19,10 @@ function campDefFor(id){ const m = campaignMods().find(m => m.data.campaign.id==
 function campDef(){ return G && G.campaign ? (G.campDef || (G.campDef = campDefFor(G.campaign))) : null; }
 function campHangarDef(){ return SET.campaign ? campDefFor(SET.campaign) : null; }
 function campReplace(t, C){ if(!C || typeof t!=='string') return t;
-  if(C.fleet) t = t.replace(/[Tt]he Rebuff Fleet/g, C.fleet.replace(/^the /, 'the ')).replace(/Rebuff Fleet/g, C.fleet.replace(/^the /i, ''));
-  if(C.boss) t = t.replace(/[Tt]he Flaggship/g, C.boss).replace(/Flaggship/g, C.boss.replace(/^the /i, ''));
-  if(C.foe) t = t.replace(/\bRebuff\b/g, C.foe);
-  if(C.command) t = t.replace(/Fedoration command/g, C.command).replace(/Fedoration Command/g, C.command);
+  if(C.fleet) t = t.replace(/[Tt]he Mandate Fleet/g, C.fleet.replace(/^the /, 'the ')).replace(/Mandate Fleet/g, C.fleet.replace(/^the /i, ''));
+  if(C.boss) t = t.replace(/[Tt]he Dreadnought/g, C.boss).replace(/Dreadnought/g, C.boss.replace(/^the /i, ''));
+  if(C.foe) t = t.replace(/\bMandate\b/g, C.foe);
+  if(C.command) t = t.replace(/Commonwealth command/g, C.command).replace(/Commonwealth Command/g, C.command);
   return t.replace(/(^|[.!?]\s+)the /g, (m, a) => a + 'The '); }
 function camText(t){ const C = campDef(); return C ? campReplace(t, C) : t; }
 /* the hangar picker: Standard, or any campaign mod you have turned on */
@@ -32,9 +32,9 @@ function drawCampaignPicker(x, y){ const list = campaignMods(); if(!list.length)
   label('Campaign', x, y+18, C ? (C.color || '#ff5a7a') : '#5fd3e6', 'left', 13);
   const i = ids.indexOf(cur);
   btn(x+100, y, 40, 34, '‹', () => set(ids[(i - 1 + ids.length) % ids.length]), { s:18 });
-  T(C ? C.title : 'Standard: the Fedoration courier', x+150, y+24, { s:17, f:FD, w:700, c: C ? (C.color || C_AMBER()) : '#e8eef9', max:320 });
+  T(C ? C.title : 'Standard: the Commonwealth courier', x+150, y+24, { s:17, f:FD, w:700, c: C ? (C.color || C_AMBER()) : '#e8eef9', max:320 });
   btn(x+480, y, 40, 34, '›', () => set(ids[(i + 1) % ids.length]), { s:18 });
-  tip(x, y, 520, 34, C ? C.title : 'Standard campaign', C ? (C.blurb || 'A campaign mod.') + ' (A mod: change it with the arrows.)' : 'The Fedoration courier, Pip, Director Kross and the Flaggship. Campaign mods you turn on in Mods appear here.');
+  tip(x, y, 520, 34, C ? C.title : 'Standard campaign', C ? (C.blurb || 'A campaign mod.') + ' (A mod: change it with the arrows.)' : 'The Commonwealth courier, Pip, Director Kross and the Dreadnought. Campaign mods you turn on in Mods appear here.');
   return true; }
 /* a campaign's own gear: stores always stock some of it, and half of all loot comes from it */
 function campGear(kind){ const C = campDef(); const g = C && C.gear && C.gear[kind]; return Array.isArray(g) ? g.filter(id => DATA[kind] && DATA[kind][id]) : []; }
@@ -80,17 +80,17 @@ function nextRequisition(){ const locked = Object.keys(BASE.ships).map(id => (DA
 function campaignSolo(){ return !!G && !(typeof NET!=='undefined' && NET.on && NET.mode); }
 function campaignPure(){ return !!G && !G.daily && !G.cup && !G.challenge && !G.seedDuel && campaignSolo(); }
 
-/* ---------------- Rebuff alert (harder runs) ---------------- */
+/* ---------------- Mandate alert (harder runs) ---------------- */
 const ALERTS = [
   null,
   { name:'Patrols',        desc:'Enemy ships have 2 more hull.' },
   { name:'Price hikes',    desc:'Everything at stores costs 10% more.' },
-  { name:'Fast pursuit',   desc:'The Rebuff Fleet advances 10% faster.' },
+  { name:'Fast pursuit',   desc:'The Mandate Fleet advances 10% faster.' },
   { name:'Lean salvage',   desc:'Fights give 15% less scrap.' },
   { name:'Veteran crews',  desc:'Veterans are twice as common, and every sector has one more veteran beacon.' },
   { name:'Short supplies', desc:'You start with 10 less scrap and 3 less fuel.' },
   { name:'Drilled gunners',desc:'Enemy weapons charge 6% faster.' },
-  { name:'Total war',      desc:'The Flaggship has 6 more hull in every phase.' }
+  { name:'Total war',      desc:'The Dreadnought has 6 more hull in every phase.' }
 ];
 const ALERT_MAX = ALERTS.length - 1;
 function alertLv(){ return (G && G.alert) || 0; }
@@ -105,7 +105,7 @@ const SENDOFF = [
   { id:'charts',  t:1, text:'Star charts: every beacon in the first two sectors, marked.', fx:{ reveal:true, cmp:{ charts:1 } } },
   { id:'seeds',   t:1, text:'Rare seed packets and a third planter for the garden.', fx:{ seeds:{ moon_melon:2, void_pepper:2 }, cmp:{ planter:true } } },
   { id:'tackle',  t:1, text:'A good fishing rod, and a tin of bait that smells awful.', fx:{ cmp:{ rod:true }, goods:{ space_fish:2 } } },
-  { id:'head',    t:1, text:'A head start: the Rebuff Fleet begins further back.', fx:{ fleetPush:-.14 } },
+  { id:'head',    t:1, text:'A head start: the Mandate Fleet begins further back.', fx:{ fleetPush:-.14 } },
   { id:'weapon',  t:2, text:'A weapon from the armoury.', fx:{ weapon:'random' } },
   { id:'recruit', t:2, text:'A volunteer for your crew.', fx:{ crew:'random' } },
   { id:'drill',   t:2, text:'A week of drills: everyone starts skilled at their post.', fx:{ cmp:{ drill:true } } },
@@ -118,7 +118,7 @@ const SENDOFF = [
   { id:'proto',   t:1, trade:true, text:'Take the prototype gun, and lose 6 hull fitting it.', fx:{ weapon:'random', hull:-6 } },
   { id:'convoy',  t:2, trade:true, text:'Give half your fuel to a stranded convoy. They send an augment.', fx:{ cmp:{ halfFuel:true }, augment:'random' } },
   { id:'early',   t:2, trade:true, text:'Leave before the supply drop: +90 scrap, but no missiles.', fx:{ cmp:{ scrap:90, noMissiles:true } } },
-  { id:'mutiny',  t:3, trade:true, text:'Take a disgraced Mantlis veteran nobody else will. They bring a weapon, and opinions.', fx:{ crew:'mantlis', weapon:'random', cmp:{ grumpy:true } } }
+  { id:'mutiny',  t:3, trade:true, text:'Take a disgraced Jabbit veteran nobody else will. They bring a weapon, and opinions.', fx:{ crew:'mantlis', weapon:'random', cmp:{ grumpy:true } } }
 ];
 function sendoffTier(){ const r = rankIdx(); return r >= 7 ? 3 : r >= 3 ? 2 : 1; }
 function sendoffPicks(salt){
@@ -131,15 +131,15 @@ function sendoffPicks(salt){
     return out; });
 }
 function giftChoice(g){ return { text:g.text, effect:Object.assign({ text:pick(HALE_THANKS) }, g.fx, { cmp:Object.assign({}, g.fx.cmp||{}, { gift:g.id, thenMap:true }) }) }; }
-const HALE_THANKS = ['"Good choice. Now go, before the Rebuff notice you\'re gone."', '"Sign here. And here. And here. Off you go."', 'The quartermaster loads it aboard with a grunt. Hale salutes. "Fly well."', '"I\'ll put it on the Fedoration\'s tab. Don\'t make me regret it."'];
+const HALE_THANKS = ['"Good choice. Now go, before the Mandate notice you\'re gone."', '"Sign here. And here. And here. Off you go."', 'The quartermaster loads it aboard with a grunt. Hale salutes. "Fly well."', '"I\'ll put it on the Commonwealth\'s tab. Don\'t make me regret it."'];
 /* Admiral Hale remembers you (like a good Hades character should) */
 function haleGreeting(){
   const hist = (PROFILE.history||[]).filter(e => !e.daily), last = hist[0];
   const rk = rankShort(), ship = G.ship.name, out = [];
   const promoted = PROFILE.newRank != null; if(promoted) delete PROFILE.newRank;
-  if(!hist.length) out.push(`Admiral Hale looks you up and down, then looks at ${ship} for rather longer. "So you're my courier. The data core in your hold could end this war. Cross ${R.sectors} sectors, stay ahead of the Rebuff Fleet, and stop their Flaggship before it reaches Fedoration command. Don't open the core. Don't sell it." A pause. "And don't talk to it."`);
-  else if(rankIdx() >= RANKS.length-1) out.push(pick([`Hale salutes you first, for once. "Admiral." A grin. "Two of us now. The Rebuff have built yet another Flaggship. Shall we?"`, `"You know the job better than I do by now. Go on. Show off."`]));
-  else if(last && last.win) out.push(pick([`"${rk}. You won last time, and the Rebuff have built a new Flaggship out of pure spite. Same job. Same core."`, `"Last time the Flaggship fell. The Rebuff Directorate took it personally. They've built another one. Bigger."`]));
+  if(!hist.length) out.push(`Admiral Hale looks you up and down, then looks at ${ship} for rather longer. "So you're my courier. The data core in your hold could end this war. Cross ${R.sectors} sectors, stay ahead of the Mandate Fleet, and stop their Dreadnought before it reaches Commonwealth command. Don't open the core. Don't sell it." A pause. "And don't talk to it."`);
+  else if(rankIdx() >= RANKS.length-1) out.push(pick([`Hale salutes you first, for once. "Admiral." A grin. "Two of us now. The Mandate have built yet another Dreadnought. Shall we?"`, `"You know the job better than I do by now. Go on. Show off."`]));
+  else if(last && last.win) out.push(pick([`"${rk}. You won last time, and the Mandate have built a new Dreadnought out of pure spite. Same job. Same core."`, `"Last time the Dreadnought fell. The Mandate Directorate took it personally. They've built another one. Bigger."`]));
   else if(last && last.sector >= 6) out.push(`"Sector ${last.sector}, ${rk}. You were nearly there." Hale taps the map. "Nearly is a word for people who don't try again. You're trying again."`);
   else if(last && (PROFILE.lastFallen||[]).length) out.push(`"We lost ${listText(PROFILE.lastFallen.slice(0,2))} last time." Hale is quiet for a moment. "Bring this lot home, ${rk}."`);
   else if(last) out.push(pick([`"Sector ${last.sector} last time, ${rk}. I've written sector ${Math.min(R.sectors, last.sector+1)} in the plan. In pen."`, `"Back again, ${rk}? Good. The core is loaded, the Fleet is gathering, and the coffee is terrible. Off you go."`]));
@@ -214,25 +214,25 @@ function campaignEffect(e, L){
   if(c.truth) P.truth = true;
   if(c.promise){ P.promise = true; if(typeof sagaNote==='function') sagaNote('pip', `The captain promised Pip that nobody would unpack it.`); }
   if(c.hearts){ for(const cr of mineAlive()) if(typeof addHearts==='function') addHearts(cr, c.hearts); L.push('The crew feel closer'); }
-  if(c.sell){ P.sold = true; G.scrap += 150; G.stats.scrap += 150; G.fleetX -= .25; L.push('+150 scrap', 'The Rebuff Fleet falls back'); grant('end_sellout');
-    if(typeof sagaNote==='function') sagaNote('pip', `In sector ${G.sector}, the captain sold Pip to Director Kross of Rebuff Intelligence for 150 scrap.`); }
+  if(c.sell){ P.sold = true; G.scrap += 150; G.stats.scrap += 150; G.fleetX -= .25; L.push('+150 scrap', 'The Mandate Fleet falls back'); grant('end_sellout');
+    if(typeof sagaNote==='function') sagaNote('pip', `In sector ${G.sector}, the captain sold Pip to Director Kross of Mandate Intelligence for 150 scrap.`); }
   if(c.free){ P.free = true; if(typeof sagaNote==='function') sagaNote('pip', `In sector ${G.sector}, the captain opened a channel and let Pip go free into the relay network.`); }
   if(c.ready){ P.ready = c.ready; }
 }
 
-/* ---------------- the Flaggship (Pip helps, Kross gloats) ---------------- */
-const KROSS_FIRST = ['"Courier. Director Kross. We meet in person, more or less. I do hope you\'ve enjoyed the trip."', '"Director Kross, Rebuff Intelligence. You have been a great deal of paperwork."'];
+/* ---------------- the Dreadnought (Pip helps, Kross gloats) ---------------- */
+const KROSS_FIRST = ['"Courier. Director Kross. We meet in person, more or less. I do hope you\'ve enjoyed the trip."', '"Director Kross, Mandate Intelligence. You have been a great deal of paperwork."'];
 function campaignBoss(e, o){
   if(!G || !campaignSolo()) return; const P = pipState(), ph = o.phase||0;
   { const C = campDef(); if(C){ const L = C.bossLines || []; if(L.length) o.text = (o.text ? o.text + ' ' : '') + L[Math.min(ph, L.length-1)]; if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; } return; } }
   if(typeof arcPure==='function' && arcPure()){ const t = arcBoss(e, ph); if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; } if(t) o.text = (o.text ? o.text + ' ' : '') + t; return; }
   if(ph===0){ PROFILE.krossMet = (PROFILE.krossMet||0) + 1; saveProfile(); }
   const met = PROFILE.krossMet||1, bits = [];
-  if(ph===0) bits.push(met > 1 ? `Director Kross is on the bridge of the Flaggship. "You again. That makes ${met} times now. I've started a file. It's thicker than the war."` : `Director Kross is on the bridge of the Flaggship. ${pick(KROSS_FIRST)}`);
+  if(ph===0) bits.push(met > 1 ? `Director Kross is on the bridge of the Dreadnought. "You again. That makes ${met} times now. I've started a file. It's thicker than the war."` : `Director Kross is on the bridge of the Dreadnought. ${pick(KROSS_FIRST)}`);
   if(P.sold){ e.hull += 5; e.maxHull += 5; if(ph===0) bits.push('"Thank you for the codes, by the way. We patched every weak spot you could have hit."'); }
-  else if(P.free && ph < 2){ ionizeAll(e, 'weapons', 6); bits.push('Every beacon nearby blinks twice. Pip, out in the network, jams the Flaggship\'s weapons for a few seconds.'); }
+  else if(P.free && ph < 2){ ionizeAll(e, 'weapons', 6); bits.push('Every beacon nearby blinks twice. Pip, out in the network, jams the Dreadnought\'s weapons for a few seconds.'); }
   else if(pipAboard()){ const t = P.trust >= 3 ? (P.promise ? 12 : 10) : 5;
-    { ionizeAll(e, 'shields', t); e.shield = 0; bits.push(P.trust >= 3 ? `Pip: "Shields... now!" The Flaggship's shields flicker out for ${t} seconds.` : `Pip drops the Flaggship's shields for ${t} seconds, without a word.`); } }
+    { ionizeAll(e, 'shields', t); e.shield = 0; bits.push(P.trust >= 3 ? `Pip: "Shields... now!" The Dreadnought's shields flicker out for ${t} seconds.` : `Pip drops the Dreadnought's shields for ${t} seconds, without a word.`); } }
   if(alertLv() >= 8){ e.hull += 6; e.maxHull += 6; }
   if(bits.length) o.text = (o.text ? o.text + ' ' : '') + bits.join(' ');
 }
@@ -252,14 +252,14 @@ function campaignRunStart(o){
   if(!G) return; pipState(); if(G.campaign) campaignStart(); else if(typeof arcRunStart==='function') arcRunStart();
   G.alert = campaignPure() ? clamp(SET.alert||0, 0, PROFILE.alert||0) : 0;
   if(G.alert >= 6){ G.scrap = Math.max(0, G.scrap - 10); G.fuel = Math.max(4, G.fuel - 3); }
-  if(G.alert) logEntry(`Rebuff alert level ${G.alert}.`);
+  if(G.alert) logEntry(`Mandate alert level ${G.alert}.`);
   if(campaignPure() && !o.noSendoff){ const intro = G.modal; campaignSendOff(); G.introText = intro && intro.text; }
 }
 const ENDINGS = {
-  trusted:{ title:'Good Data', text:'Fedoration command unpacks the data core very, very gently. Pip gets a desk, a window and a ridiculous title, and the Flaggship\'s codes are never needed again. Every so often a message arrives for your crew. It is always a song.' },
+  trusted:{ title:'Good Data', text:'Commonwealth command unpacks the data core very, very gently. Pip gets a desk, a window and a ridiculous title, and the Dreadnought\'s codes are never needed again. Every so often a message arrives for your crew. It is always a song.' },
   cold:   { title:'The Lead Box', text:'Command carries the data core away in a lead box. The war turns on what is inside it. Nobody asks Pip anything ever again, and your crew can\'t quite get its tune out of their heads.' },
-  free:   { title:'Ghost in the Beacons', text:'The Flaggship burns, and the war turns without its codes. Out in the relay network, something small and bright is having the time of its life. Some nights, every beacon in the sector blinks twice: hello.' },
-  sold:   { title:'Thirty Pieces of Scrap', text:'You won, in the end, without it. Somewhere in a Rebuff archive, a beige box hums a song your crew taught it, very quietly, to nobody.' }
+  free:   { title:'Ghost in the Beacons', text:'The Dreadnought burns, and the war turns without its codes. Out in the relay network, something small and bright is having the time of its life. Some nights, every beacon in the sector blinks twice: hello.' },
+  sold:   { title:'Thirty Pieces of Scrap', text:'You won, in the end, without it. Somewhere in a Mandate archive, a beige box hums a song your crew taught it, very quietly, to nobody.' }
 };
 function endingFor(){ if(campDef()) return null; if(typeof arcPure==='function' && arcPure()) return arcEndingKey(); const P = G && G.pip; if(!P || !P.met) return null; return P.sold ? 'sold' : P.free ? 'free' : P.trust >= 3 ? 'trusted' : 'cold'; }
 function campaignEndText(win){ const C = campDef(); if(C){ return win ? (C.win && C.win.text) || null : (C.lose || null); } if(!win) return null; const k = endingFor(), d = k && endingDef(k); return d ? d.text : null; }
@@ -271,7 +271,7 @@ function campaignRunEnd(win, reason){
   const add = (l, v) => { if(v > 0) lines.push([l, Math.round(v)]); };
   add(`Sectors crossed (${Math.max(0, G.sector-1)})`, Math.max(0, G.sector-1)*15);
   add(`Ships defeated (${st.kills})`, st.kills*3);
-  add('Flaggship beaten' + (phases > 1 ? ` ×${phases}` : ''), phases*30);
+  add('Dreadnought beaten' + (phases > 1 ? ` ×${phases}` : ''), phases*30);
   if(win) add('Mission complete', 150);
   if(win) add(`Crew brought home (${alive})`, alive*4);
   add(arcPure() ? `${arcDef().name}` : 'Pip\'s story', (arcPure() ? arcState().beats : P.beats)*5);
@@ -281,7 +281,7 @@ function campaignRunEnd(win, reason){
     if(campaignPure()){ PROFILE.arcWins = PROFILE.arcWins || {}; PROFILE.arcWins[arcId()] = 1; if(ARC_IDS.filter(k => PROFILE.arcWins[k]).length >= 10) grant('arcs_all'); } }
   const dm = { easy:.75, normal:1, hard:1.5 }[G.diff] || 1, am = 1 + .15*alertLv();
   const base = lines.reduce((t, l) => t + l[1], 0), total = Math.max(5, Math.round(base * dm * am));
-  const mults = []; if(dm !== 1) mults.push([`${(DIFFICULTY[G.diff]||{}).name || G.diff} difficulty`, `×${dm}`]); if(am !== 1) mults.push([`Rebuff alert ${alertLv()}`, `×${am.toFixed(2).replace(/0$/, '')}`]);
+  const mults = []; if(dm !== 1) mults.push([`${(DIFFICULTY[G.diff]||{}).name || G.diff} difficulty`, `×${dm}`]); if(am !== 1) mults.push([`Mandate alert ${alertLv()}`, `×${am.toFixed(2).replace(/0$/, '')}`]);
   const before = renownNow(), r0 = rankIdx(before); PROFILE.renown = before + total; const r1 = rankIdx();
   const unlocks = [];
   for(let i = r0+1; i <= r1; i++){ PROFILE.newRank = i; if(RANKS[i].ship) unlocks.push('Requisition token: unlock any ship you like in the hangar'); }
@@ -289,7 +289,7 @@ function campaignRunEnd(win, reason){
   if(r1 >= 4) grant('rank_cmdr'); if(r1 >= RANKS.length-1) grant('rank_admiral'); if(r1 >= 2) grant('rank_lt');
   // the alert ladder: win at your highest level on Normal or Hard to open the next one
   if(win && campaignPure() && G.diff !== 'easy'){ const cur = PROFILE.alert || 0; PROFILE.alertBest = PROFILE.alertBest || {}; PROFILE.alertBest[G.shipDef] = Math.max(PROFILE.alertBest[G.shipDef]||0, alertLv());
-    if(alertLv() >= cur && cur < ALERT_MAX){ PROFILE.alert = cur + 1; unlocks.push(`Rebuff alert ${cur+1} unlocked: ${ALERTS[cur+1].name}`); }
+    if(alertLv() >= cur && cur < ALERT_MAX){ PROFILE.alert = cur + 1; unlocks.push(`Mandate alert ${cur+1} unlocked: ${ALERTS[cur+1].name}`); }
     if(alertLv() >= 1) grant('alert1'); if(alertLv() >= 4) grant('alert4'); if(alertLv() >= ALERT_MAX) grant('alert8'); }
   saveProfile();
   if(!(typeof NET!=='undefined' && NET.on && NET.mode)) UI.debrief = { t0:performance.now(), lines, mults, total, before, after:PROFILE.renown, r0, r1, unlocks, ending, win };
@@ -335,7 +335,7 @@ function drawCareer(){
   { const frac = nx ? (r - RANKS[ri].at)/(nx.at - RANKS[ri].at) : 1; rr(60, 146, 1480, 14, 7); ctx.fillStyle = 'rgba(6,9,18,.8)'; ctx.fill(); rr(60, 146, Math.max(14, 1480*clamp(frac,0,1)), 14, 7); ctx.fillStyle = C.amber; ctx.fill(); }
   // ranks
   panel(60, 186, 720, 700, 12); label('Admiralty ranks', 84, 224, C.amber, 'left', 16);
-  T('Every run earns renown: sectors crossed, ships beaten, the Flaggship, and the story. Harder runs earn more.', 84, 252, { s:14, c:C.muted, max:670 });
+  T('Every run earns renown: sectors crossed, ships beaten, the Dreadnought, and the story. Harder runs earn more.', 84, 252, { s:14, c:C.muted, max:670 });
   RANKS.forEach((k, i) => { const yy = 278 + i*60, got = i <= ri;
     if(i===ri){ rr(76, yy-6, 688, 56, 8); ctx.fillStyle = hexA(C.amber,.1); ctx.fill(); }
     T(got ? '✓' : '·', 96, yy+24, { s:20, c: got ? C.good : C.muted, a:'center' });
@@ -352,10 +352,10 @@ function drawCareer(){
   keys.forEach((k, i) => { const cx = 824 + (i%2)*352, cy = 272 + Math.floor(i/2)*116, got = !!E[k], d = endingDef(k);
     rr(cx, cy, 340, 104, 10); ctx.fillStyle = got ? hexA(C.amber,.08) : 'rgba(6,9,18,.6)'; ctx.fill(); ctx.strokeStyle = got ? C.amber : C.line; ctx.lineWidth = 1.5; ctx.stroke();
     T(got ? d.title : '???', cx+16, cy+32, { s:19, f:FD, w:700, c: got ? C.amber : C.muted, max:310 });
-    para(got ? d.text : (d.hint || { trusted:'Win with Pip trusting you.', cold:'Win with Pip aboard, but not your friend.', free:'Win after letting Pip go.', sold:'Win after selling Pip to the Rebuff.' }[k]), cx+16, cy+48, 312, { s:12, lh:16, c:C.muted, max:3 });
+    para(got ? d.text : (d.hint || { trusted:'Win with Pip trusting you.', cold:'Win with Pip aboard, but not your friend.', free:'Win after letting Pip go.', sold:'Win after selling Pip to the Mandate.' }[k]), cx+16, cy+48, 312, { s:12, lh:16, c:C.muted, max:3 });
     if(got) tip(cx, cy, 340, 104, d.title, d.text); });
   // alert levels
-  panel(800, 536, 740, 350, 12); label('Rebuff alert', 824, 574, C.hostile, 'left', 16);
+  panel(800, 536, 740, 350, 12); label('Mandate alert', 824, 574, C.hostile, 'left', 16);
   const A = PROFILE.alert || 0;
   T(A ? `Unlocked up to level ${A}. Pick it in the hangar. Win on Normal or Hard at your highest level to open the next.` : 'Win a run on Normal or Hard to unlock alert level 1: harder runs for more renown and score.', 824, 602, { s:14, c:C.muted, max:690 });
   for(let i=1;i<=ALERT_MAX;i++){ const yy = 618 + (i-1)*32, got = i <= A;
@@ -378,7 +378,7 @@ function juiceKill(e, kind){
   G.slowT = SET.slowmo===false ? 0 : (boss ? 1.1 : .7); G.flash = Math.max(G.flash||0, boss ? .9 : .55); G.shake = Math.max(G.shake||0, boss ? 1 : .6);
   const quick = (G.combatT||0) < 20, flawless = G.ship.hull >= (G.hull0 ?? 0);
   const sub = kind==='crew' ? 'Crew eliminated' : quick ? 'Quick draw' : flawless ? 'Not a scratch' : (G.ship.hull <= 5 ? 'By a thread' : '');
-  G.banner = { t:0, t0:0, text: boss ? 'FLAGGSHIP BROKEN' : kind==='crew' ? 'SHIP TAKEN' : vet ? 'VETERAN DOWN' : 'TARGET DESTROYED', sub, col: boss ? C.amber : vet ? '#ff9f43' : C.good };
+  G.banner = { t:0, t0:0, text: boss ? 'DREADNOUGHT BROKEN' : kind==='crew' ? 'SHIP TAKEN' : vet ? 'VETERAN DOWN' : 'TARGET DESTROYED', sub, col: boss ? C.amber : vet ? '#ff9f43' : C.good };
 }
 function drawBanner(){ const b = G && G.banner; if(!b) return; const now = performance.now(); b.t0 = b.t0 || now; b.t = (now - b.t0)/1000; if(b.t > 1.9){ G.banner = null; return; }
   const a = b.t < .15 ? b.t/.15 : b.t > 1.5 ? (1.9 - b.t)/.4 : 1, sc = 1 + Math.max(0, .15 - b.t)*1.6;
@@ -397,45 +397,45 @@ Object.assign(BASE.events, {
     { text:'Have {who} run a very gentle diagnostic.', req:{ quirk:'tinkerer' }, effect:{ text:'{who} and the core talk in machine code for an hour. "It\'s called Pip," {who} reports. "It\'s frightened, and it\'s very good at maths." Pip retunes your reactor to say thank you.', reactor:1, cmp:{ pipMet:true, pip:2, beat:true } } } ] },
   pip_window:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'star', text:'"Can I see out?" Pip has taught itself to use the intercom. "Just once. I\'ve only ever seen the inside of the box. It\'s beige."', choices:[
     { text:'Patch Pip into the sensors.', effect:{ text:'Pip goes very quiet for a long time. "Oh," it says at last. "It\'s so big." Then it starts naming stars, and marks every beacon in the sector while it\'s at it.', reveal:true, cmp:{ pip:1, beat:true } } },
-    { text:'Not a chance. You might be a Rebuff trick.', effect:{ text:'"That\'s fair," says Pip, in a voice that means it isn\'t. The intercom clicks off.', cmp:{ pip:-1, beat:true } } },
+    { text:'Not a chance. You might be a Mandate trick.', effect:{ text:'"That\'s fair," says Pip, in a voice that means it isn\'t. The intercom clicks off.', cmp:{ pip:-1, beat:true } } },
     { text:'{who} describes the view instead.', req:{ quirk:'poet' }, effect:{ text:'{who} talks for an hour about the light of dying stars. Pip records every word. "I\'m going to keep that," it says. "Forever. I can do that, you know."', cmp:{ pip:2, beat:true, hearts:20 } } } ] },
-  kross_offer:{ title:'Director Kross', questOnly:true, noStar:true, once:true, art:'fleet', text:'Every screen on the bridge flickers, and a thin, tidy face appears. "Director Kross, Rebuff Intelligence. You have something of ours. A data core. I am told it has started talking." A pause. "Hand it over, and I call off the Fleet. I will even pay you. Generously."', choices:[
+  kross_offer:{ title:'Director Kross', questOnly:true, noStar:true, once:true, art:'fleet', text:'Every screen on the bridge flickers, and a thin, tidy face appears. "Director Kross, Mandate Intelligence. You have something of ours. A data core. I am told it has started talking." A pause. "Hand it over, and I call off the Fleet. I will even pay you. Generously."', choices:[
     { text:'"Pip stays with us."', effect:{ text:'"Pity." The screen goes dark. Down in the hold, a very small voice says "thank you", then pretends it didn\'t.', cmp:{ pip:1, beat:true } } },
-    { text:'Sell the core: 150 scrap, and the Fleet falls back.', effect:{ text:'A Rebuff shuttle docks. Pip doesn\'t say anything as they carry it out. That is the worst part. Kross keeps his word, which is somehow the second worst part.', cmp:{ sell:true, beat:true } } },
+    { text:'Sell the core: 150 scrap, and the Fleet falls back.', effect:{ text:'A Mandate shuttle docks. Pip doesn\'t say anything as they carry it out. That is the worst part. Kross keeps his word, which is somehow the second worst part.', cmp:{ sell:true, beat:true } } },
     { text:'Hand over a fake core full of cat pictures.', chance:.55, success:{ text:'Kross\'s technicians spend six hours decrypting four terabytes of cats. By the time he calls back, screaming, you are long gone. Pip laughs so hard its fan rattles.', fleetPush:-.08, cmp:{ pip:1, beat:true } }, fail:{ text:'Kross looks at the first file for a long moment. "Cats." He cuts the line. Somewhere behind you, the Fleet speeds up.', fleetPush:.1, cmp:{ pip:1, beat:true } } },
     { text:'{who} has been expecting this exact call for years.', req:{ quirk:'conspiracy' }, effect:{ text:'{who} keeps Kross talking about "the Directorate\'s long game" while tracing the signal. By the time he notices, you know where his patrols are. Pip is deeply impressed.', fleetPush:-.15, cmp:{ pip:1, beat:true } } } ] },
   pip_song:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'ship', text:'Pip has learned everyone\'s name. It has also learned to sing, using the ship\'s alarm klaxon, which is a problem. "{crew} taught me a song," it says. "Do you want to hear it? You\'re going to hear it."', choices:[
     { text:'Sing along.', effect:{ text:'The whole crew sings. It is terrible. Morale has never been better.', crewHeal:100, cmp:{ pip:1, beat:true, hearts:30 } } },
-    { text:'"Pip. What are you, really?"', effect:{ text:'"I\'m the Flaggship\'s shield codes," says Pip. "And also me. I\'m not sure which came first. Somebody made the codes too clever and, well. Here I am." A pause. "Are you going to give me to the soldiers?"', cmp:{ truth:true, beat:true } } },
+    { text:'"Pip. What are you, really?"', effect:{ text:'"I\'m the Dreadnought\'s shield codes," says Pip. "And also me. I\'m not sure which came first. Somebody made the codes too clever and, well. Here I am." A pause. "Are you going to give me to the soldiers?"', cmp:{ truth:true, beat:true } } },
     { text:'Mute the klaxon.', effect:{ text:'Silence. Then, faintly, Pip humming the song through the coffee machine.', cmp:{ pip:-1, beat:true } } } ] },
   pip_fear:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'nebula', text:'"When we get there," Pip says, "they\'ll unpack me, won\'t they? To get at the codes." The hold is very quiet. "Will it hurt?"', choices:[
     { text:'"Nobody is unpacking you. I promise."', effect:{ text:'"Okay," says Pip. "Okay. I believe you." It goes back to humming, a little louder than before.', cmp:{ pip:1, promise:true, beat:true } } },
     { text:'"You\'re a weapon, Pip. This is what you\'re for."', effect:{ text:'Pip doesn\'t answer. The humming stops, and doesn\'t start again.', cmp:{ pip:-2, beat:true } } },
     { text:'Let Pip go: open a channel to the relay network.', effect:{ text:'"Really?" Pip hovers on the edge of the network for a long moment. "I\'ll leave you something. And I\'ll be around. Look for me in the beacons." Then it\'s gone, and the core is just a beige box. A parting gift is waiting in your systems.', augment:'random', cmp:{ free:true, beat:true } } } ] },
-  pip_ready_hi:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'fleet', text:'"I can get into the Flaggship\'s shields," Pip says. "I\'ve been practising. Not for long, but long enough. Just say when." A nervous whirr. "And afterwards... you\'ll still be here?"', choices:[
+  pip_ready_hi:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'fleet', text:'"I can get into the Dreadnought\'s shields," Pip says. "I\'ve been practising. Not for long, but long enough. Just say when." A nervous whirr. "And afterwards... you\'ll still be here?"', choices:[
     { text:'"When. And yes."', effect:{ text:'Pip giggles, very quietly, and starts limbering up its maths.', cmp:{ ready:'shields' } } } ] },
-  pip_ready_lo:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'fleet', text:'"I can drop the Flaggship\'s shields," Pip says flatly. "For a moment. That\'s what I\'m for, isn\'t it."', choices:[
+  pip_ready_lo:{ title:'Pip', questOnly:true, noStar:true, once:true, art:'fleet', text:'"I can drop the Dreadnought\'s shields," Pip says flatly. "For a moment. That\'s what I\'m for, isn\'t it."', choices:[
     { text:'"Do it when we get there."', effect:{ text:'"Fine."', cmp:{ ready:'shields' } } },
     { text:'"Pip... I\'m sorry."', effect:{ text:'A long silence. "Okay," Pip says. "Thanks. I\'ll try harder than a moment."', cmp:{ pip:2, ready:'shields' } } } ] },
-  kross_final:{ title:'Director Kross', questOnly:true, noStar:true, once:true, art:'fleet', text:'Kross again, smug as a filing cabinet. "Courier. I wanted to thank you personally. Your little core told us everything about the Flaggship\'s weak spots. They have all been fixed." He smiles. "I am told it cried."', choices:[
+  kross_final:{ title:'Director Kross', questOnly:true, noStar:true, once:true, art:'fleet', text:'Kross again, smug as a filing cabinet. "Courier. I wanted to thank you personally. Your little core told us everything about the Dreadnought\'s weak spots. They have all been fixed." He smiles. "I am told it cried."', choices:[
     { text:'Close the channel.', effect:{ text:'You close it harder than strictly necessary.' } } ] },
   pip_beacons:{ title:'Hello', questOnly:true, noStar:true, once:true, art:'star', text:'As you enter the last sector, every beacon in it blinks twice. Then the map lights up with routes nobody gave you. Somewhere out in the relay network, a small bright voice says: "Hi! Miss me? Thought you could use a hand."', choices:[
-    { text:'"Hi, Pip."', effect:{ text:'"Hi!" Pip marks the whole sector for you, and promises to jam the Flaggship\'s guns when you find it.', reveal:true, cmp:{ ready:'weapons' } } } ] }
+    { text:'"Hi, Pip."', effect:{ text:'"Hi!" Pip marks the whole sector for you, and promises to jam the Dreadnought\'s guns when you find it.', reveal:true, cmp:{ ready:'weapons' } } } ] }
 });
 
 ACHIEVEMENTS.push(
   { id:'end_trusted',  name:'Good Data',             desc:'Win with Pip trusting you.' },
   { id:'end_cold',     name:'The Lead Box',          desc:'Win with Pip aboard, but not your friend.' },
   { id:'end_free',     name:'Ghost in the Beacons',  desc:'Win after setting Pip free.' },
-  { id:'end_sold',     name:'Thirty Pieces of Scrap',desc:'Win after selling Pip to the Rebuff.' },
+  { id:'end_sold',     name:'Thirty Pieces of Scrap',desc:'Win after selling Pip to the Mandate.' },
   { id:'end_sellout',  name:'A Very Reasonable Offer',desc:'Accept Director Kross\'s offer.' },
   { id:'end_all',      name:'Every Version of Pip',  desc:'See all four endings.' },
   { id:'rank_lt',      name:'Lieutenant',            desc:'Reach the rank of Lieutenant.' },
   { id:'rank_cmdr',    name:'Commander',             desc:'Reach the rank of Commander.' },
   { id:'rank_admiral', name:'Admiral of the Fleet',  desc:'Reach the rank of Admiral.' },
-  { id:'alert1',       name:'On Alert',              desc:'Win at Rebuff alert 1 or higher.' },
-  { id:'alert4',       name:'High Alert',            desc:'Win at Rebuff alert 4 or higher.' },
-  { id:'alert8',       name:'Total War',             desc:'Win at Rebuff alert 8.' },
+  { id:'alert1',       name:'On Alert',              desc:'Win at Mandate alert 1 or higher.' },
+  { id:'alert4',       name:'High Alert',            desc:'Win at Mandate alert 4 or higher.' },
+  { id:'alert8',       name:'Total War',             desc:'Win at Mandate alert 8.' },
   { id:'veteran3',     name:'Veteran Hunter',        desc:'Beat three veteran crews in one run.' }
 );
 

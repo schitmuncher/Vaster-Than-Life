@@ -2,9 +2,9 @@
 /* =========================================================================
    A living galaxy: ideas from the open-world simulation research, the ones
    that fit a roguelike run.
-   - Faction standing: the Mantlis, Sloog, Voltan, Pyrates, Enjinn and
-     Pebblekin remember what you do. Each has its own values (Mantlis respect
-     strength, Voltans peace, Sloogs trade...). Standing changes store prices,
+   - Faction standing: the Jabbit, Mullock, Thrumm, Pyrates, Tinkari and
+     Pebblekin remember what you do. Each has its own values (Jabbit respect
+     strength, Thrumms peace, Mullocks trade...). Standing changes store prices,
      lets friendly ships wave you through, brings allies into fights, and a
      little of it carries into your next run.
    - Room combos: systems in rooms joined by a door work together (engines
@@ -26,11 +26,11 @@
 
 /* ---------------- faction standing ---------------- */
 const FACTIONS = {
-  mantlis:  { name:'Mantlis Hives',      col:'#9be26a', likes:'Strength: destroying ships and winning boarding fights.', hates:'Weakness: surrenders, and killing their own warriors.' },
-  sloog:    { name:'Sloog Consortium',   col:'#c98ae6', likes:'Trade: spending scrap at their stores.', hates:'Wrecking their freighters.' },
-  voltan:   { name:'Voltan Temples',     col:'#ffd166', likes:'Peace: accepting surrenders, sparing crews.', hates:'Destroying ships with people on them.' },
-  pyrate:   { name:'Pyrate Kings',       col:'#ff8a5a', likes:'Piracy: hitting the Rebuff, spending at black markets.', hates:'Sinking pyrate ships.' },
-  enjinn:   { name:'Enjinn Collective',  col:'#5fd3e6', likes:'Machines: sparing crews, trading at their workshops.', hates:'Scrapping automated ships.' },
+  mantlis:  { name:'Jabbit Hives',      col:'#9be26a', likes:'Strength: destroying ships and winning boarding fights.', hates:'Weakness: surrenders, and killing their own warriors.' },
+  sloog:    { name:'Mullock Consortium',   col:'#c98ae6', likes:'Trade: spending scrap at their stores.', hates:'Wrecking their freighters.' },
+  voltan:   { name:'Thrumm Temples',     col:'#ffd166', likes:'Peace: accepting surrenders, sparing crews.', hates:'Destroying ships with people on them.' },
+  pyrate:   { name:'Pyrate Kings',       col:'#ff8a5a', likes:'Piracy: hitting the Mandate, spending at black markets.', hates:'Sinking pyrate ships.' },
+  enjinn:   { name:'Tinkari Collective',  col:'#5fd3e6', likes:'Machines: sparing crews, trading at their workshops.', hates:'Scrapping automated ships.' },
   pebblekin:{ name:'Pebblekin Quarries', col:'#d0a070', likes:'Honest business at their exchanges.', hates:'Wrecking their haulers.' }
 };
 const REP_TIERS = [[-50,'Despised','#ff5a7a'], [-10,'Disliked','#ff8a5a'], [25,'Neutral','#8592b0'], [60,'Favoured','#7be0a0'], [999,'Revered','#ffd166']];
@@ -88,7 +88,7 @@ function swapRooms(a, b){ const sh = G.ship, ra = sh.rooms[a], rb = sh.rooms[b];
 /* ---------------- the workshop ---------------- */
 const MACHINES = {
   jar:     { name:'Preserves jar',    cost:30, jumps:3, take:g => g.kind==='crop', out:'preserves', text:'Any crop becomes preserves: worth twice as much, and it never spoils.' },
-  keg:     { name:'Fermentation keg', cost:45, jumps:6, take:(g, id) => ['ion_berry','moon_melon','nebula_bloom','glass_lily','solar_grape'].includes(id), out:'fruit_wine', text:'Berries, melons and blooms become fruit wine. Pyrates and Voltans pay well.' },
+  keg:     { name:'Fermentation keg', cost:45, jumps:6, take:(g, id) => ['ion_berry','moon_melon','nebula_bloom','glass_lily','solar_grape'].includes(id), out:'fruit_wine', text:'Berries, melons and blooms become fruit wine. Pyrates and Thrumms pay well.' },
   cask:    { name:'Zero-G cask',      cost:70, jumps:8, deep:true, take:(g, id) => ['space_wine','fruit_wine'].includes(id), out:'vintage_wine', text:'Ages wine into a vintage worth a fortune. Only ages on jumps into deep space (not at stores).' },
   seeds:   { name:'Seed maker',       cost:35, jumps:1, take:(g, id) => !!seedFor(id), out:'seeds', text:'Turns a crop back into 1-3 seeds of the same plant.' },
   recycler:{ name:'Recycler',         cost:30, jumps:2, take:(g, id) => id==='junk' || g.kind==='fish', out:'parts', text:'Junk or fish become drone parts.' },
@@ -282,7 +282,7 @@ function drawHaven(){
     const wrapped = !done && UI._hvWrap; para(w.reward, x+20, wrapped ? y+110 : y+88, done ? 680 : 460, { s:13, lh:18, c:C.muted, max: wrapped ? 1 : 2 });
     if(!done) btn(x+500, y+80, 200, 44, `Renown · ${fmtNum(w.renown)}`, () => havenBuy(w), { s:14, disabled:renownFree() < w.renown }); });
   const res = H_.residents || []; label('Residents', 840, 856, '#9fdc7a', 'left', 15);
-  para(res.length ? `${res.join(', ')}. They fly with you against the Flaggship in every run (up to four).` : 'Nobody yet. Win a story with its best ending, and whoever you saved will move in, and fly with you against the Flaggship.', 840, 880, 680, { s:14, lh:20, c:C.ink });
+  para(res.length ? `${res.join(', ')}. They fly with you against the Dreadnought in every run (up to four).` : 'Nobody yet. Win a story with its best ending, and whoever you saved will move in, and fly with you against the Dreadnought.', 840, 880, 680, { s:14, lh:20, c:C.ink });
   if(!H_.leased){ btn(300, 870, 420, 64, UI.leaseAsk ? 'Sure? Rent every run, no residents' : 'Lease it to Madame Ossery', () => { if(!UI.leaseAsk){ UI.leaseAsk = true; return; } UI.leaseAsk = false; havenLease(); }, { s:16, col:C.hostile });
     tip(300, 870, 420, 64, 'Madame Ossery\'s lease', 'Every wing restored overnight. But Ossery takes 50 scrap at the start of every run and 15 every time you dock, and no ally will move into a station she owns.'); }
   else T('Leased to Madame Ossery: 50 scrap rent every run, 15 to dock.', 300, 908, { s:15, c:C.hostile });
@@ -301,9 +301,9 @@ if(typeof SEEDS!=='undefined') Object.assign(SEEDS, {
 /* ---------------- Haven's Rest residents: the people your stories saved ---------------- */
 const BEST_ENDINGS = { pip:['trusted','free'], vance:['vance_loyal'], flotilla:['fl_reborn','fl_few'], harte:['harte_wing','harte_rivals'] };
 function havenResident(ek){ if(!G || !havenPerksOn() || haven().leased || !G.arc || !ARCS[G.arc]) return; const A = ARCS[G.arc], best = BEST_ENDINGS[G.arc] || (A.medal ? [A.medal] : []);
-  if(!best.includes(ek)) return; const H_ = haven(); H_.residents = H_.residents || []; if(H_.residents.includes(A.who)) return; H_.residents.push(A.who); saveProfile(); toast(`${A.who} has moved into Haven's Rest, and will fly with you against the Flaggship in future runs.`); }
+  if(!best.includes(ek)) return; const H_ = haven(); H_.residents = H_.residents || []; if(H_.residents.includes(A.who)) return; H_.residents.push(A.who); saveProfile(); toast(`${A.who} has moved into Haven's Rest, and will fly with you against the Dreadnought in future runs.`); }
 function havenResidentsHelp(e){ const R_ = (PROFILE.haven && PROFILE.haven.residents) || []; if(!R_.length || !havenPerksOn()) return; const n = Math.min(4, R_.length);
-  e.hull = Math.max(6, e.hull - 2*n); if(e.systems.shields) ionize(e, 'shields', n); toast(`From Haven's Rest: ${R_.slice(-n).join(', ')} ${n>1 ? 'arrive' : 'arrives'} to help. The Flaggship takes ${2*n} damage before you fire.`); }
+  e.hull = Math.max(6, e.hull - 2*n); if(e.systems.shields) ionize(e, 'shields', n); toast(`From Haven's Rest: ${R_.slice(-n).join(', ')} ${n>1 ? 'arrive' : 'arrives'} to help. The Dreadnought takes ${2*n} damage before you fire.`); }
 
 /* ======================= content ======================= */
 Object.assign(BASE.goods, {
@@ -334,26 +334,26 @@ Object.assign(BASE.events, {
   rephate:{ hail:'rephate', pack:'living', title:'A grudge', art:'ship', text:'"We know that ship." The {enemy} comes in with every gun already charged. They are not here to talk.', choices:[
     { text:'Fight.', effect:{ begin:true, primeWeapons:false } },
     { text:'Offer reparations.', req:{ scrap:60 }, cost:{ scrap:60 }, effect:{ text:'They take the scrap, and some of the anger with it.', rep:{ enemy:20 }, dismiss:true } } ] },
-  rep_temple:{ pack:'living', once:true, minSector:1, tags:['voltan'], weight:1.2, title:'A Voltan temple', art:'station', text:'A quiet temple station, all soft light. The monks ask nothing. A donation bowl glows by the door.', choices:[
-    { text:'Donate 30 scrap.', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'The monks bow. Word travels fast among Voltans.', rep:{ voltan:20 }, crewHeal:30 } },
+  rep_temple:{ pack:'living', once:true, minSector:1, tags:['voltan'], weight:1.2, title:'A Thrumm temple', art:'station', text:'A quiet temple station, all soft light. The monks ask nothing. A donation bowl glows by the door.', choices:[
+    { text:'Donate 30 scrap.', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'The monks bow. Word travels fast among Thrumms.', rep:{ voltan:20 }, crewHeal:30 } },
     { text:'{who} sits with the monks.', req:{ race:'voltan' }, effect:{ text:'{who} meditates with the monks for a day. They remember your ship kindly.', rep:{ voltan:15 }, xp:{ skill:'shields', amt:15 } } },
     { text:'Walk on by.', effect:{ text:'The light follows you out, without judgement.' } } ] },
-  rep_arena:{ pack:'living', once:true, minSector:2, tags:['mantlis'], weight:1.2, title:'The blood arena', art:'station', text:'A Mantlis arena ship. Crowds of clicking spectators. "Send a champion!" the herald roars. "Win, and the Hives will know your name."', choices:[
-    { text:'Send your best fighter.', chance:.5, success:{ text:'{crew} wins to a roar that shakes the hull. The Hives will remember.', rep:{ mantlis:25 }, scrap:40 }, fail:{ text:'{crew} loses, bloodily, but stands up again. The Mantlis respect that a little.', rep:{ mantlis:8 }, crewHurt:25 } },
+  rep_arena:{ pack:'living', once:true, minSector:2, tags:['mantlis'], weight:1.2, title:'The blood arena', art:'station', text:'A Jabbit arena ship. Crowds of clicking spectators. "Send a champion!" the herald roars. "Win, and the Hives will know your name."', choices:[
+    { text:'Send your best fighter.', chance:.5, success:{ text:'{crew} wins to a roar that shakes the hull. The Hives will remember.', rep:{ mantlis:25 }, scrap:40 }, fail:{ text:'{crew} loses, bloodily, but stands up again. The Jabbit respect that a little.', rep:{ mantlis:8 }, crewHurt:25 } },
     { text:'{who} fights for the honour of the Hive.', req:{ race:'mantlis' }, effect:{ text:'{who} wins in nine seconds. The crowd goes wild.', rep:{ mantlis:30 }, scrap:50 } },
     { text:'Decline.', effect:{ text:'The herald hisses. "Cowards." The crowd agrees.', rep:{ mantlis:-10 } } } ] },
-  rep_loan:{ pack:'living', once:true, minSector:2, tags:['sloog'], weight:1.1, title:'A Sloog banker', art:'station', text:'A Sloog banker in a glistening waistcoat offers you a loan. "Eighty scrap now. One hundred and twenty later. The Consortium adores a client in debt."', choices:[
+  rep_loan:{ pack:'living', once:true, minSector:2, tags:['sloog'], weight:1.1, title:'A Mullock banker', art:'station', text:'A Mullock banker in a glistening waistcoat offers you a loan. "Eighty scrap now. One hundred and twenty later. The Consortium adores a client in debt."', choices:[
     { text:'Take the loan.', effect:{ text:'The scrap is yours. The Consortium is delighted with you.', scrap:80, rep:{ sloog:15 }, later:{ event:'rep_loan_due', jumps:6 } } },
     { text:'No thank you.', effect:{ text:'"Pity." The banker oozes away.' } } ] },
-  rep_loan_due:{ pack:'living', questOnly:true, title:'The Consortium calls', art:'station', text:'The Sloog banker is back, waistcoat glistening. "Repayment time. One hundred and twenty."', choices:[
+  rep_loan_due:{ pack:'living', questOnly:true, title:'The Consortium calls', art:'station', text:'The Mullock banker is back, waistcoat glistening. "Repayment time. One hundred and twenty."', choices:[
     { text:'Pay up.', req:{ scrap:120 }, cost:{ scrap:120 }, effect:{ text:'"A pleasure doing business." The Consortium will lend to you any time.', rep:{ sloog:20 } } },
     { text:'Pay what you can, and promise the rest.', effect:{ text:'The banker takes everything you have and sighs wetly.', scrap:-60, rep:{ sloog:-10 } } },
-    { text:'Refuse.', effect:{ text:'The banker writes your name in a little book. Every Sloog will read it.', rep:{ sloog:-40 } } } ] },
-  rep_derelict:{ pack:'living', once:true, minSector:1, tags:['enjinn'], weight:1.2, title:'A broken Enjinn drone', art:'wreck', text:'An Enjinn survey drone, adrift and blinking sadly. Its fuel cell is cracked. It would be easy to strip.', choices:[
+    { text:'Refuse.', effect:{ text:'The banker writes your name in a little book. Every Mullock will read it.', rep:{ sloog:-40 } } } ] },
+  rep_derelict:{ pack:'living', once:true, minSector:1, tags:['enjinn'], weight:1.2, title:'A broken Tinkari drone', art:'wreck', text:'A Tinkari survey drone, adrift and blinking sadly. Its fuel cell is cracked. It would be easy to strip.', choices:[
     { text:'Fix it with two drone parts.', req:{ parts:2 }, cost:{ parts:2 }, effect:{ text:'The drone chirps, spins and zooms home to tell everyone about you.', rep:{ enjinn:20 } } },
     { text:'Strip it for parts.', effect:{ text:'Useful bits. The Collective will hear about this.', parts:3, rep:{ enjinn:-15 } } },
     { text:'{who} talks it home.', req:{ race:'enjinn' }, effect:{ text:'{who} and the drone chatter for an hour. It flies home on its own, singing.', rep:{ enjinn:15 }, xp:{ skill:'repair', amt:10 } } } ] },
-  rep_payroll:{ pack:'living', once:true, minSector:2, tags:['pyrate','rebuff'], weight:1, title:'A Rebuff payroll barge', art:'ship', text:'A fat Rebuff payroll barge, lightly escorted. A pyrate on an open channel whispers: "Hit it, and every pyrate from here to the rim will drink to your name."', choices:[
+  rep_payroll:{ pack:'living', once:true, minSector:2, tags:['pyrate','rebuff'], weight:1, title:'A Mandate payroll barge', art:'ship', text:'A fat Mandate payroll barge, lightly escorted. A pyrate on an open channel whispers: "Hit it, and every pyrate from here to the rim will drink to your name."', choices:[
     { text:'Hit the barge.', effect:{ text:'The escort turns to fight.', fight:'rebuff_cutter', afterWin:{ text:'The payroll is yours. Pyrates everywhere raise a glass.', scrap:70, rep:{ pyrate:25 } } } },
     { text:'Report the pyrate instead.', effect:{ text:'The barge captain thanks you. The pyrate doesn\'t.', scrap:15, rep:{ pyrate:-15 } } },
     { text:'Fly on.', effect:{ text:'Not your fight.' } } ] },

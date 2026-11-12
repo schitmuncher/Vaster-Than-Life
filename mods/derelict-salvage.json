@@ -13,10 +13,10 @@
         { "text": "Strip the engines.", "effect": { "text": "Good parts, honestly earned.", "parts": 4, "fuel": 2 } },
         { "text": "Play one song on the ballroom piano.", "effect": { "text": "Your crew dance for a while. Nobody mentions the ghosts.", "crewHeal": 40 } }
       ] },
-    { "id": "ds_warship", "text": "Half of a Fedoration warship, cut clean in two. The weapons bay looks intact.", "tags": [""], "weight": 0.9, "minSector": 2,
+    { "id": "ds_warship", "text": "Half of a Commonwealth warship, cut clean in two. The weapons bay looks intact.", "tags": [""], "weight": 0.9, "minSector": 2,
       "choices": [
         { "text": "Cut into the weapons bay.", "chance": 0.55, "success": { "text": "One gun still works.", "weapon": "random" }, "fail": { "text": "The bay is rigged to blow.", "hull": -4, "scrap": 15 } },
-        { "text": "Recover the dog tags of the crew.", "effect": { "text": "Fedoration command will want to know. Your crew are quiet for a while.", "fleetPush": -0.03, "xp": { "skill": "combat", "amt": 10 } } }
+        { "text": "Recover the dog tags of the crew.", "effect": { "text": "Commonwealth command will want to know. Your crew are quiet for a while.", "fleetPush": -0.03, "xp": { "skill": "combat", "amt": 10 } } }
       ] },
     { "id": "ds_drone_yard", "text": "A scrapyard of dead drones, thousands of them, drifting in a slow spiral.", "tags": [""], "weight": 0.9,
       "choices": [

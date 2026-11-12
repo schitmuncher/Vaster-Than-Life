@@ -20,7 +20,7 @@
       "choices": [
         { "text": "Buy the capacitor kit everyone is talking about (40 scrap).", "req": { "scrap": 40 }, "cost": { "scrap": 40 }, "effect": { "text": "It hums. Your guns feel keener already.", "augment": "ec_capacitors" } },
         { "text": "Enter the expo's repair contest.", "chance": 0.5, "success": { "text": "Your crew fix a sabotaged reactor in record time and win the prize.", "augment": "ec_dcbots", "xp": { "skill": "repair", "amt": 15 } }, "fail": { "text": "Your crew come second. The consolation prize is a hat.", "scrap": 10 } },
-        { "text": "Let your Enjinn crew talk shop.", "req": { "race": "enjinn" }, "effect": { "text": "{who} leaves with three new friends and a box of free samples.", "augment": "random", "parts": 4 } },
+        { "text": "Let your Tinkari crew talk shop.", "req": { "race": "enjinn" }, "effect": { "text": "{who} leaves with three new friends and a box of free samples.", "augment": "random", "parts": 4 } },
         { "text": "Window-shop and leave.", "effect": { "text": "You pick up a few free brochures and a bag of bolts.", "scrap": 6 } }
       ] }
   ]

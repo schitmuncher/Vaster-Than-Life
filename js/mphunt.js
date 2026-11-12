@@ -1,7 +1,7 @@
 'use strict';
 /* =========================================================================
    Hunter and hunted: the host flies the courier as usual; the guest is the
-   Rebuff fleet commander. The commander watches the courier's game and spends
+   Mandate fleet commander. The commander watches the courier's game and spends
    command points (2 per courier jump) on cards: ambushes and hazards on the
    map, fleet surges and jammed sensors, and in a fight: overcharged guns,
    boarders and shields. The commander can also aim every enemy gun.
@@ -10,7 +10,7 @@
 const HUNT_CARDS = [
   { k:'amb', name:'Ambush', cost:3, map:true, desc:'Pick a beacon ahead. If the courier lands there, a fleet warship is waiting.' },
   { k:'hz', name:'Hazard', cost:2, map:true, desc:'Put a star, asteroids, an ion storm or a pulsar on a beacon.' },
-  { k:'surge', name:'Fleet surge', cost:4, desc:'The Rebuff fleet front leaps forward.' },
+  { k:'surge', name:'Fleet surge', cost:4, desc:'The Mandate fleet front leaps forward.' },
   { k:'jam', name:'Jam sensors', cost:2, desc:'The courier fights its next battle blind.' },
   { k:'prime', name:'Overcharge', cost:3, fight:true, desc:'Every enemy gun is charged right now.' },
   { k:'board', name:'Boarders', cost:4, fight:true, desc:'Two fleet troopers beam onto the courier.' },
@@ -28,7 +28,7 @@ function mpArrive(i, node, first){
   const H_ = G.hunt = G.hunt || { cp:2, played:0 };
   H_.cp = Math.min(10, H_.cp + 2);
   if(node.ambush && first && !['store','exit','base','start'].includes(node.type)){ node.ambush = false;
-    startCombat('random', { harder:true, title:'Ambush!', text:'A Rebuff warship drops out of the dark right on top of you. The fleet commander knew you\'d come this way.' }); return true; }
+    startCombat('random', { harder:true, title:'Ambush!', text:'A Mandate warship drops out of the dark right on top of you. The fleet commander knew you\'d come this way.' }); return true; }
   return false;
 }
 function mpSector(n){ if(!huntOn() || NET.role!=='host' || !G) return; if(MP.opts.hunt==='short' && n >= 4){ setTimeout(() => { if(G && UI.screen==='game') endRun(true, 'The courier slipped past the fleet into sector 4.'); }, 1200); } }
@@ -43,7 +43,7 @@ function huntCmd(c, P){
   switch(c.c){
     case 'amb': { const n = G.map.nodes[c.i]; if(!n || n.visited || ['store','exit','base','start'].includes(n.type) || n.ambush) return; n.ambush = true; toast('Fleet command: an ambush has been laid somewhere ahead.'); break; }
     case 'hz': { const n = G.map.nodes[c.i]; if(!n || n.visited || ['store','exit','base','start'].includes(n.type)) return; n.hazard = HUNT_HZ.includes(c.hz) ? c.hz : 'asteroid'; toast(`Fleet command: ${HZ_NAMES[n.hazard] || n.hazard} ahead.`); break; }
-    case 'surge': G.fleetX += .14; toast('Fleet surge! The Rebuff fleet front jumps forward.'); sfx('alarm'); break;
+    case 'surge': G.fleetX += .14; toast('Fleet surge! The Mandate fleet front jumps forward.'); sfx('alarm'); break;
     case 'jam': if(fight){ G.jam = 1; toast('Sensors jammed!'); } else { H_.jamNext = true; toast('Fleet command has jammed your sensors for the next fight.'); } break;
     case 'prime': for(const w of G.enemy.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge || w.charge; toast('Fleet command overcharges the enemy guns!'); sfx('alarm'); break;
     case 'board': { const e = G.enemy, race = e.crew.find(x => !x.drone)?.race || 'human'; const room = aiTargetRoom(G.ship);

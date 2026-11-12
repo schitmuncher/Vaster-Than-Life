@@ -158,7 +158,7 @@ function makeShip(def, side, o={}){
   const sector = o.sector || 1, enemy = side==='e';
   const phase = def.phases ? def.phases[Math.min(o.phase||0, def.phases.length-1)] : null;
   const sys = enemy ? scaledEnemySystems(def, sector) : Object.assign({}, def.systems||{});
-  if(enemy && def.boss && curDiff().bossShields) sys.shields = Math.max(0, (sys.shields||0) + curDiff().bossShields);   // Easy: the Flaggship has one shield layer fewer
+  if(enemy && def.boss && curDiff().bossShields) sys.shields = Math.max(0, (sys.shields||0) + curDiff().bossShields);   // Easy: the Dreadnought has one shield layer fewer
   sys.piloting = Math.max(1, sys.piloting||1);
   if(!sys.doors && !def.auto) sys.doors = 1;
   const installed = SYS.filter(k => (sys[k]||0) > 0);

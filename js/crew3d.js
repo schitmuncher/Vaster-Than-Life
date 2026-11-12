@@ -1,7 +1,7 @@
 'use strict';
 /* =========================================================================
    Life-size 3D crew for the walkable ship. Low-poly figures for every race
-   (humans of every look, Pebblekin, Enjinn, Voltans, Sloogs, Mantlis,
+   (humans of every look, Pebblekin, Tinkari, Thrumms, Mullocks, Jabbit,
    Glassborn, drones), animated from the simulation: walking, manning
    stations, repairing, fighting fires with extinguishers, brawling with
    boarders, healing, stunned, mind-controlled, and falling when they die.

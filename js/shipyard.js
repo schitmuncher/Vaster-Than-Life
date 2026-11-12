@@ -4,7 +4,7 @@
    - Pilot level: every run's renown is experience. Level = 1 + sqrt(renown/4),
      shown next to your Admiralty rank. Each ship needs a pilot level.
    - Ship challenges: most ships also need a challenge, usually done in
-     another ship (win with the Pestrel, destroy 25 ships flying the Taurus,
+     another ship (win with the Plucky, destroy 25 ships flying the Spanner in the Works,
      reach sector 5 in the Lantern...). B layouts are earned in their A ship.
    - Both met: the ship unlocks, and the debrief says so.
    - Or skip ahead: a requisition token (one at each requisition rank:

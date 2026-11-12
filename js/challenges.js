@@ -21,19 +21,19 @@ BASE.challenges = {
   shoestring:    { name:'Shoestring Budget', tier:2, ship:'pestrel', start:{ scrap:0 }, scrapMult:.6, goal:{ sector:5 },
     desc:'No scrap to start, and every wreck pays 40% less. Spend wisely and reach sector 5.' },
   hot_pursuit:   { name:'Hot Pursuit', tier:2, ship:'pestrel', rules:{ fleetSpeed:.16 }, goal:{ sector:5 },
-    desc:'The Rebuff Fleet moves half again as fast. No time to explore. Reach sector 5.' },
+    desc:'The Mandate Fleet moves half again as fast. No time to explore. Reach sector 5.' },
   drone_cmd:     { name:'Drone Commander', tier:2, ship:'pestrel', start:{ weapons:['basic'], systems:{ drones:3 }, drones:['combat1','defense1'], parts:12 }, goal:{ sector:4 },
     desc:'Your drones do the fighting, backed by one basic laser. Reach sector 4.' },
   boarders:      { name:'Boarders Away', tier:3, ship:'mantlis', start:{ weapons:[], systems:{ teleporter:2 } }, goal:{ sector:4 },
-    desc:'No guns at all. Beam your Mantlis over and win every fight by hand. Reach sector 4.' },
+    desc:'No guns at all. Beam your Jabbit over and win every fight by hand. Reach sector 4.' },
   short_fuse:    { name:'Short Fuse', tier:3, ship:'pestrel', rules:{ sectors:4 }, goal:{ win:true },
-    desc:'Only four sectors, so the Flaggship comes early. Build fast and beat it.' },
+    desc:'Only four sectors, so the Dreadnought comes early. Build fast and beat it.' },
   paper_tiger:   { name:'Paper Tiger', tier:3, ship:'pestrel', start:{ hull:15, weapons:['bust2','heavy1','arty'], scrap:40 }, goal:{ win:true },
     desc:'Big guns, a paper-thin hull. Win the whole run.' },
   hard_way:      { name:'The Hard Way', tier:3, ship:'pestrel', difficulty:'hard', goal:{ win:true },
     desc:'Win a full run on Hard.' },
   endurance:     { name:'Endurance', tier:3, ship:'pestrel', rules:{ sectors:10, baseHP:6 }, goal:{ win:true },
-    desc:'Ten sectors of space between you and the Flaggship. Win the long war.' }
+    desc:'Ten sectors of space between you and the Dreadnought. Win the long war.' }
 };
 
 ACHIEVEMENTS.push(

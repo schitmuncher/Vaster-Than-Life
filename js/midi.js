@@ -84,7 +84,7 @@ const OST = { dir:'music/', cues:{}, tracks:{
   boss:{ file:'boss.mid', style:'ost_rock' }, store:{ file:'store.mid', style:'ost_bossa' }, win:{ file:'win.mid', style:'ost_anthem' }, over:{ file:'over.mid', style:'ost_ambient' } },
   strange:['nebula', 'voltan', 'glass', 'prismfields', 'gf_graveyard', 'pv_vaults', 'nr_expanse', 'ss_hollow', 'hz_maze', 'hz_pulsarfield'] };
 const OST_TITLES = { title:'Vaster Than Life', hangar:'Dry Dock', start:'Departure', explore1:'The Long Way Round', explore2:'Beacon Lights', explore3:'Drift', explore4:'Quiet Stars',
-  explore5:'Engine Room', strange1:'Nebula Hymn', strange2:'Static', combat1:'Shields Up', combat2:'Boarding Party', combat3:'Red Alert', combat4:'Dogfight', boss:'Flaggship', store:'Haggle Bossa', win:'Homecoming', over:'Drifting On' };
+  explore5:'Engine Room', strange1:'Nebula Hymn', strange2:'Static', combat1:'Shields Up', combat2:'Boarding Party', combat3:'Red Alert', combat4:'Dogfight', boss:'Dreadnought', store:'Haggle Bossa', win:'Homecoming', over:'Drifting On' };
 const MIDI = { song:null, url:null, loading:false, style:null, next:0, idx:0, t0:0, loopAt:0 };
 const MIDI_CACHE = {};   // parsed songs by url, so a campaign can switch tunes per cue without refetching
 function midiLoad(url){
@@ -138,8 +138,11 @@ function midiTick(){
     midiNote(n, t, S, k);
   }
 }
+/* loudness, measured: each soundtrack tune is levelled to sit with the others (calm ones a touch quieter than fights) */
+const OST_GAIN = {title: 1.33, hangar: 1.56, start: 1.92, explore1: 1.37, explore2: 1.85, explore3: 1.45, explore4: 1.5, explore5: 1.12, strange1: 1.92, strange2: 2.0, store: 0.89, combat1: 1.1, combat2: 1.79, combat3: 1.19, combat4: 1.0, boss: 0.84, win: 1.08, over: 1.71};
+function midiTrackGain(){ const m = /([a-z0-9]+)\.mid$/.exec(MIDI.url || ''); return (m && OST_GAIN[m[1]] && /music\//.test(MIDI.url)) ? OST_GAIN[m[1]]*1.25 : 1; }
 function midiNote(n, t, S, k){
-  if(SET.music <= 0) return; const dur = Math.min(S.inst ? 6 : 2.5, n.d*k), v = (.03 + .045*n.v) * S.vol;
+  if(SET.music <= 0) return; const dur = Math.min(S.inst ? 6 : 2.5, n.d*k), v = (.03 + .045*n.v) * S.vol * midiTrackGain();
   if(n.ch === 9){ if(!S.drums) return; if(S.kit) return midiDrum(n.n, t, v);
     if(n.n <= 36) osc('sine', 120, t, .14, v*2.2, { to:42, slide:.12, dest:MUSG });
     else if(n.n <= 40) nz(t, .09, v*1.4, { hp:1400, dest:MUSG });

@@ -16,7 +16,7 @@
     { "id": "bm_lens", "name": "Beam Focusing Lens", "cost": 60, "desc": "Weapons charge 10% faster.", "fx": { "charge": 0.1 } }
   ],
   "enemies": [
-    { "id": "bm_cutterclass", "name": "Voltan Cutter", "tags": ["voltan"], "hull": 11, "sectors": [3, 8], "systems": { "shields": 2, "engines": 2, "weapons": 4, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ion", "bm_twin"], "crew": ["voltan", "voltan", "human"] }
+    { "id": "bm_cutterclass", "name": "Thrumm Cutter", "tags": ["voltan"], "hull": 11, "sectors": [3, 8], "systems": { "shields": 2, "engines": 2, "weapons": 4, "oxygen": 1, "piloting": 1, "doors": 1 }, "weapons": ["ion", "bm_twin"], "crew": ["voltan", "voltan", "human"] }
   ],
   "events": [
     { "id": "bm_prism", "text": "A crystal the size of a moon refracts starlight into a thousand coloured beams. A research team has been trying to catch one for years.", "weight": 1,

@@ -4,7 +4,7 @@
    Every crew member who eats has a fullness from 0 to 100 (c.food). It drops
    a little with every jump, and more the harder they work: fighting hand to
    hand, repairing systems and patching breaches all burn it. Big eaters
-   (Pebblekin, Mantlis) burn it faster; some people barely eat (Voltan,
+   (Pebblekin, Jabbit) burn it faster; some people barely eat (Thrumm,
    Glassborn) and some never do (light, wisps, robots, holograms).
 
    Hungry crew lose maximum health until they eat (c.hungerHp, given back as

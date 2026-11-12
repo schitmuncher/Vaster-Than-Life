@@ -27,7 +27,7 @@
         { "text": "Give them a gift (20 scrap).", "req": { "scrap": 20 }, "cost": { "scrap": 20 }, "effect": { "text": "They are moved to tears and give you a stocking for luck.", "augment": "wf_stocking" } },
         { "text": "Wave and carry on.", "effect": { "text": "They wave back with every light on the ship." } }
       ] },
-    { "id": "wf_choir", "text": "A Sloog choir is singing to passing ships from a frozen moon. The harmonies make your hull hum.", "tags": ["winter", ""], "weight": 1,
+    { "id": "wf_choir", "text": "A Mullock choir is singing to passing ships from a frozen moon. The harmonies make your hull hum.", "tags": ["winter", ""], "weight": 1,
       "choices": [
         { "text": "Listen.", "effect": { "text": "Even the gunners hum along.", "crewHeal": 40 } },
         { "text": "Let {who} join in.", "req": { "race": "sloog" }, "effect": { "text": "{who} hits the high note. The choir is so impressed they give you their cocoa machine.", "augment": "wf_cocoa" } },

@@ -534,7 +534,7 @@ function tickShip(sh, dt, foe){
     const race = raceOf(c), r = sh.rooms[c.room];
     if(r){
       if(r.fire>0 && !race.fireproof) c.hp -= Math.min(6, 2*r.fire)*dt;
-      if(r.o2 < 5 && !race.noAir && !(typeof armVac==='function' && armVac(c))) c.hp -= (c.owner==='p' ? 3.5 : 5)*dt;
+      if(r.o2 < 5 && !race.noAir && !(typeof armVac==='function' && armVac(c))) c.hp -= (c.owner==='p' ? 3.5*(curDiff().air || 1) : 5)*dt;   // easy: crew last longer without air
     }
     if((G.brawl ? c.mcT<=0 && !c.drone : c.owner===sh.side && crewSide(c)===sh.side) && c.room===medR && !c.path.length && medE>0) c.hp = Math.min(c.maxHp, c.hp + 6.4*medE*dt);
     if(medHack && c.room===medR && crewSide(c)===sh.side) c.hp -= 8*dt;
@@ -600,7 +600,7 @@ function tickShip(sh, dt, foe){
     if(hasAug(sh,'reloader')) mult *= 1.1; mult *= 1 + augFx(sh,'charge');
     if(sh.isEnemy && !sh.boss) mult *= Math.min(1, (R.enemyPace ?? diff.pace) * (diff.pace/.7) + .025*(G.sector-1));
     if(sh.isEnemy && sh.boss) mult *= diff.bossPace ?? 1;
-    if(sh.isEnemy && typeof alertLv==='function' && alertLv() >= 7) mult *= 1.06;   // Rebuff alert 7: drilled gunners   // the Flaggship fires slower on Easy and Normal
+    if(sh.isEnemy && typeof alertLv==='function' && alertLv() >= 7) mult *= 1.06;   // Mandate alert 7: drilled gunners   // the Dreadnought fires slower on Easy and Normal
     if(sh.isEnemy && !sh.boss && (d.type==='missile' || d.type==='bomb')) mult *= G.sector<=1 ? .6 : G.sector===2 ? .8 : 1;   // green crews fumble ordnance early on
     if(hackedNow(sh,'weapons')) { w.charge = Math.max(0, w.charge - dt*2); continue; }
     if(typeof refitMult==='function') mult *= refitMult(sh, w);
@@ -618,7 +618,7 @@ function tickShip(sh, dt, foe){
       else if(sh.side==='p' && w.target!=null && (d.type==='missile'||d.type==='bomb') && G.missiles<=0 && !G.ammoWarned){ G.ammoWarned = true; toast(`Out of missiles: the ${d.name} can't fire. Turn it off to free its power, and buy missiles at a store.`); }
     }
   }
-  if(sh.surge && foe && !foe.dead){ sh.surgeT -= dt; if(sh.surgeT<=0){ sh.surgeT = sh.surge; toast('POWER SURGE! The Flaggship fires everything.'); sfx('alarm');
+  if(sh.surge && foe && !foe.dead){ sh.surgeT -= dt; if(sh.surgeT<=0){ sh.surgeT = sh.surge; toast('POWER SURGE! The Dreadnought fires everything.'); sfx('alarm');
     for(let i=0;i<6;i++) launch(sh.side, foe.side, { type:'laser', damage:1, name:'Surge' }, aiTargetRoom(foe), { t:-i*.15 }); } }
 }
 

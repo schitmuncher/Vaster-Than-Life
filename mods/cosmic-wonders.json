@@ -20,7 +20,7 @@
     { "id": "cw_timeloop", "text": "You arrive at the beacon. You arrive at the beacon. You arrive at the beacon. Your pilot is starting to look worried.", "tags": ["wonder", ""], "weight": 1, "minSector": 2,
       "choices": [
         { "text": "Punch the engines through the loop.", "req": { "system": "engines", "level": 3 }, "effect": { "text": "You burst out of the loop a few seconds younger and with a full tank of fuel you are fairly sure you used already.", "fuel": 2, "scrap": 10 } },
-        { "text": "Wait it out.", "chance": 0.5, "success": { "text": "Each loop you pocket a little more salvage from the same wreck. Eventually the loop gets bored.", "scrap": 35 }, "fail": { "text": "You lose hours. The Rebuff Fleet doesn't.", "fleetPush": 0.06 } },
+        { "text": "Wait it out.", "chance": 0.5, "success": { "text": "Each loop you pocket a little more salvage from the same wreck. Eventually the loop gets bored.", "scrap": 35 }, "fail": { "text": "You lose hours. The Mandate Fleet doesn't.", "fleetPush": 0.06 } },
         { "text": "Ask {who} what they see.", "req": { "race": "sloog" }, "effect": { "text": "{who} reaches into the loop and pulls out a splinter of it. The loop breaks. The splinter keeps ticking.", "augment": "cw_chronoshard" } }
       ] },
     { "id": "cw_crystalworld", "text": "A planet of glass spires rings like a bell as your ship's shadow crosses it. A crystalline voice offers you a seed of its heart, for a fair trade.", "tags": ["wonder", ""], "weight": 1,

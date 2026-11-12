@@ -1,8 +1,8 @@
 'use strict';
 /* =========================================================================
    Market: stores worth stopping at.
-   - Every sector has its own kind of store (a Rebuff surplus depot, a pyrate
-     black market, an Enjinn workshop...) with a named keeper, its own stock,
+   - Every sector has its own kind of store (a Mandate surplus depot, a pyrate
+     black market, a Tinkari workshop...) with a named keeper, its own stock,
      its own prices, and things it pays well for.
    - Bigger stock, a deal of the day, mystery crates, haggling, and a guild
      loyalty card that rewards regular customers.
@@ -15,12 +15,12 @@
 
 /* ---------------- trade goods ----------------
    base: a fair price. from: sector kinds that make it (cheap there). want: sector kinds that pay well. kind: what it is.
-   illegal: Rebuff stores will not touch it, and Rebuff patrols may confiscate it. */
+   illegal: Mandate stores will not touch it, and Mandate patrols may confiscate it. */
 BASE.goods = {
   // crops (grown in the garden, homestead.js)
   star_potato: { name:'Star potato',    base:6,  kind:'crop',  from:['civilian','pebblekin'], want:['mantlis','laststand'], desc:'Lumpy, filling, grows anywhere. Every cook\'s best friend.' },
   ion_berry:   { name:'Ion berries',    base:5,  kind:'crop',  from:['voltan'], want:['sloog','civilian'], desc:'Fizz on the tongue. Slightly charged.' },
-  void_pepper: { name:'Void pepper',    base:11, kind:'crop',  from:['nebula'], want:['mantlis','pyrate'], desc:'So hot it bends light. The Mantlis eat them whole.' },
+  void_pepper: { name:'Void pepper',    base:11, kind:'crop',  from:['nebula'], want:['mantlis','pyrate'], desc:'So hot it bends light. The Jabbit eat them whole.' },
   nebula_bloom:{ name:'Nebula bloom',   base:12, kind:'crop',  from:['nebula'], want:['sloog','glass','civilian'], desc:'A flower that glows the colour of the cloud it grew in. Romantic.' },
   moon_melon:  { name:'Moon melon',     base:22, kind:'crop',  from:['civilian'], want:['rebuff','voltan'], desc:'Huge, sweet, takes ages to grow. A delicacy on every station.' },
   glass_lily:  { name:'Glass lily',     base:40, kind:'crop',  from:['glass'], want:['civilian','rebuff','sloog'], desc:'A crystal flower that rings when you touch it. Collectors adore them.' },
@@ -28,12 +28,12 @@ BASE.goods = {
   space_fish:  { name:'Space fish',     base:7,  kind:'fish',  from:['nebula'], want:['pebblekin','civilian'], desc:'Swims in vacuum. Tastes of chicken, somehow.' },
   deep_eel:    { name:'Deep eel',       base:24, kind:'fish',  from:[], want:['mantlis','sloog','pyrate'], desc:'Long, glowing and furious. A rare catch.' },
   // trade
-  sloog_silk:  { name:'Sloog silk',     base:18, kind:'trade', from:['sloog'], want:['civilian','rebuff','voltan'], desc:'Spun by Sloogs, who refuse to say how.' },
+  sloog_silk:  { name:'Mullock silk',     base:18, kind:'trade', from:['sloog'], want:['civilian','rebuff','voltan'], desc:'Spun by Mullocks, who refuse to say how.' },
   pebble_geode:{ name:'Pebblekin geode',base:15, kind:'trade', from:['pebblekin'], want:['enjinn','glass','civilian'], desc:'Plain rock outside, a galaxy inside.' },
-  voltan_cell: { name:'Voltan cells',   base:16, kind:'trade', from:['voltan'], want:['enjinn','civilian','pyrate'], desc:'Batteries charged by Voltan monks. Still warm.' },
-  enjinn_spice:{ name:'Enjinn spice',   base:14, kind:'trade', from:['enjinn'], want:['sloog','mantlis','civilian'], desc:'Makes engines run smoother and soup run hotter.' },
-  mantlis_chitin:{ name:'Mantlis chitin',base:13, kind:'trade', from:['mantlis'], want:['pebblekin','enjinn'], desc:'Shed armour plates. Light and tough. Do not ask whose.' },
-  rations:     { name:'Rebuff rations', base:4,  kind:'trade', from:['rebuff','laststand'], want:['pyrate','nebula'], desc:'Grey bricks of food. Technically edible.' },
+  voltan_cell: { name:'Thrumm cells',   base:16, kind:'trade', from:['voltan'], want:['enjinn','civilian','pyrate'], desc:'Batteries charged by Thrumm monks. Still warm.' },
+  enjinn_spice:{ name:'Tinkari spice',   base:14, kind:'trade', from:['enjinn'], want:['sloog','mantlis','civilian'], desc:'Makes engines run smoother and soup run hotter.' },
+  mantlis_chitin:{ name:'Jabbit chitin',base:13, kind:'trade', from:['mantlis'], want:['pebblekin','enjinn'], desc:'Shed armour plates. Light and tough. Do not ask whose.' },
+  rations:     { name:'Mandate rations', base:4,  kind:'trade', from:['rebuff','laststand'], want:['pyrate','nebula'], desc:'Grey bricks of food. Technically edible.' },
   pyrate_rum:  { name:'Pyrate rum',     base:10, kind:'trade', from:['pyrate'], want:['rebuff','civilian','laststand'], desc:'Strong enough to strip paint. Often used for that.' },
   space_wine:  { name:'Space wine',     base:20, kind:'trade', from:['civilian','voltan'], want:['pyrate','mantlis','laststand'], desc:'A good vintage from a terraformed moon. Goes to the head fast in zero-g.' },
   nebula_crystal:{ name:'Nebula crystal',base:26, kind:'trade', from:['nebula'], want:['glass','voltan','enjinn'], desc:'Condensed nebula. Hums in the dark.' },
@@ -41,7 +41,7 @@ BASE.goods = {
   toy_robots:  { name:'Toy robots',     base:8,  kind:'trade', from:['enjinn'], want:['civilian','laststand'], desc:'Wind-up, beeping, mildly self-aware.' },
   love_potion: { name:'"Love potion"',  base:22, kind:'trade', from:['sloog','nebula'], want:['pyrate','civilian','mantlis'], illegal:true, desc:'Pink, fizzy, very much not approved by any health authority. Sells like mad.' },
   contraband:  { name:'Contraband',     base:30, kind:'trade', from:['pyrate','nebula'], want:['laststand','rebuff'], illegal:true, desc:'Sealed crates. Best not to look inside. Pays very well, if nobody checks.' },
-  relic:       { name:'Ancient relic',  base:60, kind:'curio', from:[], want:['glass','sloog','voltan'], desc:'Older than the Fedoration. Collectors will pay a fortune.' },
+  relic:       { name:'Ancient relic',  base:60, kind:'curio', from:[], want:['glass','sloog','voltan'], desc:'Older than the Commonwealth. Collectors will pay a fortune.' },
   junk:        { name:'Interesting junk', base:3, kind:'curio', from:[], want:[], desc:'A rubber duck, a single boot, a toaster from the future. Collectors pay a little.' },
   // meals (cooked in the galley, homestead.js)
   spicy_hash:  { name:'Spicy hash',     base:24, kind:'meal',  from:[], want:['mantlis','pyrate'], desc:'Star potato and void pepper. Warms you to your boots.' },
@@ -64,15 +64,15 @@ function takeGoods(id, n){ if(goodsHave(id) < n) return false; G.bay[id] -= n; i
    pays: what it pays extra for when you sell (goods kinds, or 'gear', 'crew'). bar: chance of a bar (homestead.js). */
 const STORE_KINDS = {
   civilian: { title:'General store',            w:3, d:2, a:2, mod:{ supply:.9 }, bar:.75, pays:{ crop:1.15, meal:1.2 } },
-  rebuff:   { title:'Rebuff surplus depot',     w:4, d:2, a:2, mod:{ weapon:.9, aug:1.1, supply:.95 }, bar:.35, noIllegal:true, pays:{ gear:1.1 } },
+  rebuff:   { title:'Mandate surplus depot',     w:4, d:2, a:2, mod:{ weapon:.9, aug:1.1, supply:.95 }, bar:.35, noIllegal:true, pays:{ gear:1.1 } },
   pyrate:   { title:'Black market',             w:4, d:2, a:3, mod:{ weapon:.85, drone:.9, supply:1.1 }, bar:1, pays:{ gear:1.15, crew:1.2, trade:1.1 }, shady:true },
   nebula:   { title:"Smugglers' den",           w:3, d:3, a:2, mod:{ drone:.9, supply:1.05 }, bar:.8, pays:{ trade:1.1, curio:1.2 }, shady:true },
-  sloog:    { title:'Sloog emporium',           w:3, d:2, a:4, mod:{ aug:.85 }, bar:.6, pays:{ curio:1.3, crop:1.1 } },
+  sloog:    { title:'Mullock emporium',           w:3, d:2, a:4, mod:{ aug:.85 }, bar:.6, pays:{ curio:1.3, crop:1.1 } },
   pebblekin:{ title:'Pebblekin quarry exchange',w:3, d:2, a:2, mod:{ supply:.85, repair:.7 }, bar:.5, pays:{ fish:1.2, meal:1.15 } },
-  enjinn:   { title:'Enjinn workshop',          w:3, d:4, a:2, mod:{ drone:.8, system:.85, part:.75 }, bar:.4, pays:{ gear:1.2 } },
-  voltan:   { title:'Voltan bazaar',            w:3, d:2, a:3, mod:{ system:.9, aug:.9 }, bar:.5, pays:{ curio:1.2 } },
-  mantlis:  { title:'Mantlis arms',             w:5, d:2, a:2, mod:{ weapon:.85, missile:.85 }, bar:.7, pays:{ crew:1.3, meal:1.2 }, fighters:true },
-  laststand:{ title:'Fedoration quartermaster', w:4, d:2, a:2, mod:{ supply:.8, repair:.8 }, bar:.5, pays:{ meal:1.3, gear:1.1 } },
+  enjinn:   { title:'Tinkari workshop',          w:3, d:4, a:2, mod:{ drone:.8, system:.85, part:.75 }, bar:.4, pays:{ gear:1.2 } },
+  voltan:   { title:'Thrumm bazaar',            w:3, d:2, a:3, mod:{ system:.9, aug:.9 }, bar:.5, pays:{ curio:1.2 } },
+  mantlis:  { title:'Jabbit arms',             w:5, d:2, a:2, mod:{ weapon:.85, missile:.85 }, bar:.7, pays:{ crew:1.3, meal:1.2 }, fighters:true },
+  laststand:{ title:'Commonwealth quartermaster', w:4, d:2, a:2, mod:{ supply:.8, repair:.8 }, bar:.5, pays:{ meal:1.3, gear:1.1 } },
   glass:    { title:'Glass gallery',            w:3, d:2, a:4, mod:{ aug:.9 }, bar:.3, pays:{ curio:1.5, crop:1.2 } }
 };
 function storeKind(st){ return STORE_KINDS[(st && st.kind) || 'civilian'] || STORE_KINDS.civilian; }
@@ -146,7 +146,7 @@ function crewWorth(c){
 /* what this store pays for one of your crew */
 function crewSellPrice(c, st){
   const K = storeKind(st); let m = .9 * (.55 + .45*clamp(c.hp/c.maxHp, 0, 1)) * ((K.pays && K.pays.crew) || 1);
-  if(K.fighters && (skillLvl(c,'combat') > 0 || (DATA.races[c.race]||{}).combat > 1)) m *= 1.2;   // Mantlis arms pay extra for fighters
+  if(K.fighters && (skillLvl(c,'combat') > 0 || (DATA.races[c.race]||{}).combat > 1)) m *= 1.2;   // Jabbit arms pay extra for fighters
   if(st && st.haggled==='won') m *= 1.08;
   let v = Math.round(crewWorth(c) * m);
   if(st && (st.hired||[]).includes(c.id)) v = Math.round(v*.5);   // they only just signed on here
@@ -227,9 +227,9 @@ function marketEffect(e, L){
   if(typeof travellerEffect==='function') travellerEffect(e, L);
   if(typeof fairEffect==='function') fairEffect(e, L);
 }
-/* a Rebuff patrol finds contraband in your hold */
+/* a Mandate patrol finds contraband in your hold */
 function contrabandCheck(){ if(!G || !G.bay) return null; const bad = Object.keys(G.bay).filter(id => goodsDef(id)?.illegal); if(!bad.length) return null;
-  const n = bad.reduce((t, id) => t + goodsHave(id), 0); for(const id of bad) delete G.bay[id]; return `Rebuff inspectors find your illegal cargo (${n} crates) and confiscate the lot.`; }
+  const n = bad.reduce((t, id) => t + goodsHave(id), 0); for(const id of bad) delete G.bay[id]; return `Mandate inspectors find your illegal cargo (${n} crates) and confiscate the lot.`; }
 
 /* ---------------- the store screen ---------------- */
 function storeTabs(st){ return [['weapons','Weapons'],['drones','Drones'],['augments','Augments'],['systems','Systems'],['supplies','Supplies'],['crew','Crew'],['arms','Armoury'],['tonics','Tonics'],['goods','Goods'], ['contracts','Contracts'], ...(typeof drawHavenNeeds==='function' && !st.mags ? [['home','Send home']] : []), ...(st.bar ? [['bar','Bar']] : []), ['sell','Sell']]; }
@@ -328,7 +328,7 @@ function drawStoreCrew(st, m, cx, y0, W2){
     T(`Worth about ${crewWorth(cand)}`, cx+half-20, y+44, { s:14, a:'right', c:C.muted }); });
   // selling crew: it pays, and it costs you
   const qx = cx + half + 20; label('Sell a crew member', qx, y0+10, C.muted, 'left', 14);
-  T(storeKind(st).fighters ? 'Mantlis arms pay extra for fighters.' : storeKind(st).pays?.crew > 1 ? 'No questions asked here. Good prices.' : 'Trained, healthy veterans fetch the most.', qx+half, y0+10, { s:13, a:'right', c:C.cyan });
+  T(storeKind(st).fighters ? 'Jabbit arms pay extra for fighters.' : storeKind(st).pays?.crew > 1 ? 'No questions asked here. Good prices.' : 'Trained, healthy veterans fetch the most.', qx+half, y0+10, { s:13, a:'right', c:C.cyan });
   mine.slice(0, 8).forEach((c, k2) => { const y = y0 + 22 + k2*64, v = crewSellPrice(c, st), conf = UI.confirmTrade===c.id, b = typeof bondOf==='function' ? bondOf(c) : null;
     panel(qx, y, half, 56, 8); drawPortrait(qx+28, y+28, 19, c, false);
     T(c.name, qx+56, y+24, { s:17, f:FD, w:700, max:150 }); T(`${DATA.races[c.race]?.name||c.race}${c.vet ? ' · veteran' : ''} · ${Math.ceil(c.hp)}/${c.maxHp} hp${typeof heartsOf==='function' && heartsOf(c) ? ' · ' + '♥'.repeat(heartsOf(c)) : ''}${b ? ' · ' + b.kind.replace(/s$/,'') + ' of ' + b.other.name : ''}`, qx+56, y+44, { s:12, c:C.muted, max:half-260 });
@@ -340,7 +340,7 @@ function drawStoreGoods(st, cx, y0, W2){
   for(const it of st.goods){ const g = goodsDef(it.id); if(!g) continue; const p = goodsPrice(it.id, st, false), cheap = g.from.includes(st.kind);
     panel(cx, y, half, 70, 8); T(`${g.name}${cheap ? ' · local' : ''}${g.illegal ? ' · illegal' : ''}`, cx+18, y+28, { s:18, f:FD, w:700, c: g.illegal ? C.hostile : C.ink, max:half-250 });
     T(`${it.n} in stock · sells best in ${g.want.slice(0,2).map(w => (STORE_KINDS[w]||{}).title || w).join(', ') || 'collectors\' hands'}`, cx+18, y+52, { s:12, c:C.muted, max:half-250 });
-    tip(cx, y, half-230, 70, g.name, g.desc + (g.illegal ? ' Illegal: Rebuff patrols may confiscate it.' : ''));
+    tip(cx, y, half-230, 70, g.name, g.desc + (g.illegal ? ' Illegal: Mandate patrols may confiscate it.' : ''));
     btn(cx+half-220, y+12, 200, 46, it.n ? `Buy 1 · ${p}` : 'Sold out', () => { if(holdUsed() >= holdCap()){ toast('Your hold is full.'); return; } spend(p, () => { addGoods(it.id, 1); it.n--; }); }, { s:15, disabled:!it.n || G.scrap < p, col:C.good });
     y += 78; }
   // seeds for the garden

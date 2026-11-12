@@ -11,11 +11,11 @@
    Placeholders as in story.js: {crew}, {who}, {ship}, {enemy}.
    ========================================================================= */
 const MORE_HAILS = {
-  /* Rebuff */
+  /* Mandate */
   hail_rebuff4:{ hail:'rebuff', text:'"This is a routine customs inspection, {ship}. Please do not resist. Resisting is a separate form and the queue is very long."', choices:[
     { text:'Open fire before they finish the sentence.', effect:fightNow },
     { text:'Fill in the form. All forty pages.', effect:{ text:'{crew} fills in every box, including the one marked "do not fill in this box". The inspector, defeated by paperwork, lets you go with a stamp and a sigh.', dismiss:true, xp:{ skill:'pilot', amt:2 } } },
-    { text:'Smuggle {who} into their ship while they inspect yours.', req:{ race:'mantlis' }, chance:.6, success:{ text:'{who} comes back with a bag of their scrap and a Rebuff hat. The inspectors never notice.', dismiss:true, scrap:30 }, fail:{ text:'{who} is spotted eating their coffee machine. Alarms everywhere.', begin:true } } ] },
+    { text:'Smuggle {who} into their ship while they inspect yours.', req:{ race:'mantlis' }, chance:.6, success:{ text:'{who} comes back with a bag of their scrap and a Mandate hat. The inspectors never notice.', dismiss:true, scrap:30 }, fail:{ text:'{who} is spotted eating their coffee machine. Alarms everywhere.', begin:true } } ] },
   hail_rebuff5:{ hail:'rebuff', text:'The {enemy} broadcasts your picture on every channel. Underneath: WANTED. The reward is insultingly small.', choices:[
     { text:'Make them pay for that number.', effect:fightNow },
     { text:'Call in to complain about the reward.', chance:.4, success:{ text:'The duty officer agrees it is far too low, raises it, and in the paperwork chaos forgets to shoot. You slip away.', dismiss:true }, fail:{ text:'"Complaint noted. Response: lasers."', begin:true } },
@@ -36,14 +36,14 @@ const MORE_HAILS = {
     { text:'Decline the consultation.', effect:fightNow },
     { text:'Hire them instead: 20 scrap for a tip about the road ahead.', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'They take the job seriously. Their charts show you everything in the sector.', dismiss:true, reveal:true } },
     { text:'Have {who} read their real intentions.', req:{ race:'sloog' }, effect:{ text:'{who} reads out their plan, which is mostly a list of snacks. Embarrassed, they leave you some scrap to keep quiet.', dismiss:true, scrap:15 } } ] },
-  /* Mantlis */
-  hail_mantlis3:{ hail:'mantlis', text:'The {enemy} is already matching your course. On screen, a Mantlis is sharpening something against something else. It does not look up.', choices:[
+  /* Jabbit */
+  hail_mantlis3:{ hail:'mantlis', text:'The {enemy} is already matching your course. On screen, a Jabbit is sharpening something against something else. It does not look up.', choices:[
     { text:'Fight.', effect:fightNow },
     { text:'Throw them a crate of rations as a distraction.', req:{ crewCount:2 }, chance:.55, success:{ text:'The whole crew piles onto the crate. You are three beacons away before anyone remembers you.', dismiss:true }, fail:{ text:'They eat the rations in a second and want dessert.', begin:true } } ] },
   hail_mantlis4:{ hail:'mantlis', text:'"WE CHALLENGE YOUR STRONGEST TO SINGLE COMBAT. THEN WE FIGHT EVERYONE ELSE ANYWAY."', choices:[
     { text:'Skip the single combat. Fight.', effect:fightNow },
     { text:'Send {who} to fight their champion.', req:{ race:'mantlis' }, chance:.65, success:{ text:'{who} wins, very loudly. The raiders honour the result, salute, and leave tribute behind.', dismiss:true, scrap:20, xp:{ skill:'combat', amt:4 } }, fail:{ text:'{who} limps back, bruised but proud. The raiders, delighted, attack anyway.', crewHurt:30, begin:true } } ] },
-  /* Voltan */
+  /* Thrumm */
   hail_voltan3:{ hail:'voltan', text:'"We sense your reactor is unhappy, {ship}. We will relieve its suffering. By turning it off. Permanently."', choices:[
     { text:'Defend the reactor.', effect:fightNow },
     { text:'Let {who} bless the reactor themselves.', req:{ race:'voltan' }, effect:{ text:'{who} lays a glowing hand on the core. The Peacemongers declare it healed, and leave you a little extra light.', dismiss:true, scrap:10, crewHeal:30 } },
@@ -57,15 +57,15 @@ const MORE_HAILS = {
     { text:'Buy the rock (10 scrap).', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'They are delighted. The rock turns out to be full of ore and fuel ice.', dismiss:true, fuel:2, scrap:8 } } ] },
   hail_pebble4:{ hail:'pebblekin', text:'"WE. COLLECT. HULLS. YOURS. IS. NICE."', choices:[ { text:'"It\'s not for sale."', effect:fightNow },
     { text:'Give them some spare hull plating.', req:{ crewCount:1 }, effect:{ text:'You unbolt a panel and toss it over. They add it to their collection and leave, delighted.', dismiss:true, hull:-2 } } ] },
-  /* Sloog */
+  /* Mullock */
   hail_sloog3:{ hail:'sloog', text:'"Greetings! We are selling an incredible opportunity. Just transmit your shield codes for a free trial."', choices:[
     { text:'Unsubscribe. With lasers.', effect:fightNow },
     { text:'Send them the wrong codes on purpose.', req:{ system:'hacking', level:1 }, effect:{ text:'Their own shields start a "free trial" of being off. They panic and run.', dismiss:true, parts:2 } },
     { text:'Have {who} out-sell them.', req:{ race:'sloog' }, effect:{ text:'{who} sells them a timeshare on your ship\'s broom cupboard. They pay up front.', dismiss:true, scrap:25 } } ] },
   hail_sloog4:{ hail:'sloog', text:'The {enemy} says nothing. Somewhere behind your eyes, a voice says, very kindly, "Lower your shields."', choices:[
     { text:'Shake it off. Fight.', effect:fightNow },
-    { text:'Hum loudly to block them out.', chance:.5, success:{ text:'The whole crew hums. The Sloog find it unbearable and leave.', dismiss:true }, fail:{ text:'Humming makes it worse. Everyone has a headache now.', begin:true, crewHurt:10 } } ] },
-  /* Enjinn */
+    { text:'Hum loudly to block them out.', chance:.5, success:{ text:'The whole crew hums. The Mullock find it unbearable and leave.', dismiss:true }, fail:{ text:'Humming makes it worse. Everyone has a headache now.', begin:true, crewHurt:10 } } ] },
+  /* Tinkari */
   hail_enjinn2:{ hail:'enjinn', text:'"Unregistered modifications detected on {ship}. Please hold still for corrective disassembly."', choices:[
     { text:'Fight.', effect:fightNow },
     { text:'Ask them to register your ship instead (10 scrap).', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'They fill in your registration with obvious joy and leave a free drone part as a "welcome pack".', dismiss:true, parts:1 } },
@@ -79,28 +79,28 @@ const MORE_HAILS = {
     { text:'Stay on the line.', chance:.4, success:{ text:'Hold music plays for an hour. The drone ship\'s battery dies. You salvage it.', dismiss:true, parts:2, scrap:10 }, fail:{ text:'"THANK YOU FOR WAITING. FIRING NOW."', begin:true } } ] },
   hail_auto4:{ hail:'auto', text:'The {enemy} broadcasts a countdown in seventeen languages. You do not want to find out what happens at zero.', choices:[ { text:'Strike first.', effect:{ text:'Your weapons come online before the countdown ends.', begin:true, primeWeapons:true } },
     { text:'Broadcast "zero" back at it.', req:{ system:'hacking', level:1 }, chance:.6, success:{ text:'It thinks the countdown is over, celebrates, and powers down. You strip it for parts.', dismiss:true, parts:3 }, fail:{ text:'It is not fooled.', begin:true } } ] },
-  /* the Rebuff Fleet catching up */
-  hail_fleet2:{ hail:'fleet', text:'Warning lights everywhere. The front of the Rebuff Fleet has reached you, and one of its warships peels off with its guns already charged.', choices:[ { text:'Fight your way out.', effect:fightNow } ] },
+  /* the Mandate Fleet catching up */
+  hail_fleet2:{ hail:'fleet', text:'Warning lights everywhere. The front of the Mandate Fleet has reached you, and one of its warships peels off with its guns already charged.', choices:[ { text:'Fight your way out.', effect:fightNow } ] },
   hail_fleet3:{ hail:'fleet', text:'"Fleet command to {ship}: you have been very annoying. This is the part where you stop." A warship drops out of jump right beside you.', choices:[ { text:'Fight.', effect:fightNow },
     { text:'Burn everything and run for it.', req:{ fuel:2 }, cost:{ fuel:1 }, chance:.5, success:{ text:'You push the engines past every safety limit and break away before it locks on. The fleet will be faster next time.', dismiss:true, fleetPush:.05 }, fail:{ text:'Not fast enough. It locks on.', begin:true } } ] },
-  hail_fleet4:{ hail:'fleet', text:'The stars ahead fill with red running lights. The Rebuff Fleet is here, and a picket ship is already hailing: "Surrender, or be made an example of."', choices:[ { text:'"Make an example of this."', effect:fightNow } ] },
+  hail_fleet4:{ hail:'fleet', text:'The stars ahead fill with red running lights. The Mandate Fleet is here, and a picket ship is already hailing: "Surrender, or be made an example of."', choices:[ { text:'"Make an example of this."', effect:fightNow } ] },
   /* anyone */
   hail_generic3:{ hail:'generic', text:'The {enemy} drifts closer with its transponder switched off. Nobody answers your hails.', choices:[ { text:'Battle stations.', effect:fightNow },
     { text:'Fire a warning shot first.', chance:.3, success:{ text:'The warning works. They turn and leave in a hurry.', dismiss:true }, fail:{ text:'They take the warning as a hello.', begin:true } } ] },
   hail_generic4:{ hail:'generic', text:'"Sorry about this, {ship}. Someone paid us very well to ruin your day."', choices:[ { text:'"Let\'s see you earn it."', effect:fightNow },
-    { text:'Offer them more to go away (30 scrap).', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'"Pleasure doing business." They tell you who hired them: the Rebuff, of course.', dismiss:true } } ] },
+    { text:'Offer them more to go away (30 scrap).', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'"Pleasure doing business." They tell you who hired them: the Mandate, of course.', dismiss:true } } ] },
   hail_glass2:{ hail:'glass', text:'A chord rings out from the {enemy}, so pure it rattles your teeth. It is either a greeting or a battle hymn. It is a battle hymn.', choices:[ { text:'Fight.', effect:fightNow } ] }
 };
 Object.assign(BASE.events, MORE_HAILS);
 
 /* ---------------- new ships to meet ---------------- */
 Object.assign(BASE.enemies, {
-  rebuff_cutter:  { name:'Rebuff Patrol Cutter', tags:['rebuff'], hull:9, sectors:[1,4], systems:{ shields:2, engines:2, weapons:2, oxygen:1, piloting:1, doors:1 }, weapons:['ion','basic'], crew:['human','human'] },
+  rebuff_cutter:  { name:'Mandate Patrol Cutter', tags:['rebuff'], hull:9, sectors:[1,4], systems:{ shields:2, engines:2, weapons:2, oxygen:1, piloting:1, doors:1 }, weapons:['ion','basic'], crew:['human','human'] },
   pyrate_skiff:   { name:'Pyrate Skiff', tags:['pyrate'], hull:8, sectors:[1,4], systems:{ engines:3, weapons:2, oxygen:1, piloting:1, doors:1 }, weapons:['bust1'], crew:['human','mantlis'] },
   pebble_hauler:  { name:'Pebblekin Ore Hauler', tags:['pebblekin'], hull:13, sectors:[1,5], systems:{ shields:2, engines:1, weapons:1, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['lego'], crew:['pebblekin','pebblekin'] },
   auto_picket:    { name:'Auto-Picket', tags:['auto'], auto:true, hull:7, sectors:[1,3], systems:{ shields:2, engines:1, weapons:2, piloting:1 }, weapons:['basic','basic'], crew:[] },
-  mantlis_skirm:  { name:'Mantlis Skirmisher', tags:['mantlis'], hull:9, sectors:[2,5], systems:{ shields:2, engines:2, weapons:1, teleporter:1, oxygen:1, piloting:1, doors:1 }, weapons:['basic'], crew:['mantlis','mantlis','mantlis'] },
-  voltan_runner:  { name:'Voltan Lightrunner', tags:['voltan'], hull:9, sectors:[2,6], super:2, systems:{ shields:2, engines:3, weapons:2, oxygen:1, piloting:1, doors:1 }, weapons:['pike'], crew:['voltan','voltan'] }
+  mantlis_skirm:  { name:'Jabbit Skirmisher', tags:['mantlis'], hull:9, sectors:[2,5], systems:{ shields:2, engines:2, weapons:1, teleporter:1, oxygen:1, piloting:1, doors:1 }, weapons:['basic'], crew:['mantlis','mantlis','mantlis'] },
+  voltan_runner:  { name:'Thrumm Lightrunner', tags:['voltan'], hull:9, sectors:[2,6], super:2, systems:{ shields:2, engines:3, weapons:2, oxygen:1, piloting:1, doors:1 }, weapons:['pike'], crew:['voltan','voltan'] }
 });
 CALLSIGNS.rebuff.push('Writ', 'Due Process', 'Form 27B', 'Sanction', 'Last Warning');
 CALLSIGNS.pyrate.push('Grog Hog', 'Mutiny Mabel', 'Doubloon', 'Cannonbelly', 'Scurvy Dog');
@@ -125,7 +125,7 @@ more(CHATTER, {
   enemyHurt:['They\'re smoking!','Hit them again!','Their hull is cracking!','One more volley!'],
   repair:['Patched!','That should hold.','Nobody touch it.','Running again.','Fixed. Probably.'],
   death:['Not like this...','Man down!','They were the best of us.'],
-  idle:['Did anyone feed the ship\'s cat? Do we have a ship\'s cat?','I\'ve named that star Gary.','Who keeps moving my mug?','If we survive this I\'m opening a bakery.','Quiet shift. I\'ll take it.','Fun fact: I\'ve never seen the Flaggship. I\'d like to keep it that way.','Is the reactor supposed to hum in B flat?','My bunk smells of engine grease. Again.']
+  idle:['Did anyone feed the ship\'s cat? Do we have a ship\'s cat?','I\'ve named that star Gary.','Who keeps moving my mug?','If we survive this I\'m opening a bakery.','Quiet shift. I\'ll take it.','Fun fact: I\'ve never seen the Dreadnought. I\'d like to keep it that way.','Is the reactor supposed to hum in B flat?','My bunk smells of engine grease. Again.']
 });
 more(RACE_CHATTER.pebblekin, { jump:['MOVING. FAST. TOO. FAST.'], repair:['FIXED. WITH. FIST.'], shieldsDown:['SHIELDS. GONE. ME. STILL. HERE.'] });
 more(RACE_CHATTER.enjinn, { shieldsDown:['Re-routing! Re-routing!'], victory:['Recycling their parts in my head already.'], jump:['Drive timing perfect. You\'re welcome.'] });
@@ -179,7 +179,7 @@ more(STORE_GREETS, {
   enjinn:['"Everything comes with a lifetime guarantee. Our lifetime, not yours."','"Lovingly refurbished. Some of it twice."'],
   voltan:['"Light and scrap make all things possible."','"Take what glows to you."'],
   mantlis:['"WE. SELL. WEAPONS. MOSTLY. WEAPONS."','"Spend fast. We get hungry."'],
-  laststand:['"Fedoration prices. War prices. Same thing today."','"Everything must go. Including us, soon."'],
+  laststand:['"Commonwealth prices. War prices. Same thing today."','"Everything must go. Including us, soon."'],
   glass:['"Every item rings true."']
 });
 QUIET_TEXTS.push(
@@ -189,11 +189,11 @@ QUIET_TEXTS.push(
   'The sensors pick up a single sock, drifting. Nobody claims it.',
   'A distant nebula paints the viewport pink and gold. For a few minutes nobody talks.',
   'Static on every channel, and under it, faintly, someone\'s radio playing the same three songs on a loop.',
-  'A beacon marks the wreck of an old Fedoration frigate. The crew stand for a moment of silence.',
+  'A beacon marks the wreck of an old Commonwealth frigate. The crew stand for a moment of silence.',
   '{crew} swears they saw a whale out there. A space whale. Everyone agrees not to discuss it further.',
   'Empty. Utterly, wonderfully empty. {crew} takes the chance for a nap.',
   'A cluster of tiny moons, none bigger than your ship. {crew} wants to name them all.',
-  'A cargo pod floats past, stamped PROPERTY OF THE REBUFF. It is empty except for a strongly worded note.',
+  'A cargo pod floats past, stamped PROPERTY OF THE MANDATE. It is empty except for a strongly worded note.',
   'The beacon here is broken, and has been looping the words "please hold" for eleven years.',
   'Two old warships lie locked together, still pointing their guns at each other. Nobody won.',
   'A lighthouse station, long abandoned. Its lamp still turns, for nobody.',
@@ -224,13 +224,13 @@ const HAZARD_ARRIVALS = {
 };
 more(SECTOR_INTROS, {
   civilian:['Trade lanes, tourist beacons and the occasional pyrate. A gentle start, as these things go.'],
-  rebuff:['Every beacon here has a Rebuff flag on it. Every second Rebuff flag has a gun behind it.','Directorate checkpoints everywhere. Keep your head down and your shields up.'],
+  rebuff:['Every beacon here has a Mandate flag on it. Every second Mandate flag has a gun behind it.','Directorate checkpoints everywhere. Keep your head down and your shields up.'],
   pyrate:['Somebody has painted a skull on the sector beacon. Then someone else painted a bigger one.','Black markets, broken treaties and very good deals. Count your fingers after every handshake.'],
-  nebula:['Your sensors go quiet as the gas closes in. The Rebuff Fleet will have trouble following you in here, and so will you.'],
-  sloog:['The Sloog greet you before you have even arrived. They knew you were coming.'],
+  nebula:['Your sensors go quiet as the gas closes in. The Mandate Fleet will have trouble following you in here, and so will you.'],
+  sloog:['The Mullock greet you before you have even arrived. They knew you were coming.'],
   pebblekin:['Huge rocks drift through the lanes, some of them inhabited. It is hard to tell which.'],
   enjinn:['Every beacon is spotless and perfectly maintained. The drone ships guarding them are less friendly.'],
-  voltan:['The light here is strange and warm. The Voltan say it means you are welcome. Their guns say otherwise.'],
+  voltan:['The light here is strange and warm. The Thrumm say it means you are welcome. Their guns say otherwise.'],
   mantlis:['Hive-ships drift in the dark like sleeping beasts. Try not to wake them.'],
   laststand:['This is it. Everything you have done comes down to this sector.']
 });

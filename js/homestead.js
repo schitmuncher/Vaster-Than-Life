@@ -169,7 +169,7 @@ function goFish(m, outcome){
   else if(o==='eel'){ const got = addGoods('deep_eel', 1); text = got ? `Something huge takes the line. After an hour of shouting, ${who.name} lands a deep eel, glowing and furious.` : 'A deep eel! But your hold is full, so it gets away.'; }
   else if(o==='junk'){ addGoods('junk', 1); text = pick([`${who.name} reels in a single boot. It is, somehow, still warm.`, `You catch a rubber duck. It squeaks at you, accusingly.`, `The line comes back with half a toaster on it. ${who.name} keeps it.`]); }
   else if(o==='seeds'){ const k = pick(Object.keys(SEEDS).filter(s => !SEEDS[s].only)); G.seeds = G.seeds || {}; G.seeds[k] = (G.seeds[k]||0) + 2; text = `The line snags a drifting seed pod: 2 ${SEEDS[k].name} seeds.`; }
-  else if(o==='relic'){ addGoods('relic', 1); text = `${who.name} hooks something heavy and old: an ancient relic, older than the Fedoration. Collectors will go mad for this.`; grant('home_angler'); if(typeof sagaNote==='function') sagaNote('fish', `${who.name} fished an ancient relic out of empty space in sector ${G.sector}.`); }
+  else if(o==='relic'){ addGoods('relic', 1); text = `${who.name} hooks something heavy and old: an ancient relic, older than the Commonwealth. Collectors will go mad for this.`; grant('home_angler'); if(typeof sagaNote==='function') sagaNote('fish', `${who.name} fished an ancient relic out of empty space in sector ${G.sector}.`); }
   else if(o==='lost') text = pick(['It got away. It was, everyone agrees, enormous.', `The line snaps back empty. ${who.name} swears at the stars for a full minute.`, 'Whatever it was, it is still out there, laughing.']);
   else text = pick(['Nothing bites. It is peaceful, though.', `${who.name} falls asleep holding the rod. Nobody wakes them.`, 'A fish looks at the bait, looks at you, and swims away.']);
   if(typeof addHearts==='function' && who.id) addHearts(who, 6);
@@ -210,7 +210,7 @@ function barAct(st, what){
   const crew = G.ship.crew.filter(c => c.owner==='p' && !c.drone);
   if(what==='round'){ const c = barRound(st); if(G.scrap < c){ toast('Not enough scrap.'); return; } G.scrap -= c; G.spent = (G.spent||0) + c; st.barDone = (st.barDone||0) + 1;
     for(const x of crew){ x.hp = Math.min(x.maxHp, x.hp + 20); addHearts(x, crew.some(o => o.quirk==='romantic') ? 50 : 40); }
-    UI.storeMsg = pick(['The crew drink, sing, and tell the same three stories louder each time.', 'Somebody starts a dance on the table. Somebody else falls off it. Everyone agrees it was a great night.', 'Your crew make friends with a table of off-duty Rebuff gunners. Nobody mentions the war.']);
+    UI.storeMsg = pick(['The crew drink, sing, and tell the same three stories louder each time.', 'Somebody starts a dance on the table. Somebody else falls off it. Everyone agrees it was a great night.', 'Your crew make friends with a table of off-duty Mandate gunners. Nobody mentions the war.']);
     if(Math.random() < .45) queueMorning(); }
   else if(what==='night'){ const c = 22; if(G.scrap < c){ toast('Not enough scrap.'); return; } G.scrap -= c; G.spent = (G.spent||0) + c; st.barDone = (st.barDone||0) + 1; st.nightOut = true;
     for(const x of crew){ x.hp = x.maxHp; addHearts(x, 75); gainXP(x, pick(['pilot','engines','shields','weapons','repair','combat']), 3); }
@@ -237,8 +237,8 @@ function homeJump(){ const noTrav = typeof campDef==='function' && campDef() && 
   if(G.sector >= 2 && !G.fairPlanned && !G.daily && !G.cup){ G.fairPlanned = true; if(Math.random() < .7) G.later.push({ event:'m_fair', jumps:ri(5, 12) }); }   // the Harvest Fair, once a run
   if(typeof wishJump==='function') wishJump(); if(typeof travellersJump==='function' && !noTrav) travellersJump();
   if(G.sector >= 2 && !G.mags && !G.magsPlanned && !G.daily && !G.cup && !noTrav){ G.magsPlanned = true; if(Math.random() < .75) G.later.push({ event:'m_mags_meet', jumps:ri(2, 5) }); }   // Mags finds most crews sooner or later
-  // Rebuff space: patrols search ships, and illegal cargo goes
-  if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Rebuff patrol found the smuggled cargo and took the lot.`); } }
+  // Mandate space: patrols search ships, and illegal cargo goes
+  if(G.sectorType==='rebuff' && Math.random() < .2 && typeof contrabandCheck==='function'){ const t = contrabandCheck(); if(t){ UI.toast = { text:t, t:5 }; if(typeof sagaNote==='function') sagaNote('law', `In sector ${G.sector} a Mandate patrol found the smuggled cargo and took the lot.`); } }
   if(G.bay) for(const id of Object.keys(G.bay)) if(goodsDef(id)?.kind==='fish' && Math.random() < .08){ G.bay[id]--; if(!G.bay[id]) delete G.bay[id]; }   // fish do not keep forever: cook them
 }
 /* each fight won: the crew grow closer, and a full belly wears off */

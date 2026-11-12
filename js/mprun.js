@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
-   Race to the Flaggship and Wingmen: everyone flies their own copy of the same
+   Race to the Dreadnought and Wingmen: everyone flies their own copy of the same
    run (same seed, same game data), at the same time.
    - Race: a strip under the top bar shows how far everyone has got. Winning a
      fight draws a trouble card to play on a rival: fleet surges, ambushes,
@@ -11,7 +11,7 @@
    ========================================================================= */
 const PAR = { picks:{}, goAt:0, go:null, prog:{}, res:{}, sendT:0, cardsOpen:false, giftOpen:false, cardSel:null, giftTo:null, waiting:false };
 const TROUBLE = [
-  { k:'surge', name:'Fleet surge', desc:'Their Rebuff fleet front leaps forward.' },
+  { k:'surge', name:'Fleet surge', desc:'Their Mandate fleet front leaps forward.' },
   { k:'ambush', name:'Ambush', desc:'A pirate waits at their next beacon.' },
   { k:'storm', name:'Ion storm', desc:'Their next beacon sits in an ion storm.' },
   { k:'jam', name:'Sensor jam', desc:'They fight their next battle blind.' },
@@ -91,7 +91,7 @@ function parRunEnded(win, reason){
 }
 netOn('fin', (m, P) => { const id = m.id || P.id; if(PAR.res[id]) return; PAR.res[id] = m; if(NET.role==='host') netSend(m, null, P.id);
   const p = mpPlayer(id), name = p ? p.name : 'Someone';
-  if(m.win){ const first = Object.values(PAR.res).filter(r => r.win).length===1; toast(`${name} ${NET.mode==='race' && first ? 'won the race' : 'reached Fedoration command'}!`); mpFeed(`${name} won with ${fmtNum(m.score)} points.`, p?.color); sfx('victory', { vol:.4 }); }
+  if(m.win){ const first = Object.values(PAR.res).filter(r => r.win).length===1; toast(`${name} ${NET.mode==='race' && first ? 'won the race' : 'reached Commonwealth command'}!`); mpFeed(`${name} won with ${fmtNum(m.score)} points.`, p?.color); sfx('victory', { vol:.4 }); }
   else { toast(`${name} is out: ${m.why || 'their ship was lost'}`); mpFeed(`${name} is out at sector ${m.s} (${fmtNum(m.score)} points).`, p?.color); } });
 
 /* ---------------- trouble cards (race) ---------------- */

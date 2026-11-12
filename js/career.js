@@ -4,7 +4,7 @@
 
    Captain level (like an online shooter's player level): xp for everything
    you do in a run, win or lose: jumps, beacons, ships beaten, sectors
-   crossed, the Flaggship, crew levelling up, medals. Levels come quickly at
+   crossed, the Dreadnought, crew levelling up, medals. Levels come quickly at
    first and more slowly later, up to level 55; then you can prestige (★) and
    climb again. Ships the Admiralty releases by level (the hangar) count your
    prestiges too, so nothing locks again. Renown and rank stay as they were.
@@ -50,7 +50,7 @@ drawRankCard = function(x, y, w){
   T(`${rankName()} · Level ${L}${P ? ' ★' + P : ''}`, x, y, { s:24, f:FD, w:700, c:C.amber, max:w - 150 });
   rr(x, y + 12, w, 10, 5); ctx.fillStyle = 'rgba(6,9,18,.8)'; ctx.fill(); rr(x, y + 12, Math.max(10, w*fr), 10, 5); ctx.fillStyle = C.amber; ctx.fill();
   T(L >= CAP_MAX ? (P < 10 ? 'Maximum level: prestige is ready (Career ›)' : 'Maximum level and prestige') : `${fmtNum(cur - x0)} / ${fmtNum(x1 - x0)} xp to level ${L + 1}${PROFILE.lastCxp ? ` · +${fmtNum(PROFILE.lastCxp)} last run` : ''}`, x, y + 44, { s:13, c:C.muted, max:w });
-  tip(x, y - 24, w, 76, `Captain level ${L}`, `Every run earns xp, win or lose: jumps, beacons, ships beaten, sectors crossed, the Flaggship, crew levelling up and medals. Levels clear new ships for the hangar. At level ${CAP_MAX} you can prestige and climb again. Your rank (${rankName()}) comes from renown, earned at the end of each run.`);
+  tip(x, y - 24, w, 76, `Captain level ${L}`, `Every run earns xp, win or lose: jumps, beacons, ships beaten, sectors crossed, the Dreadnought, crew levelling up and medals. Levels clear new ships for the hangar. At level ${CAP_MAX} you can prestige and climb again. Your rank (${rankName()}) comes from renown, earned at the end of each run.`);
 };
 /* prestige lives on the Career screen */
 (function(){ if(typeof drawCareer!=='function') return; const d0 = drawCareer; drawCareer = function(){ d0(); if(capLevel() >= CAP_MAX && capPres() < 10) btn(1100, 906, 220, 64, UI.capAsk ? 'Sure? Tap again' : '★ Prestige', () => { if(!UI.capAsk){ UI.capAsk = true; return; } UI.capAsk = false; capPrestige(); }, { s:18, col:C.violet || '#c48bff', fill:!!UI.capAsk }); }; })();

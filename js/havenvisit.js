@@ -101,7 +101,7 @@ function drawHavenVisit(m){
   } else if(tab==='restore'){ drawHavenNeeds(cx, y0, W2);
   } else if(tab==='board' && typeof drawContracts==='function'){ if(!V.jobs) V.jobs = makeOffers(`haven${G.sector}n${G.map.cur}`); drawContracts(V.jobs, cx, y0, W2, true);
   } else if(tab==='bunks'){
-    para('The bunks are old and the blankets smell of somebody else\'s great-uncle, but it\'s home. A night here heals everyone, cures cabin fever and brings the crew closer. The Rebuff Fleet won\'t wait while you sleep.', cx, y0+16, W2, { s:17, lh:24 });
+    para('The bunks are old and the blankets smell of somebody else\'s great-uncle, but it\'s home. A night here heals everyone, cures cabin fever and brings the crew closer. The Mandate Fleet won\'t wait while you sleep.', cx, y0+16, W2, { s:17, lh:24 });
     btn(cx, y0+90, 360, 64, V.rested ? 'Rested' : 'Rest a night', () => { V.rested = true; for(const c of s.crew) if(c.owner==='p'){ c.hp = c.maxHp; if(!c.drone && typeof addHearts==='function') addHearts(c, 10); } G.away = 0; if(G.anom) delete G.anom.fever; G.fleetX += .04; toast('Everyone slept like a log. The Fleet crept a little closer.'); }, { disabled:V.rested, fill:!V.rested, col:C.good, s:18 });
     s.crew.filter(c => c.owner==='p' && !c.drone).forEach((c, i) => T(`${c.name}: ${Math.round(c.hp)}/${c.maxHp} health · ${typeof heartsOf==='function' ? heartsOf(c) : 0} hearts`, cx, y0+200 + i*28, { s:15 }));
   } else if(tab==='drydock'){

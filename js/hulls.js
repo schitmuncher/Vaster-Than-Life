@@ -2,8 +2,8 @@
 /* =========================================================================
    Hull styles: every faction builds ships its own way. A style sets the hull
    outline, the engines, the fins, the paint, the cockpit and a few details:
-   Fedoration wedges, Rebuff spikes, Enjinn capsules with dishes, Pebblekin
-   rock, Voltan lenses of light, Sloog blobs, Mantlis insects with mandibles,
+   Commonwealth wedges, Mandate spikes, Tinkari capsules with dishes, Pebblekin
+   rock, Thrumm lenses of light, Mullock blobs, Jabbit insects with mandibles,
    stealth chevrons, Glassborn crystal, pyrate patchwork, automated blocks...
    Outlines only ever grow outwards from the rooms (and are scaled up if they
    would cut a room), so the interior always fits. Ships and mods can pick a

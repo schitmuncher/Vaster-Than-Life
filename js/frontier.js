@@ -15,7 +15,7 @@
      for, and selling a lot of one thing at one store floods its market.
    - Maximum heat: the blockade can be fought, bribed, or dodged through an
      uncharted wormhole.
-   - Factions: the Mantlis despise running from a fight, and peoples who
+   - Factions: the Jabbit despise running from a fight, and peoples who
      dislike you won't sign on as crew.
    ========================================================================= */
 
@@ -127,7 +127,7 @@ function storeOf(){ const m = G && G.modal; return m && m.type==='store' && G.ma
 })();
 
 /* ---------------- maximum heat: fight, bribe or the wormhole ---------------- */
-BASE.events.fr_blockade = { id:'fr_blockade', questOnly:true, triggered:true, title:'Blockade', art:'fleet', text:'The exit beacon is ringed with Rebuff interdictors, guns out, transponders screaming. "Courier. Power down and prepare to be boarded." Behind them, sensors find something else: a ragged, uncharted wormhole, flickering in and out.',
+BASE.events.fr_blockade = { id:'fr_blockade', questOnly:true, triggered:true, title:'Blockade', art:'fleet', text:'The exit beacon is ringed with Mandate interdictors, guns out, transponders screaming. "Courier. Power down and prepare to be boarded." Behind them, sensors find something else: a ragged, uncharted wormhole, flickering in and out.',
   choices:[
     { text:'Break through.', effect:{ text:'All guns on the nearest interdictor.', fight:'rb_blockade', afterWin:{ text:'The blockade breaks. The exit is yours.', heatDrop:30, scrap:40, openExit:true } } },
     { text:'Pay the commander to look away (90 scrap).', req:{ scrap:90 }, cost:{ scrap:90 }, effect:{ text:'"We never saw you." The line opens just long enough.', heatDrop:20, openExit:true } },

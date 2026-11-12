@@ -103,7 +103,7 @@ function validateMod(d){
     if(typeof x.power!=='number') E.push(`Drone "${id}": "power" must be a number.`); }
   const Rm = toMap(d.races); for(const id in Rm){ if(typeof Rm[id].hp!=='number') E.push(`Race "${id}": "hp" must be a number.`); }
   for(const [k,label] of [['ships','Ship'],['enemies','Enemy']]){ const M = toMap(d[k]); for(const id in M){ const s = M[id];
-    if(typeof BASE!=='undefined' && BASE[k] && BASE[k][id]) continue;   // changing a game ship or enemy (renaming the Flaggship, say) only needs the fields you change
+    if(typeof BASE!=='undefined' && BASE[k] && BASE[k][id]) continue;   // changing a game ship or enemy (renaming the Dreadnought, say) only needs the fields you change
     if(typeof s.hull!=='number') E.push(`${label} "${id}": "hull" must be a number.`);
     if(!s.systems || typeof s.systems!=='object') E.push(`${label} "${id}": add a "systems" object, e.g. {"shields":2}.`);
     if(s.rooms && !Array.isArray(s.rooms)) E.push(`${label} "${id}": "rooms" must be a list.`); } }

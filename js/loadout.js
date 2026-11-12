@@ -34,9 +34,9 @@ const LO_WEAPONS = [
   ['ar_lancer',   'Lancer Battle Rifle', 'ar', 2, 70, { dmg:1.55, reach:.55 }, 'Heavier rounds, slower fire. Hits like a door slamming.'],
   ['ar_fang',     'Fang Burst Rifle',    'ar', 2, 65, { crit:.08 }, 'Three-round bursts. Now and then all three find the same spot.'],
   ['ar_ion',      'Ionclad Rifle',       'ar', 2, 75, { stun:.06 }, 'Fires ionised slugs that make muscles twitch.'],
-  ['ar_tempest',  'Tempest AR',          'ar', 3, 95, { dmg:1.6, reach:.6, dur:110 }, 'Fedoration special forces issue. Spare parts not included.'],
+  ['ar_tempest',  'Tempest AR',          'ar', 3, 95, { dmg:1.6, reach:.6, dur:110 }, 'Commonwealth special forces issue. Spare parts not included.'],
   ['ar_harbinger','Harbinger Rifle',     'ar', 3, 100, { dmg:1.55, bleed:2 }, 'Serrated flechettes. Nasty.'],
-  ['ar_cobalt',   'Cobalt Pulse Rifle',  'ar', 3, 105, { dmg:1.5, reach:.7, stun:.04 }, 'A pulse weapon from the Enjinn foundries. Hums politely.'],
+  ['ar_cobalt',   'Cobalt Pulse Rifle',  'ar', 3, 105, { dmg:1.5, reach:.7, stun:.04 }, 'A pulse weapon from the Tinkari foundries. Hums politely.'],
   ['smg_wasp',    'Wasp SMG',            'smg', 1, 40, {}, 'Buzzes. Stings. Mostly hits the right person.'],
   ['smg_ferret',  'Ferret Machine Pistol','smg', 1, 38, { spd:.14, dmg:1.3 }, 'Tiny, fast and hard to keep still.'],
   ['smg_hornet',  'Hornet PDW',          'smg', 2, 60, { dmg:1.42 }, 'Personal defence weapon. Defends very personally.'],
@@ -66,13 +66,13 @@ const LO_WEAPONS = [
   ['sp_grav',     'Grav Thrower',        'special', 3, 95, { knock:.2, dmg:1.35 }, 'A little Gravity Hammer that works at range.'],
   ['sp_plasma',   'Plasma Caster',       'special', 3, 110, { dmg:1.7, ignite:.03 }, 'Glowing, hissing, lovely. Dangerous to everyone.'],
   ['sp_spore',    'Spore Projector',     'special', 2, 65, { bleed:2.5, dmg:1.2 }, 'Grown, not built. Do not ask by whom.'],
-  ['pi_sidearm',  'Fedoration Sidearm',  'pistol', 1, 25, {}, 'Standard issue. Reliable, unremarkable, always there.'],
+  ['pi_sidearm',  'Commonwealth Sidearm',  'pistol', 1, 25, {}, 'Standard issue. Reliable, unremarkable, always there.'],
   ['pi_viper',    'Viper Revolver',      'pistol', 1, 30, { dmg:1.4, quick:.3 }, 'Six shots. Each one a sentence.'],
   ['pi_dart',     'Dart Pistol',         'pistol', 1, 28, { stun:.08 }, 'Tranquilliser darts. Very relaxing for the target.'],
-  ['pi_magnum',   'Hand Cannon',         'pistol', 2, 50, { dmg:1.55, knock:.05 }, 'Heavier than it looks. Kicks like a Mantlis.'],
+  ['pi_magnum',   'Hand Cannon',         'pistol', 2, 50, { dmg:1.55, knock:.05 }, 'Heavier than it looks. Kicks like a Jabbit.'],
   ['pi_machine',  'Auto Pistol',         'pistol', 2, 45, { dmg:1.3, spd:.05 }, 'A pistol that wishes it were an SMG.'],
   ['pi_flare',    'Flare Pistol',        'pistol', 2, 35, { ignite:.06 }, 'For signalling. And for starting fires on purpose.'],
-  ['pi_ionic',    'Ionic Repeater',      'pistol', 3, 70, { dmg:1.45, stun:.06 }, 'A Voltan design. Hums a little hymn when it fires.'],
+  ['pi_ionic',    'Ionic Repeater',      'pistol', 3, 70, { dmg:1.45, stun:.06 }, 'A Thrumm design. Hums a little hymn when it fires.'],
   ['pi_gold',     'Gilded Duelist',      'pistol', 3, 80, { dmg:1.5, crit:.12 }, 'A pyrate captain\'s pride. Polished between shots.'],
   ['ln_tube',     'Tube Launcher',       'launcher', 2, 60, {}, 'One rocket, one room, one very surprised boarding party.'],
   ['ln_grenade',  'Grenade Launcher',    'launcher', 2, 65, { splash:18, dur:35 }, 'Lobs grenades round corners. Mostly round corners.'],
@@ -84,8 +84,8 @@ const LO_WEAPONS = [
   ['me_cutlass',  'Pyrate Cutlass',      'melee', 2, 40, { dmg:1.6, bleed:2 }, 'Swashbuckling, as advertised.'],
   ['me_shard',    'Glass Shard Blade',   'melee', 3, 70, { dmg:1.8, bleed:3 }, 'Sharpened by the Glassborn. Hums when it\'s hungry.'],
   ['me_maul',     'Pebble Maul',         'melee', 2, 45, { dmg:1.7, knock:.1, spd:-.05 }, 'A Pebblekin heirloom: a rock on a stick, but a very good rock.'],
-  ['me_claws',    'Mantlis Claw Gloves', 'melee', 2, 50, { dmg:1.5, bleed:2.5 }, 'For people who miss having claws.'],
-  ['me_sword',    'Ceremonial Sabre',    'melee', 3, 75, { dmg:1.75, crit:.1 }, 'Fedoration officers carry them to parades. You carry one to boarding actions.']
+  ['me_claws',    'Jabbit Claw Gloves', 'melee', 2, 50, { dmg:1.5, bleed:2.5 }, 'For people who miss having claws.'],
+  ['me_sword',    'Ceremonial Sabre',    'melee', 3, 75, { dmg:1.75, crit:.1 }, 'Commonwealth officers carry them to parades. You carry one to boarding actions.']
 ];
 (function(){ for(const [id, name, cls, tier, cost, o, desc] of LO_WEAPONS){ const C_ = LO_CLASS[cls]; if(!C_ || BASE.arms[id]) continue;
   BASE.arms[id] = Object.assign({ name, kind:C_.kind, cls, slot:C_.slot, tier, cost, desc }, C_.base, o); } })();

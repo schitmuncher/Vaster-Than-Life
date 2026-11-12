@@ -270,7 +270,7 @@ function deckMapKind(n, i){
   const scan = hasAug(G.ship, 'scanners'), known = scan || n.revealed, flagHere = G.flag && G.flag.node===i;
   const kind = flagHere ? 'flag' : n.type==='store' ? 'store' : n.type==='exit' ? 'exit' : n.type==='base' ? 'base' : n.type==='start' ? 'start' : n.quest && !n.visited ? 'quest' : n.distress && !n.visited ? 'distress' : n.visited ? 'visited' : known ? (n.type==='combat' ? 'hostile' : n.type==='event' ? 'event' : 'empty') : 'unknown';
   const col = { flag:'#ff5a7a', store:'#7be0a0', exit:'#7be0a0', base:'#7be0a0', quest:'#ffd166', distress:'#ffd166', hostile:'#ff5a7a', visited:'#8592b0', start:'#8592b0', empty:'#8592b0' }[kind] || '#dfe6f5';
-  const name = { flag:'The Flaggship', store:'Store', exit:'Exit beacon', base:'Fedoration command', start:'Start', quest:'Quest beacon', distress:'Distress signal', visited:'Visited beacon', hostile:'Hostile ship', event:'Event', empty:'Empty beacon', unknown:'Unknown beacon' }[kind];
+  const name = { flag:'The Dreadnought', store:'Store', exit:'Exit beacon', base:'Commonwealth command', start:'Start', quest:'Quest beacon', distress:'Distress signal', visited:'Visited beacon', hostile:'Hostile ship', event:'Event', empty:'Empty beacon', unknown:'Unknown beacon' }[kind];
   return { kind, col, name };
 }
 function deckMapInit(){

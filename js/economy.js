@@ -2,7 +2,7 @@
 /* =========================================================================
    A living economy: convoys on the map.
    - Each sector has a couple of trade convoys (a faction's freighters, or a
-     Rebuff payroll barge) crawling one beacon per jump towards a store.
+     Mandate payroll barge) crawling one beacon per jump towards a store.
      They show on the map with their route.
    - Meet one and you can raid it (the faction is furious, unless you run
      dark with a cloak or stealth plating), fly escort (they pay, and like
@@ -12,7 +12,7 @@
      well stocked: cheaper to buy there.
    ========================================================================= */
 BASE.enemies.ec_freighter = { name:'Convoy Freighter', tags:['convoy'], eventOnly:true, hull:9, sectors:[1, 9], systems:{ shields:2, engines:1, oxygen:1, weapons:1, piloting:1, doors:1 }, weapons:['basic'], crew:['human', 'human'], style:'fed' };
-BASE.enemies.ec_payroll = { name:'Rebuff Payroll Barge', tags:['rebuff'], eventOnly:true, hull:11, sectors:[1, 9], systems:{ shields:2, engines:1, oxygen:1, weapons:2, piloting:1, doors:1 }, weapons:['basic', 'ion'], crew:['human', 'human'], style:'rebuff' };
+BASE.enemies.ec_payroll = { name:'Mandate Payroll Barge', tags:['rebuff'], eventOnly:true, hull:11, sectors:[1, 9], systems:{ shields:2, engines:1, oxygen:1, weapons:2, piloting:1, doors:1 }, weapons:['basic', 'ion'], crew:['human', 'human'], style:'rebuff' };
 const CONVOY_FACS = ['sloog', 'pebblekin', 'enjinn', 'voltan', 'mantlis', 'rebuff'];
 function convoys(){ return (G && G.convoys) || []; }
 /* a route from a beacon to a store, shortest first */
@@ -27,7 +27,7 @@ function makeConvoys(){
       const fac = pick(CONVOY_FACS), good = (typeof factionGood==='function' && factionGood(fac)) || 'rations';
       G.convoys.push({ id:k, fac, good, path, pos:0, dest, gone:false, escort:false }); } }); }
 (function(){ if(typeof genSector!=='function') return; const g0 = genSector; genSector = function(n, type){ const r = g0(n, type); try{ makeConvoys(); }catch(e){} return r; }; })();
-function convoyName(c){ return c.fac==='rebuff' ? 'Rebuff payroll barge' : `${FACTIONS[c.fac] ? FACTIONS[c.fac].name.split(' ')[0] : c.fac} convoy`; }
+function convoyName(c){ return c.fac==='rebuff' ? 'Mandate payroll barge' : `${FACTIONS[c.fac] ? FACTIONS[c.fac].name.split(' ')[0] : c.fac} convoy`; }
 /* every jump the convoys move one beacon on */
 function convoyJump(){ for(const c of convoys()){ if(c.gone) continue; c.pos++;
     if(c.pos >= c.path.length - 1){ c.gone = true; const nd = G.map.nodes[c.dest]; if(!nd) continue;
@@ -38,7 +38,7 @@ function convoyAt(i){ return convoys().find(c => !c.gone && c.path[c.pos]===i); 
 function convoyEvent(c){ const nm = convoyName(c), gd = goodsDef(c.good), store = G.map.nodes[c.dest], rebuff = c.fac==='rebuff', price = Math.max(4, Math.round((gd ? gd.base : 10) * .6));
   const dark = { text:'Run dark and take it.', req:{ hide:true, system:'cloaking' }, effect:{ text:'Transponder off, cloak up. They never see who hit them.', fight:rebuff ? 'ec_payroll' : 'ec_freighter', afterWin:{ text:`The holds are full of ${gd ? gd.name.toLowerCase() : 'cargo'}.`, goods:{ [c.good]:3 }, scrap:20, convoyRaid:true }, heat:4 } };
   const darkAug = { text:'Run dark behind the stealth plating and take it.', req:{ augment:'stealth' }, effect:dark.effect };
-  DATA.events.ec_convoy = { id:'ec_convoy', questOnly:true, triggered:true, title:nm, art:'ship', text:`A ${nm.toLowerCase()} is crawling past, heavy with ${gd ? gd.name.toLowerCase() : 'cargo'}, bound for the store ${Math.max(1, c.path.length - 1 - c.pos)} jump${c.path.length - 1 - c.pos === 1 ? '' : 's'} on. ${rebuff ? 'Payroll for a whole Rebuff garrison. The Pyrate Kings would love you for this.' : 'Its escort is thin.'}`,
+  DATA.events.ec_convoy = { id:'ec_convoy', questOnly:true, triggered:true, title:nm, art:'ship', text:`A ${nm.toLowerCase()} is crawling past, heavy with ${gd ? gd.name.toLowerCase() : 'cargo'}, bound for the store ${Math.max(1, c.path.length - 1 - c.pos)} jump${c.path.length - 1 - c.pos === 1 ? '' : 's'} on. ${rebuff ? 'Payroll for a whole Mandate garrison. The Pyrate Kings would love you for this.' : 'Its escort is thin.'}`,
     choices:[
       { text:'Raid it.', effect:{ text:'Guns out. They scramble to defend the cargo.', fight:rebuff ? 'ec_payroll' : 'ec_freighter', afterWin:{ text:`The holds are full of ${gd ? gd.name.toLowerCase() : 'cargo'}.`, goods:{ [c.good]:3 }, scrap:rebuff ? 45 : 20, convoyRaid:true }, rep:rebuff ? { pyrate:8 } : { [c.fac]:-15 }, heat:rebuff ? 12 : 6 } },
       dark, darkAug,

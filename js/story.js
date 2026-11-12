@@ -8,24 +8,24 @@
 const fightNow = { begin:true };
 const STORY_EVENTS = {
   /* ---------------- hails before ship fights ---------------- */
-  hail_rebuff1:{ hail:'rebuff', text:'"Fedoration vessel {ship}, this is the {enemy}. Power down your weapons and prepare to be boarded. Resistance will be noted in your file. Your very thick file."', choices:[
+  hail_rebuff1:{ hail:'rebuff', text:'"Commonwealth vessel {ship}, this is the {enemy}. Power down your weapons and prepare to be boarded. Resistance will be noted in your file. Your very thick file."', choices:[
     { text:'Open fire.', effect:fightNow },
-    { text:'Try to bluff: claim you are a Rebuff supply run.', chance:.35, success:{ text:'"Supply run? Why didn\'t you say so." They wave you on, then realise their mistake far too late to follow.', dismiss:true, scrap:5 }, fail:{ text:'"Nice try. Your transponder says Fedoration and your paint job says idiot." Weapons lock.', begin:true } },
+    { text:'Try to bluff: claim you are a Mandate supply run.', chance:.35, success:{ text:'"Supply run? Why didn\'t you say so." They wave you on, then realise their mistake far too late to follow.', dismiss:true, scrap:5 }, fail:{ text:'"Nice try. Your transponder says Commonwealth and your paint job says idiot." Weapons lock.', begin:true } },
     { text:'Have {who} slip under their sensors.', req:{ system:'cloaking', level:1 }, effect:{ text:'You vanish from their screens. They spend the next hour scanning an empty patch of space.', dismiss:true } } ] },
-  hail_rebuff2:{ hail:'rebuff', text:'A stern face fills your screen. "By order of the Rebuff Directorate, your journey ends here. Any last words for the report?"', choices:[
+  hail_rebuff2:{ hail:'rebuff', text:'A stern face fills your screen. "By order of the Mandate Directorate, your journey ends here. Any last words for the report?"', choices:[
     { text:'"Yes. Duck."', effect:fightNow },
     { text:'Offer a 25 scrap "processing fee".', req:{ scrap:25 }, cost:{ scrap:25 }, effect:{ text:'The officer pockets the scrap and suddenly remembers an appointment elsewhere.', dismiss:true } },
-    { text:'{who} quotes Rebuff regulations at them until they give up.', req:{ race:'human' }, chance:.5, success:{ text:'Section 14, paragraph 9: no engagements during scheduled lunch. They check the time, swear and leave.', dismiss:true }, fail:{ text:'"That regulation was repealed." Of course it was.', begin:true } } ] },
+    { text:'{who} quotes Mandate regulations at them until they give up.', req:{ race:'human' }, chance:.5, success:{ text:'Section 14, paragraph 9: no engagements during scheduled lunch. They check the time, swear and leave.', dismiss:true }, fail:{ text:'"That regulation was repealed." Of course it was.', begin:true } } ] },
   hail_rebuff3:{ hail:'rebuff', text:'"Attention, rebel scum. Surrender your data core and we will let your crew live. Probably. Ninety percent chance. Seventy."', choices:[
     { text:'"Come and get it."', effect:fightNow },
     { text:'Pretend to comply, then fire first.', effect:{ text:'You power down for a moment, then bring everything back online at once. Your weapons start warm.', begin:true, primeWeapons:true } } ] },
   hail_pyrate1:{ hail:'pyrate', text:'"Ahoy, {ship}! Hand over your scrap and nobody gets spaced!" The {enemy} runs out its guns with a lot of unnecessary shouting.', choices:[
     { text:'Never. Open fire!', effect:fightNow },
     { text:'Pay them off (20 scrap).', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'They take the scrap and sail off singing badly.', dismiss:true } },
-    { text:'Have {who} explain what Mantlis do to pirates.', req:{ race:'mantlis' }, effect:{ text:'{who} describes it in detail. The pirates go pale, throw a crate of scrap out of the airlock and flee.', scrap:15, dismiss:true } } ] },
+    { text:'Have {who} explain what Jabbit do to pirates.', req:{ race:'mantlis' }, effect:{ text:'{who} describes it in detail. The pirates go pale, throw a crate of scrap out of the airlock and flee.', scrap:15, dismiss:true } } ] },
   hail_pyrate2:{ hail:'pyrate', text:'The {enemy} hails you with a laugh. "Nice ship. We\'ll take it. You can keep the crew. Actually, no, we\'ll take them too."', choices:[
     { text:'Fight.', effect:fightNow },
-    { text:'Offer to join forces against the Rebuff Fleet.', chance:.3, success:{ text:'"A common enemy, eh?" They share a little loot and wish you well.', dismiss:true, scrap:20, fuel:1 }, fail:{ text:'"We\'re pirates. We don\'t have friends." They open fire.', begin:true } },
+    { text:'Offer to join forces against the Mandate Fleet.', chance:.3, success:{ text:'"A common enemy, eh?" They share a little loot and wish you well.', dismiss:true, scrap:20, fuel:1 }, fail:{ text:'"We\'re pirates. We don\'t have friends." They open fire.', begin:true } },
     { text:'Challenge their captain to a game of cards. {who} counts cards.', req:{ race:'sloog' }, effect:{ text:'{who} wins their scrap, their dignity and a weird hat. They leave, furious and poorer.', scrap:25, dismiss:true } } ] },
   hail_pyrate3:{ hail:'pyrate', text:'"Yarr! Stand and deliver! That means stop moving. And give us stuff."', choices:[
     { text:'Give them something to remember. Fire!', effect:fightNow },
@@ -34,7 +34,7 @@ const STORY_EVENTS = {
     { text:'Fight.', effect:fightNow },
     { text:'Let {who} answer in their own language.', req:{ race:'mantlis' }, chance:.6, success:{ text:'A long series of clicks. The raiders bow, salute {who} and leave a "tribute" floating behind them.', dismiss:true, scrap:20 }, fail:{ text:'{who} accidentally insults its mother. Battle stations.', begin:true } } ] },
   hail_mantlis2:{ hail:'mantlis', text:'"Your ship is weak. Your crew are soft. We will enjoy this." The {enemy} sweeps you with targeting lasers.', choices:[ { text:'Prove them wrong.', effect:fightNow } ] },
-  hail_voltan1:{ hail:'voltan', text:'A serene Voltan glows on your screen. "You trespass in sacred space. We must ask you to leave. Then we must ask you to explode."', choices:[
+  hail_voltan1:{ hail:'voltan', text:'A serene Thrumm glows on your screen. "You trespass in sacred space. We must ask you to leave. Then we must ask you to explode."', choices:[
     { text:'Fight.', effect:fightNow },
     { text:'Pay a 20 scrap tithe to the temple.', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'"Your offering is accepted. Go in peace, and in fewer pieces."', dismiss:true } },
     { text:'Let {who} ask for safe passage.', req:{ race:'voltan' }, effect:{ text:'They recognise {who}\'s glow. "Sister-light. Pass freely." They even top up your shields\' super-charge.', dismiss:true, scrap:10 } } ] },
@@ -46,7 +46,7 @@ const STORY_EVENTS = {
   hail_pebble2:{ hail:'pebblekin', text:'"YOUR. HULL. LOOKS. SOFT." The {enemy} cracks its knuckles. You did not know ships could do that.', choices:[ { text:'Fight.', effect:fightNow } ] },
   hail_sloog1:{ hail:'sloog', text:'"Hello friend! We are definitely not about to hack your ship and steal everything. Please lower your shields so we can say hello properly."', choices:[
     { text:'Fight.', effect:fightNow },
-    { text:'Let {who} read their minds.', req:{ race:'sloog' }, effect:{ text:'{who} reads out the Sloog captain\'s embarrassing secrets on an open channel. They pay you to stop.', scrap:25, dismiss:true } } ] },
+    { text:'Let {who} read their minds.', req:{ race:'sloog' }, effect:{ text:'{who} reads out the Mullock captain\'s embarrassing secrets on an open channel. They pay you to stop.', scrap:25, dismiss:true } } ] },
   hail_sloog2:{ hail:'sloog', text:'"We know what you are thinking," the {enemy} oozes. "You are thinking about losing."', choices:[ { text:'"I\'m thinking about shooting."', effect:fightNow } ] },
   hail_enjinn1:{ hail:'enjinn', text:'"Unidentified vessel. Your engine timing is off by 0.3%. It offends us. We will fix it. By destroying it."', choices:[
     { text:'Fight.', effect:fightNow },
@@ -56,7 +56,7 @@ const STORY_EVENTS = {
     { text:'Spoof its friend-or-foe code with your hacking system.', req:{ system:'hacking', level:1 }, effect:{ text:'The drone ship decides you are its mother and follows you for a while before wandering off.', dismiss:true, parts:2 } },
     { text:'Let {who} sweet-talk its AI.', req:{ race:'enjinn' }, chance:.7, success:{ text:'The AI was lonely. It gives you its spare parts and powers down.', dismiss:true, parts:4 }, fail:{ text:'It does not want to be friends.', begin:true } } ] },
   hail_auto2:{ hail:'auto', text:'"HOSTILE DETECTED. HOSTILE DETECTED. HAVE A NICE DAY. HOSTILE DETECTED."', choices:[ { text:'Fight.', effect:fightNow } ] },
-  hail_fleet:{ hail:'fleet', text:'The Rebuff Fleet has caught up. A warship breaks formation, its guns already hot. "End of the line, {ship}."', choices:[ { text:'Fight your way out.', effect:fightNow } ] },
+  hail_fleet:{ hail:'fleet', text:'The Mandate Fleet has caught up. A warship breaks formation, its guns already hot. "End of the line, {ship}."', choices:[ { text:'Fight your way out.', effect:fightNow } ] },
   hail_generic1:{ hail:'generic', text:'The {enemy} powers its weapons without a word.', choices:[ { text:'Battle stations.', effect:fightNow } ] },
   hail_generic2:{ hail:'generic', text:'"Nothing personal, {ship}. Business is business." The {enemy} locks on.', choices:[
     { text:'Fight.', effect:fightNow },
@@ -77,7 +77,7 @@ const STORY_EVENTS = {
   glass_welcome:{ questOnly:true, art:'glass', text:'Towers of living glass rise from the beacon\'s asteroid. A Glassborn envoy, all facets and slow light, drifts out to meet you. "Opaque ones. You carried our song home."', choices:[
     { text:'"We just followed the map."', effect:{ text:'"Then you are the first in a long age." The envoy chimes. "We will remember your ship."', unlock:'glasscannon', choices:[
       { text:'Ask if any of them want to see the galaxy.', effect:{ text:'A young Glassborn steps forward, refracting nervously. It joins your crew.', crew:'glassborn' } },
-      { text:'Ask for help against the Rebuff Fleet.', effect:{ text:'They reinforce your hull with crystal lattice.', maxHull:5, hull:5 } } ] } },
+      { text:'Ask for help against the Mandate Fleet.', effect:{ text:'They reinforce your hull with crystal lattice.', maxHull:5, hull:5 } } ] } },
     { text:'Ask to trade.', effect:{ text:'They open their vaults.', store:true } } ] },
   glass_trial:{ tags:['glass'], once:true, art:'glass', text:'A crystal spire flashes a challenge: a test of patience, it seems. The light pulses in a slow pattern.', choices:[
     { text:'Wait and match the pattern with your shields.', req:{ system:'shields', level:3 }, effect:{ text:'Your shield harmonics match the spire. It shatters into a shower of valuable shards.', scrap:45 } },
@@ -88,13 +88,13 @@ const STORY_EVENTS = {
     { text:'Admire them and move on.', effect:{ text:'Your crew feels oddly rested.', crewHeal:40 } } ] },
 
   /* ---------------- quest: the defector ---------------- */
-  defector:{ once:true, minSector:3, tags:['rebuff',''], art:'ship', text:'A Rebuff shuttle limps toward you, flashing an old Fedoration surrender code. "This is Commander Ilsa Vane. I have codes for the Flaggship. I want asylum."', choices:[
+  defector:{ once:true, minSector:3, tags:['rebuff',''], art:'ship', text:'A Mandate shuttle limps toward you, flashing an old Commonwealth surrender code. "This is Commander Ilsa Vane. I have codes for the Dreadnought. I want asylum."', choices:[
     { text:'Bring her aboard.', effect:{ text:'Vane comes aboard with a datapad and a nervous smile. "Its shield generators have a flaw. When you face it, aim for the seams."', crew:'human', setFlag:'intel', choices:[
-      { text:'"Why are you helping us?"', effect:{ text:'"Because I\'ve seen what the Rebuff do with victory." She doesn\'t say more.' } } ] } },
-    { text:'It\'s a trap. Destroy the shuttle.', effect:{ text:'The shuttle explodes. A Rebuff ship that was hiding behind it opens fire.', fight:'rebuff_fighter' } },
+      { text:'"Why are you helping us?"', effect:{ text:'"Because I\'ve seen what the Mandate do with victory." She doesn\'t say more.' } } ] } },
+    { text:'It\'s a trap. Destroy the shuttle.', effect:{ text:'The shuttle explodes. A Mandate ship that was hiding behind it opens fire.', fight:'rebuff_fighter' } },
     { text:'Have {who} read her mind first.', req:{ race:'sloog' }, effect:{ text:'{who} frowns, then nods. "She\'s telling the truth. She\'s also terrified." Vane comes aboard with the codes.', crew:'human', setFlag:'intel', scrap:10 } } ] },
   defector_doubt:{ flag:'intel', noFlag:'trusted', minSector:5, weight:4, once:true, text:'Commander Vane asks to send a short coded message from your comms. "My family. They need to know I\'m alive."', choices:[
-    { text:'Allow it.', chance:.8, success:{ text:'She sends the message and quietly thanks you. Later, a Fedoration courier drops off supplies, "from a friend of Vane".', fuel:3, missiles:3, setFlag:'trusted' }, fail:{ text:'The message was a beacon. A Rebuff ship arrives within minutes. Vane is gone in the confusion.', fight:'rebuff_elite', clearFlag:'intel' } },
+    { text:'Allow it.', chance:.8, success:{ text:'She sends the message and quietly thanks you. Later, a Commonwealth courier drops off supplies, "from a friend of Vane".', fuel:3, missiles:3, setFlag:'trusted' }, fail:{ text:'The message was a beacon. A Mandate ship arrives within minutes. Vane is gone in the confusion.', fight:'rebuff_elite', clearFlag:'intel' } },
     { text:'Refuse.', effect:{ text:'She nods. "I understand." She doesn\'t ask again.' } },
     { text:'Let {who} check her intentions.', req:{ race:'sloog' }, effect:{ text:'{who} confirms she\'s loyal. You let her send it. The courier\'s gift includes an augment.', augment:'random', setFlag:'trusted' } } ] },
 
@@ -102,7 +102,7 @@ const STORY_EVENTS = {
   weevil_nest:{ questOnly:true, art:'creature', text:'The Space Weevils\' nest is a hollowed-out freighter, wriggling with larvae. At its heart, something big is breathing.', choices:[
     { text:'Send in a team to grab the royal jelly.', chance:.5, success:{ text:'Your team returns sticky, terrified and carrying a fortune in weevil jelly.', scrap:70 }, fail:{ text:'The queen is awake. Your team retreats, chewed.', crewHurt:40, scrap:15 } },
     { text:'Burn it out with fire bombs.', req:{ weaponType:'bomb' }, effect:{ text:'The nest goes up like a torch. Among the ashes: a stash of salvaged weapons.', weapon:'random', scrap:30 } },
-    { text:'Send your Mantlis. They\'re already drooling.', req:{ race:'mantlis' }, effect:{ text:'There is a lot of crunching. {who} returns, very pleased, with the queen\'s hoard.', scrap:60, augment:'random' } },
+    { text:'Send your Jabbit. They\'re already drooling.', req:{ race:'mantlis' }, effect:{ text:'There is a lot of crunching. {who} returns, very pleased, with the queen\'s hoard.', scrap:60, augment:'random' } },
     { text:'Leave the weevils be.', effect:{ text:'A wise and itch-free choice.' } } ] },
 
   /* ---------------- quest: treasure map ---------------- */
@@ -119,26 +119,26 @@ const STORY_EVENTS = {
     { text:'Blast it open.', effect:{ text:'The vault\'s guardian drone wakes up.', fight:'auto_assault', afterWin:{ text:'Past the wrecked guardian, the treasure is yours.', scrap:90, weapon:'random', achievement:'treasure' } } } ] },
 
   /* ---------------- quest: the loan shark ---------------- */
-  loanshark:{ once:true, tags:['sloog','pyrate',''], art:'market', text:'A Sloog in a sharp suit oozes onto your screen. "Short on scrap, friend? I can lend you 50 right now. Pay me back later. With a little interest."', choices:[
+  loanshark:{ once:true, tags:['sloog','pyrate',''], art:'market', text:'A Mullock in a sharp suit oozes onto your screen. "Short on scrap, friend? I can lend you 50 right now. Pay me back later. With a little interest."', choices:[
     { text:'Take the loan.', effect:{ text:'"Pleasure doing business. I\'ll find you." The scrap lands in your account.', scrap:50, setFlag:'loan', later:{ event:'debt_collector', jumps:6 } } },
     { text:'No thanks.', effect:{ text:'"Your loss, friend."' } } ] },
-  debt_collector:{ questOnly:true, art:'ship', text:'A heavily armed Sloog ship drops in beside you. "The boss sends his regards. You owe 80 scrap. Pay now, or we take it out of your hull."', choices:[
+  debt_collector:{ questOnly:true, art:'ship', text:'A heavily armed Mullock ship drops in beside you. "The boss sends his regards. You owe 80 scrap. Pay now, or we take it out of your hull."', choices:[
     { text:'Pay 80 scrap.', req:{ scrap:80 }, cost:{ scrap:80 }, effect:{ text:'"Lovely. The boss will be pleased." They leave.', clearFlag:'loan' } },
     { text:'Fight them.', effect:{ text:'"Wrong answer."', fight:'sloog_mind', clearFlag:'loan' } },
-    { text:'Have {who} convince them you already paid.', req:{ race:'sloog' }, chance:.6, success:{ text:'{who} plants a false memory of the payment. They leave happy.', clearFlag:'loan' }, fail:{ text:'Sloog don\'t fall for Sloog tricks. They open fire.', fight:'sloog_mind', clearFlag:'loan' } } ] },
+    { text:'Have {who} convince them you already paid.', req:{ race:'sloog' }, chance:.6, success:{ text:'{who} plants a false memory of the payment. They leave happy.', clearFlag:'loan' }, fail:{ text:'Mullock don\'t fall for Mullock tricks. They open fire.', fight:'sloog_mind', clearFlag:'loan' } } ] },
 
-  /* ---------------- quest: Mantlis honour ---------------- */
-  mantlis_honor:{ once:true, tags:['mantlis'], art:'creature', text:'A Mantlis war-chief hails you. "Your ship smells of victory. We demand a duel of champions. Choose."', choices:[
-    { text:'Send your toughest fighter.', chance:.45, success:{ text:'Against all odds, {crew} wins. The war-chief bows. "You have honour, soft one."', scrap:30, setFlag:'mantlisFriend' }, fail:{ text:'{crew} is carried back, battered but alive. The Mantlis laugh and leave.', crewHurt:30 } },
+  /* ---------------- quest: Jabbit honour ---------------- */
+  mantlis_honor:{ once:true, tags:['mantlis'], art:'creature', text:'A Jabbit war-chief hails you. "Your ship smells of victory. We demand a duel of champions. Choose."', choices:[
+    { text:'Send your toughest fighter.', chance:.45, success:{ text:'Against all odds, {crew} wins. The war-chief bows. "You have honour, soft one."', scrap:30, setFlag:'mantlisFriend' }, fail:{ text:'{crew} is carried back, battered but alive. The Jabbit laugh and leave.', crewHurt:30 } },
     { text:'Send {who}.', req:{ race:'mantlis' }, effect:{ text:'{who} wins in a flurry of limbs. The war-chief offers a warrior to serve on your ship.', crew:'mantlis', setFlag:'mantlisFriend' } },
     { text:'Refuse the duel.', effect:{ text:'"Cowards!" They open fire.', fight:'mantlis_raider' } } ] },
-  mantlis_gift:{ flag:'mantlisFriend', once:true, tags:['mantlis'], weight:3, text:'A Mantlis warband recognises your ship and salutes you with a burst of clicking. "Honoured one! Take these spoils."', choices:[ { text:'Accept.', effect:{ text:'They hand over a weapon taken from some unfortunate pirate.', weapon:'random', missiles:3 } } ] },
+  mantlis_gift:{ flag:'mantlisFriend', once:true, tags:['mantlis'], weight:3, text:'A Jabbit warband recognises your ship and salutes you with a burst of clicking. "Honoured one! Take these spoils."', choices:[ { text:'Accept.', effect:{ text:'They hand over a weapon taken from some unfortunate pirate.', weapon:'random', missiles:3 } } ] },
 
-  /* ---------------- quest: Voltan prophecy ---------------- */
-  prophecy1:{ once:true, tags:['voltan',''], minSector:2, art:'star', text:'A Voltan oracle stops you. "I have seen a ship vaster than life. It carries a burning secret and outruns a fleet. Is it you?"', choices:[
+  /* ---------------- quest: Thrumm prophecy ---------------- */
+  prophecy1:{ once:true, tags:['voltan',''], minSector:2, art:'star', text:'A Thrumm oracle stops you. "I have seen a ship vaster than life. It carries a burning secret and outruns a fleet. Is it you?"', choices:[
     { text:'"Probably."', effect:{ text:'"Then we will meet again, Vaster One." The oracle fades away.', setFlag:'prophecy', later:{ event:'prophecy2', jumps:7 } } },
     { text:'"Definitely not. Wrong ship."', effect:{ text:'"Hmm. You are lying, but that is part of the prophecy too."', setFlag:'prophecy', later:{ event:'prophecy2', jumps:7 } } } ] },
-  prophecy2:{ questOnly:true, art:'star', text:'The Voltan oracle appears on your viewscreen without using the comms. "Vaster One. The prophecy says you will need light when the darkness comes."', choices:[
+  prophecy2:{ questOnly:true, art:'star', text:'The Thrumm oracle appears on your viewscreen without using the comms. "Vaster One. The prophecy says you will need light when the darkness comes."', choices:[
     { text:'Accept the oracle\'s gift.', effect:{ text:'A pulse of pure energy wraps your ship.', augment:'voltanShield', achievement:'prophecy' } },
     { text:'Ask {who} to join with the oracle\'s light.', req:{ race:'voltan' }, effect:{ text:'{who} and the oracle glow as one. Your reactor hums stronger.', reactor:2, augment:'voltanShield', achievement:'prophecy' } } ] },
 
@@ -154,11 +154,11 @@ const STORY_EVENTS = {
     { text:'Give back the core.', effect:{ text:'The core vanishes from your hold. The voice sighs, satisfied. Something new is sitting in its place.', augment:'random', clearFlag:'ghostCore' } },
     { text:'Refuse.', effect:{ text:'The ghost ship\'s guns are very real.', fight:'rebuff_cloaker', clearFlag:'ghostCore', afterWin:{ text:'As the phantom ship breaks up, a choir of relieved voices fades away.', scrap:40 } } } ] },
 
-  /* ---------------- quest: the Enjinn lamp ---------------- */
+  /* ---------------- quest: the Tinkari lamp ---------------- */
   lamp_find:{ once:true, art:'wreck', text:'Floating among some junk: an ornate brass lamp, rather out of place in space.', choices:[
     { text:'Take it.', effect:{ text:'It feels warm. {crew} rubs it a bit, but nothing happens. Yet.', setFlag:'lamp' } },
     { text:'Leave it.', effect:{ text:'You have quite enough junk.' } } ] },
-  lamp_genie:{ flag:'lamp', weight:4, minSector:3, once:true, text:'The brass lamp starts rattling in the hold. A small, very tired Enjinn genie pops out. "Three wishes. Make them quick, my shift ends soon."', choices:[
+  lamp_genie:{ flag:'lamp', weight:4, minSector:3, once:true, text:'The brass lamp starts rattling in the hold. A small, very tired Tinkari genie pops out. "Three wishes. Make them quick, my shift ends soon."', choices:[
     { text:'Wish for a stronger ship.', effect:{ text:'"Done." Your hull thickens.', maxHull:6, hull:6, clearFlag:'lamp', choices:[
       { text:'Second wish: more firepower.', effect:{ text:'"Fine." A weapon appears in your cargo hold.', weapon:'random', choices:[
         { text:'Third wish: "Join my crew."', effect:{ text:'"...Huh. Nobody\'s ever asked that." The genie shrugs and joins you.', crew:'enjinn' } },
@@ -166,10 +166,10 @@ const STORY_EVENTS = {
     { text:'Wish for the war to end.', effect:{ text:'"I\'m a genie, not a miracle worker." The genie gives you a drone part out of pity and vanishes.', parts:3, clearFlag:'lamp' } } ] },
 
   /* ---------------- quest: escort ---------------- */
-  escort:{ once:true, minSector:2, art:'ship', text:'A damaged Fedoration medical frigate asks for an escort to the next beacon. "We have wounded aboard. We can pay."', choices:[
+  escort:{ once:true, minSector:2, art:'ship', text:'A damaged Commonwealth medical frigate asks for an escort to the next beacon. "We have wounded aboard. We can pay."', choices:[
     { text:'Agree to escort them.', effect:{ text:'The frigate falls in behind you.', later:{ event:'escort_end', jumps:1 } } },
     { text:'You can\'t risk the delay.', effect:{ text:'"We understand." They limp off alone.' } } ] },
-  escort_end:{ questOnly:true, art:'ship', text:'The frigate made the jump with you. Then a Rebuff ship drops out of nowhere, guns trained on the frigate.', choices:[
+  escort_end:{ questOnly:true, art:'ship', text:'The frigate made the jump with you. Then a Mandate ship drops out of nowhere, guns trained on the frigate.', choices:[
     { text:'Put yourself between them.', effect:{ text:'You draw their fire.', fight:'rebuff_fighter', afterWin:{ text:'The frigate\'s captain thanks you and sends over medical supplies and a volunteer.', crewHeal:100, crew:'random', scrap:25 } } },
     { text:'Run for it.', effect:{ text:'The frigate is caught. You hear their final transmission as you jump. Nobody speaks for a while.' } } ] },
 
@@ -197,7 +197,7 @@ const STORY_EVENTS = {
   clone_vat:{ minSector:2, art:'station', text:'An abandoned medical station still has a working clone vat. A clone is half-grown inside, labelled "SPARE".', choices:[
     { text:'Finish growing the clone.', chance:.75, success:{ text:'The clone wakes up confused but eager to help. They join your crew.', crew:'human' }, fail:{ text:'Something went wrong. You turn the vat off and leave quickly.' } },
     { text:'Salvage the equipment.', effect:{ text:'Medical gear and scrap.', scrap:25, crewHeal:100 } } ] },
-  refugee_choice:{ art:'ship', text:'Two ships hail you at once. A refugee transport begs for fuel. A Rebuff patrol orders you to stop it from fleeing.', choices:[
+  refugee_choice:{ art:'ship', text:'Two ships hail you at once. A refugee transport begs for fuel. A Mandate patrol orders you to stop it from fleeing.', choices:[
     { text:'Give the refugees 2 fuel.', req:{ fuel:3 }, cost:{ fuel:2 }, effect:{ text:'The refugees escape. The patrol turns on you.', fight:'rebuff_fighter', afterWin:{ text:'The refugees send a thank-you message, and a volunteer.', crew:'random' } } },
     { text:'Fire on the patrol.', effect:{ text:'The refugees flee as you engage.', fight:'rebuff_fighter', afterWin:{ text:'The refugees leave you a gift of scrap.', scrap:20 } } },
     { text:'Do nothing.', effect:{ text:'The patrol catches the transport. You leave before you have to watch.' } } ] },
@@ -218,11 +218,11 @@ const STORY_EVENTS = {
     { text:'Pay.', req:{ scrap:25 }, cost:{ scrap:25 }, chance:.6, success:{ text:'Weapons now charge faster. And the coffee machine works.', augment:'reloader' }, fail:{ text:'Your ship now plays music when you open doors. That is all.' } },
     { text:'Decline.', effect:{ text:'"Your loss, grandpa."' } } ] },
   archives:{ art:'station', text:'A drifting library station invites travellers to browse its archives. It has records on almost everything.', choices:[
-    { text:'Study Rebuff tactics.', effect:{ text:'Your gunners learn a few tricks.', xp:{ skill:'weapons', amt:15 } } },
+    { text:'Study Mandate tactics.', effect:{ text:'Your gunners learn a few tricks.', xp:{ skill:'weapons', amt:15 } } },
     { text:'Study engine schematics.', effect:{ text:'Your pilots and engineers learn a lot.', xp:{ skill:'pilot', amt:30 } } },
     { text:'Study field medicine.', effect:{ text:'Everyone learns some first aid.', crewHeal:100 } } ] },
-  cargo_drop:{ text:'A cargo container tumbles through the beacon, labelled "PROPERTY OF REBUFF FLEET. DO NOT OPEN."', choices:[
-    { text:'Open it.', chance:.7, success:{ text:'Missiles! Lots of missiles.', missiles:6 }, fail:{ text:'It\'s a beacon. A Rebuff ship arrives to see who opened it.', fight:'rebuff_scout' } },
+  cargo_drop:{ text:'A cargo container tumbles through the beacon, labelled "PROPERTY OF MANDATE FLEET. DO NOT OPEN."', choices:[
+    { text:'Open it.', chance:.7, success:{ text:'Missiles! Lots of missiles.', missiles:6 }, fail:{ text:'It\'s a beacon. A Mandate ship arrives to see who opened it.', fight:'rebuff_scout' } },
     { text:'Leave it.', effect:{ text:'Some things are clearly labelled for a reason.' } } ] },
   burning_colony:{ minSector:2, art:'planet', text:'A small mining colony is on fire. Its people are evacuating in tiny shuttles, and some are not going to make it.', choices:[
     { text:'Help evacuate.', effect:{ text:'You take on as many as you can. One stays to repay you.', crew:'random', fuel:-1 } },
@@ -235,18 +235,18 @@ const STORY_EVENTS = {
     { text:'Attack the mutineers.', effect:{ text:'The mutineers turn their guns on you.', fight:'pyrate_gunship', afterWin:{ text:'The grateful captain gives you his treasure and his parrot. The parrot leaves.', scrap:45 } } },
     { text:'Rescue the captain and leave.', effect:{ text:'He joins your crew. "Aye, I\'ll swab your decks."', crew:'human' } },
     { text:'Ignore the drama.', effect:{ text:'Pirates are exhausting.' } } ] },
-  rebuff_propaganda:{ tags:['rebuff','laststand'], text:'A Rebuff propaganda beacon blares a looping message: "The Rebuff are your friends. Report suspicious Fedoration ships. Reward: 50 scrap."', choices:[
+  rebuff_propaganda:{ tags:['rebuff','laststand'], text:'A Mandate propaganda beacon blares a looping message: "The Mandate are your friends. Report suspicious Commonwealth ships. Reward: 50 scrap."', choices:[
     { text:'Shoot the beacon.', effect:{ text:'Satisfying. Its scrap is useful too.', scrap:12 } },
     { text:'Report a "suspicious ship" (a passing asteroid).', chance:.5, success:{ text:'They pay out the reward without checking.', scrap:50 }, fail:{ text:'They check. They are not happy.', fight:'rebuff_scout' } },
-    { text:'Hack it to broadcast a funny message.', req:{ system:'hacking', level:1 }, effect:{ text:'The beacon now plays "The Rebuff smell of feet" on loop. Morale soars.', crewHeal:30 } } ] },
-  rebuff_prison:{ tags:['rebuff'], minSector:3, art:'station', text:'A Rebuff prison barge holds dozens of Fedoration prisoners. It\'s lightly guarded.', choices:[
+    { text:'Hack it to broadcast a funny message.', req:{ system:'hacking', level:1 }, effect:{ text:'The beacon now plays "The Mandate smell of feet" on loop. Morale soars.', crewHeal:30 } } ] },
+  rebuff_prison:{ tags:['rebuff'], minSector:3, art:'station', text:'A Mandate prison barge holds dozens of Commonwealth prisoners. It\'s lightly guarded.', choices:[
     { text:'Attack the barge.', effect:{ text:'The guard ship moves to intercept.', fight:'rebuff_fighter', afterWin:{ text:'You free the prisoners. Two of them join you.', crew:'human', scrap:20 } } },
     { text:'Teleport in a rescue team.', req:{ system:'teleporter', level:1 }, chance:.7, success:{ text:'In and out. One prisoner, a veteran gunner, joins your crew.', crew:'human', xp:{ skill:'weapons', amt:10 } }, fail:{ text:'Alarms! Your team escapes, but the guards are coming.', fight:'rebuff_fighter' } },
     { text:'Not worth the risk.', effect:{ text:'You leave them behind.' } } ] },
-  enjinn_market:{ tags:['enjinn'], weight:.4, art:'market', text:'An Enjinn bazaar floats here, selling everything from spare parts to suspiciously cheap drones.', choices:[
+  enjinn_market:{ tags:['enjinn'], weight:.4, art:'market', text:'A Tinkari bazaar floats here, selling everything from spare parts to suspiciously cheap drones.', choices:[
     { text:'Browse.', effect:{ text:'They are delighted to have a customer.', store:true } },
     { text:'Buy a bag of drone parts (20 scrap).', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'Five parts, slightly used.', parts:5 } } ] },
-  enjinn_overhaul:{ tags:['enjinn'], text:'An Enjinn mechanic offers a full ship overhaul. "Thirty scrap. I will fix everything. I will also fix some things that were not broken."', choices:[
+  enjinn_overhaul:{ tags:['enjinn'], text:'A Tinkari mechanic offers a full ship overhaul. "Thirty scrap. I will fix everything. I will also fix some things that were not broken."', choices:[
     { text:'Pay 30 scrap.', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'Your hull gleams. Your engines purr.', hull:10, upgrade:'engines' } },
     { text:'No thanks.', effect:{ text:'"Your loss. Your engine sounds sad."' } } ] },
   pebble_quarry:{ tags:['pebblekin'], art:'asteroid', text:'A Pebblekin quarry. Its workers are moving one boulder per day. They are very proud of this pace.', choices:[
@@ -255,57 +255,57 @@ const STORY_EVENTS = {
   pebble_elder:{ tags:['pebblekin'], text:'A Pebblekin elder asks for passage to the next beacon. "I. WILL. NOT. TAKE. UP. MUCH. ROOM." They take up quite a lot of room.', choices:[
     { text:'Give them a lift.', effect:{ text:'At the next beacon they give you a blessing and a weapon.', weapon:'heavy1' } },
     { text:'Refuse.', effect:{ text:'They are still saying "OKAY" as you leave.' } } ] },
-  voltan_library:{ tags:['voltan'], art:'station', text:'A Voltan library of light. Knowledge here is stored as glowing patterns. "Take what you need, but give something back."', choices:[
+  voltan_library:{ tags:['voltan'], art:'station', text:'A Thrumm library of light. Knowledge here is stored as glowing patterns. "Take what you need, but give something back."', choices:[
     { text:'Give 2 drone parts, take a schematic.', req:{ parts:2 }, cost:{ parts:2 }, effect:{ text:'A design for a beam drone.', drone:'beamd' } },
     { text:'Give a story. {crew} tells one.', effect:{ text:'The librarians love it. They give you energy cells.', fuel:3 } } ] },
-  voltan_pilgrim:{ tags:['voltan'], text:'A Voltan pilgrim asks to ride along. "I seek the edge of the galaxy. Or at least the edge of this sector."', choices:[
+  voltan_pilgrim:{ tags:['voltan'], text:'A Thrumm pilgrim asks to ride along. "I seek the edge of the galaxy. Or at least the edge of this sector."', choices:[
     { text:'Welcome aboard.', effect:{ text:'The pilgrim joins your crew and glows contentedly.', crew:'voltan' } },
     { text:'No room.', effect:{ text:'"I understand. The universe provides." It does not provide.' } } ] },
-  sloog_spa:{ tags:['sloog','nebula'], art:'nebula', text:'A Sloog mud spa offers "full crew rejuvenation" for 20 scrap. Customers emerge looking very relaxed and slightly damp.', choices:[
+  sloog_spa:{ tags:['sloog','nebula'], art:'nebula', text:'A Mullock mud spa offers "full crew rejuvenation" for 20 scrap. Customers emerge looking very relaxed and slightly damp.', choices:[
     { text:'Book the whole crew in.', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'Everyone comes back refreshed. Mostly.', crewHeal:100 } },
     { text:'Decline.', effect:{ text:'"Your pores will regret this."' } } ] },
-  sloog_oracle:{ tags:['sloog'], text:'A Sloog fortune teller reads your crew\'s minds and offers a prediction for 10 scrap.', choices:[
+  sloog_oracle:{ tags:['sloog'], text:'A Mullock fortune teller reads your crew\'s minds and offers a prediction for 10 scrap.', choices:[
     { text:'Pay.', req:{ scrap:10 }, cost:{ scrap:10 }, effect:{ text:'"I see a store in your future. Also a fight. Also a bad sandwich." The next beacons are revealed on your map.', reveal:true } },
     { text:'Decline.', effect:{ text:'"I knew you would say that."' } } ] },
-  mantlis_arena:{ tags:['mantlis'], art:'creature', text:'A Mantlis fighting arena. "Fight a champion and win 50 scrap. Lose and we keep your crew member as a snack."', choices:[
+  mantlis_arena:{ tags:['mantlis'], art:'creature', text:'A Jabbit fighting arena. "Fight a champion and win 50 scrap. Lose and we keep your crew member as a snack."', choices:[
     { text:'Send {who} to fight.', req:{ race:'mantlis' }, effect:{ text:'{who} wins. Easily. The crowd loves them.', scrap:50, xp:{ skill:'combat', amt:6 } } },
     { text:'Send your best fighter.', chance:.35, success:{ text:'{crew} wins! The crowd is stunned.', scrap:50 }, fail:{ text:'{crew} is badly hurt. You leave quickly before the "snack" part.', crewHurt:60 } },
     { text:'Leave.', effect:{ text:'Very sensible.' } } ] },
-  mantlis_eggs:{ tags:['mantlis'], text:'You find a crate of Mantlis eggs floating in space. They\'re warm.', choices:[
+  mantlis_eggs:{ tags:['mantlis'], text:'You find a crate of Jabbit eggs floating in space. They\'re warm.', choices:[
     { text:'Return them to the nearest hive.', effect:{ text:'The hive is grateful. Very grateful. A little too grateful.', scrap:35 } },
-    { text:'Sell them to a passing trader.', effect:{ text:'You make some scrap. Somewhere, a Mantlis mother is writing your name down.', scrap:45 } } ] },
+    { text:'Sell them to a passing trader.', effect:{ text:'You make some scrap. Somewhere, a Jabbit mother is writing your name down.', scrap:45 } } ] },
   nebula_ghostlights:{ nebula:true, art:'nebula', text:'Lights dance in the nebula, forming shapes that look a lot like your crew\'s faces.', choices:[
     { text:'Follow them.', chance:.5, success:{ text:'They lead you to a hidden cache.', scrap:35, parts:2 }, fail:{ text:'They lead you in circles. You burn a fuel cell finding your way out.', fuel:-1 } },
     { text:'Ignore them.', effect:{ text:'{crew} keeps waving at them anyway.' } } ] },
-  nebula_hideout:{ nebula:true, text:'A Fedoration hideout is buried in the nebula. "We can\'t do much, but we can refuel you."', choices:[ { text:'Accept.', effect:{ text:'They top up your fuel and wish you luck.', fuel:4, missiles:2 } } ] },
+  nebula_hideout:{ nebula:true, text:'A Commonwealth hideout is buried in the nebula. "We can\'t do much, but we can refuel you."', choices:[ { text:'Accept.', effect:{ text:'They top up your fuel and wish you luck.', fuel:4, missiles:2 } } ] },
   nebula_storm:{ nebula:true, art:'nebula', text:'The nebula crackles with static. Your sensors are blind, and something big just pinged your hull.', choices:[
     { text:'Hold still and wait.', chance:.6, success:{ text:'It passes. Whatever it was.' }, fail:{ text:'It bumps you again, harder.', hull:-4 } },
     { text:'Fire into the fog.', effect:{ text:'You hit something. It hits back.', fight:'random' } } ] },
-  laststand_refugees:{ tags:['laststand'], text:'Fedoration civilians are fleeing the front lines. "The Flaggship is coming. Please, stop it."', choices:[
+  laststand_refugees:{ tags:['laststand'], text:'Commonwealth civilians are fleeing the front lines. "The Dreadnought is coming. Please, stop it."', choices:[
     { text:'"We will."', effect:{ text:'They give you what little they have.', scrap:20, fuel:2 } } ] },
-  laststand_veterans:{ tags:['laststand'], art:'fleet', text:'A battered Fedoration squadron salutes as you pass. "We can\'t win this. You can. Take our supplies."', choices:[ { text:'Accept.', effect:{ text:'Missiles, drone parts and a hull patch.', missiles:5, parts:4, hull:8 } } ] },
-  laststand_sabotage:{ tags:['laststand'], text:'A Fedoration spy offers to sabotage the Flaggship\'s weapons, but needs a fast ship to reach it. "Lend me 30 scrap for a shuttle."', choices:[
+  laststand_veterans:{ tags:['laststand'], art:'fleet', text:'A battered Commonwealth squadron salutes as you pass. "We can\'t win this. You can. Take our supplies."', choices:[ { text:'Accept.', effect:{ text:'Missiles, drone parts and a hull patch.', missiles:5, parts:4, hull:8 } } ] },
+  laststand_sabotage:{ tags:['laststand'], text:'A Commonwealth spy offers to sabotage the Dreadnought\'s weapons, but needs a fast ship to reach it. "Lend me 30 scrap for a shuttle."', choices:[
     { text:'Pay 30 scrap.', req:{ scrap:30 }, cost:{ scrap:30 }, effect:{ text:'The spy salutes and jumps away. You hope it works.', setFlag:'sabotage' } },
     { text:'No.', effect:{ text:'"Then may the stars help you."' } } ] },
   space_bar:{ art:'station', text:'A space bar hangs on the edge of the beacon. Its neon sign flickers: "THE BLACK HOLE. Everyone gets sucked in."', choices:[
     { text:'Let the crew have a drink.', effect:{ text:'The crew comes back happy, and {crew} comes back with a new friend who wants to join.', crew:'random', crewHeal:20 } },
     { text:'Ask around for rumours.', effect:{ text:'You learn the locations of the nearby beacons.', reveal:true } },
     { text:'Pass.', effect:{ text:'Probably for the best.' } } ] },
-  satellite:{ text:'A Rebuff spy satellite is recording everything at this beacon, including you.', choices:[
-    { text:'Shoot it down.', effect:{ text:'It explodes. The Rebuff Fleet will know where it lost contact.', scrap:10, fleetPush:.05 } },
-    { text:'Hack it to send false data.', req:{ system:'hacking', level:1 }, effect:{ text:'The Rebuff Fleet now thinks you are three sectors away. They slow down.', fleetPush:-.12 } },
+  satellite:{ text:'A Mandate spy satellite is recording everything at this beacon, including you.', choices:[
+    { text:'Shoot it down.', effect:{ text:'It explodes. The Mandate Fleet will know where it lost contact.', scrap:10, fleetPush:.05 } },
+    { text:'Hack it to send false data.', req:{ system:'hacking', level:1 }, effect:{ text:'The Mandate Fleet now thinks you are three sectors away. They slow down.', fleetPush:-.12 } },
     { text:'Ignore it.', effect:{ text:'It watches you go.' } } ] },
   mirror_ship:{ minSector:3, art:'ship', text:'A ship identical to yours appears at the beacon. Same paint, same scratches. Its captain looks just like you.', choices:[
     { text:'Hail them.', effect:{ text:'"Oh no, not again," says the other you. They jump away. A dimensional rift closes behind them, leaving scrap.', scrap:30 } },
     { text:'Open fire.', effect:{ text:'The other you had the same idea.', fight:'random' } } ] },
   gravity_well:{ text:'A gravity well grabs your ship as you arrive. Your engines strain.', choices:[
     { text:'Burn hard to escape.', effect:{ text:'You break free, using extra fuel.', fuel:-1 } },
-    { text:'Slingshot around it with a skilled pilot.', req:{ system:'engines', level:3 }, effect:{ text:'You whip around it and gain speed. The Rebuff Fleet falls further behind.', fleetPush:-.08 } } ] },
+    { text:'Slingshot around it with a skilled pilot.', req:{ system:'engines', level:3 }, effect:{ text:'You whip around it and gain speed. The Mandate Fleet falls further behind.', fleetPush:-.08 } } ] },
   data_cache:{ text:'You find a data cache with a map of this sector\'s beacons.', choices:[ { text:'Download it.', effect:{ text:'Your map lights up with the locations of stores and dangers.', reveal:true } } ] },
   frozen_crew:{ minSector:2, art:'wreck', text:'An old colony ship drifts here. Its cryo-pods are still running, holding sleeping colonists.', choices:[
     { text:'Wake one up.', chance:.7, success:{ text:'A groggy colonist emerges. "Is it the future yet?" They join your crew.', crew:'random' }, fail:{ text:'The pod fails. You leave the rest asleep.' } },
     { text:'Tow the ship to a safe beacon.', effect:{ text:'The colonists will wake up somewhere safe. Their ship\'s AI pays you.', scrap:25, fuel:-1 } } ] },
-  tax:{ tags:['rebuff','',''], text:'A Rebuff "tax collector" demands 15 scrap for "space maintenance".', choices:[
+  tax:{ tags:['rebuff','',''], text:'A Mandate "tax collector" demands 15 scrap for "space maintenance".', choices:[
     { text:'Pay.', req:{ scrap:15 }, cost:{ scrap:15 }, effect:{ text:'You receive a receipt. It\'s blank.' } },
     { text:'Refuse.', effect:{ text:'"Then I\'ll take it from your wreckage."', fight:'rebuff_scout' } },
     { text:'Have {who} audit their paperwork.', req:{ race:'human' }, effect:{ text:'{who} finds so many errors that the collector pays you to go away.', scrap:15 } } ] },
@@ -337,19 +337,19 @@ const STORY_SECTORS = {
     intro:['Light bends strangely here. Every surface seems to hum. The Glassborn have been waiting a very long time for visitors.'] }
 };
 const SECTOR_INTROS = {
-  civilian:['Busy trade lanes and nervous civilians. The Rebuff Fleet is not far behind.','Merchant beacons blink across the sector. A good place to stock up, if you are quick.'],
-  rebuff:['Rebuff patrols everywhere. Keep your head down and your shields up.','Propaganda broadcasts fill every channel. This is enemy territory.'],
+  civilian:['Busy trade lanes and nervous civilians. The Mandate Fleet is not far behind.','Merchant beacons blink across the sector. A good place to stock up, if you are quick.'],
+  rebuff:['Mandate patrols everywhere. Keep your head down and your shields up.','Propaganda broadcasts fill every channel. This is enemy territory.'],
   pyrate:['Lawless space. Everyone here is a pirate, a victim or both.','The Pyrate Haven: cheap goods, expensive mistakes.'],
-  nebula:['Thick gas swallows your sensors. The Rebuff Fleet will struggle to track you here, and so will you.','A sea of colour, and no idea what is inside it.'],
-  sloog:['Sloog space. Hold on to your scrap and your thoughts.','The air tastes of slime and deception.'],
+  nebula:['Thick gas swallows your sensors. The Mandate Fleet will struggle to track you here, and so will you.','A sea of colour, and no idea what is inside it.'],
+  sloog:['Mullock space. Hold on to your scrap and your thoughts.','The air tastes of slime and deception.'],
   pebblekin:['The Pebblekin homeworlds. Everything moves slowly here, except the asteroids.','Huge rocky worlds and huge rocky people.'],
-  enjinn:['Enjinn space. Every ship here is perfectly maintained and slightly over-engineered.','Drones buzz between the beacons like bees.'],
-  voltan:['The Voltan homeworlds glow with soft, peaceful light. The Peacemongers are less peaceful.','Monks, temples and a lot of very bright ships.'],
-  mantlis:['The Mantlis hives. Everything here wants to fight you, and most of it will win.','Clicking echoes over every comm channel.'],
-  laststand:['The Last Stand. The Flaggship is heading for Fedoration command. Catch it.','This is it. Everything has led here.']
+  enjinn:['Tinkari space. Every ship here is perfectly maintained and slightly over-engineered.','Drones buzz between the beacons like bees.'],
+  voltan:['The Thrumm homeworlds glow with soft, peaceful light. The Peacemongers are less peaceful.','Monks, temples and a lot of very bright ships.'],
+  mantlis:['The Jabbit hives. Everything here wants to fight you, and most of it will win.','Clicking echoes over every comm channel.'],
+  laststand:['The Last Stand. The Dreadnought is heading for Commonwealth command. Catch it.','This is it. Everything has led here.']
 };
 const STORE_GREETS = {
-  civilian:['"Welcome, welcome! Everything is half price. Of what, I won\'t say."','"Fedoration credit accepted. Rebuff credit accepted. Scrap preferred."'],
+  civilian:['"Welcome, welcome! Everything is half price. Of what, I won\'t say."','"Commonwealth credit accepted. Mandate credit accepted. Scrap preferred."'],
   rebuff:['"Keep it quick. If a patrol comes, you were never here."'],
   pyrate:['"Arr. Prices are firm. Mostly. Haggling costs extra."','"Everything here is stolen. That\'s why it\'s cheap."'],
   nebula:['"You found us! Most people don\'t."'],
@@ -358,7 +358,7 @@ const STORE_GREETS = {
   enjinn:['"Everything here is tested, retested and tested again."'],
   voltan:['"May your purchases bring you light."'],
   mantlis:['"BUY OR DIE. MOSTLY BUY."'],
-  laststand:['"Take what you need. If the Flaggship wins, money won\'t matter."'],
+  laststand:['"Take what you need. If the Dreadnought wins, money won\'t matter."'],
   glass:['"Our wares are clear. Literally."']
 };
 const QUIET_TEXTS = ['Empty space. A good place to breathe, patch up and plan.','An old navigation buoy blinks lazily. Nothing else stirs.','The stars are very quiet here. {crew} says it is too quiet. Nobody listens.','A cloud of frozen debris drifts by, glittering. Pretty, but useless.','Nothing on sensors. {crew} uses the break to fix the coffee machine.','Static on every channel. Somewhere, a beacon hums to itself.'];
@@ -412,7 +412,7 @@ const SURRENDER_LINES = {
   generic:'"Enough! Enough! Take what you want."'
 };
 const VICTORY_LINES = {
-  rebuff:'The {enemy} breaks apart, its Rebuff colours burning.', pyrate:'The {enemy} explodes in a shower of stolen loot.', mantlis:'The {enemy} goes down screaming war cries to the very end.',
+  rebuff:'The {enemy} breaks apart, its Mandate colours burning.', pyrate:'The {enemy} explodes in a shower of stolen loot.', mantlis:'The {enemy} goes down screaming war cries to the very end.',
   voltan:'The {enemy}\'s light flickers out.', pebblekin:'The {enemy} cracks open like a geode.', sloog:'The {enemy} bursts with a wet pop.', enjinn:'The {enemy} disintegrates into perfectly sorted parts.',
   auto:'The {enemy} powers down with a final "HAVE A NICE DAY".', glass:'The {enemy} shatters into a million glittering pieces.', generic:'The {enemy} breaks apart.'
 };
@@ -425,7 +425,7 @@ Object.assign(BASE.sectors, STORY_SECTORS);
 for(const k in SECTOR_INTROS) if(BASE.sectors[k]) BASE.sectors[k].intro = SECTOR_INTROS[k];
 ACHIEVEMENTS.push({ id:'glasswork', name:'Through the Looking Glass', desc:'Find the hidden Glasswork Expanse.' },
   { id:'treasure', name:'X Marks the Spot', desc:'Find the Pyrate King\'s treasure.' },
-  { id:'prophecy', name:'The Vaster One', desc:'Fulfil the Voltan prophecy.' });
+  { id:'prophecy', name:'The Vaster One', desc:'Fulfil the Thrumm prophecy.' });
 /* hook a quest into an existing event: successful weevil raids reveal the nest */
 if(BASE.events.weevils) BASE.events.weevils.choices[0].success.quest = 'weevil_nest';
 if(BASE.events.colony) BASE.events.colony.art = 'planet';

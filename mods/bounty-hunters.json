@@ -152,7 +152,7 @@
     {
       "id": "bh_hail1",
       "hail": "bounty",
-      "text": "\"Fedoration courier {ship}. Your bounty is twelve thousand scrap, dead or alive. Alive is a lot less paperwork, so let's do this nicely.\"",
+      "text": "\"Commonwealth courier {ship}. Your bounty is twelve thousand scrap, dead or alive. Alive is a lot less paperwork, so let's do this nicely.\"",
       "choices": [
         {
           "text": "\"Come and collect it.\"",
@@ -174,7 +174,7 @@
           }
         },
         {
-          "text": "{who} reminds them how Mantlis treat hunters.",
+          "text": "{who} reminds them how Jabbit treat hunters.",
           "req": {
             "race": "mantlis"
           },
@@ -184,7 +184,7 @@
             "dismiss": true
           },
           "fail": {
-            "text": "\"I've hunted Mantlis before.\" They charge their guns.",
+            "text": "\"I've hunted Jabbit before.\" They charge their guns.",
             "begin": true
           }
         }

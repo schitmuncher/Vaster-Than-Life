@@ -299,7 +299,7 @@ def combat4():   # Dogfight
              ([0, 6, 5, 4], 1, { 'bass':'synth', 'drums':'four', 'arp':'up', 'av':44 })])
     return s
 @track
-def boss():   # Flaggship
+def boss():   # Dreadnought
     s = Song('boss', 'C', 'harmonic', 120, seed=25)
     A = '0:2 -1:1 0:1 | 2:2 1:1 0:1 | -1:2 -2:1 -1:1 | -3:4 | 0:2 2:1 4:1 | 5:2 4:1 2:1 | 3:2 2:1 1:1 | -1:4'
     B = '7:3 6:1 | 5:3 4:1 | 5:2 4:1 2:1 | 4:4 | 3:3 2:1 | 1:3 0:1 | 1:2 2:1 -1:1 | 0:4'

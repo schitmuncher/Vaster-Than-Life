@@ -63,7 +63,7 @@ function drawGallery(){
 const JUKEBOX = [['title', 'Vaster Than Life', 'title', 'ost_anthem'], ['hangar', 'Dry Dock', 'hangar', 'ost_funk'], ['start', 'Departure', 'start', 'ost_arp'],
   ['explore1', 'The Long Way Round', 'explore', 'ost_soft'], ['explore2', 'Beacon Lights', 'explore', 'ost_arp'], ['explore3', 'Drift', 'explore', 'ost_ambient'], ['explore4', 'Quiet Stars', 'explore', 'ost_waltz'], ['explore5', 'Engine Room', 'explore', 'ost_funk'],
   ['strange1', 'Nebula Hymn', 'strange sectors', 'ost_ambient'], ['strange2', 'Static', 'strange sectors', 'ost_eerie'], ['store', 'Haggle Bossa', 'stores', 'ost_bossa'],
-  ['combat1', 'Shields Up', 'fights', 'ost_rock'], ['combat2', 'Boarding Party', 'fights', 'ost_rock'], ['combat3', 'Red Alert', 'fights', 'ost_arp'], ['combat4', 'Dogfight', 'fights', 'ost_break'], ['boss', 'Flaggship', 'the last fight', 'ost_rock'],
+  ['combat1', 'Shields Up', 'fights', 'ost_rock'], ['combat2', 'Boarding Party', 'fights', 'ost_rock'], ['combat3', 'Red Alert', 'fights', 'ost_arp'], ['combat4', 'Dogfight', 'fights', 'ost_break'], ['boss', 'Dreadnought', 'the last fight', 'ost_rock'],
   ['win', 'Homecoming', 'victory', 'ost_anthem'], ['over', 'Drifting On', 'the end', 'ost_ambient']];
 function drawJukebox(){
   panel(60, 180, 1470, 660, 10); label('The soundtrack · eighteen tunes written for the game', 84, 216, C.amber, 'left', 15);

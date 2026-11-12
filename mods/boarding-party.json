@@ -23,11 +23,11 @@
       "weapons": ["bp_gasbomb", "basic"], "drones": ["bp_raider"], "crew": ["mantlis", "human", "pebblekin"], "fuel": 16, "missiles": 4, "parts": 8, "unlock": { "sector": 3 } }
   ],
   "enemies": [
-    { "id": "bp_reaver", "name": "Mantlis Reaver", "tags": ["mantlis"], "hull": 12, "sectors": [2, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 1 }, "weapons": ["bust1", "bp_stunbomb"], "crew": ["mantlis", "mantlis", "mantlis", "mantlis"] },
+    { "id": "bp_reaver", "name": "Jabbit Reaver", "tags": ["mantlis"], "hull": 12, "sectors": [2, 8], "systems": { "shields": 2, "engines": 2, "weapons": 3, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 1 }, "weapons": ["bust1", "bp_stunbomb"], "crew": ["mantlis", "mantlis", "mantlis", "mantlis"] },
     { "id": "bp_brawlbarge", "name": "Pebblekin Brawl Barge", "tags": ["pebblekin"], "hull": 15, "sectors": [3, 8], "systems": { "shields": 2, "engines": 1, "weapons": 3, "teleporter": 2, "oxygen": 1, "medbay": 1, "piloting": 1, "doors": 2 }, "weapons": ["heavy1", "bp_gasbomb"], "crew": ["pebblekin", "pebblekin", "pebblekin", "mantlis"] }
   ],
   "events": [
-    { "id": "bp_arena", "text": "A Mantlis fighting arena hangs between two moons. The champion is taking challengers: one bout, winner takes the purse.", "tags": ["mantlis", ""], "weight": 1,
+    { "id": "bp_arena", "text": "A Jabbit fighting arena hangs between two moons. The champion is taking challengers: one bout, winner takes the purse.", "tags": ["mantlis", ""], "weight": 1,
       "choices": [
         { "text": "Send your best fighter.", "chance": 0.5, "success": { "text": "Your fighter wins to a standing ovation. The purse is generous and the training was free.", "scrap": 50, "xp": { "skill": "combat", "amt": 25 } }, "fail": { "text": "Your fighter loses, badly, but learns a lot.", "crewHurt": 30, "xp": { "skill": "combat", "amt": 15 } } },
         { "text": "Send {who}.", "req": { "race": "mantlis" }, "chance": 0.8, "success": { "text": "{who} wins in four seconds. The crowd goes wild.", "scrap": 60, "xp": { "skill": "combat", "amt": 25 } }, "fail": { "text": "{who} loses on points and sulks for a jump.", "crewHurt": 20 } },
@@ -39,7 +39,7 @@
         { "text": "Pay the ransom (30 scrap).", "req": { "scrap": 30 }, "cost": { "scrap": 30 }, "effect": { "text": "The pyrates leave with the scrap. A grateful worker joins your crew.", "crew": "human" } },
         { "text": "Leave it to the authorities.", "effect": { "text": "There are no authorities out here. You jump anyway." } }
       ] },
-    { "id": "bp_drill", "text": "A Fedoration marine outpost offers to run your crew through a boarding drill. \"Free of charge. We need the practice too.\"", "tags": ["", "rebuff"], "weight": 0.8,
+    { "id": "bp_drill", "text": "A Commonwealth marine outpost offers to run your crew through a boarding drill. \"Free of charge. We need the practice too.\"", "tags": ["", "rebuff"], "weight": 0.8,
       "choices": [
         { "text": "Run the drill.", "effect": { "text": "Bruises all round, and everyone is better for it.", "xp": { "skill": "combat", "amt": 20 }, "crewHurt": 10 } },
         { "text": "Ask for spare kit instead.", "effect": { "text": "The quartermaster finds you some old gear.", "augment": "bp_trauma" } }

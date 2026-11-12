@@ -7,7 +7,7 @@ Changes the game's rules for the whole run. All fields optional.
 | --- | --- | --- | --- |
 | `sectors` | Number of sectors in a run (the last one is the Last Stand) | 8 | 4–12 |
 | `startScrap` | Scrap at the start | 20 | 0–200 |
-| `fleetSpeed` | How far the Rebuff Fleet advances per jump | 0.11 | 0.07–0.16 |
+| `fleetSpeed` | How far the Mandate Fleet advances per jump | 0.11 | 0.07–0.16 |
 | `shieldRegen` | Seconds to recharge one shield layer | 2 | 1.4–4 |
 | `repairRate` | Crew repair speed | 0.16 | 0.1–0.25 |
 | `enemyPace` | Enemy weapon speed (higher is faster) | 0.7 | 0.5–1 |
@@ -16,7 +16,7 @@ Changes the game's rules for the whole run. All fields optional.
 | `weaponSlots` | Weapon slots | 4 | 2–5 |
 | `droneSlots` | Drone slots | 3 | 2–4 |
 | `augmentSlots` | Augment slots | 3 | 2–5 |
-| `baseHP` | Jumps Fedoration command survives the Flaggship | 4 | 2–8 |
+| `baseHP` | Jumps Commonwealth command survives the Dreadnought | 4 | 2–8 |
 | `startParts` | Drone parts at the start | 2 | 0–10 |
 
 ### races (crew species)
@@ -195,7 +195,7 @@ An event is a scene with choices.
 - Cargo and garden: `goods` (`{"space_wine":2}`, negative to take; or `"loot"` for the enemy faction's goods), `seeds` (`{"ion_berry":3}` or `"random"`), `gardenBoost` (jumps of growth for every planted crop, 1-3)
 - Crew kit: `arm` (personal weapon id, `"random"`, or a list), `item` (tonic id, `"random"`, or a list)
 - Pets: `pet` (`"random"`, a kind, or `{"name":"Biscuit","kind":"kitten"}`; only if the ship has none)
-- Heat (how hard the Rebuff hunt you, 0-100): `heat` (raise it, 5-20), `heatDrop` (lower it, 10-40)
+- Heat (how hard the Mandate hunt you, 0-100): `heat` (raise it, 5-20), `heatDrop` (lower it, 10-40)
 - Anomalies (multi-sector situations, see Reference): `anom` (`{"fungus":1}` starts one, `{"fungus":null}` ends it). Use sparingly: they change the whole run
 - Frontier: `longLight` (true: a "Relay home" button for this sector), `openExit` (true: the sector exit opens after the outcome, e.g. after getting past a blockade)
 - Captain's log: `saga` (one line written into the run's story log, e.g. `"{crew} kept the strange egg."`)
@@ -238,7 +238,7 @@ Good events offer a real decision: a safe small reward, a risky bigger one, and 
 
 ### campaign (optional object: a whole new story)
 
-A mod with a `campaign` object is a complete alternative campaign. It only loads when the player picks it with the **Campaign** arrows in the hangar, so it can freely rename the Flaggship, replace the last sector and so on without touching the normal game. Put its ships, races, enemies, sectors and events in the usual lists of the same file.
+A mod with a `campaign` object is a complete alternative campaign. It only loads when the player picks it with the **Campaign** arrows in the hangar, so it can freely rename the Dreadnought, replace the last sector and so on without touching the normal game. Put its ships, races, enemies, sectors and events in the usual lists of the same file.
 
 ```json
 "campaign": {
@@ -278,10 +278,10 @@ A mod with a `campaign` object is a complete alternative campaign. It only loads
 | `crew` | Names the starting crew in order; skills 1 = skilled, 2 = expert |
 | `host` | Title of the opening scene |
 | `gifts` | False: no gift choice, just the briefing |
-| `fleet` | Replaces "the Rebuff Fleet" in game text |
-| `foe` | Replaces "Rebuff" |
-| `boss` | Replaces "the Flaggship" |
-| `command` | Replaces "Fedoration command" |
+| `fleet` | Replaces "the Mandate Fleet" in game text |
+| `foe` | Replaces "Mandate" |
+| `boss` | Replaces "the Dreadnought" |
+| `command` | Replaces "Commonwealth command" |
 | `start` | Sector id for sector 1 |
 | `sectors` | The only sector types offered at exits (at least 2) |
 | `noTravellers` | No Mags, Kestrel or Doctor Oddly |

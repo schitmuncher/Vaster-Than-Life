@@ -35,7 +35,7 @@ P('### The screen in a run',
   table(['Where', 'What it shows'], [
     ['Top left', 'Hull (your ship\'s life), shields (layers up), evasion and average oxygen'],
     ['Top middle', 'Scrap (money), fuel (one per jump), missiles, drone parts and food (meals for the crew)'],
-    ['Top centre-right', 'Sector and its type; in the last sector, the Flaggship\'s progress'],
+    ['Top centre-right', 'Sector and its type; in the last sector, the Dreadnought\'s progress'],
     ['VTL drive', 'Charges during a fight while someone flies the ship; when it is full you can jump away'],
     ['Jump / Map', 'Opens the map (it says Jump when the drive is charged in a fight)'],
     ['Crew', 'The crew screen: everyone\'s level, health, food, class, weapons, perks and abilities'],
@@ -49,13 +49,13 @@ P('### The screen in a run',
 
 P('### Your first run',
   '1. **New run → pick a ship.** Easy is the gentle way in. The Admiral sends you off with a gift: take one.',
-  '2. **Open the Map** and jump to a beacon joined to yours. Each jump costs 1 fuel, and the Rebuff Fleet follows you from the left; keep ahead of it.',
+  '2. **Open the Map** and jump to a beacon joined to yours. Each jump costs 1 fuel, and the Mandate Fleet follows you from the left; keep ahead of it.',
   '3. **Beacons** are events (?), fights, stores, quiet spots, distress calls and quests. Stores and exits are always marked.',
   '4. **In a fight**: power your weapons, pick one, then click an enemy room (shields first, then weapons). Pause whenever it gets busy.',
   '5. **Damage control**: send crew to fires, breaches and broken systems; hurt crew walk to the medbay.',
   '6. **Spend scrap** at stores and on upgrades (Ship → Systems). A second shield layer is the best early upgrade.',
   '7. **Feed the crew**: they eat between jumps from the Food count; buy more at stores (Supplies) before it runs low.',
-  '8. **Reach the exit** of each sector, pick the next one, and in the last sector catch and beat the Flaggship three times.',
+  '8. **Reach the exit** of each sector, pick the next one, and in the last sector catch and beat the Dreadnought three times.',
   'Every run earns captain xp and renown, win or lose. The **Tutorial** on the title screen (Guided practice) teaches all of this hands-on.');
 
 // ---------------- crew ----------------
@@ -133,9 +133,9 @@ P('### Races',
 const capRows = []; for(const L of [2, 3, 5, 10, 15, 20, 25, 30, 40, 50, 55]) capRows.push([L, fmtNum(capXpFor(L))]);
 P('### Captain level, rank and renown',
   `**Captain level** rises every run, win or lose, up to ${CAP_MAX}. Then you can prestige (Career screen) to start again at level 1 with a ★; up to 10 times. Levels clear new ships for the hangar, and prestiges count towards those, so nothing locks again. The title screen shows your level, the bar to the next one and what you earned last run.`,
-  table(['You get xp for', 'Xp'], [['Each jump', 10], ['Each event choice', 12], ['Each ship beaten (escaped: 10)', '40 + 10 × sector'], ['Each new sector', 100], ['Each Flaggship phase beaten', 250], ['Winning the run', 1000], ['Losing a run', '50 + 25 per sector crossed'], ['Each boarder killed', 5], ['Each repair', 2], ['A crew member levelling up', 20], ['Each new medal', 50], ['Difficulty', 'Easy ×0.8, Hard ×1.25']]),
+  table(['You get xp for', 'Xp'], [['Each jump', 10], ['Each event choice', 12], ['Each ship beaten (escaped: 10)', '40 + 10 × sector'], ['Each new sector', 100], ['Each Dreadnought phase beaten', 250], ['Winning the run', 1000], ['Losing a run', '50 + 25 per sector crossed'], ['Each boarder killed', 5], ['Each repair', 2], ['A crew member levelling up', 20], ['Each new medal', 50], ['Difficulty', 'Easy ×0.8, Hard ×1.25']]),
   table(['Captain level', 'Total xp'], capRows),
-  '**Rank** (Cadet to Admiral) comes from **renown**, earned at the end of each run (sectors crossed, ships beaten, the Flaggship, a win, crew brought home, story scenes and new endings, more on harder difficulty and alert levels). Ranks bring better send-off gifts and requisition tokens. Renown can also be spent rebuilding Haven\'s Rest wings without lowering your rank.',
+  '**Rank** (Cadet to Admiral) comes from **renown**, earned at the end of each run (sectors crossed, ships beaten, the Dreadnought, a win, crew brought home, story scenes and new endings, more on harder difficulty and alert levels). Ranks bring better send-off gifts and requisition tokens. Renown can also be spent rebuilding Haven\'s Rest wings without lowering your rank.',
   table(['Rank', 'Renown', 'Reward'], RANKS.map(r => [r.name, fmtNum(r.at), r.reward || '—'])));
 
 const ships = Object.values(DATA.ships).filter(d => d && !d.secret); const chT = c => { try{ return typeof chParts==='function' && c ? chParts(c).map(p => Array.isArray(p) ? p[2] : p.text || p.t || p).filter(x => typeof x==='string').join(', ') : ''; }catch(e){ return ''; } };
@@ -148,8 +148,8 @@ if(typeof HAVEN_WINGS!=='undefined') P('### Haven\'s Rest',
   table(['Wing', 'Needs', 'Or renown', 'Gives'], HAVEN_WINGS.map(w => [w.name, w.needs.map(([it, n]) => `${n} ${needName(it)}`).join(', '), w.renown, w.reward])));
 
 P('### Difficulty',
-  table(['Setting', 'Scrap', 'Start scrap', 'Enemy hull', 'Your evasion', 'Fleet', 'Other'], Object.values(DIFFICULTY).map(d => [d.name, '×' + d.scrap, (d.startScrap > 0 ? '+' : '') + (d.startScrap || 0), (d.enemyHull > 0 ? '+' : '') + (d.enemyHull || 0), (d.evade > 0 ? '+' : '') + (d.evade || 0) + '%', d.fleet ? '×' + d.fleet : 'normal', [d.patch ? `patch ${d.patch} hull after fights` : '', d.foeMelee ? `boarders ×${d.foeMelee}` : '', d.bossShields ? `Flaggship shields ${d.bossShields}` : ''].filter(Boolean).join(', ') || '—'])),
-  'Rebuff alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.');
+  table(['Setting', 'Scrap', 'Start scrap', 'Enemy hull', 'Your evasion', 'Fleet', 'Other'], Object.values(DIFFICULTY).map(d => [d.name, '×' + d.scrap, (d.startScrap > 0 ? '+' : '') + (d.startScrap || 0), (d.enemyHull > 0 ? '+' : '') + (d.enemyHull || 0), (d.evade > 0 ? '+' : '') + (d.evade || 0) + '%', d.fleet ? '×' + d.fleet : 'normal', [d.patch ? `patch ${d.patch} hull after fights` : '', d.foeMelee ? `boarders ×${d.foeMelee}` : '', d.bossShields ? `Dreadnought shields ${d.bossShields}` : ''].filter(Boolean).join(', ') || '—'])),
+  'Mandate alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.');
 
 // ---------------- saves ----------------
 P('### Gentler rules',
@@ -168,9 +168,12 @@ P('### Longer voyages, the Memorial Wall, logs and the Graveyard',
   `- **The Graveyard**: a ${Math.round(GRAVE_CHANCE*1000)/10}% chance on each event beacon from sector 2, once a run, if you have dead from earlier runs. Dig up one of the best three: 70% they come back as they were (about 60% of their old level, a skill or two), 30% they come back wrong (new personality, 80% health, lower level). Or leave flowers, or rob the graves.`,
   `- **Pixel Studio** (title screen, hangar, Record, or 🎨 by any crew member): draw pixel-art crew on canvases from 16×24 up to 128×128 (${PX_SIZES.map(s => s[0] + '×' + s[1]).join(', ')}). Tools: pen, rubber, fill, pick, line, box, oval, dither, shade, brush sizes 1–8, mirror, outline, flip, undo; zoom and pan with a corner map; a colour mixer, shading ramps and up to 62 colours; scale up ×2 to add detail. Import a picture (colours, dithering, outline, background removal), trace over a picture, or copy an AI prompt and paste its reply back. Share codes let friends swap characters. Any crew member can wear a drawing; the hangar remembers who wore what.`,
   `- **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of ${Object.keys(ORDERS).length}. ${ORDER_PAY} scrap and ${ORDER_XP} captain xp each, plus ${ORDER_BONUS} scrap for all three. Not in dailies, the Cup, challenges or multiplayer.`,
-  `- **The Archive** (Record → Codex → Archive): ${LORE.length} lore entries (histories, memos, adverts, legends, letters), opened by playing or found in wrecks and on old relays, plus ${RADIO.length} snippets of radio chatter overheard between jumps.`,
+  `- **The regulars**: Pip Tanner, Captain Reg Bilge and Mrs Pembury turn up across your voyages (five meetings each, at most one each per run) and remember how you treated them.`,
+  `- **The radio** (Settings → Audio, or 📻 in the pause menu): the adaptive soundtrack, or Radio Commonwealth, Pyrate FM and Mandate Broadcasting, with presenters between tunes (captions, plus an optional British voice).`,
+  `- **Report a problem** (Settings, top right) copies everything needed to fix a bug, or opens a GitHub issue. **Download all data** (Settings → Profile) backs up your progress.`,
+  `- **The Archive** (Record → Codex → Archive): ${LORE.length} lore entries (histories, memos, adverts, legends, letters), opened by playing or found in wrecks and on old relays, plus ${RADIO_LINES.length} snippets of radio chatter overheard between jumps.`,
   `- **The Codex** (Record → Codex): fills in as you meet ships (${Object.keys(DATA.enemies).length}), carry weapons (${Object.keys(DATA.weapons).length}), drones (${Object.keys(DATA.drones).length}) and augments (${Object.keys(DATA.augments).length}), crew with peoples and cross sectors. ${CODEX_XP} captain xp at 25, 50 and 75% of a section, ${CODEX_XP*3} at 100%.`,
-  '- **The Fedoration Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain\'s logs → Front page.',
+  '- **The Commonwealth Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain\'s logs → Front page.',
   '- **Grown-up humour** (Settings → Gameplay, on by default): adult stories, last words, funerals and captain\'s remarks. Off keeps everything family-friendly.');
 
 P('### Saves and your data',

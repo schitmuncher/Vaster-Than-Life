@@ -13,7 +13,7 @@ Give this whole file to an AI chat (Claude, ChatGPT, Gemini or any other), then 
 
 ## Instructions for the AI
 
-You are writing a mod for **Vaster Than Life**, a browser game inspired by *FTL: Faster Than Light*. The player commands a small starship across sectors of beacons, fighting enemy ships, meeting events, upgrading systems, trading goods, looking after a crew with personalities, and running from the Rebuff Fleet towards a final battle with the Flaggship. Mods are plain JSON read by the game's data loader. Follow these rules exactly: the game cannot read anything that isn't described here.
+You are writing a mod for **Vaster Than Life**, a browser game inspired by *FTL: Faster Than Light*. The player commands a small starship across sectors of beacons, fighting enemy ships, meeting events, upgrading systems, trading goods, looking after a crew with personalities, and running from the Mandate Fleet towards a final battle with the Dreadnought. Mods are plain JSON read by the game's data loader. Follow these rules exactly: the game cannot read anything that isn't described here.
 
 ### Work in this order
 1. **Plan before writing.** Decide the mod's theme in one sentence, choose a 2-4 letter id prefix, and list every id you will create (weapons, enemies, events...) with a one-line purpose. Decide how the parts connect: which sector tags the events and enemies use, which event leads to which.
@@ -26,7 +26,7 @@ You are writing a mod for **Vaster Than Life**, a browser game inspired by *FTL:
 - Give the mod a `"name"` (required, unique), `"version"` and `"author"`.
 - Start every new `id` with the prefix, such as `"ip_"` (`"ip_frostgun"`, `"ip_glacier"`), so it never clashes with the game or other mods. Reusing a base id on purpose replaces that base item; you only need the fields you change.
 - Every id you reference must exist: in this mod, or in the Reference section.
-- All names and text must be original. Do not copy names, characters, dialogue or text from FTL or any other game, book, show or film. Parody-adjacent puns are the game's tone (the enemies are the "Rebuff", the heroes the "Fedoration", pirates are "pyrates", a weapon is the "Hermies Missile").
+- All names and text must be original. Do not copy names, characters, dialogue or text from FTL or any other game, book, show or film. Parody-adjacent puns are the game's tone (the enemies are the "Mandate", the heroes the "Commonwealth", pirates are "pyrates", a weapon is the "Hermies Missile").
 - Write British English, plain and warm, with dry humour. Short sentences. No emoji in game text.
 - Keep text short, because it appears in small panels: event `text` 1-4 sentences, choice `text` under 90 characters, outcome `text` 1-3 sentences, `desc` under 120 characters.
 - If the player's request is huge, make a smaller mod that is complete and polished rather than a big one with gaps, and say what you left out.
@@ -34,7 +34,7 @@ You are writing a mod for **Vaster Than Life**, a browser game inspired by *FTL:
 ### What makes a good mod for this game
 - **Real decisions.** Every event should make the player think. Typical shape: a safe small reward, a risky bigger one (`chance` with a `fail` that stings), a blue option that needs something specific (a race, a quirk, a system level, a weapon type), and often a way to walk away.
 - **Distinct mechanics, not bigger numbers.** A new weapon should do something the base guns don't (drain, pin, ricochet, salvage, warm up), not just "Heavy Laser but 3 damage". One trick per item, two at most.
-- **Connect to what's there.** The game already has factions that remember you (`rep`), heat from the Rebuff (`heat`, `heatDrop`), trade goods and a cargo hold (`goods`, `req.goodsKind`), crew personalities (`req.quirk`), pets, ship scars, anomalies, story flags and delayed events. A mod that uses these feels part of the game.
+- **Connect to what's there.** The game already has factions that remember you (`rep`), heat from the Mandate (`heat`, `heatDrop`), trade goods and a cargo hold (`goods`, `req.goodsKind`), crew personalities (`req.quirk`), pets, ship scars, anomalies, story flags and delayed events. A mod that uses these feels part of the game.
 - **Consequences that last.** Use `setFlag` plus a later event with `flag`, `later` to bring something back a few jumps on, `quest` to send the player to a beacon, `scar` for lasting damage, `rep` for a faction remembering. A three-beacon story beats ten unconnected one-offs.
 - **Variety on replay.** `twist` lets one event come out differently each run. Several versions of a hail keep fights fresh.
 - **Fair difficulty.** Losses should hurt (hull, crew health, scrap, a fight) but an event alone should never end a run. Free crew members and free weapons are rare treats.

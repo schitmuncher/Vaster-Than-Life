@@ -2,13 +2,13 @@
 /* =========================================================================
    Game modes: choose the sort of game you want, in the hangar.
    Two switches, and four presets that name the combinations:
-   - Galaxy: Chase (the Rebuff Fleet hunts you sector by sector) or
+   - Galaxy: Chase (the Mandate Fleet hunts you sector by sector) or
      Expedition (no Fleet; Haven's Rest is your hub, heat is the danger).
    - Ship: Standard, or Capital (two decks, and bigger enemies have them too).
    Dailies, challenges, campaign mods and multiplayer always play Classic.
    ========================================================================= */
 const GAME_MODES = [
-  { id:'classic',  name:'Classic',      galaxy:'chase',      ship:'standard', col:'#ffb547', text:'The original. Outrun the Rebuff Fleet across eight sectors and beat the Flaggship.' },
+  { id:'classic',  name:'Classic',      galaxy:'chase',      ship:'standard', col:'#ffb547', text:'The original. Outrun the Mandate Fleet across eight sectors and beat the Dreadnought.' },
   { id:'explorer', name:'Explorer',     galaxy:'expedition', ship:'standard', col:'#9fdc7a', text:'No Fleet behind you. Haven\'s Rest is your hub; choose near, far or deep trips, find three Precursor keys, then strike. Heat is the danger.' },
   { id:'admiral',  name:'Admiral',      galaxy:'chase',      ship:'capital',  col:'#5fd3e6', text:'The classic chase, flying a two-deck capital ship. The lower deck is safe from everything but missiles and bombs, and big enemies have one too.' },
   { id:'voyage',   name:'Grand Voyage', galaxy:'expedition', ship:'capital',  col:'#c48bff', text:'The long game: a capital ship, the open galaxy, your station as home. The most to manage, and the most to build.' } ];

@@ -102,7 +102,7 @@ const BUILD_GOALS = ['s3','s4','s5','s6','s7','win'];
 const BUILD_ROWS = [
   ['hull', 'Hull', ['def', 8, 12, 15, 20, 40]], ['crew', 'Crew', ['def', 1, 2, 3]], ['scrap', 'Starting scrap', ['def', 0, 50, 100, 200]],
   ['fuel', 'Fuel', ['def', 4, 8, 25]], ['missiles', 'Missiles', ['def', 0, 4, 20]],
-  ['fleet', 'Rebuff Fleet', ['normal', 'slow', 'fast', 'faster']], ['sectors', 'Sectors', [8, 4, 6, 10]], ['loot', 'Salvage', [1, .6, 1.5]],
+  ['fleet', 'Mandate Fleet', ['normal', 'slow', 'fast', 'faster']], ['sectors', 'Sectors', [8, 4, 6, 10]], ['loot', 'Salvage', [1, .6, 1.5]],
 ];
 function buildDefault(){ return { name:'My challenge', ship:'pestrel', diff:'normal', goal:'s5', hull:'def', crew:'def', scrap:'def', fuel:'def', missiles:'def', fleet:'normal', sectors:8, loot:1, w:['def','def','def'] }; }
 function buildToDef(b){

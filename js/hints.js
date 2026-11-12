@@ -13,11 +13,11 @@ const RECT = {
 function roomRect(sh, sys){ if(!sh || !sh._rects) return null; const i = roomOf(sh, sys); const q = sh._rects[i]; if(!q) return null;
   if(typeof svOn==='function' && svOn()){ const a = svToScreen(q.x, q.y); return [a.x, a.y, q.w*SV.z, q.h*SV.z]; } return [q.x, q.y, q.w, q.h]; }
 const HINTS = {
-  welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Rebuff Fleet, then defeat the Flaggship. Each jump uses 1 fuel. On the map (Map, or M), pick a beacon joined to yours and jump.', at:()=>RECT.map },
+  welcome:   { title:'Welcome aboard, Captain', text:'Your goal: cross 8 sectors, staying ahead of the Mandate Fleet, then defeat the Dreadnought. Each jump uses 1 fuel. On the map (Map, or M), pick a beacon joined to yours and jump.', at:()=>RECT.map },
   vr:        { title:'You\'re on the bridge', text:'Playing seated or lying down? Pause (A) and pick your play position, or choose it in Settings. Walk with the left stick, or aim at the floor and pull the trigger to teleport. Right stick turns. Look at a controller to see what its buttons do. Click the left stick to toggle the magnifier over this console.' },
   interior:  { title:'Your ship is behind you', text:'Walk through the door at the back of the bridge to go down the corridor into your ship. You\'ll see your crew at work. Point at crew and pull the trigger to select them, point at a floor to send them there, and point at doors to open or close them. During fights you can beam over to the enemy ship from your teleporter.' },
   jumpdmg:   { title:'Damage comes with you', text:'Fires, breaches and intruders don\'t stay behind when you jump. Deal with them first unless you\'re fleeing.', at:()=>RECT.map },
-  map:       { title:'Reading the map', text:'Beacons are linked by lanes; you can only jump along them. STORE beacons sell repairs and gear. The red edge on the left is the Rebuff Fleet: it advances every jump, so explore what you can but keep heading for EXIT.' },
+  map:       { title:'Reading the map', text:'Beacons are linked by lanes; you can only jump along them. STORE beacons sell repairs and gear. The red edge on the left is the Mandate Fleet: it advances every jump, so explore what you can but keep heading for EXIT.' },
   combat:    { title:'Battle stations (game paused)', text:'Click a weapon below, then click a room on the enemy ship. Hit their SHIELDS room first: while their shields are up, most of your shots get blocked. Press Space to pause any time.', at:()=>roomRect(G.enemy,'shields') || RECT.armory, pause:true },
   notarget:  { title:'Your guns are idle', text:'Your weapons are charged but have no target. Select a weapon, then click an enemy room. Targets stay set, so weapons keep firing on their own.', at:()=>RECT.armory, pause:true },
   volley:    { title:'Fire together', text:'Each enemy shield layer blocks one shot, then recharges. Press "Hold fire" (V), let all your weapons charge, then release them together so the later shots get through.', at:()=>RECT.armory },
@@ -40,7 +40,7 @@ const HINTS = {
   store:     { title:'At a store', text:'Good buys, in order: hull repairs if you\'re below about two thirds, fuel up to 6-8, then a weapon that fits your power. Keep some scrap for the next store.' },
   event:     { title:'Choices matter', text:'Some choices risk crew or hull. Options in blue need a particular crew race, system or weapon, and are usually the safest or best outcome.' },
   surrender: { title:'They\'re surrendering', text:'Accepting gives a guaranteed reward now. Refusing lets you keep fighting for the normal (usually bigger) salvage, if you can finish the job.' },
-  fleet:     { title:'The fleet is close', text:'The Rebuff Fleet is one jump behind. Beacons it has reached mean a hard fight. Head right towards the EXIT now.' },
+  fleet:     { title:'The fleet is close', text:'The Mandate Fleet is one jump behind. Beacons it has reached mean a hard fight. Head right towards the EXIT now.' },
   fuel:      { title:'Fuel is low', text:'Each jump burns 1 fuel. Buy fuel at stores (3 scrap each) and pick up loot. Run dry and you\'re stuck waiting for the fleet.' },
   shields2:  { title:'Only one shield layer', text:'Enemies from here on fire several shots at once. Upgrade Shields to 4 (two layers) soon: open Ship (C) > Systems.', at:()=>RECT.ship },
   skills:    { title:'Crew learn on the job', text:'Crew who stay on a station (Helm, Engines, Shields, Weapons) gain skill and boost it. Use "Stations" to send everyone back to their posts.' },
@@ -49,7 +49,7 @@ const HINTS = {
   tonics:    { title:'Tonics and treats', text:'You have something to give a crew member. Ship → Armoury → Tonics & treats: permanent boosts, skill chips, stims and medkits, given to one person at a time.', at:()=>RECT.ship },
   workshop:  { title:'The workshop', text:'This store sells workshop machines: load one with goods from your hold and it turns them into something worth more while you jump. Ship → Workshop. You can also send goods home to Haven\'s Rest from there, and swap rooms for combos in Ship → Layout.', at:()=>RECT.ship },
   standing:  { title:'They remember you', text:'That changed how a faction sees you. Ship → Factions shows your standing: it sets their store prices, and whether their ships talk or shoot.', at:()=>RECT.ship },
-  heat:      { title:'You are getting noticed', text:'Heat shows how much the Rebuff are paying attention (the chip under your ship). Quiet beacons, nebulas and a trip home cool it. Let it reach 70 and hunter-killers come looking; at 90 the exit is blockaded.' },
+  heat:      { title:'You are getting noticed', text:'Heat shows how much the Mandate are paying attention (the chip under your ship). Quiet beacons, nebulas and a trip home cool it. Let it reach 70 and hunter-killers come looking; at 90 the exit is blockaded.' },
   sendhome:  { title:'Send it home', text:'You\'re carrying something Haven\'s Rest needs to restore a wing. Open Trade → Send home to ship it there. What you send is kept for good.' },
   facility:  { title:'Empty rooms', text:'You can fit an empty room with a facility here: Ship → Ship → Layout, tap an empty room. A lounge, a galley, a hydroponics bay... and they make combos.' },
   home:      { title:'You can go home', text:'The green HOME beacon on the map is the Haven\'s Rest relay. Jump there to rest the crew, repair cheaply, store guns for future runs and tend the greenhouse.', at:()=>RECT.map },
@@ -58,7 +58,7 @@ const HINTS = {
   anomaly:   { title:'Something is bending this run', text:'An anomaly is changing the rules for a while: the chip under your ship says what it does. Most build to a climax over the next few jumps, so watch for its next scene.' },
   hull:      { title:'Hull is getting low', text:'Hull repairs cost a few scrap each at stores, and quiet beacons sometimes let your crew patch it. Avoid optional fights until you\'ve repaired.', at:()=>RECT.hull },
   sector:    { title:'New sector', text:'Each sector is a little harder. Visit stores to repair and upgrade, and take blue options when you can.' },
-  flagship:  { title:'The final sector', text:'The Flaggship is heading for Fedoration command. It has 3 phases: boarders, then drones with a super shield, then power surges. Arrive repaired, with missiles and fuel. You have to beat it three times.' },
+  flagship:  { title:'The final sector', text:'The Dreadnought is heading for Commonwealth command. It has 3 phases: boarders, then drones with a super shield, then power surges. Arrive repaired, with missiles and fuel. You have to beat it three times.' },
 };
 function hintsOn(){ return SET.hints !== false; }
 function hint(id, force){

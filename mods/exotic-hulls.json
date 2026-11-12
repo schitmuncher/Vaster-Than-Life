@@ -9,7 +9,7 @@
     { "id": "xh_phantom", "name": "The Phantom", "cls": "Infiltrator", "layout": "A", "desc": "Cloak, teleport, repeat. The enemy never quite sees you coming.", "hull": 24, "reactor": 8, "color": "#b48cff", "pattern": "TABCN",
       "systems": { "shields": 2, "engines": 2, "oxygen": 1, "weapons": 2, "cloaking": 1, "teleporter": 1, "piloting": 1, "doors": 1 },
       "weapons": ["bust1"], "drones": [], "crew": ["mantlis", "mantlis", "human"], "fuel": 16, "missiles": 3, "parts": 1, "unlock": { "sector": 4 } },
-    { "id": "xh_juggernaut", "name": "The Juggernaut", "cls": "Rock Dreadnought", "layout": "A", "desc": "Forty hull, a rock crew and no intention of dodging anything.", "hull": 40, "reactor": 8, "color": "#c9a27e", "pattern": "TBCCN",
+    { "id": "xh_juggernaut", "name": "The Juggernaut", "cls": "Pebblekin Battleship", "layout": "A", "desc": "Forty hull, a rock crew and no intention of dodging anything.", "hull": 40, "reactor": 8, "color": "#c9a27e", "pattern": "TBCCN",
       "systems": { "shields": 2, "engines": 1, "oxygen": 1, "weapons": 3, "medbay": 1, "piloting": 1, "doors": 2 },
       "weapons": ["heavy1", "arty"], "drones": [], "crew": ["pebblekin", "pebblekin", "pebblekin"], "fuel": 14, "missiles": 8, "parts": 1, "augments": ["rockPlating"], "unlock": { "kills": 25 } },
     { "id": "xh_puppet", "name": "The Puppeteer's Glove", "cls": "Mind Cutter", "layout": "A", "desc": "Hack their systems, borrow their crew, win without firing much at all.", "hull": 26, "reactor": 9, "color": "#9fdc7a", "pattern": "TBACN",

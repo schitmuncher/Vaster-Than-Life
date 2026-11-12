@@ -165,11 +165,11 @@ function draw(){
 /* ---------------- title & menus ---------------- */
 function drawTitle(){
   const t = performance.now()/1000; if(typeof drawWallpaper==='function') drawWallpaper();
-  label('A Fedoration courier roguelike', 110, 200, C.cyan, 'left', 20);
+  label('A Commonwealth courier roguelike', 110, 200, C.cyan, 'left', 20);
   glow(380, 300, 260, C.amber, .12);
   T('VASTER', 104, 320, { s:132, f:FD, w:700, c:C.amber, ls:10 });
   T('THAN LIFE', 108, 428, { s:96, f:FD, w:700, c:C.ink, ls:12 });
-  para('Outrun the Rebuff Fleet across eight sectors and stop the Flaggship. Built for Meta Quest, playable on any screen.', 112, 486, 780, { s:21, c:C.muted });
+  para('Outrun the Mandate Fleet across eight sectors and stop the Dreadnought. Built for Meta Quest, playable on any screen.', 112, 486, 780, { s:21, c:C.muted });
   const hasSave = !!LS.get(SAVE_KEY, null);
   let y = 556; const bw = 330, hw = 160, x2 = 280;
   if(hasSave){ btn(110, y, bw, 58, 'Continue run', () => { if(!loadSave()) toast('That save could not be loaded.'); }, { fill:true }); y += 68; }
@@ -221,14 +221,15 @@ function drawTitleCards(t){
   btn(x+24, 398, w-48, 48, best ? 'Fly it again' : "Fly today's run", () => startDaily(), { fill:true, col:C.cyan, s:17 });
   // last run
   const last = (PROFILE.history||[])[0];
-  panel(x, 480, w, 196, 12); label('Last run', x+24, 516, C.amber, 'left', 16);
+  if(typeof drawNextStepIn==='function' && drawNextStepIn(x, 480, w, 196)){}
+  else { panel(x, 480, w, 196, 12); label('Last run', x+24, 516, C.amber, 'left', 16);
   if(last){ const sdef = DATA?.ships?.[last.ship] || BASE.ships[last.ship];
     T(last.name || sdef?.name || last.ship, x+24, 550, { s:22, f:FD, w:700, c:sdef?.color || C.ink, max:300 }); T(`${DIFFICULTY[last.diff]?.name || ''}${last.daily ? ' · daily' : ''}`, x+w-24, 516, { s:14, a:'right', c:C.muted });
-    T(last.win ? 'Won: the Flaggship fell' : `Lost in sector ${last.sector}`, x+24, 580, { s:17, c: last.win ? C.good : C.hostile });
+    T(last.win ? 'Won: the Dreadnought fell' : `Lost in sector ${last.sector}`, x+24, 580, { s:17, c: last.win ? C.good : C.hostile });
     T(`${last.kills} ships defeated · ${last.jumps} jumps · ${fmtNum(last.score)} pts`, x+24, 606, { s:14, c:C.muted, max:w-48 });
     if(last.seed && !last.daily) btn(x+24, 620, 240, 42, `Replay seed ${last.seed}`, () => { applyMods(); UI.selShip = DATA.ships[last.ship] ? last.ship : 'pestrel'; UI.seed = last.seed; UI.shipName = null; UI._prev = null; UI.screen = 'select'; }, { s:14 });
     btn(x+w-204, 620, 180, 42, 'All runs', () => { UI.screen = 'record'; }, { s:14 }); }
-  else para('No runs yet. Your first one is waiting: New run, then pick a ship. Easy is the gentle way in.', x+24, 552, w-48, { s:16, lh:23, c:C.muted });
+  else para('No runs yet. Your first one is waiting: New run, then pick a ship. Easy is the gentle way in.', x+24, 552, w-48, { s:16, lh:23, c:C.muted }); }
   // record
   panel(x, 696, w, 226, 12); label('Captain\'s record', x+24, 732, C.good, 'left', 16);
   if(typeof drawRankCard==='function'){ drawRankCard(x+24, 770, w-48); btn(x+w-164, 708, 140, 40, 'Career ›', () => { UI.screen = 'career'; }, { s:15, col:C.amber }); }
@@ -296,11 +297,11 @@ function drawHangar(){
   Object.keys(DIFFICULTY).forEach((k,i) => btn(760 + i*150, y0+376, 140, 48, DIFFICULTY[k].name, () => { SET.difficulty = k; saveProfile(); }, { fill:SET.difficulty===k, s:16 }));
   tip(760, y0+376, 440, 48, 'Difficulty', 'Easy: enemies are a sector behind, slower and weaker, the fleet chases more slowly and you earn more scrap. Normal: the intended challenge. Hard: tougher, faster enemies and less scrap.');
   if((PROFILE.alert||0) > 0 && typeof ALERTS!=='undefined'){ const A = PROFILE.alert, cur = clamp(SET.alert||0, 0, A);
-    label('Rebuff alert', 84, y0+446, C.hostile, 'left', 13);
+    label('Mandate alert', 84, y0+446, C.hostile, 'left', 13);
     btn(210, y0+424, 40, 34, '‹', () => { SET.alert = Math.max(0, cur-1); saveProfile(); }, { s:18, disabled:cur<=0 });
     T(cur ? `${cur} · ${ALERTS[cur].name}` : 'Off', 262, y0+448, { s:17, f:FD, w:700, c: cur ? C.hostile : C.muted, max:220 });
     btn(490, y0+424, 40, 34, '›', () => { SET.alert = Math.min(A, cur+1); saveProfile(); }, { s:18, disabled:cur>=A });
-    tip(84, y0+424, 450, 34, cur ? `Rebuff alert ${cur}` : 'Rebuff alert', cur ? `${alertText(cur)} More renown (+${cur*15}%) and score (+${cur*10}%). Not used in dailies, challenges or multiplayer.` : `Harder runs for more renown and score. You have unlocked up to level ${A}.`); }
+    tip(84, y0+424, 450, 34, cur ? `Mandate alert ${cur}` : 'Mandate alert', cur ? `${alertText(cur)} More renown (+${cur*15}%) and score (+${cur*10}%). Not used in dailies, challenges or multiplayer.` : `Harder runs for more renown and score. You have unlocked up to level ${A}.`); }
   // per-ship record and the run seed
   const bst = PROFILE.best?.[sel]; if(bst) T(`Your best with this ship: ${bst.wins ? bst.wins + ' win' + (bst.wins>1?'s':'') : 'sector ' + bst.sector} · ${fmtNum(bst.score)} pts`, 1516, y0+48, { s:15, a:'right', c:C.good });
   label('Seed', 1240, y0+360, C.muted, 'left', 14);
@@ -396,6 +397,8 @@ function drawSettings(){
       choice('Spoken voices', 'tts', [['off','Off'],['dialogue','Dialogue'],['full','Full story']], 'off', 'Your device reads the story aloud, with a different voice for each character (Admiral Hale, Pip, Kross, Vance, Holly, Rimmer...). Dialogue speaks only what people say; Full story reads the narration and crew chatter too. Uses the voices installed on your device, so it sounds different on each.', v => { if(v==='off' && typeof ttsStop==='function') ttsStop(); else if(typeof ttsSay==='function') ttsSay([{ t:'Voices on. Welcome aboard, Captain.', v:{ key:'Hale', g:'f', p:.9, r:.95 } }], true); });
       if((SET.tts||'off')!=='off') bar_('Voice speed', 'ttsRate', .7, 1.4, .05, 1, v => `${Math.round(v*100)}%`, 'How fast the voices talk.');
       choice('Music source', 'musicSrc', [['ost','Soundtrack'],['synth','Generated']], 'ost', 'Soundtrack plays the game\'s own score: eighteen tunes for the hangar, exploring, strange sectors, stores, fights and the last battle. Generated is the endless adaptive synth music. Campaigns with their own music always play it.');
+      if(typeof RADIO_STATIONS!=='undefined'){ choice('Radio station', 'radio', Object.entries(RADIO_STATIONS).map(([k, r]) => [k, r.short]), 'ost', 'Soundtrack follows the action. The stations play the same tunes one after another, with a presenter between them: Radio Commonwealth (Gerald on the late shift), Pyrate FM (DJ Scurvy Dave) or Mandate Broadcasting (compulsory). You can also change station from the pause menu.');
+        onoff("Presenter's voice", 'radioVoice', true, "Reads the presenter's links aloud in a British voice, using your browser's speech. Off shows them as captions only."); }
       btn(X, y+10, 220, 46, 'Test sounds', () => { ensureAudio(); ['laser','ion','missile','shield','hit','explode'].forEach((n,i) => setTimeout(() => sfx(n), i*260)); });
       break;
     case 'graphics':
@@ -403,6 +406,7 @@ function drawSettings(){
       choice('Effects quality', 'gfx', [['low','Low'],['medium','Medium'],['high','High'],['ultra','Ultra']], 'high', 'How many particles, streaks and explosion layers to draw. Use Low or Medium if your headset stutters.');
       choice('VR resolution', 'vrRes', [[.7,'70%'],[.85,'85%'],[1,'100%'],[1.2,'120%']], 1, 'Rendering resolution inside the headset. Higher is sharper but slower. Applies next time you enter VR.');
       choice('VR foveation', 'vrFov', [[0,'Off'],[.33,'Low'],[.66,'Medium'],[1,'High']], .66, 'Renders the edges of your view at lower resolution to save performance on Quest. Applies next time you enter VR.');
+      onoff('Auto quality', 'autoGfx', true, 'If the game starts to stutter (common on Quest 2 in big fights), effects quality steps down by itself. It never steps back up: raise it again here.');
       head('Space');
       onoff('Living sky', 'skyFx', true, 'Hazard skies (nebula clouds, ion lightning, sun glare, pulsar pulses, asteroid belts), hyperspace tunnel and alert tints.');
       onoff('Shooting stars', 'shootingStars', true, 'The occasional meteor streaking across the sky.');
@@ -415,6 +419,7 @@ function drawSettings(){
     case 'display':
       head('Screen');
       T('Full screen', X, y+30, { s:20 }); btn(VX, y+4, 240, 42, (typeof isFullscreen==='function' && isFullscreen()) ? 'Exit full screen' : 'Go full screen', () => toggleFullscreen(), { s:15, fill:true }); tip(X-10, y, 440, 50, 'Full screen', 'Hides the browser bars. On iPhone, add the game to your home screen instead and it opens full screen.'); y += 50;
+      choice('Crew size', 'crewSize', [['normal','Normal'],['large','Large'],['huge','Huge']], 'normal', 'How big your crew are drawn in the ship view. Larger makes them easier to see and pick, and shows off drawings from the Pixel Studio.');
       choice('Text size', 'textSize', [['normal','Normal'],['large','Large'],['huge','Huge']], MOB.touch ? 'large' : 'normal', 'Raises the smallest text everywhere. Large is the default on phones and tablets.');
       choice('Turn game sideways', 'rotatePortrait', [[true,'When upright'],[false,'Never']], true, 'If you hold your phone upright, the game turns sideways to fill the screen. Rotate the phone to play.', () => layoutGame());
       choice('Screen shape', 'aspect', [['fill','Fill'],['fit','16:10'],['r169','16:9'],['r219','21:9'],['crop','Crop']], MOB.touch ? 'fill' : 'fit', 'Fill stretches the game to the whole screen (no black bars). 16:10 is the original shape. 16:9 and 21:9 are wide shapes. Crop zooms in so nothing is left over, and you drag to see the edges.', () => { resetZoom(); layoutGame(); });
@@ -474,6 +479,7 @@ function drawSettings(){
       head('Seeing');
       choice('Colour vision', 'palette', [['standard','Standard'],['redgreen','Red-green safe']], 'standard', 'Red-green safe turns green to blue and deepens the reds, so friends, foes and health bars stay easy to tell apart with protanopia or deuteranopia.', () => applyPalette());
       onoff('High contrast', 'contrast', false, 'Brighter secondary text and panel lines.', () => applyPalette());
+      choice('Crew size', 'crewSize', [['normal','Normal'],['large','Large'],['huge','Huge']], 'normal', 'How big your crew are drawn in the ship view. Larger makes them easier to see and pick, and shows off drawings from the Pixel Studio.');
       choice('Text size', 'textSize', [['normal','Normal'],['large','Large'],['huge','Huge']], MOB.touch ? 'large' : 'normal', 'Raises the smallest text everywhere. Large is the default on phones and tablets.');
       onoff('Reduce flashes', 'reduceFlashes', false, 'Softer jump white-outs, lightning and pulsar flashes.');
       head('Pace');
@@ -527,11 +533,11 @@ const HELP_PAGES = [
     ['Doors & air', 'Click doors to open or close them. Open airlocks to vent oxygen and starve fires or boarders. Breaches leak air until crew patch them.'],
     ['Special systems', 'Teleporter: gather crew in it and Send. Cloaking: dodge and freeze enemy weapons. Hacking: launch a drone, then pulse it. Mind control: turn an enemy. Battery: temporary power.'],
     ['Drones', 'Drones need Drone system power and use one drone part each time they deploy. Attack drones orbit the enemy, defense drones shoot down missiles, internal drones repair or fight.'],
-    ['The journey', 'Each jump costs 1 fuel and the Rebuff Fleet advances. Choose your next sector at each exit. In the Last Stand, jump onto the Flaggship\'s beacon (red tag and arrow on the map) and beat it three times before it wears down Fedoration command.'] ]],
+    ['The journey', 'Each jump costs 1 fuel and the Mandate Fleet advances. Choose your next sector at each exit. In the Last Stand, jump onto the Dreadnought\'s beacon (red tag and arrow on the map) and beat it three times before it wears down Commonwealth command.'] ]],
   ['Map & hazards', [
     ['The map', 'Each sector is a web of beacons. Stores, the exit, distress calls and quests are always marked; hostile ships (crosshair) and events (?) show once known, and Long-Range Scanners reveal everything. Your route so far is traced in amber.'],
-    ['The Rebuff Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
-    ['Stores', 'Each sector has its own kind of store (black market, Mantlis arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
+    ['The Mandate Fleet', 'The red band on the map is the fleet; the dashed line shows where it will be after your next jump. Beacons it reaches are taken: fights there are tough and pay almost nothing. The footer says how far behind it is.'],
+    ['Stores', 'Each sector has its own kind of store (black market, Jabbit arms...) with its own stock and prices. Haggle once per store, look for the daily deal, try a mystery crate; your guild card gives a discount as you spend. Crew are priced by race, training, health and veterancy.'],
     ['Trade goods', 'Goods live in your cargo hold (Ship → Hold & gifts). Each is cheap where it is made and dear where it is wanted. Request boards (Goods tab) pay extra for deliveries to any store. Mags Vetch, a travelling merchant, pays best for relics.'],
     ['Garden & galley', 'Plant seeds in your hydroponic planters (Ship → Garden & galley). Crops grow every jump, faster under a sun, not at all in an ion storm. Harvest them to sell, give, or cook. Each meal gives an edge for three fights (spicy hash: melee; fish supper: guns; star stew: repairs; berry pie: dodging). The medbay does the healing. Fishing needs a rod, and only works at fishing spots. From sector 2 a Harvest Fair may turn up, with prizes for your best crop.'],
     ['Travellers', 'Mags Vetch trades, Kestrel Jones pays bounties for kinds of ship (see Ship → Hold), Doctor Oddly fits implants. Each comes back if you treat them well.'],
@@ -540,15 +546,15 @@ const HELP_PAGES = [
     ['Events', 'Choices in blue need something you have: a crew race, a system level or gear. They are usually the best option. Some events lead to quests marked on the map.'],
     ['Upgrades', 'Upgrade systems and the reactor from the Ship screen any time you are not fighting. Shields only add a layer every 2 levels, so plan for even numbers.'] ]],
   ['Career', [
-    ['Renown & ranks', 'Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story all count, and harder runs earn more. Renown raises your Admiralty rank, from Cadet to Admiral. See Career on the title screen.'],
+    ['Renown & ranks', 'Every run earns renown, won or lost: sectors crossed, ships beaten, the Dreadnought and the story all count, and harder runs earn more. Renown raises your Admiralty rank, from Cadet to Admiral. See Career on the title screen.'],
     ['The send-off', 'Admiral Hale sees you off at the start of each run with a choice of gifts. Higher ranks mean more choices and better gifts, and some gifts come with a price. Hale remembers how your last run went.'],
-    ['Unlocking ships', 'You start with the Pestrel. Every other ship needs a pilot level (renown is your experience) and usually a challenge, often done in another ship. Lieutenant, Commander, Commodore and Vice Admiral each give a requisition token that unlocks any ship at once, and once you are the right level you can buy a ship with renown instead. The hangar shows your progress on each one.'],
-    ['Stories', 'Each run follows one of 24 stories, from Pip the data core to a heist, a haunting, a wedding and a saboteur to unmask. Most have a hidden twist rolled fresh each run. Its scenes come once a sector. How you treat its people changes the last sector, the Flaggship fight and how a win ends. Pick one in the hangar, or let "Surprise me" give you one you have not seen.'],
-    ['Director Kross', 'Rebuff Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Flaggship. He remembers you, too.'],
+    ['Unlocking ships', 'You start with the Plucky. Every other ship needs a pilot level (renown is your experience) and usually a challenge, often done in another ship. Lieutenant, Commander, Commodore and Vice Admiral each give a requisition token that unlocks any ship at once, and once you are the right level you can buy a ship with renown instead. The hangar shows your progress on each one.'],
+    ['Stories', 'Each run follows one of 24 stories, from Pip the data core to a heist, a haunting, a wedding and a saboteur to unmask. Most have a hidden twist rolled fresh each run. Its scenes come once a sector. How you treat its people changes the last sector, the Dreadnought fight and how a win ends. Pick one in the hangar, or let "Surprise me" give you one you have not seen.'],
+    ['Director Kross', 'Mandate Intelligence. He wants the core back, makes you an offer halfway through, and waits for you aboard the Dreadnought. He remembers you, too.'],
     ['Veteran beacons', 'From sector 2, orange chevrons on the map mark veteran crews: harder ships that always carry a weapon or an augment, and half again the scrap. Fight them if you are strong; fly around them if not.'],
     ['Campaign mods', 'A campaign mod is a whole new story: its own ships, crew, sectors, villain and ending. Turn it on in Mods, then pick it with the Campaign arrows at the top of the hangar. Try Red Dwarf: Three Million Years Late in the mod library.'],
     ['Refits & situations', 'Store Weapons tabs have a workshop: refit a gun to Mk II and Mk III, each charging 15% faster. Exit cards can show a sector situation (a crackdown, a salvage boom, storms, a festival, refugees, a blackout) that changes what the sector is like.'],
-    ['Rebuff alert', 'Win on Normal or Hard to unlock alert level 1. Each level adds one twist (tougher patrols, dearer stores, a faster fleet...) for more renown and score. Pick the level in the hangar. Dailies and challenges ignore it.'] ]],
+    ['Mandate alert', 'Win on Normal or Hard to unlock alert level 1. Each level adds one twist (tougher patrols, dearer stores, a faster fleet...) for more renown and score. Pick the level in the hangar. Dailies and challenges ignore it.'] ]],
   ['Controls', [
     ['Mouse & keyboard', 'Click to select and act. Hover anything for details. Space pause · M map · S ship screen · 1-4 select a weapon · V hold fire · F autofire · C cloak · H crew back to stations · + and − game speed · Esc cancel.'],
     ['Touch', 'Tap to act. Press and hold for details. Pinch or double-tap empty space to zoom, drag to look around. Two-finger tap pauses. On Android the back button closes windows and pauses.'],
@@ -572,7 +578,7 @@ const HELP_PAGES = [
     ['One ship', 'Co-op crew: two to four captains on one ship. Turn on "Stick to stations" to give each player a role. Navigator: a VR captain fights, a navigator on a flat screen runs the map, events and shop. Away team: one player leads the boarders, in VR if they like.'],
     ['Watch and hunt', 'Go live streams your run to viewers, who send emoji. Hunter and hunted: one flies the courier, the other commands the fleet, spending points on ambushes, hazards and enemy gunnery.'],
     ['Versus', 'Duel arena: build a ship on a budget, then fight a friend, best of three. Boarding brawl: two crews on one ship, last crew standing.'],
-    ['Same run, own ships', 'Race to the Flaggship: everyone flies the same seed; winning fights draws trouble cards to play on rivals. Wingmen: meet at the same beacon to fight together, and send supplies.'],
+    ['Same run, own ships', 'Race to the Dreadnought: everyone flies the same seed; winning fights draws trouble cards to play on rivals. Wingmen: meet at the same beacon to fight together, and send supplies.'],
     ['No room needed', 'Seed duels send any finished run as a link. Challenge codes share runs you design. The weekly cup and daily boards post scores to public Nostr relays under your multiplayer name.'],
     ['Talking', 'Quick chat (T or the Chat button) sends calls and emoji. Turn on Voice to talk: it goes straight to the other players. Everyone sees where the others are pointing.'],
   ]] ];
@@ -588,8 +594,8 @@ function drawHelpScreen(){
 function drawEnd(){
   const win = UI.screen==='win', last = UI.lastRun;
   label(win ? 'Mission complete' : 'Run over', W/2, 172, win ? C.good : C.hostile, 'center', 22);
-  T(win ? ((typeof campDef==='function' && G && campDef() && campDef().win && campDef().win.title) || 'THE FLAGGSHIP FALLS') : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
-  { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Fedoration command. The Rebuff Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const big = lines(txt, 1100, `400 21px ${FM}`).length <= 2, ls = lines(txt, 1180, `400 ${big ? 21 : 17}px ${FM}`); ls.slice(0,3).forEach((l,i) => T(l, W/2, (big ? 312 : 302) + i*(big ? 28 : 23), { s:big ? 21 : 17, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
+  T(win ? ((typeof campDef==='function' && G && campDef() && campDef().win && campDef().win.title) || 'THE DREADNOUGHT FALLS') : 'SHIP LOST', W/2, 258, { s:80, f:FD, w:700, a:'center', c: win ? C.amber : C.ink, ls:6 });
+  { const txt = win ? ((typeof campaignEndText==='function' && G && campaignEndText(true)) || 'The data reaches Commonwealth command. The Mandate Fleet scatters, thoroughly rebuffed. You are, briefly, vaster than life.') : (UI.overReason||''); const big = lines(txt, 1100, `400 21px ${FM}`).length <= 2, ls = lines(txt, 1180, `400 ${big ? 21 : 17}px ${FM}`); ls.slice(0,3).forEach((l,i) => T(l, W/2, (big ? 312 : 302) + i*(big ? 28 : 23), { s:big ? 21 : 17, c:C.muted, a:'center' })); if(ls.length > 2) tip(W/2-560, 290, 1120, 60, win ? 'Epilogue' : 'Run over', txt); }
   if(G){ const st = [['Sector', G.sector], ['Ships defeated', G.stats.kills], ['Scrap found', G.stats.scrap], ['Jumps', G.stats.jumps], ['Score', last ? last.score : runScore(win)]];
     panel(W/2-640, 380, 1280, 150, 12);
     st.forEach((r,i) => { const x = W/2 - 640 + 128 + i*256; label(r[0], x, 420, C.muted, 'center', 15); T(fmtNum(r[1]), x, 486, { s:46, f:FD, w:700, a:'center', c: i===4 ? C.amber : C.ink }); });
@@ -756,11 +762,12 @@ function drawGame(){
     panel(W/2-200, 250, 400, 100, 10); T('PAUSED', W/2, 298, { s:42, f:FD, w:700, a:'center', c:C.amber, ls:8 }); T('Give orders, then resume', W/2, 332, { s:17, a:'center', c:C.muted });
     btn(W/2+148, 258, 44, 34, '▴', () => { SET.pauseMin = true; saveProfile(); }, { s:16 }); tip(W/2+148, 258, 44, 34, 'Hide menu', 'Shrinks the pause menu to a small tab so you can see both ships. Your choice is remembered.');
     if(typeof inXR==='function' && inXR()){ panel(W/2-260, 362, 520, 70, 10); [['standing','Standing'],['seated','Seated'],['lying','Lying down']].forEach(([v,l],i) => btn(W/2-250 + i*170, 372, 160, 50, l, () => setPlayPose(v), { fill:(SET.vrPose||'standing')===v, s:16 })); }
-    else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const sg = typeof buildSaga==='function', n = (fsOk ? 2 : 1) + (sg ? 1 : 0), bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
+    else { const fsOk = typeof canFullscreen==='function' && !isFullscreen(); const sg = typeof buildSaga==='function', rd = typeof radioCycle==='function', n = (fsOk ? 2 : 1) + (sg ? 1 : 0) + (rd ? 1 : 0), bw = 190, x0 = W/2 - (n*bw + (n-1)*12)/2;
       panel(x0-10, 362, n*bw + (n-1)*12 + 20, 70, 10);
       btn(x0, 372, bw, 50, '⚙ Settings', () => { UI.setFrom = 'game'; UI.screen = 'settings'; }, { s:16 });
       if(sg) btn(x0 + bw + 12, 372, bw, 50, '📜 Saga so far', () => openSaga(buildSaga(null), 'game'), { s:16 });
-      if(fsOk) btn(x0 + (bw + 12)*(sg ? 2 : 1), 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 }); }
+      if(fsOk) btn(x0 + (bw + 12)*(sg ? 2 : 1), 372, bw, 50, '⛶ Full screen', () => toggleFullscreen(), { s:16 });
+      if(rd){ const rx_ = x0 + (bw + 12)*((sg ? 1 : 0) + (fsOk ? 1 : 0) + 1); btn(rx_, 372, bw, 50, '📻 ' + RADIO_STATIONS[SET.radio || 'ost'].short, () => radioCycle(), { s:15, col:'#ffb547' }); tip(rx_, 372, bw, 50, 'Radio', 'Change station: the adaptive soundtrack, Radio Commonwealth, Pyrate FM or Mandate Broadcasting.'); } }
     // second row: speed, the manual, and leaving the run
     panel(W/2-300, 438, 600, 66, 10); speedButton(W/2-290, 448);
     btn(W/2-60, 448, 160, 46, 'Wiki', () => { UI.setFrom = 'game'; UI.helpPage = 0; UI.screen = 'help'; }, { s:15 });
@@ -794,8 +801,8 @@ function drawTopBar(){
   const sd = sectorDef();
   label(`Sector ${G.sector} of ${R.sectors}`, 872, 22, C.muted, 'left', 12);
   label(sd.name, 872, 42, sd.color||C.cyan, 'left', 12);
-  if(G.flag){ const fd = mapDist(G.map.cur, (n,k) => k===G.flag.node); label(`Flaggship ${G.flag.phase+1}/3 · ${fd===0 ? 'here' : fd + ' jump' + (fd===1?'':'s')} · Command ${G.flag.baseHP}`, 872, 64, C.hostile, 'left', 11);
-    tip(866, 8, 230, 66, 'How to win', `Jump onto the Flaggship's beacon (red FLAGGSHIP tag on the map) and beat it. It retreats twice, so catch and beat it three times. It moves one beacon toward Fedoration command every other jump; once there, command holds for ${G.flag.baseHP} more jump${G.flag.baseHP===1?'':'s'}.`); }
+  if(G.flag){ const fd = mapDist(G.map.cur, (n,k) => k===G.flag.node); label(`Dreadnought ${G.flag.phase+1}/3 · ${fd===0 ? 'here' : fd + ' jump' + (fd===1?'':'s')} · Command ${G.flag.baseHP}`, 872, 64, C.hostile, 'left', 11);
+    tip(866, 8, 230, 66, 'How to win', `Jump onto the Dreadnought's beacon (red DREADNOUGHT tag on the map) and beat it. It retreats twice, so catch and beat it three times. It moves one beacon toward Commonwealth command every other jump; once there, command holds for ${G.flag.baseHP} more jump${G.flag.baseHP===1?'':'s'}.`); }
   else if(G.hazard) label(HAZARDS[G.hazard], 872, 64, G.hazard==='nebula'?C.violet:C.warn, 'left', 11);
   label('VTL drive', 1108, 28, C.muted, 'left', 12);
   const charge = G.enemy && !G.enemy.dead ? G.ftl : 1; bar(1108, 38, 150, 12, charge, charge>=1 ? C.good : C.amber); if(charge>=1) glow(1258, 44, 16, C.good, .4);
@@ -908,7 +915,7 @@ function drawShip(sh, box, facing, isEnemy, mini){
     if(open && !d.broken) glow(mx, my, L*.4, C.good, .25); if(d.broken>0 && Math.random()<.05 && live) sparks(mx, my, '#ffb547', 3);
     if(!isEnemy && canDoors(sh) && G) region(mx-Math.max(horiz?Th:L,22)/2, my-Math.max(horiz?L:Th,22)/2, Math.max(horiz?Th:L,22), Math.max(horiz?L:Th,22), () => { d.open = !d.open; d.broken = 0; sfx('door'); });
   }
-  const rad = Math.max(5, Math.min(15, cell*.26));
+  const rad = Math.max(5, Math.min(15, cell*.26)) * (mini ? 1 : ({ large:1.3, huge:1.6 }[SET.crewSize] || 1));   // Accessibility → Crew size
   const seeCrew = !isEnemy || mini || sensorLevel()>=2 || telepathic();
   for(const c of sh.crew){
     if(isEnemy && !seeCrew && c.owner!=='p' && !ownIn.has(c.room)){ c._sx = null; continue; }
@@ -956,7 +963,7 @@ function drawQuiet(){
   const b = EBOX; const node = G.map?.nodes[G.map.cur];
   ctx.beginPath(); ctx.arc(b.x+b.w*.62, b.y+b.h*.46, 150, 0, 7); const pg = ctx.createRadialGradient(b.x+b.w*.55,b.y+b.h*.38,10,b.x+b.w*.62,b.y+b.h*.46,150);
   pg.addColorStop(0, G.nebula ? '#5a4a8f' : '#3a4f7a'); pg.addColorStop(1,'#0c1226'); ctx.fillStyle = pg; ctx.fill();
-  label(node?.type==='haven' ? 'Haven\'s Rest relay' : node?.type==='store' ? 'Store beacon' : node?.type==='exit' ? 'Exit beacon' : node?.type==='base' ? 'Fedoration Command' : 'Beacon', b.x+20, b.y+34, C.cyan, 'left', 18);
+  label(node?.type==='haven' ? 'Haven\'s Rest relay' : node?.type==='store' ? 'Store beacon' : node?.type==='exit' ? 'Exit beacon' : node?.type==='base' ? 'Commonwealth Command' : 'Beacon', b.x+20, b.y+34, C.cyan, 'left', 18);
   T('No hostiles in range.', b.x+20, b.y+74, { s:24, f:FD, w:600 });
   T(G.hazard ? HAZARDS[G.hazard] : 'Open the map to plot your next jump.', b.x+20, b.y+106, { s:18, c: G.hazard ? C.warn : C.muted });
   const boarders = G.ship.crew.filter(c => crewSide(c)!=='p').length;
@@ -1021,7 +1028,7 @@ function drawSystems(){
   list.forEach((k,i) => {
     const cx = x+14 + i*colW, sy = s.systems[k], e = eff(s,k), bonus = bonusPower(s,k), cw = colW-8;
     drawSysIcon(ctx, k, cx + 12, y+55, 15, SYSC[k]); T(SYSS[k], cx + 24, y+60, { s:13, f:FD, w:700, c:SYSC[k], ls:1 });
-    tip(cx, y+40, cw, 160, SYSN[k], `${sysDesc(k)} Level ${sy.max}, power ${sy.power}${bonus?` (+${bonus} Voltan)`:''}${sy.dmg?`, ${sy.dmg} damaged`:''}.`);
+    tip(cx, y+40, cw, 160, SYSN[k], `${sysDesc(k)} Level ${sy.max}, power ${sy.power}${bonus?` (+${bonus} Thrumm)`:''}${sy.dmg?`, ${sy.dmg} damaged`:''}.`);
     const areaH = 108, bh = Math.min(20, (areaH - (sy.max-1)*3)/sy.max), bw = Math.min(46, cw-10), bx = cx + cw/2 - bw/2;
     for(let b=0;b<sy.max;b++){ const by = y+70 + areaH - (b+1)*(bh+3);
       let fill = null, stroke = C.line;
@@ -1202,7 +1209,7 @@ function drawModal(){
     case 'haven': if(typeof drawHavenVisit==='function') drawHavenVisit(m); else G.modal = null; break;
     case 'ship': drawShipModal(); break;
     case 'exit': { if(typeof expOn==='function' && expOn()){ drawExpeditionChart(m); break; } const opts = m.opts||[]; const f = mframe(Math.max(1000, opts.length*420+64), 680, 'Exit beacon', C.good);
-      para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Flaggship waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
+      para(G.sector+1 >= R.sectors ? 'One jump left: the Last Stand, where the Dreadnought waits.' : opts.includes('glass') ? 'Your nav computer shows the usual routes, and one that should not exist.' : 'Two routes lead on. Choose the next sector. You cannot come back.', f.x+32, f.y+104, f.w-64, { s:20 });
       const cw = (f.w-64-(opts.length-1)*20)/opts.length, ch = 400;
       opts.forEach((t,i) => { const sd = DATA.sectors[t]; if(!sd) return; const bx = f.x+32 + i*(cw+20), by = f.y+150, col = sd.color||C.cyan;
         const art = eventArt(sd.secret ? 'glass' : sd.nebula>.3 ? 'nebula' : sd.final ? 'fleet' : 'planet', t, Math.floor(cw), 90);
@@ -1211,15 +1218,15 @@ function drawModal(){
         T(sd.name, bx+18, by+122, { s:21, f:FD, w:700, c:col, max:cw-36 });
         para(sd.blurb || (sd.secret ? 'Uncharted. Unknown.' : 'Who knows what is out there.'), bx+18, by+148, cw-36, { s:14, lh:18, c:C.ink, max:2 });
         const mix = sd.mix||{}; T(`Fights ${mix.combat||0}% · Events ${mix.event||0}% · ${sd.final ? 'No stores past command' : '2–3 stores'}`, bx+18, by+196, { s:13, c:C.muted, max:cw-36 });
-        T(sd.secret ? 'Meet: the Glassborn' : sd.final ? 'Meet: the Flaggship and its escorts' : `Meet: ${sectorFoes(sd)}`, bx+18, by+218, { s:13, c:C.muted, max:cw-36 });
+        T(sd.secret ? 'Meet: the Glassborn' : sd.final ? 'Meet: the Dreadnought and its escorts' : `Meet: ${sectorFoes(sd)}`, bx+18, by+218, { s:13, c:C.muted, max:cw-36 });
         T(sd.nebula>.3 ? 'Nebula: no sensors, the fleet is slower' : `Hazards: ${sectorHazards(sd)}`, bx+18, by+240, { s:13, c: sd.nebula>.3 ? C.violet : C.muted, max:cw-36 });
         { const S = typeof situFor==='function' ? situFor(t) : null; if(S){ T('◆ ' + S.name, bx+18, by+272, { s:15, f:FD, w:700, c:S.col, max:cw-36 }); para(S.desc, bx+18, by+292, cw-36, { s:12, lh:16, c:C.ink, max:2 }); } }
         btn(bx+16, by+ch-62, cw-32, 46, `Jump to sector ${G.sector+1}`, () => nextSector(t), { fill:true, col, s:17 });
-        tip(bx, by, cw, ch-70, sd.name, `${sd.blurb||''} ${sd.fleetMult && sd.fleetMult<1 ? 'The Rebuff Fleet moves slower here. ' : ''}Fights ${mix.combat||0}%, events ${mix.event||0}%, quiet beacons ${mix.empty||0}%.`); });
+        tip(bx, by, cw, ch-70, sd.name, `${sd.blurb||''} ${sd.fleetMult && sd.fleetMult<1 ? 'The Mandate Fleet moves slower here. ' : ''}Fights ${mix.combat||0}%, events ${mix.event||0}%, quiet beacons ${mix.empty||0}%.`); });
       if(typeof exitHomeButton==='function') exitHomeButton(f);
       btn(f.x+f.w-232, f.y+f.h-82, 200, 56, 'Stay here', () => { G.modal = null; }); break; }
     case 'stranded': { const f = mframe(940, 420, 'Out of fuel', C.hostile);
-      para('The tanks are dry. You can broadcast a distress call for fuel, but the Rebuff Fleet will hear it too and close in.', f.x+32, f.y+104, f.w-64, { s:21 });
+      para('The tanks are dry. You can broadcast a distress call for fuel, but the Mandate Fleet will hear it too and close in.', f.x+32, f.y+104, f.w-64, { s:21 });
       btn(f.x+32, f.y+f.h-92, 420, 62, 'Broadcast distress call', () => { G.fuel += 3; G.fleetX += .3; G.modal = { type:'msg', title:'Signal answered', text:'A passing trader sells you 3 fuel cells at a mercy price. The fleet is much closer now.', btn:'Open map', then:openMap }; }, { fill:true, col:C.hostile });
       btn(f.x+f.w-252, f.y+f.h-92, 220, 62, 'Not yet', () => { G.modal = null; }); break; }
     case 'surrender': { const f = mframe(940, 470, 'They surrender', C.good);
@@ -1318,7 +1325,7 @@ function mapIcon(kind, x, y, s, col, g = ctx){
 function mapDist(from, pred){ const nodes = G.map.nodes, seen = { [from]:0 }, q = [from];
   while(q.length){ const k = q.shift(); if(pred(nodes[k], k)) return seen[k]; for(const n of nodes[k].links) if(!(n in seen)){ seen[n] = seen[k] + 1; q.push(n); } } return -1; }
 /* what the exit beacon tells you about each route */
-const FOE_NAMES = { rebuff:'Rebuff warships', pyrate:'pyrates', sloog:'Sloog ships', pebblekin:'Pebblekin ships', enjinn:'Enjinn', auto:'automated ships', voltan:'Voltan ships', mantlis:'Mantlis raiders', glass:'the Glassborn' };
+const FOE_NAMES = { rebuff:'Mandate warships', pyrate:'pyrates', sloog:'Mullock ships', pebblekin:'Pebblekin ships', enjinn:'Tinkari', auto:'automated ships', voltan:'Thrumm ships', mantlis:'Jabbit raiders', glass:'the Glassborn' };
 const HZ_NAMES = { asteroid:'asteroids', sun:'solar flares', ionstorm:'ion storms', pulsar:'pulsars' };
 function sectorFoes(sd){ const t = (sd.enemyTags||[]).map(k => FOE_NAMES[k] || k); return t.length ? `mostly ${t.join(' and ')}` : 'a bit of everyone'; }
 function sectorHazards(sd){ const h = Object.entries(sd.hazards||{}).filter(([,p]) => p > 0).sort((a,b) => b[1]-a[1]).map(([k]) => HZ_NAMES[k] || k); return h.length ? h.slice(0,3).join(', ') : 'none to speak of'; }
@@ -1330,7 +1337,7 @@ function drawMapModal(){
   const step = fleetStep(), reachSet = new Set(cur.links), jumpable = canJump() && G.warp<=0, scan = hasAug(G.ship,'scanners');
   ctx.save(); ctx.beginPath(); ctx.rect(ax, ay, aw, ah); ctx.clip();
   ctx.drawImage(mapBackdrop(aw, ah), ax, ay);
-  // the Rebuff Fleet: occupied space, its advancing front and where it will be after your next jump
+  // the Mandate Fleet: occupied space, its advancing front and where it will be after your next jump
   const fleetPx = px(G.fleetX), nextPx = px(G.fleetX + step);
   if(fleetPx > ax){ const w_ = Math.min(fleetPx - ax, aw);
     const fg = ctx.createLinearGradient(ax, 0, ax + w_, 0); fg.addColorStop(0, hexA(C.hostile,.34)); fg.addColorStop(1, hexA(C.hostile,.11)); ctx.fillStyle = fg; ctx.fillRect(ax, ay, w_, ah);
@@ -1346,7 +1353,7 @@ function drawMapModal(){
     ctx.strokeStyle = hot ? C.amber : live ? hexA(C.cyan,.9) : hexA(C.muted,.26); ctx.lineWidth = hot ? 4 : live ? 3 : 2;
     if(live && !hot){ ctx.setLineDash([10,6]); ctx.lineDashOffset = (i===G.map.cur ? -1 : 1)*t*20; }
     ctx.beginPath(); ctx.moveTo(mx(a), my(a)); ctx.lineTo(mx(b), my(b)); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }));
-  // where the Flaggship heads next
+  // where the Dreadnought heads next
   if(G.flag){ const nx = flagNext(), a = nodes[G.flag.node], b = nodes[nx]; if(a && b && nx!==G.flag.node){ const x1 = mx(a), y1 = my(a), x2 = mx(b), y2 = my(b), an = Math.atan2(y2-y1, x2-x1), ex = x2 - Math.cos(an)*30, ey = y2 - Math.sin(an)*30;
     ctx.setLineDash([6,6]); ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1 + Math.cos(an)*30, y1 + Math.sin(an)*30); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = C.hostile; ctx.beginPath(); ctx.moveTo(ex + Math.cos(an)*4, ey + Math.sin(an)*4); ctx.lineTo(ex - Math.cos(an-.5)*14, ey - Math.sin(an-.5)*14); ctx.lineTo(ex - Math.cos(an+.5)*14, ey - Math.sin(an+.5)*14); ctx.closePath(); ctx.fill(); } }
@@ -1371,21 +1378,21 @@ function drawMapModal(){
       if(reach || hov) label({ sun:'Sun', asteroid:'Asteroids', ionstorm:'Ion storm', pulsar:'Pulsar' }[n.hazard] || (HAZARDS[n.hazard]||n.hazard).split(' ')[0], x, y-38, hc, 'center', 11); }
     if(n.fishy && (known || n.visited || reach)){ T('🐟', x - 21, y - 14, { s:15, a:'center' }); }
     let tag = n.type==='haven' ? 'HOME' : n.type==='store' && !hideSt ? 'STORE' : n.type==='exit' ? 'EXIT' : n.type==='base' ? `BASE ${G.flag?.baseHP??''}` : n.type==='start' ? 'START' : n.quest && !n.visited ? 'QUEST' : n.distress && !n.visited ? 'DISTRESS' : n.elite && !n.visited ? 'VETERAN' : '';
-    if(flagHere) tag = 'FLAGGSHIP';
+    if(flagHere) tag = 'DREADNOUGHT';
     if(tag) label(tag, x, y+48, col, 'center', 13);
     if(taken){ ctx.strokeStyle = hexA(C.hostile,.9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x-10,y-10); ctx.lineTo(x+10,y+10); ctx.moveTo(x+10,y-10); ctx.lineTo(x-10,y+10); ctx.stroke(); }
     if(reach && jumpable) region(x-30,y-30,60,60, () => jumpTo(i));
-    { const name = n.type==='haven' ? 'Haven\'s Rest relay: jump home and back. Rest, repair, the locker, the greenhouse' : n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Fedoration command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
+    { const name = n.type==='haven' ? 'Haven\'s Rest relay: jump home and back. Rest, repair, the locker, the greenhouse' : n.type==='store' ? 'Store' : n.type==='exit' ? 'Exit beacon' : n.type==='base' ? 'Commonwealth command' : n.type==='start' ? 'Start' : n.visited ? 'Visited beacon' : known ? (n.type==='combat' ? 'Hostile ship' : n.type==='event' ? 'Event' : 'Empty beacon') : 'Unknown beacon';
       const ahead = (n.x - G.fleetX)/step; const bits = [];
-      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Flaggship is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.'); if(n.fishy) bits.push(G.rod ? 'A fishing spot.' : 'A fishing spot (you need a rod).');
+      if(isCur) bits.push('You are here.'); if(flagHere) bits.push('The Dreadnought is here. Jump onto this beacon to fight it: it cannot slip away once you arrive. The red arrow shows where it moves next.'); if(n.quest && !n.visited) bits.push('A quest waits here.'); if(n.distress && !n.visited) bits.push('A distress signal.'); if(n.elite && !n.visited) bits.push('Veteran crew: a hard fight, but they always carry a weapon or an augment, and half again the scrap.'); if(n.fishy) bits.push(G.rod ? 'A fishing spot.' : 'A fishing spot (you need a rod).');
       if(showHz) bits.push(`${HAZARDS[n.hazard]}: ${hazardText(n.hazard)}`); if(n.nebula) bits.push('Nebula: no sensors, but the fleet is slower here.');
-      bits.push(n.x < G.fleetX ? 'The Rebuff Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
+      bits.push(n.x < G.fleetX ? 'The Mandate Fleet holds this beacon: expect a tough fight and little salvage.' : ahead < 1.6 ? 'The fleet arrives here with your next jump.' : `The fleet reaches this beacon in about ${Math.floor(ahead)} jumps.`);
       if(reach && !jumpable) bits.push('The VTL drive must charge before you can jump.'); else if(!reach && !isCur) bits.push('Not connected to where you are.');
       tip(x-26, y-26, 52, 52, name, bits.join(' ')); }
   });
   if(typeof mpMapOverlay==='function' && NET.on) mpMapOverlay(mx, my, nodes, f);
   if(typeof drawConvoys==='function') drawConvoys(mx, my, nodes, t);
-  if(fleetPx > ax + 4) label(typeof camText==='function' ? camText('Rebuff Fleet') : 'Rebuff Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
+  if(fleetPx > ax + 4) label(typeof camText==='function' ? camText('Mandate Fleet') : 'Mandate Fleet', clamp(fleetPx - 14, ax + 170, ax + aw - 14), ay + 28, C.hostile, 'right', 14);
   if(nextPx > ax + 4 && nextPx < ax + aw - 200) label('after your next jump', nextPx + 10, ay + 28, hexA(C.hostile,.85), 'left', 11);
   ctx.restore();
   if(typeof drawRelayButton==='function') drawRelayButton(f, ay, ah);
@@ -1395,7 +1402,7 @@ function drawMapModal(){
   // footer: where the exit is, how far behind the fleet is, fuel
   ctx.fillStyle = hexA(C.cyan,.35); ctx.fillRect(f.x, ay+ah, f.w, 1.5);
   const exitD = G.flag ? mapDist(G.map.cur, (n,k) => k===G.flag.node) : mapDist(G.map.cur, n => n.type==='exit' || n.type==='base'), margin = (cur.x - G.fleetX)/step, bits = [];
-  if(G.flag) bits.push(exitD===0 ? 'The Flaggship is here' : `Flaggship ${exitD} jump${exitD===1?'':'s'} away: jump onto it to fight (${G.flag.phase+1} of 3)`);
+  if(G.flag) bits.push(exitD===0 ? 'The Dreadnought is here' : `Dreadnought ${exitD} jump${exitD===1?'':'s'} away: jump onto it to fight (${G.flag.phase+1} of 3)`);
   else if(exitD===0) bits.push('You are at the exit beacon');
   else if(exitD>0) bits.push(`Exit ${exitD} jump${exitD===1?'':'s'} away`);
   if(typeof expOn==='function' && expOn()) bits.push(`No Fleet · heat ${typeof heat==='function' ? heat() : 0}`); else bits.push(margin <= 0 ? 'The fleet has caught you' : margin < 1.6 ? 'The fleet reaches you next jump' : `Fleet about ${Math.floor(margin)} jumps behind`);

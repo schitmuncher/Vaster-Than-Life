@@ -1,8 +1,8 @@
 'use strict';
 /* =========================================================================
    A more open galaxy, without losing the chase.
-   - Heat: how much attention the Rebuff Directorate is paying to you. Loud
-     play (destroying Rebuff ships, beating fleet ships, boarding) raises it;
+   - Heat: how much attention the Mandate Directorate is paying to you. Loud
+     play (destroying Mandate ships, beating fleet ships, boarding) raises it;
      quiet play (empty beacons, nebulas, going home, cloaking) lets it cool.
      At 40 the Fleet moves faster; at 70 hunter-killers drop in on you; at 90
      the exit beacon is blockaded and you must fight through. Forged
@@ -14,14 +14,14 @@
      before choosing the next sector.
    - Faction ships: become Revered by a faction and it gives you one of its
      ship designs for good.
-   - Pip at home: with Pip living at Haven's Rest, the Flaggship's defences
+   - Pip at home: with Pip living at Haven's Rest, the Dreadnought's defences
      are decoded before every final battle.
    ========================================================================= */
 
 /* ---------------- heat ---------------- */
 function heat(){ return (G && G.heat) || 0; }
 function heatAdd(n, why){ if(!G || !havenPerksOn() || !n) return; const b = heatTier(); G.heat = clamp(heat() + n, 0, 100); const a = heatTier();
-  syncHeatChip(); if(a[0] > b[0]) toast(`Heat: ${a[1]}. ${a[2]}${why ? ' (' + why + ')' : ''}`); else if(a[0] < b[0] && a[0]===0) toast('The Rebuff have lost interest in you, for now.'); }
+  syncHeatChip(); if(a[0] > b[0]) toast(`Heat: ${a[1]}. ${a[2]}${why ? ' (' + why + ')' : ''}`); else if(a[0] < b[0] && a[0]===0) toast('The Mandate have lost interest in you, for now.'); }
 function syncHeatChip(){ if(!G) return; G.anom = G.anom || {}; if(heat() >= 20) G.anom.heatShow = true; else delete G.anom.heatShow; }
 function heatTier(){ const h = heat(); return h >= 90 ? [3, 'Blockade', 'The exit beacon will be blockaded.'] : h >= 70 ? [2, 'Hunted', 'Hunter-killers are looking for you.'] : h >= 40 ? [1, 'Noticed', 'The Fleet is moving faster.'] : [0, 'Quiet', '']; }
 function heatFleetMult(){ return heat() >= 40 ? 1.1 : 1; }
@@ -33,7 +33,7 @@ function heatArrive(node, first){
 }
 function heatCombatEnd(kind, e){
   if(!e || e.boss || !havenPerksOn()) return; const f = e.faction;
-  if(kind==='destroyed') heatAdd(f==='rebuff' || e.fleet ? 10 : 4, f==='rebuff' ? 'a Rebuff ship destroyed' : '');
+  if(kind==='destroyed') heatAdd(f==='rebuff' || e.fleet ? 10 : 4, f==='rebuff' ? 'a Mandate ship destroyed' : '');
   else if(kind==='crew') heatAdd(f==='rebuff' ? 6 : 2);
   if(e.hunter) G.heat = clamp(heat() - 15, 0, 100);   // beat the hunters and the trail goes cold for a while
 }
@@ -52,7 +52,7 @@ function makeOffers(seed){
   return withSeed('jobs' + seed, () => { const out = [], fs = Object.keys(FACTIONS), last = R.sectors - 1;
     if(G.sector < last){ const g = pick(CONTRACT_GOODS), to = Math.min(last, G.sector + ri(1, 2)); out.push({ kind:'deliver', goods:g, n:2, to, pay:40 + 25*(to - G.sector) + 6*G.sector, fac:pick(fs), title:`Deliver 2 ${goodsDef(g).name.toLowerCase()} to any store in sector ${to}` }); }
     const tf = pick(['pyrate','rebuff','mantlis','auto']); const ally = tf==='pyrate' ? 'voltan' : tf==='rebuff' ? 'pyrate' : tf==='mantlis' ? 'sloog' : 'enjinn';
-    out.push({ kind:'bounty', target:tf, n:2, got:0, pay:55 + 10*G.sector, fac:ally, title:`Beat 2 ${tf==='auto' ? 'automated' : tf==='rebuff' ? 'Rebuff' : tf.charAt(0).toUpperCase() + tf.slice(1)} ships (destroy, board or make them surrender)` });
+    out.push({ kind:'bounty', target:tf, n:2, got:0, pay:55 + 10*G.sector, fac:ally, title:`Beat 2 ${tf==='auto' ? 'automated' : tf==='rebuff' ? 'Mandate' : tf.charAt(0).toUpperCase() + tf.slice(1)} ships (destroy, board or make them surrender)` });
     out.push({ kind:'survey', n:3, got:0, pay:35 + 8*G.sector, fac:pick(fs), title:'Survey 3 quiet or nebula beacons you haven\'t visited before' });
     return out; }); }
 function acceptContract(c, st){ if(contracts().length >= 3){ toast('You can only take three contracts at a time.'); return; }
@@ -87,25 +87,25 @@ function exitHomeButton(f){ if(!havenPerksOn() || G.sector+1 >= R.sectors) retur
 /* ---------------- faction ships, Pip's intel ---------------- */
 function factionShipFor(f){ const want = f==='pebblekin' ? 'pebble' : f; return Object.keys(DATA.ships).find(id => { const d = DATA.ships[id]; if(typeof shipUnlocked==='function' ? shipUnlocked(d) : (!d.unlock || (PROFILE.unlocked||{})[id])) return false; try{ return typeof shipStyle==='function' && shipStyle({ id, cls:d.cls, name:d.name })===want; }catch(e){ return false; } }); }
 function factionRevered(f){ if(!havenPerksOn()) return; const id = factionShipFor(f); if(!id) return; PROFILE.unlocked = PROFILE.unlocked || {}; PROFILE.unlocked[id] = true; saveProfile(); toast(`The ${FACTIONS[f].name} give you the plans for the ${DATA.ships[id].name}. It's in your hangar now.`); }
-function pipIntel(e){ const R_ = (PROFILE.haven && PROFILE.haven.residents) || []; if(!R_.includes('Pip') || !havenPerksOn()) return; e.hull = Math.max(6, e.hull - 3); if(e.systems.weapons) ionize(e, 'weapons', 2); toast('Pip, at home in Haven\'s Rest, has decoded the Flaggship\'s defences: its guns stutter and its hull is weaker.'); }
+function pipIntel(e){ const R_ = (PROFILE.haven && PROFILE.haven.residents) || []; if(!R_.includes('Pip') || !havenPerksOn()) return; e.hull = Math.max(6, e.hull - 3); if(e.systems.weapons) ionize(e, 'weapons', 2); toast('Pip, at home in Haven\'s Rest, has decoded the Dreadnought\'s defences: its guns stutter and its hull is weaker.'); }
 
 /* ---------------- effects ---------------- */
 function openEffect(e, L){ if(!e || !G) return;
   if(e.heat){ G.heat = clamp(heat() + e.heat, 0, 100); L.push(`Heat ${e.heat > 0 ? '+' : ''}${e.heat}`); }
   if(e.heatDrop){ G.heat = clamp(heat() - e.heatDrop, 0, 100); L.push(`Heat -${e.heatDrop}`); } if(e.heat || e.heatDrop) syncHeatChip(); }
-if(typeof ANOM_INFO!=='undefined') ANOM_INFO.heatShow = { name:'Heat', label:() => `Heat ${Math.round(heat())} · ${heatTier()[1]}`, col:'#ff5a7a', text:() => `Rebuff attention: ${Math.round(heat())} of 100 (${heatTier()[1]}). 40: the Fleet moves faster. 70: hunter-killers. 90: the exit is blockaded. Quiet beacons, nebulas and going home cool it; destroying Rebuff ships heats it up.` };
+if(typeof ANOM_INFO!=='undefined') ANOM_INFO.heatShow = { name:'Heat', label:() => `Heat ${Math.round(heat())} · ${heatTier()[1]}`, col:'#ff5a7a', text:() => `Mandate attention: ${Math.round(heat())} of 100 (${heatTier()[1]}). 40: the Fleet moves faster. 70: hunter-killers. 90: the exit is blockaded. Quiet beacons, nebulas and going home cool it; destroying Mandate ships heats it up.` };
 
 /* ======================= content ======================= */
 Object.assign(BASE.enemies, {
-  rb_hunter:  { name:'Rebuff Hunter-Killer', eventOnly:true, relentless:true, tags:['rebuff'], hull:13, sectors:[1,9], style:'rebuff', systems:{ shields:4, engines:4, weapons:5, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['heavy1','ion','basic'], crew:['human','human','human'] },
-  rb_blockade:{ name:'Rebuff Blockade Cruiser', eventOnly:true, relentless:true, tags:['rebuff'], hull:18, sectors:[1,9], style:'flag', systems:{ shields:6, engines:2, weapons:6, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','choke_bomb','basic'], crew:['human','human','human','pebblekin'] }
+  rb_hunter:  { name:'Mandate Hunter-Killer', eventOnly:true, relentless:true, tags:['rebuff'], hull:13, sectors:[1,9], style:'rebuff', systems:{ shields:4, engines:4, weapons:5, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['heavy1','ion','basic'], crew:['human','human','human'] },
+  rb_blockade:{ name:'Mandate Blockade Cruiser', eventOnly:true, relentless:true, tags:['rebuff'], hull:18, sectors:[1,9], style:'flag', systems:{ shields:6, engines:2, weapons:6, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','choke_bomb','basic'], crew:['human','human','human','pebblekin'] }
 });
 Object.assign(BASE.events, {
-  hunter_hail:{ hail:'hunter', pack:'open', title:'Hunted', art:'fleet', text:'"Courier {ship}. Rebuff Intelligence has been following your trail for some time." The {enemy} has its guns charged before it finishes the sentence.', choices:[
+  hunter_hail:{ hail:'hunter', pack:'open', title:'Hunted', art:'fleet', text:'"Courier {ship}. Mandate Intelligence has been following your trail for some time." The {enemy} has its guns charged before it finishes the sentence.', choices:[
     { text:'Fight.', effect:{ begin:true } },
     { text:'Bribe them to lose your trail.', req:{ scrap:60 }, cost:{ scrap:60 }, effect:{ text:'The captain pockets it and logs you as "debris".', heatDrop:20, dismiss:true } },
     { text:'{who} broadcasts a fake transponder.', req:{ quirk:'conspiracy' }, effect:{ text:'{who} has been ready for this moment for years. The hunters chase a ghost into the next system.', heatDrop:25, dismiss:true } } ] },
-  heat_forger:{ pack:'open', once:true, minSector:2, tags:['pyrate','nebula'], weight:1.2, title:'A code forger', art:'station', text:'A Sloog in a tiny workshop forges transponder codes. "New name, new history, new ship as far as the Rebuff know. Sixty scrap."', choices:[
+  heat_forger:{ pack:'open', once:true, minSector:2, tags:['pyrate','nebula'], weight:1.2, title:'A code forger', art:'station', text:'A Mullock in a tiny workshop forges transponder codes. "New name, new history, new ship as far as the Mandate know. Sixty scrap."', choices:[
     { text:'New codes, please.', req:{ scrap:60 }, cost:{ scrap:60 }, effect:{ text:'Your ship is now, officially, a fertiliser tanker. The heat drains away.', heatDrop:50 } },
     { text:'{who} forges them for free.', req:{ quirk:'expyrate' }, effect:{ text:'{who} watches the forger work for ten minutes, then does it better. The forger is furious, then impressed.', heatDrop:40 } },
     { text:'Not today.', effect:{ text:'"Come back when they are on your tail."' } } ] },

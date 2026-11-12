@@ -1,11 +1,11 @@
 'use strict';
 /* =========================================================================
    Run flow: new runs, sectors and the map, events, stores, combat start and
-   end, the Flaggship chase, saving and the main update loop.
+   end, the Dreadnought chase, saving and the main update loop.
    ========================================================================= */
 let G = null;
 const UI = { screen:'title', selCrew:null, selCrews:[], selWeapon:null, mode:null, page:0, selShip:null, toast:null, tab:'systems', storeTab:'weapons', overReason:'', modsPage:0 };
-/* ship names often start with "The": "the The Pestrel" reads badly, so it becomes "The Pestrel" */
+/* ship names often start with "The": "the The Plucky" reads badly, so it becomes "The Plucky" */
 function fixThe(t){ if(typeof t!=='string') return t; if(typeof camText==='function') t = camText(t); return t.replace(/\b([Tt]he) (The )/g, '$2'); }
 function toast(t){ UI.toast = { text:fixThe(t), t:2.6 }; }
 
@@ -47,8 +47,8 @@ function newRun(shipId, name, o={}){
   UI.screen = 'game'; UI.selCrew = null; UI.selCrews = []; UI.selWeapon = null; UI.mode = null; UI.crewPanel = false; if(typeof svReset==='function') svReset();
   emit('runStart', G);
   logEntry(`Took command of ${G.ship.name}.`, 'start');
-  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Fedoration, and the Rebuff Fleet wants it back. Cross ${R.sectors} sectors and stop the Flaggship before it reaches Fedoration command.`, btn:'Open map', then:openMap };
-  if(typeof campaignRunStart==='function') campaignRunStart(o);   // Admiral Hale's send-off, Rebuff alert (campaign.js)
+  G.modal = { type:'msg', title: G.daily ? `Daily challenge · ${G.daily}` : G.cup ? `Weekly cup · ${G.cup}` : ch ? `Challenge · ${ch.name}` : G.seedDuel ? `Seed duel · vs ${G.seedDuel.n || 'a friend'}` : 'Sector 1 · Civilian Sector', text:`${G.daily ? 'Everyone flies the same run today: same ship, same maps, same events. ' : G.cup ? 'Everyone flies the same run all week. Post your best score to the cup board. ' : G.seedDuel ? `The same maps, events and shops ${G.seedDuel.n || 'your friend'} had. ${G.seedDuel.sc ? 'Score to beat: ' + fmtNum(G.seedDuel.sc) + '. ' : ''}` : ''}${ch ? `${ch.desc} Goal: ${challengeGoalText(ch).toLowerCase()}. ` : ''}You command ${G.ship.name}. Your hold carries data that could win the war for the Commonwealth, and the Mandate Fleet wants it back. Cross ${R.sectors} sectors and stop the Dreadnought before it reaches Commonwealth command.`, btn:'Open map', then:openMap };
+  if(typeof campaignRunStart==='function') campaignRunStart(o);   // Admiral Hale's send-off, Mandate alert (campaign.js)
   if(typeof livingRunStart==='function') livingRunStart();   // standing carried over, Haven's Rest perks, an old wreck (living.js)
   if(typeof mpRunStarted==='function') mpRunStarted(o);
   save();
@@ -147,8 +147,8 @@ function flagNext(){ const f = G.flag; if(!f) return null; const nodes = G.map.n
 function moveFlagship(){
   const f = G.flag; if(!f) return; const nodes = G.map.nodes; const base = nodes.findIndex(n=>n.type==='base');
   if(f.node===base){ f.baseHP--; sfx('alarm');
-    if(f.baseHP<=0){ endRun(false, 'The Flaggship destroyed Fedoration command while you were elsewhere. To win the last sector, jump onto the Flaggship\'s beacon and beat it three times before it wears command down.'); return; }
-    toast(`The Flaggship is attacking Fedoration command! It holds for ${f.baseHP} more jump${f.baseHP===1?'':'s'}: jump to command to fight it.`);
+    if(f.baseHP<=0){ endRun(false, 'The Dreadnought destroyed Commonwealth command while you were elsewhere. To win the last sector, jump onto the Dreadnought\'s beacon and beat it three times before it wears command down.'); return; }
+    toast(`The Dreadnought is attacking Commonwealth command! It holds for ${f.baseHP} more jump${f.baseHP===1?'':'s'}: jump to command to fight it.`);
     return; }
   f.step = (f.step||0) + 1; if(f.step % 2) return;
   const prev = { [f.node]:null }, q = [f.node];
@@ -171,8 +171,8 @@ function arrive_(i){
   if(typeof anomArrive==='function') anomArrive(node, first);   // fungus, escorts, fractures (anomalies.js)
   if(typeof livingArrive==='function') livingArrive(node, first);   // workshop, crew off duty, standing (living.js)
   emit('arrive', node);
-  if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Flaggship's beacon catches it before it can move on
-    if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Flaggship returns' : 'The Flaggship', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Rebuff Flaggship fills your viewport.' }); return; } }
+  if(G.flag){ if(G.flag.node!==i) moveFlagship(); if(UI.screen!=='game') return;   // jumping onto the Dreadnought's beacon catches it before it can move on
+    if(G.flag.node===i){ startCombat('flag', { boss:true, phase:G.flag.phase, title:G.flag.phase ? 'The Dreadnought returns' : 'The Dreadnought', text: DATA.enemies[R.bossId]?.phases?.[G.flag.phase]?.name || 'The Mandate Dreadnought fills your viewport.' }); return; } }
   if(node.x < G.fleetX - .02 && node.type!=='base'){
     startCombat('random', { harder:true, hail:'fleet' }); return; }
   if(typeof mpArrive==='function' && mpArrive(i, node, first)) return;
@@ -183,7 +183,7 @@ function arrive_(i){
   G.later = G.later.filter(l => l!==due && (l.jumps > -12 || !DATA.events[l.event]?.moment));   // a scene that never found a beacon is dropped eventually
   if(due){ startEvent(due.event, { star:due.star }); return; }
   if(typeof heatIntercept==='function' && heatIntercept(node, first)) return;   // hunters and blockades (openworld.js)
-  if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Fedoration Command', text:'The base crews patch your hull completely and wish you luck. The Flaggship is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Fedoration Command', text:'The base is holding. For now.' }; save(); return; }
+  if(node.type==='base'){ if(first){ G.ship.hull = G.ship.maxHull; G.modal = { type:'msg', title:'Commonwealth Command', text:'The base crews patch your hull completely and wish you luck. The Dreadnought is coming here. Stop it.' }; } else G.modal = { type:'msg', title:'Commonwealth Command', text:'The base is holding. For now.' }; save(); return; }
   if(node.type==='haven' && typeof havenArrive==='function'){ havenArrive(node, i); return; }   // home (havenvisit.js)
   if(node.type==='store' && typeof anomStoreBlock==='function' && anomStoreBlock(node)){ save(); return; }
   if(node.type==='store'){ sfx('store'); if(!node.store) node.store = makeStore(); G.modal = { type:'store', node:i }; save(); return; }
@@ -209,7 +209,7 @@ function arrive_(i){
 }
 function fleetStep(){ return R.fleetSpeed * (sectorDef().fleetMult||1) * (curDiff().fleet||1) * (typeof alertLv==='function' && alertLv() >= 3 ? 1.1 : 1) * (typeof situFleet==='function' ? situFleet() : 1) * (G.ship && G.ship.crew.some(c => c.owner==='p' && c.quirk==='conspiracy') ? .95 : 1) * (typeof heatFleetMult==='function' ? heatFleetMult() : 1); }
 function hazardText(h){ return { asteroid:'Asteroids drift through this beacon. Expect the odd rock to hit your shields.', sun:'You are close to a star. Solar flares will start fires aboard.',
-  ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Rebuff Fleet is slower in here too.' }[h]; }
+  ionstorm:'An ion storm halves your reactor power while you stay here.', pulsar:'A pulsar sends out ion waves that knock out systems and shields.', nebula:'Nebula gas blinds your sensors. The Mandate Fleet is slower in here too.' }[h]; }
 function sectorOptions(){ return withSeed(`s${G.sector}exit`, sectorOptions_); }
 function sectorOptions_(){
   if(G.sector+1 >= R.sectors) return ['laststand'];
@@ -338,7 +338,7 @@ function applyEffect(e){
   if(e.crewHurt){ for(const c of s.crew) if(c.owner==='p' && !c.drone) c.hp = Math.max(1, c.hp - e.crewHurt*(.5+Math.random()*.5)); L.push('Crew injured'); }
   if(e.xp){ for(const c of s.crew) if(c.owner==='p' && !c.drone) gainXP(c, e.xp.skill, e.xp.amt); L.push(`Crew trained in ${SKILLN[e.xp.skill]||e.xp.skill}`); }
   if(e.reveal && G.map){ for(const n of G.map.nodes) n.revealed = true; L.push('Sector map revealed'); }
-  if(e.fleetPush){ G.fleetX += e.fleetPush; L.push(e.fleetPush>0 ? 'The Rebuff Fleet draws closer' : 'The Rebuff Fleet falls behind'); }
+  if(e.fleetPush){ G.fleetX += e.fleetPush; L.push(e.fleetPush>0 ? 'The Mandate Fleet draws closer' : 'The Mandate Fleet falls behind'); }
   if(e.primeWeapons){ for(const w of s.weapons) if(w.on) w.charge = DATA.weapons[w.id]?.charge||0; }
   if(e.mapPiece){ G.mapPieces = (G.mapPieces||0) + e.mapPiece; L.push(`Treasure map piece ${Math.min(3,G.mapPieces)} of 3`);
     if(G.mapPieces>=3 && !G.flags.mapDone){ G.flags.mapDone = true; placeQuest('treasure_vault'); L.push('The map is complete! The treasure is marked on your map'); } }
@@ -421,7 +421,7 @@ function startCombat_(id, o={}){
   G.enemy.hailTag = (tags.includes(G.enemy.faction) && hasHail(G.enemy.faction)) ? G.enemy.faction : (tags.find(hasHail) || G.enemy.faction);
   const cs = CALLSIGNS[G.enemy.faction]; if(cs && !def.boss) G.enemy.name = `${def.name} "${pick(cs)}"`;
   // now and then a veteran crew: tougher and faster, but they carry better salvage
-  if(!def.boss && typeof alertLv==='function' && alertLv() >= 1){ G.enemy.hull += 2; G.enemy.maxHull += 2; }   // Rebuff alert 1: patrols
+  if(!def.boss && typeof alertLv==='function' && alertLv() >= 1){ G.enemy.hull += 2; G.enemy.maxHull += 2; }   // Mandate alert 1: patrols
   if(!def.boss && !o.harder && ((o.elite && G.sector >= 2) || (G.sector >= 3 && Math.random() < (typeof alertLv==='function' && alertLv() >= 5 ? .1 : .05)))){ const e = G.enemy; e.elite = true; e.name = 'Veteran ' + e.name; e.hull += 3; e.maxHull += 3;
     for(const k of ['engines','weapons']) if(e.systems[k]){ e.systems[k].max = Math.min(8, e.systems[k].max + 1); e.systems[k].power = e.systems[k].max; } }
   if(typeof sagaCombatStart==='function') sagaCombatStart(G.enemy, o);   // your nemesis, back for more
@@ -505,11 +505,11 @@ function finishCombat(kind, offer){
   if(typeof LOG_MAX==='undefined') logEntry(`Defeated the ${e.name}.`); say('victory', { force:true }); sfx('victory', { vol:.6 });
 }
 function flagDefeated(){
-  const f = G.flag; grant('phase1'); if(typeof sagaNote==='function') sagaNote('boss', f && f.phase >= 2 ? 'At Fedoration command, the Flaggship finally broke apart.' : `They beat the Flaggship${f && f.phase ? ' a second time' : ''}, and it ran.`);
+  const f = G.flag; grant('phase1'); if(typeof sagaNote==='function') sagaNote('boss', f && f.phase >= 2 ? 'At Commonwealth command, the Dreadnought finally broke apart.' : `They beat the Dreadnought${f && f.phase ? ' a second time' : ''}, and it ran.`);
   if(!f || f.phase >= 2){ endRun(true); return; }
   f.phase++; f.step = 1; moveFlagship();
-  const bp = curDiff().bossPatch || 0, sh = G.ship, got = Math.min(bp, sh.maxHull - sh.hull); if(got > 0) sh.hull += got;   // Easy: a Fedoration repair tender catches up between phases
-  G.modal = { type:'msg', title:'The Flaggship retreats', text:`The Flaggship jumps away, damaged but not done. It is heading for Fedoration command.${got > 0 ? ` A Fedoration repair tender catches up and patches ${got} hull.` : ''} Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
+  const bp = curDiff().bossPatch || 0, sh = G.ship, got = Math.min(bp, sh.maxHull - sh.hull); if(got > 0) sh.hull += got;   // Easy: a Commonwealth repair tender catches up between phases
+  G.modal = { type:'msg', title:'The Dreadnought retreats', text:`The Dreadnought jumps away, damaged but not done. It is heading for Commonwealth command.${got > 0 ? ` A Commonwealth repair tender catches up and patches ${got} hull.` : ''} Chase it down. Next: ${DATA.enemies[R.bossId]?.phases?.[f.phase]?.name || 'phase ' + (f.phase+1)}.`, btn:'Open map', then:openMap };
   save();
 }
 function runScore(win){ return Math.round(((win ? 10000 : 0) + G.sector*1000 + G.stats.kills*40 + Math.round(G.stats.scrap/5) + (G.flag ? G.flag.phase*500 : 0)) * (1 + .1*(G.alert||0))); }
@@ -595,7 +595,7 @@ function updateGame(dt){
   if(G.warp>0){ G.warp -= dt;
     if(G.warpNode!=null && G.warp < .5){ const n = G.warpNode; G.warpNode = null;
       if(typeof n==='string' && n.startsWith('sector:')){ const t = n.slice(7); genSector(G.sector+1, t);
-        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Flaggship is heading for Fedoration command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : (typeof expOn==='function' && expOn() ? 'No Fleet out here: only the heat you make, and whatever is waiting.' : 'The Rebuff Fleet is already plotting its pursuit.')) + (typeof situLine==='function' ? situLine() : ''), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
+        G.modal = { type:'msg', title:`Sector ${G.sector} · ${sectorDef().name}`, text: (sectorDef().intro ? pick(sectorDef().intro) + ' ' : '') + (sectorDef().final ? 'The Dreadnought is heading for Commonwealth command at the far end of this sector. Catch it, three times, before it gets there.' : sectorDef().secret ? 'A quest beacon marks where the Glassborn are waiting.' : (typeof expOn==='function' && expOn() ? 'No Fleet out here: only the heat you make, and whatever is waiting.' : 'The Mandate Fleet is already plotting its pursuit.')) + (typeof situLine==='function' ? situLine() : ''), btn:'Continue', then:() => { if(!(typeof campaignSector==='function' && campaignSector())) openMap(); } }; save(); }
       else arrive(n); } }
   const live = !G.paused && !blockingModal() && G.warp<=0 && !(typeof mpHold==='function' && mpHold());
   if(live){
@@ -648,5 +648,5 @@ function updateGame(dt){
   if(typeof mpGameTick==='function' && mpGameTick(dt)) return;
   if(UI.screen==='game' && G.ship.hull<=0 && typeof anomRescue==='function' && anomRescue()) return;   // a time fracture snaps back (anomalies.js)
   if(UI.screen==='game' && (G.ship.hull<=0 || ownerCrewCount('p')===0)){
-    endRun(false, G.ship.hull<=0 ? `Your hull gave out. ${(() => { const C = typeof campDef==='function' && campDef(); return C && C.fleet ? C.fleet.charAt(0).toUpperCase() + C.fleet.slice(1) : 'The Rebuff Fleet'; })()} collects the pieces.` : 'Your last crew member is gone. The ship drifts on, empty.'); }
+    endRun(false, G.ship.hull<=0 ? `Your hull gave out. ${(() => { const C = typeof campDef==='function' && campDef(); return C && C.fleet ? C.fleet.charAt(0).toUpperCase() + C.fleet.slice(1) : 'The Mandate Fleet'; })()} collects the pieces.` : 'Your last crew member is gone. The ship drifts on, empty.'); }
 }

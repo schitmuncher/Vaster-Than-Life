@@ -2,7 +2,7 @@
 
 A starship-command roguelike for WebXR, built for Meta Quest 2 and newer. It also plays in any desktop or phone browser.
 
-You command a Fedoration courier carrying data that could end the war. Cross eight sectors, one jump at a time, while the Rebuff Fleet closes in behind you. Then chase down the Flaggship before it destroys Fedoration command.
+You command a Commonwealth courier carrying data that could end the war. Cross eight sectors, one jump at a time, while the Mandate Fleet closes in behind you. Then chase down the Dreadnought before it destroys Commonwealth command.
 
 It's a fan homage to *FTL: Faster Than Light*. The code, art, names and writing are all original, with plenty of puns.
 
@@ -83,10 +83,10 @@ Free, with no accounts and no game servers: players connect directly, browser to
 | **Navigator** | 2 | A captain in VR flies and fights; a navigator on a laptop or phone plots the course, answers beacons and runs the shop. |
 | **Away team** | 2–4 | Co-op with a boarding specialist, who is prompted to beam over with the teleporter crew. In VR they can walk the enemy ship, sabotage systems by hand and use the sidearm. |
 | **Go live** | 1 + up to 7 viewers | Stream your run. Viewers watch from any device, can look at the map and ship screen, and send emoji that float up on everyone's screen. Games can be listed publicly, and any co-op game can take viewers too. |
-| **Hunter and hunted** | 2 | The host flies the courier as usual. The guest is the Rebuff fleet commander, earning 2 command points per courier jump and spending them on cards: ambushes and hazards placed on the map, fleet surges, jammed sensors, and in a fight overcharged guns, boarders and shield surges. The commander can also aim every enemy gun. Play the whole run, or a short hunt to sector 4. |
+| **Hunter and hunted** | 2 | The host flies the courier as usual. The guest is the Mandate fleet commander, earning 2 command points per courier jump and spending them on cards: ambushes and hazards placed on the map, fleet surges, jammed sensors, and in a fight overcharged guns, boarders and shield surges. The commander can also aim every enemy gun. Play the whole run, or a short hunt to sector 4. |
 | **Duel arena** | 2 | Each player picks a hull and spends the same budget in an arena store that sells everything, then the two ships fight. Best of 1, 3 or 5. Each player's own game runs their own ship; shots, boarders, hacking pulses and mind control cross over, and whoever is hit works out the hit. |
 | **Boarding brawl** | 2 | Pick up to four crew on a points budget. Both crews start at opposite ends of the same ship with the doors open; the medbay heals whoever stands in it. After two minutes, life support fails. |
-| **Race to the Flaggship** | 2–4 | Everyone flies the same seed at the same time. A strip under the top bar shows how far each rival has got; winning fights draws trouble cards to play on them (fleet surge, ambush, ion storm, sensor jam, fuel leak, pirate toll, or a jammer to block one). |
+| **Race to the Dreadnought** | 2–4 | Everyone flies the same seed at the same time. A strip under the top bar shows how far each rival has got; winning fights draws trouble cards to play on them (fleet surge, ambush, ion storm, sensor jam, fuel leak, pirate toll, or a jammer to block one). |
 | **Wingmen** | 2–4 | Your own ships on the same sectors. Jump to the same beacon as a wingmate and you fight the same ship together: each of your shots is echoed into their fight as covering fire. Send each other scrap, fuel, missiles and drone parts. |
 
 **No room needed.** **Seed duels** send any finished run as a link or code: your friend flies the same seed (same maps, events and shops) and sees whose score wins, and their answer comes back the same way. **Challenge codes**: design a challenge (ship, difficulty, goal, hull, crew, starting supplies, guns, fleet speed, sector count, salvage) and share it as a code; codes from friends are saved to the Challenges screen. The **weekly cup** is a run everyone flies all week (Normal, mods off); it and the **daily run** have public score boards.
@@ -159,7 +159,7 @@ A detailed reference for everything you do in a run. The tables in this section 
 | --- | --- |
 | Top left | Hull (your ship's life), shields (layers up), evasion and average oxygen |
 | Top middle | Scrap (money), fuel (one per jump), missiles, drone parts and food (meals for the crew) |
-| Top centre-right | Sector and its type; in the last sector, the Flaggship's progress |
+| Top centre-right | Sector and its type; in the last sector, the Dreadnought's progress |
 | VTL drive | Charges during a fight while someone flies the ship; when it is full you can jump away |
 | Jump / Map | Opens the map (it says Jump when the drive is charged in a fight) |
 | Crew | The crew screen: everyone's level, health, food, class, weapons, perks and abilities |
@@ -175,7 +175,7 @@ A detailed reference for everything you do in a run. The tables in this section 
 
 1. **New run → pick a ship.** Easy is the gentle way in. The Admiral sends you off with a gift: take one.
 
-2. **Open the Map** and jump to a beacon joined to yours. Each jump costs 1 fuel, and the Rebuff Fleet follows you from the left; keep ahead of it.
+2. **Open the Map** and jump to a beacon joined to yours. Each jump costs 1 fuel, and the Mandate Fleet follows you from the left; keep ahead of it.
 
 3. **Beacons** are events (?), fights, stores, quiet spots, distress calls and quests. Stores and exits are always marked.
 
@@ -187,7 +187,7 @@ A detailed reference for everything you do in a run. The tables in this section 
 
 7. **Feed the crew**: they eat between jumps from the Food count; buy more at stores (Supplies) before it runs low.
 
-8. **Reach the exit** of each sector, pick the next one, and in the last sector catch and beat the Flaggship three times.
+8. **Reach the exit** of each sector, pick the next one, and in the last sector catch and beat the Dreadnought three times.
 
 Every run earns captain xp and renown, win or lose. The **Tutorial** on the title screen (Guided practice) teaches all of this hands-on.
 
@@ -334,9 +334,9 @@ Primary weapons are what crew fight with; the secondary (from level 3) takes ove
 | Lancer Battle Rifle | Assault rifle | primary | 2 | 70 | ×1.55 | +55% melee damage, shoots into neighbouring rooms. | Heavier rounds, slower fire. Hits like a door slamming. |
 | Fang Burst Rifle | Assault rifle | primary | 2 | 65 | ×1.45 | +45% melee damage, shoots into neighbouring rooms. | Three-round bursts. Now and then all three find the same spot. |
 | Ionclad Rifle | Assault rifle | primary | 2 | 75 | ×1.45 | +45% melee damage, stuns, shoots into neighbouring rooms. | Fires ionised slugs that make muscles twitch. |
-| Tempest AR | Assault rifle | primary | 3 | 95 | ×1.60 | +60% melee damage, shoots into neighbouring rooms. | Fedoration special forces issue. Spare parts not included. |
+| Tempest AR | Assault rifle | primary | 3 | 95 | ×1.60 | +60% melee damage, shoots into neighbouring rooms. | Commonwealth special forces issue. Spare parts not included. |
 | Harbinger Rifle | Assault rifle | primary | 3 | 100 | ×1.55 | +55% melee damage, cuts bleed 2/s, shoots into neighbouring rooms. | Serrated flechettes. Nasty. |
-| Cobalt Pulse Rifle | Assault rifle | primary | 3 | 105 | ×1.50 | +50% melee damage, stuns, shoots into neighbouring rooms. | A pulse weapon from the Enjinn foundries. Hums politely. |
+| Cobalt Pulse Rifle | Assault rifle | primary | 3 | 105 | ×1.50 | +50% melee damage, stuns, shoots into neighbouring rooms. | A pulse weapon from the Tinkari foundries. Hums politely. |
 | Wasp SMG | SMG | primary | 1 | 40 | ×1.35 | +35% melee damage, shoots into neighbouring rooms. | Buzzes. Stings. Mostly hits the right person. |
 | Ferret Machine Pistol | SMG | primary | 1 | 38 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | Tiny, fast and hard to keep still. |
 | Hornet PDW | SMG | primary | 2 | 60 | ×1.42 | +42% melee damage, shoots into neighbouring rooms. | Personal defence weapon. Defends very personally. |
@@ -366,13 +366,13 @@ Primary weapons are what crew fight with; the secondary (from level 3) takes ove
 | Grav Thrower | Special | primary | 3 | 95 | ×1.35 | +35% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | A little Gravity Hammer that works at range. |
 | Plasma Caster | Special | primary | 3 | 110 | ×1.70 | +70% melee damage, shoots into neighbouring rooms. | Glowing, hissing, lovely. Dangerous to everyone. |
 | Spore Projector | Special | primary | 2 | 65 | ×1.20 | +20% melee damage, cuts bleed 2.5/s, shoots into neighbouring rooms. | Grown, not built. Do not ask by whom. |
-| Fedoration Sidearm | Pistol | secondary | 1 | 25 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | Standard issue. Reliable, unremarkable, always there. |
+| Commonwealth Sidearm | Pistol | secondary | 1 | 25 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | Standard issue. Reliable, unremarkable, always there. |
 | Viper Revolver | Pistol | secondary | 1 | 30 | ×1.40 | +40% melee damage, shoots into neighbouring rooms. | Six shots. Each one a sentence. |
 | Dart Pistol | Pistol | secondary | 1 | 28 | ×1.25 | +25% melee damage, stuns, shoots into neighbouring rooms. | Tranquilliser darts. Very relaxing for the target. |
-| Hand Cannon | Pistol | secondary | 2 | 50 | ×1.55 | +55% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Heavier than it looks. Kicks like a Mantlis. |
+| Hand Cannon | Pistol | secondary | 2 | 50 | ×1.55 | +55% melee damage, shoots into neighbouring rooms, knocks foes out of the room. | Heavier than it looks. Kicks like a Jabbit. |
 | Auto Pistol | Pistol | secondary | 2 | 45 | ×1.30 | +30% melee damage, shoots into neighbouring rooms. | A pistol that wishes it were an SMG. |
 | Flare Pistol | Pistol | secondary | 2 | 35 | ×1.25 | +25% melee damage, shoots into neighbouring rooms. | For signalling. And for starting fires on purpose. |
-| Ionic Repeater | Pistol | secondary | 3 | 70 | ×1.45 | +45% melee damage, stuns, shoots into neighbouring rooms. | A Voltan design. Hums a little hymn when it fires. |
+| Ionic Repeater | Pistol | secondary | 3 | 70 | ×1.45 | +45% melee damage, stuns, shoots into neighbouring rooms. | A Thrumm design. Hums a little hymn when it fires. |
 | Gilded Duelist | Pistol | secondary | 3 | 80 | ×1.50 | +50% melee damage, shoots into neighbouring rooms. | A pyrate captain's pride. Polished between shots. |
 | Tube Launcher | Launcher | secondary | 2 | 60 | ×1.00 | +0% melee damage, shoots into neighbouring rooms. | One rocket, one room, one very surprised boarding party. |
 | Grenade Launcher | Launcher | secondary | 2 | 65 | ×1.00 | +0% melee damage, shoots into neighbouring rooms. | Lobs grenades round corners. Mostly round corners. |
@@ -384,8 +384,8 @@ Primary weapons are what crew fight with; the secondary (from level 3) takes ove
 | Pyrate Cutlass | Melee | secondary | 2 | 40 | ×1.60 | +60% melee damage, cuts bleed 2/s. | Swashbuckling, as advertised. |
 | Glass Shard Blade | Melee | secondary | 3 | 70 | ×1.80 | +80% melee damage, cuts bleed 3/s. | Sharpened by the Glassborn. Hums when it's hungry. |
 | Pebble Maul | Melee | secondary | 2 | 45 | ×1.70 | +70% melee damage, knocks foes out of the room. | A Pebblekin heirloom: a rock on a stick, but a very good rock. |
-| Mantlis Claw Gloves | Melee | secondary | 2 | 50 | ×1.50 | +50% melee damage, cuts bleed 2.5/s. | For people who miss having claws. |
-| Ceremonial Sabre | Melee | secondary | 3 | 75 | ×1.75 | +75% melee damage. | Fedoration officers carry them to parades. You carry one to boarding actions. |
+| Jabbit Claw Gloves | Melee | secondary | 2 | 50 | ×1.50 | +50% melee damage, cuts bleed 2.5/s. | For people who miss having claws. |
+| Ceremonial Sabre | Melee | secondary | 3 | 75 | ×1.75 | +75% melee damage. | Commonwealth officers carry them to parades. You carry one to boarding actions. |
 
 ### Health and healing
 
@@ -429,7 +429,7 @@ There are three settings (**Settings → Gameplay → Crew hunger**). **Relaxed*
 
 | Food in the hold | Fills |
 | --- | --- |
-| Rebuff rations | 40 |
+| Mandate rations | 40 |
 | Star potato | 25 |
 | Ion berries | 15 |
 | Void pepper | 10 |
@@ -464,10 +464,10 @@ Crew improve at what they do. Each skill has two steps, skilled and expert.
 | --- | --- | --- | --- | --- | --- | --- |
 | Human | 100 | +0% | +0% | +0% | ×1 | Perfectly average. Learns skills a bit faster. Proud of it. |
 | Pebblekin | 150 | -50% | +0% | -50% | ×1.3 | Huge health and fireproof. Slow on their feet and slower with a wrench. |
-| Enjinn | 100 | +100% | -50% | +0% | ×1 | Wish-granting mechanics. Repair twice as fast, fight like a wet towel. |
-| Voltan | 70 | +0% | +0% | +0% | ×0.5 | Add 1 free power to the system they stand in. Explode when they die. |
-| Sloog | 100 | +0% | +0% | +0% | ×1 | Telepathic: always see enemy crew. Immune to mind control. Smug. |
-| Mantlis | 100 | -50% | +50% | +25% | ×1.2 | Born brawlers. Fast and deadly in a fight, hopeless with tools. |
+| Tinkari | 100 | +100% | -50% | +0% | ×1 | Wish-granting mechanics. Repair twice as fast, fight like a wet towel. |
+| Thrumm | 70 | +0% | +0% | +0% | ×0.5 | Add 1 free power to the system they stand in. Explode when they die. |
+| Mullock | 100 | +0% | +0% | +0% | ×1 | Telepathic: always see enemy crew. Immune to mind control. Smug. |
+| Jabbit | 100 | -50% | +50% | +25% | ×1.2 | Born brawlers. Fast and deadly in a fight, hopeless with tools. |
 | Squawkling | 90 | +50% | +0% | +20% | ×1 | Repeats every order. Repairs fairly fast. |
 | Prismari | 80 | +0% | -20% | +0% | ×0.5 | Crystal people. Immune to mind control, brittle in a fight. |
 | Hivelings | 60 | -20% | +0% | +50% | ×0.8 | Small, quick, learn fast. Fall over easily. |
@@ -492,7 +492,7 @@ Crew improve at what they do. Each skill has two steps, skilled and expert.
 | Each event choice | 12 |
 | Each ship beaten (escaped: 10) | 40 + 10 × sector |
 | Each new sector | 100 |
-| Each Flaggship phase beaten | 250 |
+| Each Dreadnought phase beaten | 250 |
 | Winning the run | 1000 |
 | Losing a run | 50 + 25 per sector crossed |
 | Each boarder killed | 5 |
@@ -515,7 +515,7 @@ Crew improve at what they do. Each skill has two steps, skilled and expert.
 | 50 | 64,925 |
 | 55 | 78,300 |
 
-**Rank** (Cadet to Admiral) comes from **renown**, earned at the end of each run (sectors crossed, ships beaten, the Flaggship, a win, crew brought home, story scenes and new endings, more on harder difficulty and alert levels). Ranks bring better send-off gifts and requisition tokens. Renown can also be spent rebuilding Haven's Rest wings without lowering your rank.
+**Rank** (Cadet to Admiral) comes from **renown**, earned at the end of each run (sectors crossed, ships beaten, the Dreadnought, a win, crew brought home, story scenes and new endings, more on harder difficulty and alert levels). Ranks bring better send-off gifts and requisition tokens. Renown can also be spent rebuilding Haven's Rest wings without lowering your rank.
 
 | Rank | Renown | Reward |
 | --- | --- | --- |
@@ -536,18 +536,18 @@ Crew improve at what they do. Each skill has two steps, skilled and expert.
 
 | Ship | Class | Hull | Reactor | Crew | Captain level | Also needs |
 | --- | --- | --- | --- | --- | --- | --- |
-| The Pestrel | Fedoration Cruiser | 30 | 8 | 3 | 1 | — |
-| The Red Tale | Fedoration Cruiser | 30 | 8 | 4 | 7 | Reach sector 6 flying The Pestrel |
-| The Taurus | Enjinn Cruiser | 30 | 8 | 3 | 4 | Defeat 15 ships in total |
-| The Bortex | Enjinn Cruiser | 30 | 9 | 3 | 10 | Destroy 25 ships flying The Taurus |
+| The Plucky | Commonwealth Cruiser | 30 | 8 | 3 | 1 | — |
+| The Red Herring | Commonwealth Cruiser | 30 | 8 | 4 | 7 | Reach sector 6 flying The Plucky |
+| The Spanner in the Works | Tinkari Cruiser | 30 | 8 | 3 | 4 | Defeat 15 ships in total |
+| The Remote Control | Tinkari Cruiser | 30 | 9 | 3 | 10 | Destroy 25 ships flying The Spanner in the Works |
 | The Rolling Stone | Pebblekin Cruiser | 30 | 8 | 3 | 5 | Reach sector 4 in any run |
 | The Rock Bottom | Pebblekin Cruiser | 35 | 8 | 3 | 11 | Earn the medal "Fire Starter" |
-| The Zapjudicator | Voltan Cruiser | 28 | 8 | 3 | 8 | Reach sector 5 in any run |
-| The Volt Face | Voltan Cruiser | 26 | 7 | 3 | 13 | Earn the medal "Augmented Reality" |
-| The Slime of War | Sloog Cruiser | 30 | 9 | 3 | 11 | Earn the medal "Hostile Takeover" |
-| The Gastropod | Sloog Cruiser | 30 | 9 | 3 | 16 | Win a run flying The Slime of War |
-| The Preying Mantlis | Mantlis Cruiser | 30 | 9 | 4 | 14 | Earn the medal "Mind Over Matter" |
-| The Basil-isk | Mantlis Cruiser | 30 | 10 | 4 | 20 | Win a run flying The Preying Mantlis |
+| The Zapjudicator | Thrumm Cruiser | 28 | 8 | 3 | 8 | Reach sector 5 in any run |
+| The Volt Face | Thrumm Cruiser | 26 | 7 | 3 | 13 | Earn the medal "Augmented Reality" |
+| The Slime of War | Mullock Cruiser | 30 | 9 | 3 | 11 | Earn the medal "Hostile Takeover" |
+| The Gastropod | Mullock Cruiser | 30 | 9 | 3 | 16 | Win a run flying The Slime of War |
+| The Preying Jabbit | Jabbit Cruiser | 30 | 9 | 4 | 14 | Earn the medal "Mind Over Matter" |
+| The Elbow Room | Jabbit Cruiser | 30 | 10 | 4 | 20 | Win a run flying The Preying Jabbit |
 | The Peekaboo | Stealth Cruiser | 30 | 8 | 3 | 15 | Reach sector 7 in any run |
 | The Now-You-Don't | Stealth Cruiser | 30 | 9 | 3 | 21 | Win a run flying The Peekaboo |
 | The Glass Cannon | Glassborn Cruiser | 24 | 9 | 3 | 19 | Earn the medal "Through the Looking Glass" |
@@ -557,26 +557,26 @@ Crew improve at what they do. Each skill has two steps, skilled and expert.
 | The Dimmer | Scout Skiff | 26 | 7 | 2 | 9 | Reach sector 5 flying The Lantern |
 | The Anvil | Siege Hulk | 36 | 9 | 3 | 10 | Defeat 60 ships in total |
 | The Hammer | Siege Hulk | 32 | 9 | 2 | 15 | Destroy 30 ships flying The Anvil |
-| The Undertow | Ion Skirmisher | 28 | 8 | 2 | 9 | Destroy 15 ships flying The Taurus |
+| The Undertow | Ion Skirmisher | 28 | 8 | 2 | 9 | Destroy 15 ships flying The Spanner in the Works |
 | The Riptide | Ion Skirmisher | 28 | 8 | 2 | 14 | Reach sector 6 flying The Undertow |
-| The Beehive | Drone Carrier | 26 | 9 | 2 | 12 | Destroy 30 ships flying The Taurus |
+| The Beehive | Drone Carrier | 26 | 9 | 2 | 12 | Destroy 30 ships flying The Spanner in the Works |
 | The Swarm Queen | Drone Carrier | 26 | 9 | 2 | 17 | Destroy 30 ships flying The Beehive |
 | The Paper Kite | Frontier Courier | 22 | 7 | 2 | 2 | — |
 | The Night Post | Frontier Courier | 24 | 7 | 2 | 8 | Reach sector 4 flying The Paper Kite |
-| The Argument | Frontier Gunboat | 30 | 9 | 3 | 6 | Destroy 20 ships flying The Pestrel |
+| The Argument | Frontier Gunboat | 30 | 9 | 3 | 6 | Destroy 20 ships flying The Plucky |
 | The Rebuttal | Frontier Gunboat | 30 | 9 | 3 | 12 | Destroy 30 ships flying The Argument |
 | The Long Haul | Frontier Ark | 34 | 8 | 5 | 13 | Reach sector 6 in any run |
 | The Second Chance | Frontier Ark | 32 | 8 | 4 | 18 | Reach sector 6 flying The Long Haul |
 | The Long Lance | Beam Frigate | 26 | 9 | 3 | 7 | Defeat 40 ships in total |
 | The Phantom | Infiltrator | 24 | 8 | 3 | 18 | Reach sector 6 flying The Peekaboo |
-| The Juggernaut | Rock Dreadnought | 40 | 8 | 3 | 26 | Defeat 250 ships in total |
-| The Puppeteer's Glove | Mind Cutter | 26 | 9 | 3 | 22 | Destroy 30 ships flying The Preying Mantlis |
+| The Juggernaut | Pebblekin Battleship | 40 | 8 | 3 | 26 | Defeat 250 ships in total |
+| The Puppeteer's Glove | Mind Cutter | 26 | 9 | 3 | 22 | Destroy 30 ships flying The Preying Jabbit |
 | The Black Gull | Pyrate Corsair | 28 | 8 | 3 | 16 | Defeat 120 ships in total |
 | The Gilded Debt | Pyrate Corsair | 30 | 8 | 3 | 19 | Destroy 30 ships flying The Black Gull |
 | The Crowbar | Boarding Cutter | 26 | 8 | 4 | 20 | Defeat 150 ships in total, Earn the medal "Hostile Takeover" |
 | The Can Opener | Boarding Cutter | 26 | 8 | 3 | 21 | Destroy 25 ships flying The Crowbar |
-| The Turncoat | Rebuff Defector | 32 | 8 | 3 | 24 | Win 3 runs in any ships |
-| The Whistleblower | Rebuff Defector | 26 | 9 | 2 | 25 | Reach sector 7 flying The Turncoat |
+| The Turncoat | Mandate Defector | 32 | 8 | 3 | 24 | Win 3 runs in any ships |
+| The Whistleblower | Mandate Defector | 26 | 9 | 2 | 25 | Reach sector 7 flying The Turncoat |
 
 ### Haven's Rest
 
@@ -586,10 +586,10 @@ Your great-uncle's old station, restored across runs. Collect each wing's goods 
 | --- | --- | --- | --- |
 | The Biodome | 5 Star potato, 5 Ion berries, 2 Moon melon | 900 | Grand Greenhouse: every run starts with a third planter and three seed packets, and crops grow faster. |
 | Aquaculture Bay | 6 Space fish, 1 Deep eel | 700 | Every run starts with a fishing rod and two space fish. |
-| The Promenade | 2 Space wine, 3 Sloog silk, 3 Star preserves, 1 Nebula crystal | 1200 | The Intergalactic Market: every store stocks one extra augment. |
+| The Promenade | 2 Space wine, 3 Mullock silk, 3 Star preserves, 1 Nebula crystal | 1200 | The Intergalactic Market: every store stocks one extra augment. |
 | The Engineering Deck | 400 Scrap, 12 Drone parts | 1200 | The Automated Shipyard: room swaps cost half, and every run starts with +3 max hull. |
-| The Communications Relay | 20 Fuel, 3 Voltan cells, 2 Old books | 1000 | The Gate Network: every run starts with +4 fuel and the first sector's map revealed, and the relay can call you home from any beacon once a sector. |
-| The Smuggler's Fence | 2 Contraband, 3 Pyrate rum, 6 Rebuff rations | 1000 | The Black Market Fence: goods you sell fetch 10% more. |
+| The Communications Relay | 20 Fuel, 3 Thrumm cells, 2 Old books | 1000 | The Gate Network: every run starts with +4 fuel and the first sector's map revealed, and the relay can call you home from any beacon once a sector. |
+| The Smuggler's Fence | 2 Contraband, 3 Pyrate rum, 6 Mandate rations | 1000 | The Black Market Fence: goods you sell fetch 10% more. |
 | The Cellar | 2 Fruit wine, 1 Void vintage, 1 An epic poem | 1100 | The cellar sells well: every run starts with 60 extra scrap. |
 | The Cantina | 2 Star stew, 2 Space wine, 2 Pyrate rum | 1000 | The Cantina reopens: hire visiting specialists when you call home, and every run starts with one extra trained crew member. |
 
@@ -597,11 +597,11 @@ Your great-uncle's old station, restored across runs. Collect each wing's goods 
 
 | Setting | Scrap | Start scrap | Enemy hull | Your evasion | Fleet | Other |
 | --- | --- | --- | --- | --- | --- | --- |
-| Easy | ×1.4 | +20 | -2 | +10% | ×0.85 | patch 2 hull after fights, boarders ×0.75, Flaggship shields -2 |
-| Normal | ×1 | 0 | 0 | 0% | normal | — |
+| Easy | ×1.4 | +20 | -2 | +10% | ×0.85 | patch 3 hull after fights, boarders ×0.7, Dreadnought shields -2 |
+| Normal | ×1.05 | +5 | -1 | 0% | normal | patch 1 hull after fights |
 | Hard | ×0.8 | -10 | +2 | -5% | normal | — |
 
-Rebuff alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.
+Mandate alert levels (opened by winning at your highest level on Normal or Hard) make runs harder again for more renown.
 
 ### Gentler rules
 
@@ -633,11 +633,17 @@ Rebuff alert levels (opened by winning at your highest level on Normal or Hard) 
 
 - **Admiral's orders**: three goals per run (one fighting, one voyage, one life aboard), from a pool of 19. 25 scrap and 20 captain xp each, plus 40 scrap for all three. Not in dailies, the Cup, challenges or multiplayer.
 
+- **The regulars**: Pip Tanner, Captain Reg Bilge and Mrs Pembury turn up across your voyages (five meetings each, at most one each per run) and remember how you treated them.
+
+- **The radio** (Settings → Audio, or 📻 in the pause menu): the adaptive soundtrack, or Radio Commonwealth, Pyrate FM and Mandate Broadcasting, with presenters between tunes (captions, plus an optional British voice).
+
+- **Report a problem** (Settings, top right) copies everything needed to fix a bug, or opens a GitHub issue. **Download all data** (Settings → Profile) backs up your progress.
+
 - **The Archive** (Record → Codex → Archive): 56 lore entries (histories, memos, adverts, legends, letters), opened by playing or found in wrecks and on old relays, plus 30 snippets of radio chatter overheard between jumps.
 
 - **The Codex** (Record → Codex): fills in as you meet ships (69), carry weapons (81), drones (31) and augments (67), crew with peoples and cross sectors. 40 captain xp at 25, 50 and 75% of a section, 120 at 100%.
 
-- **The Fedoration Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain's logs → Front page.
+- **The Commonwealth Gazette**: a newspaper front page for every finished voyage, written from its log. End screen → Read the paper, or Record → Captain's logs → Front page.
 
 - **Grown-up humour** (Settings → Gameplay, on by default): adult stories, last words, funerals and captain's remarks. Off keeps everything family-friendly.
 
@@ -722,15 +728,15 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 - **Tonics and treats** (inspired by sim-management games where you raise a favourite hero): give one crew member a Muscle Tonic, Iron Biscuit, Nimble Gum or Tinker's Tea for a permanent boost (capped per person), a skill chip to train them fast, a Battle Stim or Berserker Brew for the next fights, a medkit mid-battle, or cookies for hearts. Crops and fish can be eaten raw for small permanent gains, so you can build a champion. Stores have Armoury and Tonics tabs, and events can give both.
 
 **Twenty-four stories**
-- Every run follows one story, a scene per sector, with its own help (or harm) at the Flaggship and its own endings. Most stories roll a **hidden twist** at the start of the run, so the same story can go a different way next time (who the stowaway really is, who the saboteur is, what the ghost is, whether the prophecy is true...):
+- Every run follows one story, a scene per sector, with its own help (or harm) at the Dreadnought and its own endings. Most stories roll a **hidden twist** at the start of the run, so the same story can go a different way next time (who the stowaway really is, who the saboteur is, what the ghost is, whether the prophecy is true...):
   - **The Data Core**: Pip, the frightened data core in your hold, and Director Kross who wants it back (four endings).
-  - **The Defector**: Commander Ilsa Vance, a Rebuff officer who wants to change sides, a tracker in her uniform, a brother on a Rebuff colony, and a plan to lock the Flaggship's gunners out of their own guns (four endings).
-  - **The Lost Flotilla**: forty shuttles fleeing the Rebuff, scattered along your route. Save them from pyrates, comets and fever, and Old Marrow, a retired mining tug, comes to the Flaggship with you (three endings).
-  - **The Rival**: Captain Juno Harte, flying the decoy run on your route. Races, a missile cache, an ambush, cards or a rescue, and someone to draw the Flaggship's fire (three endings).
-  - **The Stowaway**: a twelve-year-old in your cargo, who may be a runaway heir, a Rebuff cadet or just a dockyard kid.
-  - **The Cure**: collect samples so a doctor can cure the Sloog blight. Unless it's a bioweapon.
-  - **The Heist**: help a pyrate rob the Rebuff payroll barge. Someone double-crosses someone.
-  - **The Haunting**: cold spots and coffee nobody made. A dead captain, a stowaway in the vents, or a Rebuff worm.
+  - **The Defector**: Commander Ilsa Vance, a Mandate officer who wants to change sides, a tracker in her uniform, a brother on a Mandate colony, and a plan to lock the Dreadnought's gunners out of their own guns (four endings).
+  - **The Lost Flotilla**: forty shuttles fleeing the Mandate, scattered along your route. Save them from pyrates, comets and fever, and Old Marrow, a retired mining tug, comes to the Dreadnought with you (three endings).
+  - **The Rival**: Captain Juno Harte, flying the decoy run on your route. Races, a missile cache, an ambush, cards or a rescue, and someone to draw the Dreadnought's fire (three endings).
+  - **The Stowaway**: a twelve-year-old in your cargo, who may be a runaway heir, a Mandate cadet or just a dockyard kid.
+  - **The Cure**: collect samples so a doctor can cure the Mullock blight. Unless it's a bioweapon.
+  - **The Heist**: help a pyrate rob the Mandate payroll barge. Someone double-crosses someone.
+  - **The Haunting**: cold spots and coffee nobody made. A dead captain, a stowaway in the vents, or a Mandate worm.
   - **The Old Debt**: pay off your loan shark one sector at a time, or find out who she's really working for.
   - **The Prophecy**: an oracle says you are the Starbreaker. She might be right. She might be running a con.
   - **Wanted**: framed for murder, hunted by the Widow Sable, with three possible culprits.
@@ -739,13 +745,13 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
   - **The Wedding**: one of your own crew is getting married, rings, cake, in-laws and all (sometimes the in-laws are pyrates).
   - **The Star-Wyrm**: a baby dragon hatches in your hold and grows every sector.
   - **The Gunnery Cup**: a shooting tournament along your route, with a rival who may be cheating.
-  - **Messages from Tomorrow**: warnings in your own voice from nine days ahead. Or a Rebuff trick.
+  - **Messages from Tomorrow**: warnings in your own voice from nine days ahead. Or a Mandate trick.
   - **The Saboteur**: three passengers, one saboteur, clues every sector, and a different culprit every time.
   - **The Long Lights**: relight a dying beacon network. Some lights were put out for a reason.
   - **The Duke of Dice**: cards with a gambler who owns four planets, for ever-higher stakes.
-  - **The Lantern**: help a resistance cell inside Rebuff space, and find their informant, if there is one.
+  - **The Lantern**: help a resistance cell inside Mandate space, and find their informant, if there is one.
   - **The Inheritance**: a great-uncle has left you a tiny, falling-apart space station.
-  - **The Double**: someone with your face is one beacon ahead: a shape-shifter, a Rebuff clone, or you from another universe.
+  - **The Double**: someone with your face is one beacon ahead: a shape-shifter, a Mandate clone, or you from another universe.
   - **The Song in the Static**: one of your crew hears a song nobody else can. Where it leads changes every run.
 - Pick one in the hangar, or leave it on **Surprise me** to get the one you've seen least. Endings (75 of them) are collected under Career, with a medal for each story's best ending and one for winning ten different stories.
 
@@ -773,7 +779,7 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
   - All the writing is original, and the characters use the game's ordinary sprites; Red Dwarf belongs to its creators.
 
 **A galaxy that remembers**
-- **Faction standing.** The Mantlis Hives, Sloog Consortium, Voltan Temples, Pyrate Kings, Enjinn Collective and Pebblekin Quarries each keep score, and each values something different: the Mantlis respect kills and boarding victories, Voltans want mercy, Sloogs love a customer (and a client in debt), Enjinn hate seeing machines scrapped. Standing runs from Despised to Revered: it changes their store prices (up to 40% more or 18% less), favoured factions' ships wave you through, despised ones come in hot, and in a revered faction's space their ships jump into your fights. A quarter of it carries into your next run. Ship → Factions shows where you stand; new scenes include a Voltan temple, a Mantlis blood arena, a Sloog loan, a broken Enjinn drone, a Rebuff payroll barge and a Pebblekin rockslide.
+- **Faction standing.** The Jabbit Hives, Mullock Consortium, Thrumm Temples, Pyrate Kings, Tinkari Collective and Pebblekin Quarries each keep score, and each values something different: the Jabbit respect kills and boarding victories, Thrumms want mercy, Mullocks love a customer (and a client in debt), Tinkari hate seeing machines scrapped. Standing runs from Despised to Revered: it changes their store prices (up to 40% more or 18% less), favoured factions' ships wave you through, despised ones come in hot, and in a revered faction's space their ships jump into your fights. A quarter of it carries into your next run. Ship → Factions shows where you stand; new scenes include a Thrumm temple, a Jabbit blood arena, a Mullock loan, a broken Tinkari drone, a Mandate payroll barge and a Pebblekin rockslide.
 - **Room combos.** Ship → Layout draws your ship with glowing links between combo rooms; tap two rooms at a store or at home to swap them. Systems in rooms joined by a door work together: Iron Artery (engines + weapons: guns charge faster), War Room (helm + sensors), Clean-Air Ward (medbay + oxygen), Fortress (shields + doors), Hive Mind (drones + teleporter), Ghost Wing (cloak + helm), Gun Deck (weapons + shields) and Engine Bay (engines + oxygen). At any store the shipyard swaps two rooms' systems, so you can build combos. Ship → Layout.
 - **The workshop.** Buy machines at stores and they work while you jump: a preserves jar, a fermentation keg, a zero-G cask that ages wine into a fortune (only on deep-space jumps), a seed maker, a recycler (junk and fish into drone parts) and a loom (ballistic cloth that mends all your crew's kit). Ship → Workshop.
 - **Crossbreeding.** Harvest a crop next to a different one and you may get a hybrid seed: Frostfire root or Solar vine.
@@ -785,7 +791,7 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
   - **Cantina** (once restored): hire visiting specialists, already experts at something.
   - **Market** (once the Promenade is restored): rare augments, starfruit seeds, and 20% over the going rate for your goods.
   - **Freight**: send goods to finish the wings' bundles.
-- **Heat.** The Rebuff notice how loud you are. Destroying Rebuff ships, beating fleet ships and boarding raise your heat; quiet beacons, nebulas, stores and going home cool it, and every new sector cools it a little. At 40 the Fleet moves faster, at 70 hunter-killers drop in on you, and at 90 the exit beacon is blockaded by a cruiser you have to fight through. Bribes, a code forger and a decoy freighter bring it down. A chip under your ship shows it.
+- **Heat.** The Mandate notice how loud you are. Destroying Mandate ships, beating fleet ships and boarding raise your heat; quiet beacons, nebulas, stores and going home cool it, and every new sector cools it a little. At 40 the Fleet moves faster, at 70 hunter-killers drop in on you, and at 90 the exit beacon is blockaded by a cruiser you have to fight through. Bribes, a code forger and a decoy freighter bring it down. A chip under your ship shows it.
 - **Contracts.** Every store has a noticeboard (Trade → Contracts), and so does Haven's Rest: deliver cargo to a later sector, beat two ships of a faction, or survey quiet beacons. Up to three at a time, paid in scrap and faction standing; Ship → Log → Contracts tracks them.
 - **Home between sectors.** At an exit beacon you can drop in at Haven's Rest before choosing where to go next.
 - **Faction ships.** Become Revered by a faction and it gives you one of its ship designs for good.
@@ -793,30 +799,30 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 - **Madame Ossery** will lease the whole station: every wing restored at once, but she takes rent every run and a fee every time you dock, and no ally will move into a station she owns.
 - **Random encounters.** Many beacons are built on the spot from 16 kinds of people and ships, 12 kinds of trouble and choices made from your ship, crew races and personalities, and cargo, with sector-scaled rewards, traps, surprises, thank-yous and grudges a few jumps later, and short quests. Settings → Gameplay → Story variety: Hand-made, Mixed or Wild. In the open galaxy your story plays up to two scenes a trip, and the chart warns you before you'd strike with scenes unplayed.
 - **Game modes.** Hangar → Mode: Classic (Fleet chase, standard ship), Explorer (open galaxy), Admiral (Fleet chase in a two-deck capital ship) or Grand Voyage (both), or mix the two switches yourself.
-- **Capital ships.** A lower deck of three rooms under the main deck, joined by ladders, drawn as a cutaway. Only missiles and bombs reach it (other shots hit the room above), so vital systems are safe down there at the cost of longer walks. Crew at the top of a ladder fire down on enemies below, and a Gravity Hammer can knock foes through the floor. Veterans, hunters, the Flaggship and some later enemies are capitals too, with their oxygen and medbay below decks.
-- **Convoys.** Faction freighters and Rebuff payroll barges crawl across each sector towards a store, shown on the map with their route. Raid one (its faction is furious unless you run dark behind a cloak or stealth plating), escort it for pay and standing, or trade with it. A raided store pays 2.5 times as much for the cargo that never came; an escorted one is well stocked.
-- **Expedition mode.** Pick it in the hangar. No Rebuff Fleet: heat rises as you travel and the Rebuff hunt you harder the hotter you run. Haven's Rest is the hub, and every exit opens a galaxy chart of Near, Far and Deep spokes (1, 2 and 4 fuel). Deep spokes hold Precursor keys; three open the final assault early, and each key held weakens the Flaggship. Classic mode is unchanged.
+- **Capital ships.** A lower deck of three rooms under the main deck, joined by ladders, drawn as a cutaway. Only missiles and bombs reach it (other shots hit the room above), so vital systems are safe down there at the cost of longer walks. Crew at the top of a ladder fire down on enemies below, and a Gravity Hammer can knock foes through the floor. Veterans, hunters, the Dreadnought and some later enemies are capitals too, with their oxygen and medbay below decks.
+- **Convoys.** Faction freighters and Mandate payroll barges crawl across each sector towards a store, shown on the map with their route. Raid one (its faction is furious unless you run dark behind a cloak or stealth plating), escort it for pay and standing, or trade with it. A raided store pays 2.5 times as much for the cargo that never came; an escorted one is well stocked.
+- **Expedition mode.** Pick it in the hangar. No Mandate Fleet: heat rises as you travel and the Mandate hunt you harder the hotter you run. Haven's Rest is the hub, and every exit opens a galaxy chart of Near, Far and Deep spokes (1, 2 and 4 fuel). Deep spokes hold Precursor keys; three open the final assault early, and each key held weakens the Dreadnought. Classic mode is unchanged.
 - **Ship facilities.** Fit empty rooms (Ship → Layout, at a store or home) with a Hydroponics Bay, Crew Lounge, Galley, Armoury Rack or Vending Machine. Each helps between jumps (planters and growth, hearts and later cabin fever, extra meal portions, kit repairs), and six new room combos use them (The Oasis, Botanist's Delight, Triage Centre, The Galley Garden, Mess Hall, Snack Corner). A vending machine is a bridge: the rooms either side of it count as linked.
 - **Grief.** When someone dies, their best friend, sibling or sweetheart is furious: 25% more hand-to-hand damage and slightly slower repairs, for three jumps or until you win a fight and they have their revenge. A quiet scene later lets you help (a shared meal works best).
 - **The Long Lights.** Relight an old relay beacon, or restore the Communications Relay wing, and the map gets a "Relay home" button: once a sector, for 2 fuel, Haven's Rest pulls you home from any beacon.
 - **Supply and demand.** Every sector has a shortage that stores pay double for, and selling lots of one good at one store floods its market.
-- **The blockade.** At maximum heat you can fight through, bribe the commander, or risk an uncharted wormhole. The Mantlis think less of you each time you run from a fight, and peoples who dislike you won't sign on as crew.
-- **Earning your ships.** Only the Pestrel is free. Every other ship needs a pilot level (renown is experience: level = 1 + √(renown/4)) and usually a challenge, often done in another ship: win with the Pestrel, destroy 25 ships flying the Taurus, reach sector 5 in the Lantern. B layouts are earned in their A ship. Requisition tokens (one at each requisition rank) unlock any ship at once; at the right level you can buy a ship with renown instead. The hangar shows progress bars for each locked ship, and the debrief lists level-ups and new ships. Mod ships can set `lvl` and `ch` ({ win, wins, sector, kills, ach, shipSector:[id,n], shipKills:[id,n] }).
+- **The blockade.** At maximum heat you can fight through, bribe the commander, or risk an uncharted wormhole. The Jabbit think less of you each time you run from a fight, and peoples who dislike you won't sign on as crew.
+- **Earning your ships.** Only the Plucky is free. Every other ship needs a pilot level (renown is experience: level = 1 + √(renown/4)) and usually a challenge, often done in another ship: win with the Plucky, destroy 25 ships flying the Spanner in the Works, reach sector 5 in the Lantern. B layouts are earned in their A ship. Requisition tokens (one at each requisition rank) unlock any ship at once; at the right level you can buy a ship with renown instead. The hangar shows progress bars for each locked ship, and the debrief lists level-ups and new ships. Mod ships can set `lvl` and `ch` ({ win, wins, sector, kills, ach, shipSector:[id,n], shipKills:[id,n] }).
 - **The ship's wiki.** Title screen → Wiki (or Wiki in the pause menu): search every page, Guides for every system, and an Encyclopedia page for every weapon, drone, augment, race, ship, enemy, sector, good, crop, meal, machine, kit, Haven wing, faction, combo, scar, anomaly, pet, medal and challenge, built from the live data so mods appear too. Pages link to each other.
 - **Restoring Haven's Rest, made clear.** Stores have a Trade → Send home tab listing every dark wing, what it still needs, what you're carrying and where to get the rest; the station has a Restore wings tab; docking with something a wing wants tells you so.
-- **Haven's Rest.** Your great-uncle's old station, restored across runs, Stardew-style: send goods home from any store to complete each wing's bundle. Eight wings (the Biodome, Aquaculture Bay, the Promenade, the Engineering Deck, the Communications Relay, the Smuggler's Fence, the Cellar, the Cantina), each giving every future run a perk. Or let the Directorate's contractors rebuild a wing for renown. Win a story with its best ending and whoever you saved moves in, and flies with you against the Flaggship in later runs. On the title screen.
+- **Haven's Rest.** Your great-uncle's old station, restored across runs, Stardew-style: send goods home from any store to complete each wing's bundle. Eight wings (the Biodome, Aquaculture Bay, the Promenade, the Engineering Deck, the Communications Relay, the Smuggler's Fence, the Cellar, the Cantina), each giving every future run a perk. Or let the Directorate's contractors rebuild a wing for renown. Win a story with its best ending and whoever you saved moves in, and flies with you against the Dreadnought in later runs. On the title screen.
 - **The wreck of your last ship.** Lose a run, and next time you may find what's left of your old ship: salvage its guns, hold a service for its crew, or search the decks and meet what's still aboard.
 
 **Runs that stop being polite**
-- **Ship scars.** Some damage stays: a room that leaks air, a system jammed one bar short, wiring that sparks into fires, a system locked out until you deal with the cause. Events can't end your run, but they can scar it. A badge shows on the room, and any store's dockyard (Supplies) patches it; Enjinn workshops do it cheaper.
+- **Ship scars.** Some damage stays: a room that leaks air, a system jammed one bar short, wiring that sparks into fires, a system locked out until you deal with the cause. Events can't end your run, but they can scar it. A badge shows on the room, and any store's dockyard (Supplies) patches it; Tinkari workshops do it cheaper.
 - **Anomalies** bend the rules for a few jumps, each with a climax:
   - **Void fungus** (nebulas): mends your hull every jump and keeps the air sweet, but glows so the Fleet sees you, nibbles a drone part and finally asks for the reactor (two bars of power, for a living shield). Merge with it, burn it out (a Pebblekin can pull it out bare-handed) or vent the ship.
-  - **WARDEN-9**, an Enjinn escort carrier that opens fire on every enemy for you. Some runs it starts "correcting" your course into hazards and finally takes the helm; other runs it's genuinely loyal.
+  - **WARDEN-9**, a Tinkari escort carrier that opens fire on every enemy for you. Some runs it starts "correcting" your course into hazards and finally takes the helm; other runs it's genuinely loyal.
   - **Crystal song** (Glass space): super shields at the start of every fight, engines stuck at 2 power, and your crew slowly turning to glass. Join the choir, smash its heart, or sell it.
-  - **The Black Mark**: take the Pyrate King's mark and the Rebuff stop chasing you. Fedoration enforcers hunt you instead, lawful stores shut their shutters, and at the end the King offers to help against the Flaggship, for half your crew.
-  - **Pilgrims of the Quiet**: Voltan pilgrims lend you a huge shield as long as you kill nobody. Ion, board and accept surrenders. Destroy a crewed ship and they sabotage the reactor; win three fights peacefully and they bless you, and come back at the Flaggship.
+  - **The Black Mark**: take the Pyrate King's mark and the Mandate stop chasing you. Commonwealth enforcers hunt you instead, lawful stores shut their shutters, and at the end the King offers to help against the Dreadnought, for half your crew.
+  - **Pilgrims of the Quiet**: Thrumm pilgrims lend you a huge shield as long as you kill nobody. Ion, board and accept surrenders. Destroy a crewed ship and they sabotage the reactor; win three fights peacefully and they bless you, and come back at the Dreadnought.
   - **A time fracture**: fly through and, for the next few jumps, if your ship is destroyed, time snaps back to the fracture. Once. The enemies remember.
-- **Elite Rebuff ships** that change the fight: the Suffocator gasses rooms and pins you so you can't dodge, the Leech Frigate drains your power, the Auto-Strangler does both, and the Pyrate Shock-Raider fires boarding drones that stun the whole room on landing. Elites never give up and jump away.
+- **Elite Mandate ships** that change the fight: the Suffocator gasses rooms and pins you so you can't dodge, the Leech Frigate drains your power, the Auto-Strangler does both, and the Pyrate Shock-Raider fires boarding drones that stun the whole room on landing. Elites never give up and jump away.
 - **Trade-off augments**: Reckless Overdrive (fast guns and crew, fragile systems, more breaches), Caffeine Drip-Line, Glass-Fibre Plating (+12% evasion, far more breaches), Sympathetic Shields, the Blood Reactor (+3 power, the crew bleed every jump), the Scrap Furnace, the Berserker Loop and the Mirror Hull.
 - **Friends and rivals at work.** Bonded crew in the same room work 15% better. Rivals fight 25% harder to show off, but repair 40% slower.
 - **Pet diets.** When your pet gets hungry, what you feed it decides what it becomes: a fixer, a beast that spits at enemy ships, an armour-plated welder or a gourmet that heals the room.
@@ -824,10 +830,10 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 
 **Spoken voices (optional)**
 - Settings → Audio → **Spoken voices** reads the story aloud with your device's own voices. **Dialogue** speaks only what characters say; **Full story** adds a narrator, crew chatter and enemy taunts. Off by default.
-- Every story character has their own voice, pitch and pace (Pip is small and quick, Director Kross slow and low, the Oracle measured, Holly calm, Rimmer clipped, Kryten high and earnest, a Simulant deep and slow), and the game works out who is speaking each line. Your own crew speak in a voice that suits their people: Pebblekin rumble, Voltans hum high, Enjinn chatter. A **Voice speed** slider sits under it. How good the voices sound depends on your device and browser.
+- Every story character has their own voice, pitch and pace (Pip is small and quick, Director Kross slow and low, the Oracle measured, Holly calm, Rimmer clipped, Kryten high and earnest, a Simulant deep and slow), and the game works out who is speaking each line. Your own crew speak in a voice that suits their people: Pebblekin rumble, Thrumms hum high, Tinkari chatter. A **Voice speed** slider sits under it. How good the voices sound depends on your device and browser.
 
 **Ships with character**
-- Every faction's ships now have their own silhouette, colours, engines and details: Fedoration ships are sleek with swept fins, Rebuff ships are angular gunboats with spikes, Enjinn ships are rounded with twin pods, Pebblekin ships are boulders with rocky plating, Voltan ships are glowing lenses with a halo, Sloog ships are soft blobs with tendrils, Mantlis ships are insects with mandibles and wings, stealth ships are thin, dark and faceted, Glass ships are crystal shards, pyrate ships are patched-up junk with a flag, auto-ships are blocky with a single red eye, drone carriers have hangar bays, and the Flaggship is a long armoured spearhead. A mod can pick a look for its ships with `"style"`.
+- Every faction's ships now have their own silhouette, colours, engines and details: Commonwealth ships are sleek with swept fins, Mandate ships are angular gunboats with spikes, Tinkari ships are rounded with twin pods, Pebblekin ships are boulders with rocky plating, Thrumm ships are glowing lenses with a halo, Mullock ships are soft blobs with tendrils, Jabbit ships are insects with mandibles and wings, stealth ships are thin, dark and faceted, Glass ships are crystal shards, pyrate ships are patched-up junk with a flag, auto-ships are blocky with a single red eye, drone carriers have hangar bays, and the Dreadnought is a long armoured spearhead. A mod can pick a look for its ships with `"style"`.
 
 **Better information**
 - **The crew card** is now a slim strip under your ship, so it never covers the rooms. Tap ⓘ for the full card.
@@ -835,19 +841,19 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 
 **More on the road**
 - **Gun refits.** Every store's Weapons tab has a workshop: refit a gun you own to Mk II and Mk III, each charging 15% faster. No need to throw away a gun you like.
-- **Sector situations.** About half the routes at an exit come with a situation, shown on the card: a Rebuff crackdown (more patrols, cheaper stores), a salvage boom (richer wrecks, faster Fleet), storm season (double hazards, slower Fleet), festival season (fewer fights, the Harvest Fair), refugee convoys (distress calls everywhere) or a comms blackout (stores hidden until you're next to them).
-- **The Ghost Fleet.** A forty-year-old distress code leads, over three sectors, to Captain Ada Rourke in cold sleep and a hidden fleet. Wake it, and six old frigates join you at the Flaggship. Or strip them for parts.
-- **Lucky Vell's crate.** A smuggler pays you to carry a humming crate to a buyer in the next sector. Deliver it, open it, sell it to the Rebuff, or keep what's inside.
+- **Sector situations.** About half the routes at an exit come with a situation, shown on the card: a Mandate crackdown (more patrols, cheaper stores), a salvage boom (richer wrecks, faster Fleet), storm season (double hazards, slower Fleet), festival season (fewer fights, the Harvest Fair), refugee convoys (distress calls everywhere) or a comms blackout (stores hidden until you're next to them).
+- **The Ghost Fleet.** A forty-year-old distress code leads, over three sectors, to Captain Ada Rourke in cold sleep and a hidden fleet. Wake it, and six old frigates join you at the Dreadnought. Or strip them for parts.
+- **Lucky Vell's crate.** A smuggler pays you to carry a humming crate to a buyer in the next sector. Deliver it, open it, sell it to the Mandate, or keep what's inside.
 - **New encounters**: a singing space whale, an auction drone, a quarantined hospital ship, a pyrate race, an old minefield, a vending machine in deep space, a library ship and a rival courier.
 
 **A career, not just a run**
-- **Admiralty ranks.** Every run earns renown, won or lost: sectors crossed, ships beaten, the Flaggship and the story. Ten ranks from Cadet to Admiral, shown on the title screen and in **Career**. A debrief after each run counts it up.
+- **Admiralty ranks.** Every run earns renown, won or lost: sectors crossed, ships beaten, the Dreadnought and the story. Ten ranks from Cadet to Admiral, shown on the title screen and in **Career**. A debrief after each run counts it up.
 - **Ship requisitions.** Lieutenant, Commander, Commodore and Vice Admiral each unlock the next locked ship, so every ship is reachable just by playing.
 - **The send-off.** Admiral Hale sees you off with a choice of gifts (fuel, scrap, a weapon, a crew member, star charts...). Some come with a price. Higher ranks bring more and better choices, and a reroll. Hale remembers how your last run went.
-- **Pip, the data core.** The core in your hold wakes up in sector 2. Talk to it, show it the stars, refuse Director Kross's offer to buy it (or don't), and decide what happens to it. How you treat Pip changes the Flaggship fight and how a win ends: four endings to find.
-- **Director Kross** of Rebuff Intelligence wants the core back, and waits for you aboard the Flaggship. He keeps a file on you.
+- **Pip, the data core.** The core in your hold wakes up in sector 2. Talk to it, show it the stars, refuse Director Kross's offer to buy it (or don't), and decide what happens to it. How you treat Pip changes the Dreadnought fight and how a win ends: four endings to find.
+- **Director Kross** of Mandate Intelligence wants the core back, and waits for you aboard the Dreadnought. He keeps a file on you.
 - **Veteran beacons** are marked on the map from sector 2: harder ships that always carry a weapon or an augment.
-- **Rebuff alert.** Win on Normal or Hard to unlock alert levels 1 to 8, each adding a twist for more renown and score.
+- **Mandate alert.** Win on Normal or Hard to unlock alert levels 1 to 8, each adding a twist for more renown and score.
 - **The killing blow** lands in slow motion with a banner.
 - **Upgrade advice.** The Ship screen says what the next level of each system does, warns when your guns need more Weapons power or your systems want more reactor than you have, and the quartermaster suggests one upgrade.
 - **Clearer fights.** Missile weapons say "No missiles" when you run dry (with a one-time warning), and when an enemy gives up because neither ship can land a blow, you're told why and what would help. A broke ship nets a little debris as they go.
@@ -857,7 +863,7 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 
 **Ships and crew**
 - 41 ships: the 8 cruiser classes plus the built-in packs' scouts, gunboats, carriers, corsairs and more, most with an A and a B layout, unlocked by playing. A Settings toggle unlocks them all.
-- 7 crew races, each with its own perk: Human, Pebblekin, Enjinn, Voltan, Sloog, Mantlis and the secret Glassborn.
+- 7 crew races, each with its own perk: Human, Pebblekin, Tinkari, Thrumm, Mullock, Jabbit and the secret Glassborn.
 - Crew skills in Piloting, Engines, Shields, Weapons, Repair and Combat, which improve as crew work.
 - Renaming your ship and crew, and dismissing crew.
 
@@ -874,7 +880,7 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 
 **Combat**
 - Weapons: lasers, missiles, ion, beams, flak, and bombs (fire, breach, ion, small and healing).
-- Volley fire, autofire, shield layers, Voltan super shields, evasion and cloaking.
+- Volley fire, autofire, shield layers, Thrumm super shields, evasion and cloaking.
 - Teleporter boarding: send crew over, recall them, and win by killing the whole enemy crew.
 - Hacking drones with timed pulses, mind control, and enemies who board, hack and mind-control you back.
 - Drones: combat, beam, ion, defense, anti-drone, system repair, anti-personnel, boarding and hull repair.
@@ -885,40 +891,40 @@ It has 123 scenes (a story scene in every sector, picked from several each run, 
 - 16 augments, such as Scrapture Arm, Weapon Pre-Igniter, Long-Range Scanners and Backup DNA Bank.
 
 **The journey**
-- 10 sector types, including Civilian, Rebuff Stronghold, Pyrate Haven, Nebula, the race homeworlds and the Last Stand.
+- 10 sector types, including Civilian, Mandate Stronghold, Pyrate Haven, Nebula, the race homeworlds and the Last Stand.
 - At each exit you choose between two next sectors.
 - Beacon hazards: asteroid fields, solar flares, ion storms, pulsars and nebulae, where sensors go blind.
 - About 210 events with race, system and equipment "blue options", distress beacons and quest chains. Events never repeat within a run until you've seen the rest, and whatever the last few beacons gave you (a free crew member, a weapon) turns up less for a while.
 - Stores with tabs for weapons, drones, augments, new systems, supplies, crew and selling.
-- The Rebuff Fleet advances every jump.
-- The Flaggship fight has three phases (boarders; drones with a super shield; power surges). It moves toward Fedoration command, which can only hold out for a few jumps.
+- The Mandate Fleet advances every jump.
+- The Dreadnought fight has three phases (boarders; drones with a super shield; power surges). It moves toward Commonwealth command, which can only hold out for a few jumps.
 
 **Your crew's story**
 
 Inspired by the spirit of the absurd trail games: a small crew you grow fond of, strange things on the road, and deaths that get remembered.
 - **Your crew, your names.** In the hangar, tap **Name crew** to name your starting crew and pick each one's personality before you launch.
-- **Personalities.** Every crew member has a personality as well as a skill trait: Gambler, Poet, Galley cook, Superstitious, Daredevil, Worrier, Tinkerer, Romantic, Conspiracy buff, Sleepwalker, Collector, Ex-pyrate, Mystic, Optimist, Grump or Bookworm. Each has its own chatter, last words and scenes, and unlocks its own options in events and hails (an ex-pyrate can talk pyrates down in the old cant, a bookworm can quote regulations at the Rebuff, a gambler has "a system" at the casino).
+- **Personalities.** Every crew member has a personality as well as a skill trait: Gambler, Poet, Galley cook, Superstitious, Daredevil, Worrier, Tinkerer, Romantic, Conspiracy buff, Sleepwalker, Collector, Ex-pyrate, Mystic, Optimist, Grump or Bookworm. Each has its own chatter, last words and scenes, and unlocks its own options in events and hails (an ex-pyrate can talk pyrates down in the old cant, a bookworm can quote regulations at the Mandate, a gambler has "a system" at the casino).
 - **Bonds.** Crew can be best friends, siblings, rivals or sweethearts. They banter between beacons, and when one dies the other grieves, and hits 30% harder for a while. Bonds also form on the way: two crew keep ending up on the same night shift, or fall out over how the oxygen smells.
 - **Veterans.** Crew who beat five enemies hand to hand become veterans, with extra health.
 - **Crew moments.** Two or three times a run, a beacon is a short scene starring one of your crew, with their portrait: a snail race, an epic poem broadcast to the whole sector, a mystery stew, a black comet, a sleepwalker at the airlock button, a cursed statue, a double of someone after a bad jump. Some come back later in the run: a lost bet, a curse, a pyrate sweetheart, a statue that wakes up.
 - **The ship's pet.** Hatch an egg, take in a stray or keep a lost Biscuit, and name it yourself. Pets get up to things between beacons, learn tricks, grow, fall ill, rescue the ship, and sometimes go home.
 - **Pets have jobs.** You can see your pet walking from room to room, and tap it for a fuss (crew hearts, once a jump). A void kitten claws boarders, a hull slug seals breaches and patches hull after fights, a star moth beats out fires, a space goat headbutts boarders and eats junk for scrap, and a pocket nebula adds 3% evasion and soothes the wounded.
 - **A nemesis.** An enemy captain who gets away (or whom you run from) may swear revenge and come back a few jumps later with a named, upgraded ship. They return angrier each time until you finish them, make peace, or they vanish for good. Beating one pays well. A nemesis who is still at large when your run ends may turn up in a later run, remembering your old ship.
-- **More strange days:** your evil twins from a mirror universe, an alien baby called Squib left in the airlock, a crew band ("and the Hull Breaches") that gets a gig, a Rebuff health inspection of your garden, a love triangle with a handsome Pebblekin insurance salesman, and an ex-pyrate's eleven-step casino heist.
+- **More strange days:** your evil twins from a mirror universe, an alien baby called Squib left in the airlock, a crew band ("and the Hull Breaches") that gets a gig, a Mandate health inspection of your garden, a love triangle with a handsome Pebblekin insurance salesman, and an ex-pyrate's eleven-step casino heist.
 - **The fallen.** Crew who die say their last words, are remembered in the fight report, and may appear as ghosts later in the run. In later runs a relative or friend of someone you lost may come looking for you, wanting to finish what they started. **Record → Memorial** lists everyone you've lost, across every voyage.
 - **The saga.** At the end of every run, read the whole story written out: who set out, who joined, who died and how, the nemesis, the pet and the strange things in between, with an epitaph for each crew member. Pause and choose **Saga so far** to read it mid-run. Your last twelve sagas are kept in **Record → Sagas**.
 
 **Stores and trade**
-- **Every sector has its own kind of store**, with a named keeper in a mood: general stores, Rebuff surplus depots, pyrate black markets, smugglers' dens, the Sloog emporium, the Pebblekin quarry exchange, Enjinn workshops, Voltan bazaars, Mantlis arms, the Fedoration quartermaster and the Glass gallery. Each has its own stock size, prices and tastes.
+- **Every sector has its own kind of store**, with a named keeper in a mood: general stores, Mandate surplus depots, pyrate black markets, smugglers' dens, the Mullock emporium, the Pebblekin quarry exchange, Tinkari workshops, Thrumm bazaars, Jabbit arms, the Commonwealth quartermaster and the Glass gallery. Each has its own stock size, prices and tastes.
 - **More to buy:** up to five weapons, four drones and four augments, a deal of the day at 30% off, mystery crates, seeds, trade goods, cargo racks, hydroponic planters and full medical care. Prices rise a little each sector and wobble from store to store.
 - **Haggle** once per store (a gambler, or an ex-pyrate at a black market, helps), and the **merchant guild card** knocks 5%, 8% then 12% off as you spend.
-- **Crew are worth what they are worth.** Hiring and selling prices depend on race, training, veterancy, health and the store: a trained veteran fetches several times a raw recruit, Mantlis arms pay extra for fighters, and black markets ask no questions. Two candidates per store. Selling someone's best friend or sibling will not be forgiven.
+- **Crew are worth what they are worth.** Hiring and selling prices depend on race, training, veterancy, health and the store: a trained veteran fetches several times a raw recruit, Jabbit arms pay extra for fighters, and black markets ask no questions. Two candidates per store. Selling someone's best friend or sibling will not be forgiven.
 - **Sell almost anything:** gear in cargo, augments, spare fuel, missiles and drone parts, and every trade good, crop, fish and meal.
 - **Request boards:** most stores want something (3 void peppers, 2 deep eels...) and pay far over the odds for it. Accept the order, grow, catch, cook or buy the goods, and deliver them at any store before the deadline. Deliveries count towards your guild card.
 - **Mags Vetch,** a travelling merchant, finds most crews in sector 2 or 3 and keeps turning up: rare seeds and weapons, the best prices anywhere for relics and curios, and personal orders that pay extra. Have tea with her, tell her about the voyage, and she may decide you are her favourite customer.
 - **Kestrel Jones,** bounty hunter, turns up in about half of runs with contracts: destroy two or three ships of one kind before the sector ends, and she wires you the money. Fill three and she offers you her old rifle, or to join your crew.
 - **Doctor Ossian Oddly,** a travelling surgeon whose hospital ship is painted like a circus, fits crew with implants: reinforced bones, a reflex chip, a targeting eye, a hydraulic grip, med-nanites, a learning cortex (two per person). His cheap experimental treatment usually gives two free implants, sometimes a whole new personality, and occasionally a glow in the dark.
-- **Trade goods:** 28 goods, each cheap where it is made and worth up to three times as much where it is wanted, carried in a 16-space cargo hold (racks add more). Smuggled goods pay best, but Rebuff patrols may confiscate them.
+- **Trade goods:** 28 goods, each cheap where it is made and worth up to three times as much where it is wanted, carried in a 16-space cargo hold (racks add more). Smuggled goods pay best, but Mandate patrols may confiscate them.
 
 **Home life aboard** (light touch, all optional)
 - **A hydroponic garden** (with Harvest all and Plant all): plant seeds, watch crops grow each jump (faster under a sun, stunted by ion storms), and harvest them. A Green thumb crew member helps. Now and then a crop comes up as a bumper harvest.
@@ -929,7 +935,7 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - **The Harvest Fair** turns up from sector 2: enter your best crop in the show, run a food stall, or take the crew for a night out.
 - **Birthdays** last two jumps. A present then counts three times over and makes them properly good at their job. Forget, and they sulk: 10% worse for three fights. The Ship button lights up when a birthday is on.
 - **Home-life tips** explain the garden, trade goods and hearts the first time they matter.
-- **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Sloog, a ship renamed in a card game.
+- **The bar:** many stores have one. Buy a round, take shore leave, buy a navigator a drink for the sector map, or sit in on a card game. Nights out tend to carry on into the morning: a stolen hat, a tattoo of the captain's face, a surprise marriage to a Mullock, a ship renamed in a card game.
 - **Personality perks:** every personality now does something: tinkerers repair faster, daredevils dodge more at the helm, ex-pyrates hit harder, collectors sell for more, mystics glimpse the sector ahead, and more.
 
 **Story and dialogue**
@@ -937,13 +943,13 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Ships hail you before most fights. Every faction has several hails of its own, and you won't hear the same hail twice in a run until you've heard the rest. You can bluff, bribe, intimidate or sneak past.
 - Ten multi-beacon quest lines:
   - The Glass Shard: unlocks a secret sector, the Glasswork Expanse, with a new race (the Glassborn) and two new ships.
-  - The Defector: a Rebuff officer whose codes weaken the Flaggship.
+  - The Defector: a Mandate officer whose codes weaken the Dreadnought.
   - The Pyrate King's treasure map, found in three pieces.
   - A loan shark who comes to collect.
   - The Ghost Ship.
-  - The Voltan Prophecy.
-  - The Enjinn genie lamp.
-  - Mantlis honour duels.
+  - The Thrumm Prophecy.
+  - The Tinkari genie lamp.
+  - Jabbit honour duels.
   - The Weevil nest.
   - A medical escort mission.
 - Named enemy ships, enemy taunts, surrender speeches, sector intros and store-keeper greetings.
@@ -954,7 +960,7 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Procedurally textured hulls with plating, fins, nacelles, cockpit glass and weapon hardpoints.
 - Tiled deck floors and system icons.
 - Hand-shaded, outlined crew sprites for every race, with idle, walking, repairing and fighting frames. Every crew member has a gender and a unique look (skin tone, hairstyle, hair colour, colour morph, accessories) that stays with them all run, plus portraits in the roster, crew screen and store.
-- Each species has its own silhouette: uniformed humans, faceted Pebblekin, smoke-tailed Enjinn mechanics, glowing Voltans, eyestalked Sloogs, insectoid Mantlis, crystalline Glassborn, and repair, combat and boarding drones.
+- Each species has its own silhouette: uniformed humans, faceted Pebblekin, smoke-tailed Tinkari mechanics, glowing Thrumms, eyestalked Mullocks, insectoid Jabbit, crystalline Glassborn, and repair, combat and boarding drones.
 - Particle effects: explosions, sparks, smoke, debris, fire embers, venting breaches and missile trails.
 - Glowing lasers, ion bolts and beams; shield bubbles that ripple where they are hit.
 - Nebula backgrounds with planets and hazards that change at every beacon.
@@ -1015,9 +1021,9 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Five new medals: beat a veteran crew, finish a daily, three dailies in a row, fix 10 hazards by hand in VR, and sabotage 5 enemy systems in VR.
 
 **Sector map and routes**
-- The sector map is a star chart in the sector's colours. Beacons carry icons (store, hostile ship, distress call, quest, exit, Fedoration command), hazards show as small badges, and nebulas glow.
+- The sector map is a star chart in the sector's colours. Beacons carry icons (store, hostile ship, distress call, quest, exit, Commonwealth command), hazards show as small badges, and nebulas glow.
 - Your route through the sector is traced in amber and your ship sits on the beacon you are at. Live routes flow outward from you and light up amber under the pointer.
-- The Rebuff Fleet is a red front that sweeps across the chart; a dashed line shows where it will be after your next jump, and beacons it will reach next are ringed in red.
+- The Mandate Fleet is a red front that sweeps across the chart; a dashed line shows where it will be after your next jump, and beacons it will reach next are ringed in red.
 - The footer says how many jumps the exit is, how far behind the fleet is, and warns when fuel is short.
 - At each exit beacon, the route cards show a short description of the sector, a danger rating, fights and events, who you will mostly meet and its hazards.
 
@@ -1046,13 +1052,13 @@ Inspired by the spirit of the absurd trail games: a small crew you grow fond of,
 - Mind control lasts a set time and then has a cooldown, so enemy Puppeteers can't keep one of your crew forever.
 - Enemy shields grow to 2 layers from sector 5 and 3 only in the last sector. Extra enemy guns come from the sector's weapon tier and must fit the ship's weapon power.
 - Weapons and drones that lose power to damage, ion or a power shuffle switch back on (and re-aim) when the power returns.
-- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Flaggship has one shield layer fewer and fires slower. After each fight you win on Easy, the crew patches 2 hull; enemy boarders hit a quarter softer; and a repair tender patches 10 hull between Flaggship phases. The Flaggship also fires slower on Normal.
+- Easy: enemies are one sector behind, the fleet is slower, scrap is up 40%, and the Dreadnought has one shield layer fewer and fires slower. After each fight you win on Easy, the crew patches 2 hull; enemy boarders hit a quarter softer; and a repair tender patches 10 hull between Dreadnought phases. The Dreadnought also fires slower on Normal.
 
 **Mechanics tuned to FTL reference numbers**
 - Oxygen refills at 1.2 / 4.8 / 8.4 % per second by level and drains at 1.2 % per second when unpowered; breaches drain 8 % per second.
 - Ion damage locks a system for 5 seconds per hit, stacking up to 25 seconds.
 - Weapons use FTL's fire and breach chances, and a hit only rolls for a breach if it didn't start a fire.
-- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Flaggship has 22 hull per phase (18 on Easy). Enemy shields reach two layers gradually: a few ships in sector 4, about half in sector 5, all from sector 6. A nemesis met early gets fewer upgrades.
+- Enemies gain 1 hull per sector; hull repairs cost 2 / 3 / 4 scrap in sectors 1-3 / 4-6 / 7-8; the Dreadnought has 22 hull per phase (18 on Easy). Enemy shields reach two layers gradually: a few ships in sector 4, about half in sector 5, all from sector 6. A nemesis met early gets fewer upgrades.
 - Fighting fleet ships after they've caught you yields almost no salvage, and each extra fleet fight in a sector gets harder.
 
 **Around the game**
@@ -1079,10 +1085,10 @@ Mods are saved in the browser and apply when you start a new run. Turn them on o
 
 The content and ship mods in `mods/` are now **built into the game** (`node tools/build-packs.js` turns them into `js/packs.js`; they also stay in `mods/` as examples for modders). The Mod library offers the rest: the Red Dwarf campaign, the challenge pack, rule sets and scripts. The packs are:
 
-- **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Crystal Arsenal, Voltan Lightworks, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
-- **Ships**: Hangar Expansion, Frontier Classes, Exotic Hulls and Rebuff Defectors, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
+- **Weapons and gear**: Frontier Arsenal, Ion Arsenal, Heavy Ordnance, Beam Masters, Crystal Arsenal, Thrumm Lightworks, Drone Hive and Engineering Corps (eleven augments that change how your ship works).
+- **Ships**: Hangar Expansion, Frontier Classes, Exotic Hulls and Mandate Defectors, plus flyable ships in Space Pirates Ahoy, Pyrate Kings, Boarding Party and Drone Hive.
 - **Crew**: Strange Peoples and Rim Peoples (four races each), Galactic Zoo (two races and a ship's mascot), More Crew Traits (ten traits), and the Archon builder race in Precursor Vaults.
-- **Sectors and stories**: Deep Space Tales, Bounty Hunters, The Ghost Fleet, Merchant Guild, Cosmic Wonders, Pyrate Kings, Rebuff Crackdown, Precursor Vaults, Nebula Runners, Boarding Party, Winterfest, Spooky Season, Hazard Zones (three hazard sectors), Derelict Salvage and Sloog Mysteries, each with its own events, enemies, hails or quests.
+- **Sectors and stories**: Deep Space Tales, Bounty Hunters, The Ghost Fleet, Merchant Guild, Cosmic Wonders, Pyrate Kings, Mandate Crackdown, Precursor Vaults, Nebula Runners, Boarding Party, Winterfest, Spooky Season, Hazard Zones (three hazard sectors), Derelict Salvage and Mullock Mysteries, each with its own events, enemies, hails or quests.
 - **Challenges**: Challenge Pack adds eight more challenge runs.
 - **Rule sets**: Ironman, Gentle Skies (relaxed), Knife's Edge (more guns, faster enemies), Double Trouble, Scrap Rich, Sprint (5 sectors) and Marathon (10 sectors).
 - **Scripts**: Party Laser and Combat Bonuses (bonus scrap for quick and flawless wins). Scripts only run when you allow them in Settings.
@@ -1169,14 +1175,14 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/market.js` | Store kinds and keepers, prices, haggling, deals, mystery crates, the guild card, crew worth, trade goods and the cargo hold, the store screen |
 | `js/homestead.js` | The garden, galley and meals, friendship hearts and gifts, personality perks, fishing, the bar |
 | `js/expansion.js` | Gun refits, sector situations, the Ghost Fleet and Lucky Vell quests, new encounters, plain-language weapon descriptions, and the ship's pet (jobs and sprite) |
-| `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Rebuff alert, the debrief and Career screens |
-| `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Flaggship help, endings and the hangar story picker |
-| `js/arcs2.js` | Twenty more stories, each with a hidden twist rolled per run, their scenes, Flaggship effects and endings |
+| `js/campaign.js` | Campaign mods, ranks and renown, Admiral Hale's send-off, Pip and Director Kross, endings, veteran beacons, Mandate alert, the debrief and Career screens |
+| `js/arcs.js` | The other three stories (the Defector, the Lost Flotilla, the Rival): their scenes, Dreadnought help, endings and the hangar story picker |
+| `js/arcs2.js` | Twenty more stories, each with a hidden twist rolled per run, their scenes, Dreadnought effects and endings |
 | `js/tricks.js` | Weapon tricks any weapon or mod can use: warm-up, homing, pinning, splash, ricochet, crits, salvage, gas, panic, toast, decoys, power drain |
 | `js/arms.js` | Personal weapons and armour: kit data, melee effects, wear and repair, enemy kit and drops, the Armoury tab and store |
 | `js/items.js` | Tonics and treats: permanent per-crew boosts, skill chips, boosts, healing, eating raw crops, the Tonics view and store tab |
 | `js/living.js` | Faction standing, room combos and the shipyard, the workshop, crew off duty, crossbreeding, Haven's Rest, the wreck of your last ship |
-| `js/openworld.js` | Heat and Rebuff hunters, exit blockades, contracts, home between sectors, faction ships, Pip's intel |
+| `js/openworld.js` | Heat and Mandate hunters, exit blockades, contracts, home between sectors, faction ships, Pip's intel |
 | `js/frontier.js` | Ship facilities and their combos, grief, the Long Lights relay, shortages and flooded markets, the blockade wormhole, faction recruit refusals |
 | `js/economy.js` | Convoys on the map: raiding, escorting and trading, store shortages and surpluses |
 | `js/expedition.js` | Expedition mode: no Fleet, Haven's Rest as the hub, near/far/deep spokes, Precursor keys |
@@ -1206,7 +1212,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/core.js` | Utilities, profile and unlocks, mod loading and scripts, audio and music |
 | `js/ship.js` | Layout generator, doors and airlocks, pathfinding, crew |
 | `js/sim.js` | Power, systems, damage, fire, oxygen, drones, crew AI, enemy AI, hazards |
-| `js/run.js` | Run flow, map, events, stores, combat start and end, the Flaggship chase, saving |
+| `js/run.js` | Run flow, map, events, stores, combat start and end, the Dreadnought chase, saving |
 | `js/ui.js` | All canvas drawing and input |
 | `js/scene3d.js` | VR bridge, 3D ship models, holotable, battle outside the canopy |
 | `js/audio.js` | Synthesised sound effects, ambience and adaptive music |
@@ -1232,7 +1238,7 @@ The whole interface is drawn on a 1600×1000 canvas. On flat screens the canvas 
 | `js/mp.js` | The multiplayer menu, rooms, players and roles, the in-game strip, pointers, quick chat |
 | `js/mphunt.js` | Hunter and hunted, what viewers may press, co-op medals |
 | `js/mpcodes.js` | Seed duels, challenge codes and their builder, the weekly cup and daily boards |
-| `js/mprun.js` | Race to the Flaggship and Wingmen: progress, trouble cards, covering fire, supplies |
+| `js/mprun.js` | Race to the Dreadnought and Wingmen: progress, trouble cards, covering fire, supplies |
 | `js/mpversus.js` | Duel arena and Boarding brawl |
 | `js/mpvr.js` | VR avatars and voice chat |
 

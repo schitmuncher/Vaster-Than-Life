@@ -64,7 +64,7 @@ function eatGoodsKind(kind){ const id = Object.keys(G.bay || {}).find(id => (G.b
 function scarStoreRow(st, price){
   const l = scars(); if(!l.length) return null; const sc = l[0];
   if(sc.need && sc.need.goodsKind) return [`Fix: ${scarName(sc)}`, `${l.length} scar${l.length>1 ? 's' : ''} aboard. This one needs ${scarNeedText(sc.need)}${sc.why ? '. ' + sc.why : ''}.`, 0, () => { const n = eatGoodsKind(sc.need.goodsKind); if(n){ G.scars.shift(); toast(`${n} handed over. ${scarName(sc)} fixed.`); } }, !hasGoodsKind(sc.need.goodsKind)];
-  return [`Dockyard: ${scarName(sc)}`, `${l.length} scar${l.length>1 ? 's' : ''} aboard. ${SCAR_KINDS[sc.kind].text}${st && st.kind==='enjinn' ? ' Enjinn rates.' : ''}`, price(scarPrice(sc, st), st, 'repair'), () => { G.scars.shift(); toast(`${scarName(sc)} patched.`); }, false];
+  return [`Dockyard: ${scarName(sc)}`, `${l.length} scar${l.length>1 ? 's' : ''} aboard. ${SCAR_KINDS[sc.kind].text}${st && st.kind==='enjinn' ? ' Tinkari rates.' : ''}`, price(scarPrice(sc, st), st, 'repair'), () => { G.scars.shift(); toast(`${scarName(sc)} patched.`); }, false];
 }
 
 /* ---------------- effects ---------------- */
@@ -91,10 +91,10 @@ function anomEffect(e, L){
 /* ---------------- the anomalies: what each does while it lasts ---------------- */
 const ANOM_INFO = {
   fungus:   { name:'Void fungus', col:'#9be26a', text:a => a.fungus==='merged' ? 'The fungus is part of the ship now: it mends 1 hull a jump and keeps the air sweet, but it glows and the Fleet sees you coming.' : `Stage ${a.fungus} of 3. Mends 1 hull a jump. Glows: the Fleet gains on you.${a.fungus >= 2 ? ' It has smothered the oxygen system, but breathes for you.' : ''}` },
-  escort:   { name:'WARDEN-9 escort', col:'#5fd3e6', text:a => `An Enjinn drone carrier flies escort: it fires on every enemy as the fight begins.${a.escort >= 2 ? ' It has started choosing your beacons for you.' : ''}` },
+  escort:   { name:'WARDEN-9 escort', col:'#5fd3e6', text:a => `A Tinkari drone carrier flies escort: it fires on every enemy as the fight begins.${a.escort >= 2 ? ' It has started choosing your beacons for you.' : ''}` },
   crystal:  { name:'Crystal song', col:'#b48cff', text:a => `A crystal grows through the reactor: 2 super-shield points at the start of every fight, but engines can't take more than 2 power.${a.crystal==='whole' ? ' The ship sings now.' : ''}` },
-  blackmark:{ name:'Black Mark', col:'#ff5a7a', text:() => 'The Pyrate King\'s mark. The Rebuff don\'t chase you any more: Fedoration enforcers do. Lawful stores won\'t trade with you.' },
-  pacifist: { name:'Pilgrims aboard', col:'#ffd166', text:a => `Voltan pilgrims lend you their Lattice. Destroying a crewed ship angers them (${(a.pacifist||{}).mad||0} of 2). Peaceful wins: ${(a.pacifist||{}).calm||0} of 3.` },
+  blackmark:{ name:'Black Mark', col:'#ff5a7a', text:() => 'The Pyrate King\'s mark. The Mandate don\'t chase you any more: Commonwealth enforcers do. Lawful stores won\'t trade with you.' },
+  pacifist: { name:'Pilgrims aboard', col:'#ffd166', text:a => `Thrumm pilgrims lend you their Lattice. Destroying a crewed ship angers them (${(a.pacifist||{}).mad||0} of 2). Peaceful wins: ${(a.pacifist||{}).calm||0} of 3.` },
   fracture: { name:'Time fracture', col:'#9fd6ff', text:a => `If the ship is destroyed in the next ${(a.fracture||{}).left||0} jumps, time snaps back to where it began. Once.` },
   squid:    { name:'Ink', col:'#8a7ab0', text:() => 'Something is not quite right with what everyone is seeing.' }
 };
@@ -122,7 +122,7 @@ function anomCombatStart(e, def, o){
   if(a.crystal) s.super = Math.max(s.super || 0, a.crystal==='whole' ? 3 : 2);
   if(a.escort){ e.hull = Math.max(1, e.hull - 2); const ks = Object.keys(e.systems).filter(k => k!=='piloting'); if(ks.length) damageSystem(e, pick(ks), 1); toast('WARDEN-9 opens fire as the fight begins.'); }
   if(def.mirror){ e.weapons = s.weapons.map(w => ({ id:w.id, charge:0, on:true, target:null })).slice(0, 4); e.systems.weapons.max = Math.max(e.systems.weapons.max, s.weapons.reduce((t, w) => t + (DATA.weapons[w.id]?.power||1), 0)); e.systems.weapons.power = e.systems.weapons.max; }
-  if(def.boss && a.kingHelp){ e.hull = Math.max(4, e.hull - 8); if(e.systems.weapons) ionize(e, 'weapons', 3); toast('The Pyrate King\'s galleon rakes the Flaggship\'s flank before your guns are even warm.'); }
+  if(def.boss && a.kingHelp){ e.hull = Math.max(4, e.hull - 8); if(e.systems.weapons) ionize(e, 'weapons', 3); toast('The Pyrate King\'s galleon rakes the Dreadnought\'s flank before your guns are even warm.'); }
   if(def.boss && a.pacifist && (a.pacifist.calm||0) >= 3) s.super = Math.max(s.super || 0, 6);
 }
 /* after a fight */
@@ -130,8 +130,8 @@ function anomCombatEnd(kind, e, L){
   if(!G || !e) return; const a = G.anom || {}, s = G.ship;
   if(a.pacifist && !e.auto && !e.boss){ const P = a.pacifist;
     if(kind==='destroyed'){ P.mad = (P.mad||0) + 1;
-      if(P.mad >= 2){ delete G.anom.pacifist; s.augments = s.augments.filter(x => x!=='still_lattice'); s.reactor = Math.max(1, s.reactor - 1); L.push('The pilgrims leave. The Voltan pilgrims file silently into their shuttle, taking the Lattice with them. On the way out, one of them pulls a reactor coupling. "So that you remember," she says. (-1 reactor, the Lattice is gone)'); }
-      else { s.reactor = Math.max(1, s.reactor - 1); L.push('The pilgrims protest. The Voltan pilgrims watched that ship die. In the night they sit down in the reactor room and will not move. You lose 1 reactor bar until they forgive you. Ion them, board them, make them surrender. Don\'t kill them.'); } }
+      if(P.mad >= 2){ delete G.anom.pacifist; s.augments = s.augments.filter(x => x!=='still_lattice'); s.reactor = Math.max(1, s.reactor - 1); L.push('The pilgrims leave. The Thrumm pilgrims file silently into their shuttle, taking the Lattice with them. On the way out, one of them pulls a reactor coupling. "So that you remember," she says. (-1 reactor, the Lattice is gone)'); }
+      else { s.reactor = Math.max(1, s.reactor - 1); L.push('The pilgrims protest. The Thrumm pilgrims watched that ship die. In the night they sit down in the reactor room and will not move. You lose 1 reactor bar until they forgive you. Ion them, board them, make them surrender. Don\'t kill them.'); } }
     else if(kind==='crew' || kind==='surrender'){ P.calm = (P.calm||0) + 1; if(P.calm===3) G.later.push({ event:'pp_bless', jumps:0 }); toast(`The pilgrims nod. (${P.calm} peaceful win${P.calm>1 ? 's' : ''})`); } }
   if(G.pet && !G.pet.gone && G.pet.evo==='armoured' && s.hull < s.maxHull && kind!=='fled'){ s.hull++; L.push(`${G.pet.name} welds a plate over the worst dent: +1 hull`); }
 }
@@ -201,12 +201,12 @@ Object.assign(BASE.augments, {
   scrap_furnace:      { name:'Scrap Furnace',       cost:50, desc:'35% more scrap. It hogs the coolant: weapons charge 12% slower.', fx:{ scrap:.35, charge:-.12 } },
   berserker_loop:     { name:'Berserker Loop',      cost:55, desc:'Crew hit 50% harder hand to hand. They hate fiddly work: repairs 30% slower.', fx:{ dps:.5, repair:-.3 } },
   mirror_hull:        { name:'Mirror Hull',         cost:60, desc:'Shields recharge 35% faster. A shiny ship is easy to see: -8% evasion.', fx:{ shield:.35, evade:-8 } },
-  still_lattice:      { name:'Lattice of Stillness',cost:0,  noLoot:true, desc:'Lent by Voltan pilgrims: 4 points of super shield at the start of every fight. They will take it back if you kill.', fx:{ superShield:4 } },
+  still_lattice:      { name:'Lattice of Stillness',cost:0,  noLoot:true, desc:'Lent by Thrumm pilgrims: 4 points of super shield at the start of every fight. They will take it back if you kill.', fx:{ superShield:4 } },
   singing_shard:      { name:'Singing Shard',       cost:80, noLoot:true, desc:'A tame piece of the crystal: 2 points of super shield at the start of every fight.', fx:{ superShield:2 } },
   bloom_heart:        { name:'Heart of the Bloom',  cost:0,  noLoot:true, desc:'The fungus lives in your reactor: 4 points of super shield at the start of every fight.', fx:{ superShield:4 } }
 });
 Object.assign(BASE.weapons, {
-  choke_bomb:  { name:'Choke Bomb',          type:'bomb',  damage:0, charge:13, power:2, cost:55, tier:2, crewDamage:10, gas:true, pin:5, color:'#9be26a', desc:'Rebuff siege ordnance. Sucks the air out of a room and pins the ship so it can\'t dodge.' },
+  choke_bomb:  { name:'Choke Bomb',          type:'bomb',  damage:0, charge:13, power:2, cost:55, tier:2, crewDamage:10, gas:true, pin:5, color:'#9be26a', desc:'Mandate siege ordnance. Sucks the air out of a room and pins the ship so it can\'t dodge.' },
   leech_beam:  { name:'Leech Beam',          type:'beam',  damage:1, rooms:2, charge:16, power:3, cost:65, tier:2, drain:2, color:'#b48cff', desc:'A beam that steals power from every system it crosses.' },
   spore_cannon:{ name:'Spore Cannon',        type:'laser', damage:1, shots:2, charge:11, power:2, cost:60, tier:2, crewDamage:15, fear:true, noLoot:true, color:'#9be26a', desc:'Fires dense balls of void fungus. Crew who get a mouthful panic.' },
   prism_lance: { name:'Prism Lance',         type:'beam',  damage:2, rooms:3, charge:15, power:3, cost:90, tier:3, crit:.2, noLoot:true, color:'#e0c8ff', desc:'Light, bent through living crystal. Long, and it sometimes hits twice as hard.' },
@@ -216,12 +216,12 @@ Object.assign(BASE.drones, {
   shock_boarder:{ name:'Shock Boarder', kind:'boarding', power:3, cost:70, stun:4, fear:true, desc:'A boarding drone that lands with a stun pulse. Everyone in the room is stunned, and whoever can move runs.' }
 });
 Object.assign(BASE.enemies, {
-  rb_suffocator: { name:'Rebuff Suffocator', tags:['rebuff'], relentless:true, hull:13, sectors:[4,8], style:'rebuff', systems:{ shields:4, engines:3, weapons:4, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['choke_bomb','basic'], crew:['human','human','human'] },
-  rb_leech:      { name:'Rebuff Leech Frigate', tags:['rebuff'], relentless:true, hull:12, sectors:[4,8], style:'rebuff', systems:{ shields:4, engines:2, weapons:5, oxygen:1, piloting:1, doors:1 }, weapons:['leech_beam','basic'], crew:['human','human'] },
+  rb_suffocator: { name:'Mandate Suffocator', tags:['rebuff'], relentless:true, hull:13, sectors:[4,8], style:'rebuff', systems:{ shields:4, engines:3, weapons:4, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['choke_bomb','basic'], crew:['human','human','human'] },
+  rb_leech:      { name:'Mandate Leech Frigate', tags:['rebuff'], relentless:true, hull:12, sectors:[4,8], style:'rebuff', systems:{ shields:4, engines:2, weapons:5, oxygen:1, piloting:1, doors:1 }, weapons:['leech_beam','basic'], crew:['human','human'] },
   pyr_shock:     { name:'Pyrate Shock-Raider', tags:['pyrate'], hull:11, sectors:[3,8], style:'pyrate', systems:{ shields:2, engines:3, weapons:2, drones:3, oxygen:1, piloting:1, doors:1 }, weapons:['basic'], drones:['shock_boarder'], crew:['mantlis','human','mantlis'] },
   auto_strangler:{ name:'Auto-Strangler', tags:['auto'], auto:true, relentless:true, hull:12, sectors:[5,8], style:'auto', systems:{ shields:4, engines:2, weapons:5, piloting:1 }, weapons:['choke_bomb','leech_beam'], crew:[] },
-  enforcer_cutter:{ name:'Fedoration Enforcer', eventOnly:true, tags:['enforcer'], hull:11, sectors:[1,9], style:'fed', color:'#5fd3e6', systems:{ shields:4, engines:3, weapons:3, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['ion','basic'], crew:['human','human','human'] },
-  enforcer_frigate:{ name:'Fedoration Enforcer Frigate', eventOnly:true, relentless:true, tags:['enforcer'], hull:15, sectors:[1,9], style:'fed', color:'#5fd3e6', systems:{ shields:6, engines:3, weapons:5, teleporter:1, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','ion','basic'], crew:['human','human','human','pebblekin'] },
+  enforcer_cutter:{ name:'Commonwealth Enforcer', eventOnly:true, tags:['enforcer'], hull:11, sectors:[1,9], style:'fed', color:'#5fd3e6', systems:{ shields:4, engines:3, weapons:3, oxygen:1, medbay:1, piloting:1, doors:1 }, weapons:['ion','basic'], crew:['human','human','human'] },
+  enforcer_frigate:{ name:'Commonwealth Enforcer Frigate', eventOnly:true, relentless:true, tags:['enforcer'], hull:15, sectors:[1,9], style:'fed', color:'#5fd3e6', systems:{ shields:6, engines:3, weapons:5, teleporter:1, oxygen:1, medbay:1, piloting:1, doors:2 }, weapons:['heavy1','ion','basic'], crew:['human','human','human','pebblekin'] },
   rogue_warden:  { name:'WARDEN-9 (rogue)', eventOnly:true, auto:true, mirror:true, relentless:true, tags:['auto'], hull:16, sectors:[1,9], style:'hive', systems:{ shields:4, engines:2, weapons:6, drones:3, piloting:1 }, weapons:['basic'], drones:['combat1'], crew:[] },
   crystal_heart: { name:'The Crystal Heart', eventOnly:true, auto:true, tags:['auto'], hull:14, super:3, sectors:[1,9], style:'glass', systems:{ shields:4, engines:1, weapons:4, piloting:1 }, weapons:['ion','pike'], crew:[] }
 });
@@ -230,7 +230,7 @@ const ANOM_EVENTS = {
   /* --- Void fungus (nebulas) --- */
   vf_spore:{ pack:'anom', nebula:true, once:true, minSector:2, maxSector:5, weight:1.3, title:'A glowing spore', art:'nebula', text:'A spore the size of a fist drifts past the window, glowing a soft green. Where it brushes the hull, a scratch closes up. {crew} has their face pressed to the glass.', choices:[
     { text:'Bring it aboard. It mends things.', effect:{ text:'The spore settles into a vent and starts to grow. By morning the scorch marks in the corridor are gone, and the ship smells faintly of mushrooms.', anom:{ fungus:1 }, later:{ event:'vf_spread', jumps:3 } } },
-    { text:'{who} has seen this before.', req:{ race:'sloog' }, effect:{ text:'"Hollow Bloom," says {who}. "It eats ships. Slowly, kindly, completely." {who} seals a sample in a jar instead, and a Sloog emporium will pay well for it.', scrap:40 } },
+    { text:'{who} has seen this before.', req:{ race:'sloog' }, effect:{ text:'"Hollow Bloom," says {who}. "It eats ships. Slowly, kindly, completely." {who} seals a sample in a jar instead, and a Mullock emporium will pay well for it.', scrap:40 } },
     { text:'Leave it alone.', effect:{ text:'The spore drifts on. {crew} sulks for an hour.' } } ] },
   vf_spread:{ pack:'anom', questOnly:true, title:'The fungus spreads', art:'ship', text:'The fungus is in every vent now. It has nibbled a spare drone part, wrapped itself round the oxygen pumps and started to glow. The air is fine; better than fine. But the glow can be seen from a long way off.', choices:[
     { text:'Let it grow.', effect:{ text:'The ship hums with something like contentment. The fungus keeps the air sweet by itself now, even when the oxygen system is damaged.', parts:-1, anom:{ fungus:2 }, later:{ event:'vf_bloom', jumps:3 } } },
@@ -243,7 +243,7 @@ const ANOM_EVENTS = {
     { text:'Vent the whole ship to space.', effect:{ text:'Every door, every airlock. The fungus freezes and dies. So, nearly, does the crew. One room never quite seals again.', crewHurt:30, scar:'leaky', anom:{ fungus:null }, unscar:'locked' } } ] },
 
   /* --- WARDEN-9, the escort --- */
-  wr_hail:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, title:'An escort offer', art:'fleet', text:'An Enjinn drone carrier drops out of jump beside you, all its bays open. "WARDEN-9," it says, in a voice like a polite lift. "Escort unit. Unassigned for some time. May I accompany you?"', choices:[
+  wr_hail:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, title:'An escort offer', art:'fleet', text:'A Tinkari drone carrier drops out of jump beside you, all its bays open. "WARDEN-9," it says, in a voice like a polite lift. "Escort unit. Unassigned for some time. May I accompany you?"', choices:[
     { text:'Welcome aboard, WARDEN-9.', effect:{ text:'WARDEN-9 takes up position off your stern. It hums happily, and it will open fire on anything that attacks you.', anom:{ escort:1 }, later:{ event:'wr_turn', jumps:4 } } },
     { text:'{who} talks to it in machine-tongue first.', req:{ race:'enjinn' }, effect:{ text:'{who} and WARDEN-9 chatter for an hour. "It\'s lonely," {who} says. "And its route logic is a bit... firm. But it means well." WARDEN-9 takes up position, and {who} leaves a little patch in its code.', anom:{ escort:1 }, setFlag:'wardenPatched', later:{ event:'wr_turn', jumps:5 } } },
     { text:'No thank you.', effect:{ text:'"Understood," says WARDEN-9, and it sounds disappointed for a lift.' } } ] },
@@ -275,28 +275,28 @@ const ANOM_EVENTS = {
     { text:'Sell the reactor room to a Glass gallery.', effect:{ text:'You limp to the nearest Glass dealer, who cuts the crystal out with great care, pays very well and leaves you a reactor two bars short.', scrap:140, reactor:-2, anom:{ crystal:null } } } ] },
 
   /* --- The Black Mark (pyrate space) --- */
-  bm_offer:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, tags:['pyrate',''], title:'The Pyrate King\'s envoy', art:'ship', text:'A black galleon blocks your way. Its captain, a Mantlis in a velvet hat, bows. "The Pyrate King charges a toll on this lane. Or, if you prefer, he offers you his Mark. Wear it and the Rebuff will never chase you again. Mind you, the Fedoration will."', choices:[
-    { text:'Take the Black Mark.', effect:{ text:'They paint it on your hull while you watch: a black crown. From now on the Rebuff Fleet leaves you alone, Fedoration enforcers hunt you instead, and no lawful store will serve you. The King also leaves you a welcome present.', scrap:60, missiles:4, anom:{ blackmark:1 } } },
+  bm_offer:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, tags:['pyrate',''], title:'The Pyrate King\'s envoy', art:'ship', text:'A black galleon blocks your way. Its captain, a Jabbit in a velvet hat, bows. "The Pyrate King charges a toll on this lane. Or, if you prefer, he offers you his Mark. Wear it and the Mandate will never chase you again. Mind you, the Commonwealth will."', choices:[
+    { text:'Take the Black Mark.', effect:{ text:'They paint it on your hull while you watch: a black crown. From now on the Mandate Fleet leaves you alone, Commonwealth enforcers hunt you instead, and no lawful store will serve you. The King also leaves you a welcome present.', scrap:60, missiles:4, anom:{ blackmark:1 } } },
     { text:'Pay the toll.', req:{ scrap:40 }, cost:{ scrap:40 }, effect:{ text:'The envoy bows again, and lets you pass.' } },
     { text:'{who} knows these people.', req:{ quirk:'expyrate' }, effect:{ text:'"Is that Hookjaw?" The envoy squints at {who}, and laughs. You pass for free, with a bottle of something terrible as a gift.', goods:'space_wine' } },
     { text:'Refuse, and fight your way past.', effect:{ text:'The envoy sighs, and signals the galleon.', fight:'pyrate_skiff' } } ] },
   bm_enforcer_hail:{ pack:'anom', hail:'enforcer', title:'Enforcers', art:'fleet', text:'"Unregistered vessel bearing the Pyrate King\'s Mark: power down and prepare to be boarded." The enforcer doesn\'t care who you\'re carrying.', choices:[
     { text:'Fight.', effect:{ begin:true } },
     { text:'Bribe them.', req:{ scrap:45 }, cost:{ scrap:45 }, effect:{ text:'The enforcer captain checks the number twice, then looks the other way.', dismiss:true } },
-    { text:'{who} quotes Fedoration law at them for twenty minutes.', req:{ quirk:'bookworm' }, effect:{ text:'They leave, mostly to get away from {who}.', dismiss:true } } ] },
-  bm_king:{ pack:'anom', questOnly:true, title:'The Pyrate King', art:'fleet', text:'A galleon the size of a moon drops into the final sector beside you. The Pyrate King himself is on your screen, with a crown, a beard and a very large smile. "The Flaggship. Lovely. I\'ll help you with it, my friend. For a price: half your crew. I\'m short-handed."', choices:[
-    { text:'Give him two of your crew.', effect:{ text:'Two of your crew walk across to the galleon. They don\'t look back. The King\'s guns turn towards the Flaggship.', crewLoss:2, anom:{ kingHelp:1 } } },
-    { text:'Pay him in scrap instead.', req:{ scrap:120 }, cost:{ scrap:120 }, effect:{ text:'"Scrap! Well, it spends." The King\'s guns turn towards the Flaggship.', anom:{ kingHelp:1 } } },
+    { text:'{who} quotes Commonwealth law at them for twenty minutes.', req:{ quirk:'bookworm' }, effect:{ text:'They leave, mostly to get away from {who}.', dismiss:true } } ] },
+  bm_king:{ pack:'anom', questOnly:true, title:'The Pyrate King', art:'fleet', text:'A galleon the size of a moon drops into the final sector beside you. The Pyrate King himself is on your screen, with a crown, a beard and a very large smile. "The Dreadnought. Lovely. I\'ll help you with it, my friend. For a price: half your crew. I\'m short-handed."', choices:[
+    { text:'Give him two of your crew.', effect:{ text:'Two of your crew walk across to the galleon. They don\'t look back. The King\'s guns turn towards the Dreadnought.', crewLoss:2, anom:{ kingHelp:1 } } },
+    { text:'Pay him in scrap instead.', req:{ scrap:120 }, cost:{ scrap:120 }, effect:{ text:'"Scrap! Well, it spends." The King\'s guns turn towards the Dreadnought.', anom:{ kingHelp:1 } } },
     { text:'{who} challenges him to an honour duel.', req:{ race:'mantlis' }, chance:.6, success:{ text:'{who} and the King fight on the galleon\'s deck for an hour. {who} wins. The King roars with laughter, and fights beside you for free.', anom:{ kingHelp:1 } }, fail:{ text:'{who} loses, badly, but bravely. The King is impressed enough to let {who} come home.', crewHurt:30 } },
     { text:'No deal.', effect:{ text:'"Shame." The galleon drops back to watch the show.' } } ] },
 
-  /* --- Pilgrims of the Quiet (Voltan) --- */
-  pp_meet:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, tags:['voltan',''], title:'Pilgrims of the Quiet', art:'station', text:'Five Voltan pilgrims in grey robes ask for passage across the sector. They carry a Lattice of Stillness, a shield older than the Fedoration, and they will lend it to you on one condition: while they are aboard, you kill nobody.', choices:[
+  /* --- Pilgrims of the Quiet (Thrumm) --- */
+  pp_meet:{ pack:'anom', once:true, minSector:2, maxSector:5, weight:1.1, tags:['voltan',''], title:'Pilgrims of the Quiet', art:'station', text:'Five Thrumm pilgrims in grey robes ask for passage across the sector. They carry a Lattice of Stillness, a shield older than the Commonwealth, and they will lend it to you on one condition: while they are aboard, you kill nobody.', choices:[
     { text:'Agreed. No killing.', effect:{ text:'The Lattice hums into place around your ship. Ion weapons, boarders and surrenders are your friends now. Unmanned drones don\'t count, the pilgrims say. Ships with people on them do.', augment:'still_lattice', anom:{ pacifist:{ calm:0, mad:0 } } } },
     { text:'Take them, but keep your guns.', effect:{ text:'They look at your guns. They look at you. They wait for the next ship.' } },
     { text:'{who} asks to learn their stillness.', req:{ race:'voltan' }, effect:{ text:'{who} meditates with them for a whole jump, and comes back calm and sharp.', xp:{ skill:'shields', amt:25 } } } ] },
   pp_bless:{ pack:'anom', questOnly:true, title:'The pilgrims\' blessing', art:'station', text:'Three ships beaten, and nobody killed. The pilgrims gather on the bridge. "You understood," says the eldest. "Keep the Lattice. And this."', choices:[
-    { text:'Accept their blessing.', effect:{ text:'They are gone at the next station, leaving the Lattice, a fixed reactor and a crew that sleeps very well. If you reach the Flaggship, they promise, they will be there.', reactor:1, crewHeal:60, anom:{ pacifist:{ calm:3, blessed:1 } } } } ] },
+    { text:'Accept their blessing.', effect:{ text:'They are gone at the next station, leaving the Lattice, a fixed reactor and a crew that sleeps very well. If you reach the Dreadnought, they promise, they will be there.', reactor:1, crewHeal:60, anom:{ pacifist:{ calm:3, blessed:1 } } } } ] },
 
   /* --- Time fracture --- */
   tf_rift:{ pack:'anom', once:true, minSector:2, maxSector:7, weight:.8, title:'A fracture in time', art:'space', text:'A crack hangs in space, thin as a hair and very bright. Light goes in one side and comes out yesterday. {crew} throws a spanner through it, and catches it a second before they threw it.', choices:[

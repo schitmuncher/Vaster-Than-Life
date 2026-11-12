@@ -1,8 +1,8 @@
 'use strict';
 /* =========================================================================
-   Expedition mode: a hub-and-spoke galaxy with no Rebuff Fleet chasing you.
+   Expedition mode: a hub-and-spoke galaxy with no Mandate Fleet chasing you.
    Picked in the hangar (Mode: Classic / Expedition). Classic is untouched.
-   - No Fleet. Instead heat climbs a little every jump, and the Rebuff hunt
+   - No Fleet. Instead heat climbs a little every jump, and the Mandate hunt
      you harder the hotter you run (hunters from 70, a blockade at 90, and
      a "death stack" of hunters everywhere near 100).
    - Haven's Rest is the hub. Every exit opens the galaxy chart: dock at home,
@@ -10,13 +10,13 @@
      riskier and cost more fuel; Deep ones are dangerous, cost the most fuel
      and hold a Precursor key at their exit.
    - Three keys open the final assault early. Run out of time and the Last
-     Stand comes anyway, but every key you hold weakens the Flaggship.
+     Stand comes anyway, but every key you hold weakens the Dreadnought.
    ========================================================================= */
 function expOn(){ return !!(typeof G!=='undefined' && G && G.expedition); }
 function expAllowed(o){ return !(o && (o.daily || o.cup || o.challenge || o.seedDuel || o.practice || o.par)) && !(typeof CAMP!=='undefined' && CAMP) && !(typeof NET!=='undefined' && NET.on && NET.mode); }
 (function(){ const n0 = newRun; newRun = function(id, name, o = {}){ n0(id, name, o);
   if(G && SET.runMode==='expedition' && expAllowed(o)){ G.expedition = { keys:0, trips:0, depth:'near', got:{} }; logEntry('Set out on an expedition from Haven\'s Rest.');
-    setTimeout(() => { if(expOn()) toast('Expedition: no Fleet behind you. Heat rises as you go. Find three Precursor keys in Deep space, then strike the Flaggship.'); }, 1800); save(); } }; })();
+    setTimeout(() => { if(expOn()) toast('Expedition: no Fleet behind you. Heat rises as you go. Find three Precursor keys in Deep space, then strike the Dreadnought.'); }, 1800); save(); } }; })();
 (function(){ const f0 = fleetStep; fleetStep = function(){ return expOn() ? 0 : f0(); }; })();
 const EXP_DEPTH = {
   near: { name:'Near', fuel:1, col:'#7be0a0', text:'Calm space close to home. Cheap to reach.' },
@@ -37,7 +37,7 @@ function drawExpeditionChart(m){
   T('Precursor keys', cx, f.y + 108, { s:18, f:FD, w:700, c:C.amber });
   for(let i = 0; i < 3; i++){ const x = cx + 190 + i*44, y = f.y + 100; ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI/4); rr(-13, -13, 26, 26, 4); ctx.fillStyle = i < full ? C.amber : i===full && half ? hexA(C.amber, .45) : 'rgba(255,255,255,.06)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); }
   T(`Trip ${E.trips + 1} · heat ${typeof heat==='function' ? heat() : 0} · fuel ${G.fuel}`, cx + W2, f.y + 108, { s:18, a:'right', c:C.ink });
-  para(expCanFinal() && E.keys >= 3 ? 'Three keys. The Precursor gate to the Flaggship\'s route is open: strike now, or keep exploring to grow stronger.' : G.sector + 1 >= R.sectors ? `Time is up: the Flaggship moves on Fedoration command. Every key you hold weakens it (${full} of 3).` : 'Dock at Haven\'s Rest, then plot your next spoke. Deep space holds the Precursor keys; the further out, the more fuel it takes and the harder it gets.', cx, f.y + 150, W2, { s:16, lh:22, c:C.muted });
+  para(expCanFinal() && E.keys >= 3 ? 'Three keys. The Precursor gate to the Dreadnought\'s route is open: strike now, or keep exploring to grow stronger.' : G.sector + 1 >= R.sectors ? `Time is up: the Dreadnought moves on Commonwealth command. Every key you hold weakens it (${full} of 3).` : 'Dock at Haven\'s Rest, then plot your next spoke. Deep space holds the Precursor keys; the further out, the more fuel it takes and the harder it gets.', cx, f.y + 150, W2, { s:16, lh:22, c:C.muted });
   const spokes = G.sector + 1 >= R.sectors ? [] : expSpokes(), cw = (W2 - 40) / 3, by = f.y + 220, ch = 380;
   spokes.forEach(([depth, t], i) => { const D = EXP_DEPTH[depth], sd = DATA.sectors[t], bx = cx + i*(cw + 20); if(!sd) return;
     rr(bx, by, cw, ch, 12); ctx.fillStyle = C.panel2 || C.panel; ctx.fill(); ctx.strokeStyle = D.col; ctx.lineWidth = 2; ctx.stroke();
@@ -59,14 +59,14 @@ function expArrive(node, first){ if(!expOn()) return; const E = G.expedition;
 }
 (function(){ if(typeof heatIntercept!=='function') return; const h0 = heatIntercept;
   heatIntercept = function(node, first){ const r = h0(node, first); if(r || !expOn() || !first || G.flag) return r;
-    if(heat() >= 95 && ['event','combat','empty'].includes(node.type) && !node.quest && Math.random() < .3){ startCombat('rb_hunter', { hail:'hunter' }); if(G.enemy) G.enemy.hunter = true; toast('The death stack: Rebuff hunters are everywhere. Cool your heat.'); return true; }
+    if(heat() >= 95 && ['event','combat','empty'].includes(node.type) && !node.quest && Math.random() < .3){ startCombat('rb_hunter', { hail:'hunter' }); if(G.enemy) G.enemy.hunter = true; toast('The death stack: Mandate hunters are everywhere. Cool your heat.'); return true; }
     return false; }; })();
 (function(){ if(typeof livingCombatStart!=='function') return; const l0 = livingCombatStart;
-  livingCombatStart = function(e, def, o){ l0(e, def, o); if(expOn() && def && def.boss && !(o && o.phase) && G.expedition.keys >= 1){ const k = Math.floor(G.expedition.keys); e.hull = Math.max(8, e.hull - 3*k); if(k >= 2 && e.systems.shields) e.systems.shields.max = Math.max(0, e.systems.shields.max - 2); toast(`Your Precursor keys unlock the Flaggship's codes: it starts weakened (${k} key${k===1 ? '' : 's'}).`); } }; })();
+  livingCombatStart = function(e, def, o){ l0(e, def, o); if(expOn() && def && def.boss && !(o && o.phase) && G.expedition.keys >= 1){ const k = Math.floor(G.expedition.keys); e.hull = Math.max(8, e.hull - 3*k); if(k >= 2 && e.systems.shields) e.systems.shields.max = Math.max(0, e.systems.shields.max - 2); toast(`Your Precursor keys unlock the Dreadnought's codes: it starts weakened (${k} key${k===1 ? '' : 's'}).`); } }; })();
 function expeditionArrive(node, first){ expArrive(node, first); }
 /* the hangar: pick the mode */
 function drawModePicker(x, y){ if(typeof NET!=='undefined' && NET.on) return; if(typeof CAMP!=='undefined' && CAMP) return; const cur = SET.runMode==='expedition' ? 'expedition' : 'classic';
   label('Mode', x, y + 24, C.muted, 'left', 14);
   btn(x + 70, y, 150, 36, 'Classic', () => { SET.runMode = 'classic'; saveProfile(); }, { fill:cur==='classic', s:14 });
   btn(x + 230, y, 170, 36, 'Expedition', () => { SET.runMode = 'expedition'; saveProfile(); }, { fill:cur==='expedition', s:14, col:'#9fdc7a' });
-  tip(x, y, 400, 36, 'Mode', 'Classic: the Rebuff Fleet chases you sector by sector. Expedition: no Fleet. Haven\'s Rest is your hub; pick near, far or deep spokes, gather three Precursor keys, and strike the Flaggship when you are ready. Heat is the danger.'); }
+  tip(x, y, 400, 36, 'Mode', 'Classic: the Mandate Fleet chases you sector by sector. Expedition: no Fleet. Haven\'s Rest is your hub; pick near, far or deep spokes, gather three Precursor keys, and strike the Dreadnought when you are ready. Heat is the danger.'); }

@@ -34,10 +34,10 @@ BASE.arms = {
   shotgun:  { name:'Boarding Shotgun',    kind:'gun',   dmg:1.9,  dur:30, cost:60, tier:2, reach:.2, stun:.1, desc:'Loud, short-ranged and devastating in a corridor.' },
   rifle:    { name:'Pulse Rifle',         kind:'gun',   dmg:1.7,  dur:35, cost:80, tier:3, reach:.6, desc:'A marine\'s rifle. Hits hard, and keeps whole neighbouring rooms under fire.' },
   freeze:   { name:'Freeze Ray',          kind:'weird', dmg:.8,   dur:35, cost:55, tier:2, stun:.6, desc:'Doesn\'t hurt much. Mostly, it just stops people moving.' },
-  spore:    { name:'Spore Pistol',        kind:'weird', dmg:1.0,  dur:40, cost:45, tier:2, bleed:5, reach:.25, desc:'Sloog-made. Fires a cloud that keeps eating at whoever it lands on.' },
+  spore:    { name:'Spore Pistol',        kind:'weird', dmg:1.0,  dur:40, cost:45, tier:2, bleed:5, reach:.25, desc:'Mullock-made. Fires a cloud that keeps eating at whoever it lands on.' },
   whip:     { name:'Tentacle Whip',       kind:'weird', dmg:1.3,  dur:50, cost:50, tier:2, fear:.18, desc:'It is alive. It is not friendly. Foes tend to run away from it.' },
   leech:    { name:'Life-Leech Glove',    kind:'weird', dmg:1.1,  dur:50, cost:60, tier:2, leech:.35, desc:'Every blow heals the wearer a little. Nobody asks how.' },
-  mender:   { name:'Mender\'s Staff',     kind:'weird', dmg:.7,   dur:60, cost:50, tier:2, heal:4, desc:'A Sloog healing staff. Everyone on your side in the room heals while it\'s in use.' },
+  mender:   { name:'Mender\'s Staff',     kind:'weird', dmg:.7,   dur:60, cost:50, tier:2, heal:4, desc:'A Mullock healing staff. Everyone on your side in the room heals while it\'s in use.' },
   chicken:  { name:'Rubber Chicken',      kind:'weird', dmg:.6,   dur:99, cost:15, tier:1, laugh:.2, desc:'It squeaks. Every so often the whole room stops fighting to laugh.' },
   vest:     { name:'Flak Vest',           kind:'suit',  armor:.2,  dur:80, cost:30, tier:1, desc:'Stops a fifth of all melee damage.' },
   plate:    { name:'Boarding Plate',      kind:'suit',  armor:.35, dur:100, cost:60, tier:2, desc:'Heavy armour for boarding actions. Stops over a third of melee damage.' },
@@ -201,7 +201,7 @@ Object.assign(BASE.events, {
   arms_derelict:{ weight:.9, art:'wreck', text:'A wrecked security cutter, its armoury locker still sealed.', choices:[
     { text:'Cut the locker open.', effect:{ text:'Inside: kit, still in its packing.', arm:['random', 'random'] } },
     { text:'Strip the cutter for parts instead.', effect:{ text:'Good parts.', parts:3 } } ] },
-  arms_master:{ weight:.8, art:'station', minSector:2, text:'An old Mantlis duelling master runs a school on this station. For a fee, she will teach your crew to fight properly.', choices:[
+  arms_master:{ weight:.8, art:'station', minSector:2, text:'An old Jabbit duelling master runs a school on this station. For a fee, she will teach your crew to fight properly.', choices:[
     { text:'Pay for lessons (25 scrap).', req:{ scrap:25 }, cost:{ scrap:25 }, effect:{ text:'Three days of bruises. Your crew fight like they mean it now.', xp:{ skill:'combat', amt:40 } } },
     { text:'Challenge her to a duel for her blade.', chance:.35, success:{ text:'You win, somehow. She bows, and hands you her blade.', arm:'mono' }, fail:{ text:'She wins. Gently. Your crew are bruised, and better for it.', crewHurt:20, xp:{ skill:'combat', amt:20 } } },
     { text:'Watch a lesson, for free.', effect:{ text:'You pick up a few moves.', xp:{ skill:'combat', amt:10 } } } ] },

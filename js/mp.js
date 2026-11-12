@@ -12,10 +12,10 @@ const MP_MODES = {
   nav:   { name:'Navigator', kind:'shared', max:2, col:'#5fd3e6', short:'A VR captain fights; a navigator on a laptop or phone plots the course.', blurb:'A captain in VR flies and fights. A navigator on a laptop or phone plots the course, reads events and runs the shop.' },
   away:  { name:'Away team', kind:'shared', max:4, col:'#c6e05a', short:'Co-op with a boarding specialist who beams over in VR.', blurb:'Co-op with a boarding specialist: beam over in VR, sabotage systems and fight hand to hand while the crew back home flies.' },
   spect: { name:'Go live', kind:'shared', max:8, col:'#ff8ad8', short:'Stream your run. Friends watch live and send emoji.', blurb:'Stream your run. Friends watch live from any device and send emoji reactions.' },
-  hunt:  { name:'Hunter and hunted', kind:'shared', max:2, col:'#ff5a7a', short:'One flies the courier, the other commands the Rebuff fleet.', blurb:'One player flies the courier. The other commands the Rebuff fleet: ambushes, hazards, fleet surges and enemy gunnery.' },
+  hunt:  { name:'Hunter and hunted', kind:'shared', max:2, col:'#ff5a7a', short:'One flies the courier, the other commands the Mandate fleet.', blurb:'One player flies the courier. The other commands the Mandate fleet: ambushes, hazards, fleet surges and enemy gunnery.' },
   duel:  { name:'Duel arena', kind:'duel', max:2, col:'#ff7a45', short:'Build a ship on a budget and fight a friend. Best of three.', blurb:'Build a ship on a budget, then fight a friend ship to ship. Best of three.' },
   brawl: { name:'Boarding brawl', kind:'brawl', max:2, col:'#e05aa0', short:'Two crews, one ship, no way off. Last crew standing wins.', blurb:'Two crews on one ship and no way off. Last crew standing takes the round.' },
-  race:  { name:'Race to the Flaggship', kind:'parallel', max:4, col:'#7be0a0', short:'Same seed, same time. Race to the end and play trouble cards.', blurb:'Everyone flies the same seed at once. Watch each other\'s progress and play trouble cards on the leader.' },
+  race:  { name:'Race to the Dreadnought', kind:'parallel', max:4, col:'#7be0a0', short:'Same seed, same time. Race to the end and play trouble cards.', blurb:'Everyone flies the same seed at once. Watch each other\'s progress and play trouble cards on the leader.' },
   wing:  { name:'Wingmen', kind:'parallel', max:4, col:'#9fb8ff', short:'Your own ships, the same sectors. Fight together, share supplies.', blurb:'Your own ships, the same sectors. Fight side by side at the same beacon and send each other supplies.' },
 };
 ACHIEVEMENTS.push(
@@ -25,7 +25,7 @@ ACHIEVEMENTS.push(
   { id:'mp_hunter', name:'Fleet Admiral',       desc:'Catch the courier as fleet commander.' },
   { id:'duelwin',   name:'Arena Champion',      desc:'Win a duel.' },
   { id:'brawlwin',  name:'Last Crew Standing',  desc:'Win a boarding brawl.' },
-  { id:'racewin',   name:'First Past the Post', desc:'Win a race to the Flaggship.' },
+  { id:'racewin',   name:'First Past the Post', desc:'Win a race to the Dreadnought.' },
   { id:'mp_wing',   name:'Care Package',        desc:'Send supplies to a wingmate.' },
   { id:'seedwin',   name:'Same Seed, Better Captain', desc:'Win a seed duel.' },
   { id:'cuppost',   name:'On the Board',        desc:'Post a score to the weekly cup.' }

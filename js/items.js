@@ -110,7 +110,7 @@ Object.assign(BASE.events, {
   items_gym:{ weight:.8, art:'station', text:'A zero-gravity gym on this station is offering a free trial session. The instructor is a Pebblekin with arms like girders.', choices:[
     { text:'Send the whole crew.', effect:{ text:'Everyone aches for a day. Everyone is a little stronger.', xp:{ skill:'combat', amt:15 }, crewHurt:10 } },
     { text:'Buy their protein supply (20 scrap).', req:{ scrap:20 }, cost:{ scrap:20 }, effect:{ text:'Three tubs of Muscle Tonic. It tastes of strawberries and regret.', item:['muscle', 'muscle', 'biscuit'] } } ] },
-  items_herbalist:{ weight:.8, art:'planet', text:'A Sloog herbalist has a stall at this beacon: jars of glowing things, all labelled in a handwriting nobody can read.', choices:[
+  items_herbalist:{ weight:.8, art:'planet', text:'A Mullock herbalist has a stall at this beacon: jars of glowing things, all labelled in a handwriting nobody can read.', choices:[
     { text:'Buy a jar of "the good stuff" (15 scrap).', req:{ scrap:15 }, cost:{ scrap:15 }, effect:{ text:'It is, genuinely, the good stuff.', item:'random' } },
     { text:'Ask for her rarest brew.', chance:.3, success:{ text:'She sighs, and hands you a tiny golden bottle. "Don\'t waste it."', item:'elixir' }, fail:{ text:'She laughs and gives you some cookies instead.', item:'cookies' } } ] }
 });
